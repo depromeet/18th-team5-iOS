@@ -33,4 +33,4 @@ jobs:
             --owner depromeet \
             --repo 18th-team5-iOS \
             --pr ${{ github.event.pull_request.number }} \
-            --token ${{ secrets.PAT_TOKEN }}
+            --token ${{ secrets.GITHUB_TOKEN }}
