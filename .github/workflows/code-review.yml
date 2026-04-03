@@ -3,6 +3,11 @@ name: Code Review
 on:
   pull_request:
     types: [opened]
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: 'PR 번호'
+        required: true
 
 jobs:
   code-review:
@@ -32,5 +37,5 @@ jobs:
           python Tools/code-review/start-code-review.py \
             --owner depromeet \
             --repo 18th-team5-iOS \
-            --pr ${{ github.event.pull_request.number }} \
+            --pr ${{ github.event.inputs.pr_number || github.event.pull_request.number }} \
             --token ${{ secrets.GITHUB_TOKEN }}
