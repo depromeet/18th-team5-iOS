@@ -17,8 +17,7 @@ extension Target {
             bundleId: module.bundleID,
             deploymentTargets: ProjectInfo.deploymentTargets,
             infoPlist: .file(path: "Info.plist"),
-            sources: ["Sources/**"],
-            resources: module.resources,
+            buildableFolders: module.buildableFolders,
             dependencies: module.dependencies,
             settings: .settings(configurations: .default)
         )
@@ -33,8 +32,7 @@ extension Module {
             product: product,
             bundleId: bundleID,
             deploymentTargets: ProjectInfo.deploymentTargets,
-            sources: ["Sources/**"],
-            resources: resources,
+            buildableFolders: buildableFolders,
             dependencies: dependencies,
             settings: .settings(configurations: .default)
         )
@@ -47,7 +45,7 @@ extension Module {
             product: .unitTests,
             bundleId: "\(bundleID)Tests",
             deploymentTargets: ProjectInfo.deploymentTargets,
-            sources: ["Tests/**"],
+            buildableFolders: ["Tests"],
             dependencies: [.target(implements)],
             settings: .settings(configurations: .default)
         )
@@ -60,7 +58,7 @@ extension Module {
             product: .app,
             bundleId: "\(bundleID)Demo",
             deploymentTargets: ProjectInfo.deploymentTargets,
-            sources: ["Demo/Sources/**"],
+            buildableFolders: ["Demo/Sources"],
             dependencies: [.target(implements)],
             settings: .settings(configurations: .default)
         )
@@ -75,10 +73,10 @@ private extension Module {
         }
     }
     
-    var resources: ResourceFileElements? {
+    var buildableFolders: [BuildableFolder] {
         switch self {
-        case .app, .designSystem: ["Resources/**"]
-        default: nil
+        case .app, .designSystem: ["Sources", "Resources"]
+        default: ["Sources"]
         }
     }
 }
