@@ -1,5 +1,6 @@
 #include "./Shared.xcconfig"
 
-PRODUCT_BUNDLE_IDENTIFIER = com.orange.app
+// TODO: 추후 앱 이름 결정되면 수정 예정 - @정원
+PRODUCT_BUNDLE_IDENTIFIER = com.orange.orange
 BUNDLE_DISPLAY_NAME = Orange
 ENV = Prod
