@@ -1,0 +1,5 @@
+#include "./Shared.xcconfig"
+
+PRODUCT_BUNDLE_IDENTIFIER = com.orange.app.dev
+BUNDLE_DISPLAY_NAME = Orange DEV
+ENV = Dev
