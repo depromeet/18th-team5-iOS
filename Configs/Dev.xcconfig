@@ -1,6 +1,5 @@
 #include "./Shared.xcconfig"
 
-// TODO: 추후 앱 이름 결정되면 수정 예정 - @정원
-PRODUCT_BUNDLE_IDENTIFIER = com.orange.orange.dev
-BUNDLE_DISPLAY_NAME = Orange DEV
+PRODUCT_BUNDLE_IDENTIFIER = com.orange.peaktime.dev
+BUNDLE_DISPLAY_NAME = Peaktime DEV
 ENV = Dev
