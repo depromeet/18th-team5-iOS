@@ -1,0 +1,41 @@
+name: Code Review
+
+on:
+  pull_request:
+    types: [opened, ready_for_review]
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: 'PR 번호'
+        required: true
+
+jobs:
+  code-review:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+      contents: read
+    env:
+      ANTHROPIC_AUTH_TOKEN: ${{ secrets.ANTHROPIC_AUTH_TOKEN }}
+      ANTHROPIC_BASE_URL: https://api.z.ai/api/anthropic
+      ANTHROPIC_DEFAULT_HAIKU_MODEL: glm-5.1
+      ANTHROPIC_DEFAULT_SONNET_MODEL: glm-5.1
+      ANTHROPIC_DEFAULT_OPUS_MODEL: glm-5.1
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Python dependencies
+        run: pip install requests
+
+      - name: Install Claude CLI
+        run: npm install -g @anthropic-ai/claude-code
+
+      - name: Run code review
+        working-directory: ${{ github.workspace }}
+        run: |
+          python Tools/code-review/start-code-review.py \
+            --owner depromeet \
+            --repo 18th-team5-iOS \
+            --pr ${{ github.event.inputs.pr_number || github.event.pull_request.number }} \
+            --token ${{ secrets.GITHUB_TOKEN }}
