@@ -1,0 +1,10 @@
+{
+  "scripts": {
+    "prepare": "husky install",
+    "commit": "gitmoji -c"
+  },
+  "devDependencies": {
+    "husky": "^8.0.0",
+    "gitmoji-cli": "^9.0.0"
+  }
+}
