@@ -6,10 +6,10 @@
 # ──────────────────────────────────────────────
 
 # mise 환경 활성화 (mise로 설치된 도구 사용)
-eval "$(mise activate bash --shims)" 2>/dev/null
+eval "$(mise activate bash --shims)" 2>/dev/null || true
 
 # 스테이징된 Swift 파일만 대상
-STAGED_SWIFT_FILES=$(git diff --cached --name-only --diff-filter=ACM | grep '\.swift$')
+STAGED_SWIFT_FILES=$(git diff --cached --name-only --diff-filter=ACM | grep '\.swift$' || true)
 
 if [ -z "$STAGED_SWIFT_FILES" ]; then
     exit 0
