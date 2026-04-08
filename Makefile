@@ -36,8 +36,8 @@ setup:
 	@echo "추가 후 터미널을 재시작하거나 'source ~/.zshrc'를 실행해주세요."
 
 generate:
-	tuist install
-	tuist generate
+	eval "$$(mise activate bash --shims)" && tuist install
+	eval "$$(mise activate bash --shims)" && tuist generate
 
 clean:
 	rm -rf Projects/**/*.xcodeproj
