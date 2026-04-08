@@ -5,8 +5,7 @@
 disabled_rules:
   # [SwiftFormat 중복 방지] SwiftFormat이 자동 처리하는 규칙 — 커밋 시 pre-commit hook에서 수정됨
   - trailing_whitespace    # SwiftFormat --trimwhitespace always로 처리
-  - redundant_return       # SwiftFormat redundantReturn 비활성화와 일치시킴 (명시적 return 허용)
-  - redundant_self         # SwiftFormat redundantSelf 비활성화와 일치시킴 (명시적 self 허용)
+  - direct_return          # SwiftFormat redundantReturn 비활성화와 일치시킴 (명시적 return 허용)
 
   # [TCA 패턴 대응] The Composable Architecture 사용 시 구조적으로 길어지는 패턴 허용
   - function_body_length   # Reducer의 body 프로퍼티가 Action 처리로 인해 길어질 수 있음
@@ -76,3 +75,4 @@ excluded:
   - Tools
   - Configs
   - "**/Derived"
+  - "**/Generated"

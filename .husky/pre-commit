@@ -29,8 +29,8 @@ fi
 # SwiftFormat + SwiftLint 자동 수정 적용
 while IFS= read -r file; do
     if [ -f "$file" ]; then
-        swiftformat "$file" --quiet
-        swiftlint lint --fix --quiet --path "$file"
+        swiftformat "$file" --quiet || exit 1
+        swiftlint lint --fix --quiet "$file" || exit 1
         git add "$file"
     fi
 done <<< "$STAGED_SWIFT_FILES"

@@ -32,11 +32,11 @@
 --commas always
 
 # 비활성화 규칙
-# redundantReturn: 단일 표현식에서 명시적 return 허용 (.swiftlint.yml의 redundant_return과 일치)
+# redundantReturn: 단일 표현식에서 명시적 return 허용 (.swiftlint.yml의 direct_return과 일치)
 --disable redundantReturn
 # redundantSelf: 명시적 self. 사용 허용 (.swiftlint.yml의 redundant_self와 일치)
 --disable redundantSelf
 --disable wrapMultilineStatementBraces
 
 # 제외 경로
---exclude Tuist,Derived,.build,**/Generated
+--exclude Tuist,.build,Tools,Configs,**/Derived,**/Generated

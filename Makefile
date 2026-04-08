@@ -17,11 +17,11 @@ setup:
 		echo "📦 mise 설치 중..."; \
 		brew install mise; \
 	fi
-	@eval "$$(mise activate zsh --shims)" && mise install
+	@eval "$$(mise activate bash --shims)" && mise install
 	@# 3. Node.js 확인 및 자동 설치 (husky, gitmoji-cli에 필요)
 	@if ! command -v node >/dev/null 2>&1; then \
 		echo "📦 Node.js 설치 중..."; \
-		eval "$$(mise activate zsh --shims)" && mise use -g node@lts; \
+		eval "$$(mise activate bash --shims)" && mise use -g node@lts; \
 	fi
 	@# 4. npm 의존성 설치 (husky + gitmoji-cli)
 	npm install

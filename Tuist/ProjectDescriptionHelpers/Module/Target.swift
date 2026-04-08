@@ -15,7 +15,7 @@ private let lintScripts: [TargetScript] = [
     .pre(
         script: """
         if command -v swiftlint >/dev/null 2>&1; then
-            swiftlint lint --quiet
+            swiftlint lint --quiet "${SRCROOT}"
         fi
         """,
         name: "SwiftLint",
