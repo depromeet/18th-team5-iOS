@@ -1,4 +1,4 @@
-#!/usr/bin/env sh
+#!/usr/bin/env bash
 . "$(dirname -- "$0")/_/husky.sh"
 
 # ──────────────────────────────────────────────
@@ -15,28 +15,22 @@ if [ -z "$STAGED_SWIFT_FILES" ]; then
     exit 0
 fi
 
-# SwiftFormat 적용
-if command -v swiftformat >/dev/null 2>&1; then
-    while IFS= read -r file; do
-        if [ -f "$file" ]; then
-            swiftformat "$file" --quiet
-            git add "$file"
-        fi
-    done <<< "$STAGED_SWIFT_FILES"
-else
+# SwiftFormat, SwiftLint 설치 확인
+if ! command -v swiftformat >/dev/null 2>&1; then
     echo "❌ SwiftFormat이 설치되어 있지 않습니다. 'make setup'을 실행해주세요."
     exit 1
 fi
 
-# SwiftLint 자동 수정 적용
-if command -v swiftlint >/dev/null 2>&1; then
-    while IFS= read -r file; do
-        if [ -f "$file" ]; then
-            swiftlint lint --fix --quiet --path "$file"
-            git add "$file"
-        fi
-    done <<< "$STAGED_SWIFT_FILES"
-else
+if ! command -v swiftlint >/dev/null 2>&1; then
     echo "❌ SwiftLint가 설치되어 있지 않습니다. 'make setup'을 실행해주세요."
     exit 1
 fi
+
+# SwiftFormat + SwiftLint 자동 수정 적용
+while IFS= read -r file; do
+    if [ -f "$file" ]; then
+        swiftformat "$file" --quiet
+        swiftlint lint --fix --quiet --path "$file"
+        git add "$file"
+    fi
+done <<< "$STAGED_SWIFT_FILES"

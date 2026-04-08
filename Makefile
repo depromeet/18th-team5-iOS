@@ -12,14 +12,10 @@ setup:
 			eval "$$(/usr/local/bin/brew shellenv)"; \
 		fi; \
 	fi
-	@# 2. mise 설치 확인 및 자동 설치 + 쉘 활성화
+	@# 2. mise 설치 확인 및 자동 설치
 	@if ! command -v mise >/dev/null 2>&1; then \
 		echo "📦 mise 설치 중..."; \
 		brew install mise; \
-	fi
-	@if ! grep -q 'mise activate' ~/.zshrc 2>/dev/null; then \
-		echo "📦 mise 쉘 활성화 설정 중..."; \
-		echo 'eval "$$(mise activate zsh)"' >> ~/.zshrc; \
 	fi
 	@eval "$$(mise activate zsh --shims)" && mise install
 	@# 3. Node.js 확인 및 자동 설치 (husky, gitmoji-cli에 필요)
@@ -31,11 +27,17 @@ setup:
 	npm install
 	@# 5. Tuist 프로젝트 생성
 	make generate
-	@echo "✅ 환경 설정 완료! 터미널을 재시작하거나 'source ~/.zshrc'를 실행해주세요."
+	@echo ""
+	@echo "✅ 환경 설정 완료!"
+	@echo ""
+	@echo "⚠️  mise 쉘 활성화가 필요합니다. 아래 명령어를 ~/.zshrc에 추가해주세요:"
+	@echo '  eval "$$(mise activate zsh)"'
+	@echo ""
+	@echo "추가 후 터미널을 재시작하거나 'source ~/.zshrc'를 실행해주세요."
 
 generate:
-	eval "$$(mise activate zsh --shims)" && tuist install
-	eval "$$(mise activate zsh --shims)" && tuist generate
+	tuist install
+	tuist generate
 
 clean:
 	rm -rf Projects/**/*.xcodeproj
