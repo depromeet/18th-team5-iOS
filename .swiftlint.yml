@@ -1,0 +1,53 @@
+disabled_rules:
+  - trailing_whitespace
+  - line_length
+  - function_body_length
+  - type_body_length
+  - file_length
+  - cyclomatic_complexity
+  - nesting
+
+opt_in_rules:
+  - empty_count
+  - closure_spacing
+  - contains_over_first_not_nil
+  - fatal_error_message
+  - force_unwrapping
+  - implicitly_unwrapped_optional
+  - modifier_order
+  - vertical_whitespace_closing_braces
+  - sorted_imports
+
+line_length:
+  warning: 120
+  error: 150
+  ignores_comments: true
+  ignores_urls: true
+
+type_name:
+  min_length: 3
+  max_length: 50
+
+identifier_name:
+  min_length:
+    warning: 2
+  max_length:
+    warning: 50
+  excluded:
+    - id
+    - x
+    - y
+    - i
+
+custom_rules:
+  todo_without_assignee:
+    name: "TODO/FIXME Without Assignee"
+    regex: '//\s*(TODO|FIXME):(?!.*-\s*@\w+)'
+    message: "TODO/FIXME에는 담당자를 명시해주세요. (예: // TODO: 내용 - @이름)"
+    severity: warning
+
+excluded:
+  - Tuist
+  - Derived
+  - .build
+  - "**/Generated"

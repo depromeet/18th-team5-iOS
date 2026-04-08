@@ -1,0 +1,36 @@
+# Swift 버전
+--swiftversion 5.9
+
+# 들여쓰기
+--indent 4
+--indentcase false
+--ifdef no-indent
+
+# 줄바꿈
+--maxwidth 120
+--wraparguments before-first
+--wrapparameters before-first
+--wrapcollections before-first
+--wrapconditions after-first
+
+# 공백
+--trimwhitespace always
+--stripunusedargs closure-only
+
+# import 정렬
+--importgrouping alpha
+
+# self 사용
+--self init-only
+
+# 후행 쉼표
+--trailingclosures
+--commas always
+
+# 비활성화 규칙
+--disable redundantReturn
+--disable redundantSelf
+--disable wrapMultilineStatementBraces
+
+# 제외 경로
+--exclude Tuist,Derived,.build,**/Generated

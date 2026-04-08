@@ -7,6 +7,30 @@
 
 import ProjectDescription
 
+// MARK: - Lint Scripts
+
+private let lintScripts: [TargetScript] = [
+    .pre(
+        script: """
+        if command -v swiftformat >/dev/null 2>&1; then
+            swiftformat . --quiet
+        fi
+        """,
+        name: "SwiftFormat",
+        basedOnDependencyAnalysis: false
+    ),
+    .pre(
+        script: """
+        if command -v swiftlint >/dev/null 2>&1; then
+            swiftlint lint --fix --quiet
+            swiftlint lint --quiet
+        fi
+        """,
+        name: "SwiftLint",
+        basedOnDependencyAnalysis: false
+    ),
+]
+
 extension Target {
     static var app: Target {
         let module = Module.app
@@ -18,6 +42,7 @@ extension Target {
             deploymentTargets: ProjectInfo.deploymentTargets,
             infoPlist: .file(path: "Info.plist"),
             buildableFolders: module.buildableFolders,
+            scripts: lintScripts,
             dependencies: module.dependencies,
             settings: .settings(configurations: .default)
         )
@@ -33,6 +58,7 @@ extension Module {
             bundleId: bundleID,
             deploymentTargets: ProjectInfo.deploymentTargets,
             buildableFolders: buildableFolders,
+            scripts: lintScripts,
             dependencies: dependencies,
             settings: .settings(configurations: .default)
         )
@@ -46,6 +72,7 @@ extension Module {
             bundleId: "\(bundleID)Tests",
             deploymentTargets: ProjectInfo.deploymentTargets,
             buildableFolders: ["Tests"],
+            scripts: lintScripts,
             dependencies: [.target(implements)],
             settings: .settings(configurations: .default)
         )
@@ -59,6 +86,7 @@ extension Module {
             bundleId: "\(bundleID)Demo",
             deploymentTargets: ProjectInfo.deploymentTargets,
             buildableFolders: ["Demo/Sources"],
+            scripts: lintScripts,
             dependencies: [.target(implements)],
             settings: .settings(configurations: .default)
         )
