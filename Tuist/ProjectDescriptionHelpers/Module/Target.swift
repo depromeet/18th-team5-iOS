@@ -12,15 +12,6 @@ import ProjectDescription
 private let lintScripts: [TargetScript] = [
     .pre(
         script: """
-        if command -v swiftformat >/dev/null 2>&1; then
-            swiftformat . --quiet
-        fi
-        """,
-        name: "SwiftFormat",
-        basedOnDependencyAnalysis: false
-    ),
-    .pre(
-        script: """
         if command -v swiftlint >/dev/null 2>&1; then
             swiftlint lint --fix --quiet
             swiftlint lint --quiet
