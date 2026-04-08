@@ -1,10 +1,23 @@
+# ──────────────────────────────────────────────
+# 비활성화 규칙
+# ──────────────────────────────────────────────
+
 disabled_rules:
-  - trailing_whitespace
-  - function_body_length
-  - type_body_length
-  - file_length
-  - cyclomatic_complexity
-  - nesting
+  # [SwiftFormat 중복 방지] SwiftFormat이 자동 처리하는 규칙 — 커밋 시 pre-commit hook에서 수정됨
+  - trailing_whitespace    # SwiftFormat --trimwhitespace always로 처리
+  - redundant_return       # SwiftFormat redundantReturn 비활성화와 일치시킴 (명시적 return 허용)
+  - redundant_self         # SwiftFormat redundantSelf 비활성화와 일치시킴 (명시적 self 허용)
+
+  # [TCA 패턴 대응] The Composable Architecture 사용 시 구조적으로 길어지는 패턴 허용
+  - function_body_length   # Reducer의 body 프로퍼티가 Action 처리로 인해 길어질 수 있음
+  - type_body_length       # Reducer 구조체가 State, Action, body, Scope 등으로 커질 수 있음
+  - file_length            # Feature 단위로 Reducer + View가 한 파일에 구성될 수 있음
+  - cyclomatic_complexity  # Action의 switch-case 분기가 많아져 복잡도가 높아질 수 있음
+  - nesting                # Action 내부에 중첩 enum(child action 등)이 필요한 패턴이 빈번함
+
+# ──────────────────────────────────────────────
+# 옵트인 규칙
+# ──────────────────────────────────────────────
 
 opt_in_rules:
   - empty_count
@@ -16,6 +29,10 @@ opt_in_rules:
   - modifier_order
   - vertical_whitespace_closing_braces
   - sorted_imports
+
+# ──────────────────────────────────────────────
+# 규칙별 설정
+# ──────────────────────────────────────────────
 
 line_length:
   warning: 120
@@ -38,15 +55,24 @@ identifier_name:
     - y
     - i
 
+# ──────────────────────────────────────────────
+# 커스텀 규칙
+# ──────────────────────────────────────────────
+
 custom_rules:
   todo_without_assignee:
     name: "TODO/FIXME Without Assignee"
-    regex: '//\s*(TODO|FIXME):(?!.*-\s*@\w+)'
+    regex: '//\s*(TODO|FIXME):(?!.*-\s*@[가-힣a-zA-Z0-9_]+)'
     message: "TODO/FIXME에는 담당자를 명시해주세요. (예: // TODO: 내용 - @이름)"
     severity: warning
 
+# ──────────────────────────────────────────────
+# 제외 경로
+# ──────────────────────────────────────────────
+
 excluded:
   - Tuist
-  - Derived
   - .build
-  - "**/Generated"
+  - Tools
+  - Configs
+  - "**/Derived"

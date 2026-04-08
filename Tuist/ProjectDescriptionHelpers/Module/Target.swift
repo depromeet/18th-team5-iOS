@@ -9,11 +9,12 @@ import ProjectDescription
 
 // MARK: - Lint Scripts
 
+// 빌드 스크립트에서는 lint 경고 표시만 수행 (파일 수정 없음)
+// 자동 수정(--fix)은 pre-commit hook에서 처리하여 incremental build 안정성 확보
 private let lintScripts: [TargetScript] = [
     .pre(
         script: """
         if command -v swiftlint >/dev/null 2>&1; then
-            swiftlint lint --fix --quiet
             swiftlint lint --quiet
         fi
         """,
