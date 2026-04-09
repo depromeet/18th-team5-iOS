@@ -66,7 +66,7 @@ custom_rules:
 
   todo_without_assignee:
     name: "TODO/FIXME Without Assignee"
-    regex: '//\s*(TODO|FIXME):(?!.*-\s*@[가-힣a-zA-Z0-9_]+)'
+    regex: '//\s*(TODO|FIXME):(?!.*-\s*@[가-힣a-zA-Z0-9_.\-]+)'
     message: "TODO/FIXME에는 담당자를 명시해주세요. (예: // TODO: 내용 - @이름)"
     severity: warning
 

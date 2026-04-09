@@ -11,8 +11,9 @@ import ProjectDescription
 
 // 빌드 스크립트에서는 lint 경고 표시만 수행 (파일 수정 없음)
 // 자동 수정(--fix)은 pre-commit hook에서 처리하여 incremental build 안정성 확보
-private let lintScripts: [TargetScript] = [
-    .pre(
+// app 타겟에서만 ${SRCROOT} 전체를 린트하므로 다른 타겟에는 부착하지 않음
+private extension TargetScript {
+    static let lint: TargetScript = .pre(
         script: """
         if command -v swiftlint >/dev/null 2>&1; then
             swiftlint lint --quiet "${SRCROOT}"
@@ -20,8 +21,8 @@ private let lintScripts: [TargetScript] = [
         """,
         name: "SwiftLint",
         basedOnDependencyAnalysis: false
-    ),
-]
+    )
+}
 
 extension Target {
     static var app: Target {
@@ -34,7 +35,7 @@ extension Target {
             deploymentTargets: ProjectInfo.deploymentTargets,
             infoPlist: .file(path: "Info.plist"),
             buildableFolders: module.buildableFolders,
-            scripts: lintScripts,
+            scripts: [.lint],
             dependencies: module.dependencies,
             settings: .settings(configurations: .default)
         )
@@ -50,7 +51,6 @@ extension Module {
             bundleId: bundleID,
             deploymentTargets: ProjectInfo.deploymentTargets,
             buildableFolders: buildableFolders,
-            scripts: lintScripts,
             dependencies: dependencies,
             settings: .settings(configurations: .default)
         )
@@ -64,7 +64,6 @@ extension Module {
             bundleId: "\(bundleID)Tests",
             deploymentTargets: ProjectInfo.deploymentTargets,
             buildableFolders: ["Tests"],
-            scripts: lintScripts,
             dependencies: [.target(implements)],
             settings: .settings(configurations: .default)
         )
@@ -78,7 +77,6 @@ extension Module {
             bundleId: "\(bundleID)Demo",
             deploymentTargets: ProjectInfo.deploymentTargets,
             buildableFolders: ["Demo/Sources"],
-            scripts: lintScripts,
             dependencies: [.target(implements)],
             settings: .settings(configurations: .default)
         )

@@ -26,11 +26,17 @@ if ! command -v swiftlint >/dev/null 2>&1; then
     exit 1
 fi
 
-# SwiftFormat + SwiftLint 자동 수정 적용
+# 스테이징된 파일 목록을 배열로 변환 (공백 경로 안전)
+FILES=()
 while IFS= read -r file; do
-    if [ -f "$file" ]; then
-        swiftformat "$file" --quiet || exit 1
-        swiftlint lint --fix --quiet "$file" || exit 1
-        git add "$file"
-    fi
+    [ -f "$file" ] && FILES+=("$file")
 done <<< "$STAGED_SWIFT_FILES"
+
+if [ ${#FILES[@]} -eq 0 ]; then
+    exit 0
+fi
+
+# SwiftFormat + SwiftLint 자동 수정 적용 (배치 실행)
+swiftformat "${FILES[@]}" --quiet || exit 1
+swiftlint lint --fix --quiet -- "${FILES[@]}" || exit 1
+git add "${FILES[@]}"

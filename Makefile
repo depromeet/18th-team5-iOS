@@ -1,11 +1,15 @@
-.PHONY: setup generate clean reset
+.PHONY: generate setup clean reset
+
+generate:
+	eval "$$(mise activate bash --shims)" && tuist install
+	eval "$$(mise activate bash --shims)" && tuist generate
 
 setup:
 	@echo "🔧 개발 환경 설정을 시작합니다..."
 	@# 1. Homebrew 설치 확인 및 자동 설치
 	@if ! command -v brew >/dev/null 2>&1; then \
 		echo "📦 Homebrew 설치 중..."; \
-		/bin/bash -c "$$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"; \
+		NONINTERACTIVE=1 /bin/bash -c "$$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"; \
 		if [ -f /opt/homebrew/bin/brew ]; then \
 			eval "$$(/opt/homebrew/bin/brew shellenv)"; \
 		elif [ -f /usr/local/bin/brew ]; then \
@@ -34,10 +38,6 @@ setup:
 	@echo '  eval "$$(mise activate zsh)"'
 	@echo ""
 	@echo "추가 후 터미널을 재시작하거나 'source ~/.zshrc'를 실행해주세요."
-
-generate:
-	eval "$$(mise activate bash --shims)" && tuist install
-	eval "$$(mise activate bash --shims)" && tuist generate
 
 clean:
 	rm -rf Projects/**/*.xcodeproj
