@@ -1,0 +1,83 @@
+# ──────────────────────────────────────────────
+# 비활성화 규칙
+# ──────────────────────────────────────────────
+
+disabled_rules:
+  # [SwiftFormat 중복 방지] SwiftFormat이 자동 처리하는 규칙 — 커밋 시 pre-commit hook에서 수정됨
+  - trailing_whitespace    # SwiftFormat --trimwhitespace always로 처리
+  - direct_return          # SwiftFormat redundantReturn 비활성화와 일치시킴 (명시적 return 허용)
+
+  # [TCA 패턴 대응] The Composable Architecture 사용 시 구조적으로 길어지는 패턴 허용
+  - function_body_length   # Reducer의 body 프로퍼티가 Action 처리로 인해 길어질 수 있음
+  - type_body_length       # Reducer 구조체가 State, Action, body, Scope 등으로 커질 수 있음
+  - file_length            # Feature 단위로 Reducer + View가 한 파일에 구성될 수 있음
+  - cyclomatic_complexity  # Action의 switch-case 분기가 많아져 복잡도가 높아질 수 있음
+  - nesting                # Action 내부에 중첩 enum(child action 등)이 필요한 패턴이 빈번함
+
+# ──────────────────────────────────────────────
+# 옵트인 규칙
+# ──────────────────────────────────────────────
+
+opt_in_rules:
+  - empty_count
+  - closure_spacing
+  - contains_over_first_not_nil
+  - force_unwrapping
+  - implicitly_unwrapped_optional
+  - modifier_order
+  - vertical_whitespace_closing_braces
+  - sorted_imports
+
+# ──────────────────────────────────────────────
+# 규칙별 설정
+# ──────────────────────────────────────────────
+
+line_length:
+  warning: 120
+  error: 150
+  ignores_comments: true
+  ignores_urls: true
+
+type_name:
+  min_length: 3
+  max_length: 50
+
+identifier_name:
+  min_length:
+    warning: 2
+  max_length:
+    warning: 50
+  excluded:
+    - id
+    - x
+    - y
+    - i
+
+# ──────────────────────────────────────────────
+# 커스텀 규칙
+# ──────────────────────────────────────────────
+
+custom_rules:
+  no_fatal_error:
+    name: "fatalError 사용 금지"
+    regex: '\bfatalError\s*\('
+    message: "fatalError 대신 assert 또는 assertionFailure를 사용해주세요. fatalError는 Release 빌드에서도 크래시를 발생시킵니다."
+    severity: error
+
+  todo_without_assignee:
+    name: "TODO/FIXME Without Assignee"
+    regex: '//\s*(TODO|FIXME):(?!.*-\s*@[가-힣a-zA-Z0-9_.\-]+)'
+    message: "TODO/FIXME에는 담당자를 명시해주세요. (예: // TODO: 내용 - @이름)"
+    severity: warning
+
+# ──────────────────────────────────────────────
+# 제외 경로
+# ──────────────────────────────────────────────
+
+excluded:
+  - Tuist
+  - .build
+  - Tools
+  - Configs
+  - "**/Derived"
+  - "**/Generated"

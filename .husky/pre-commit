@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+. "$(dirname -- "$0")/_/husky.sh"
+
+# ──────────────────────────────────────────────
+# Pre-commit Hook: SwiftFormat + SwiftLint 자동 수정
+# ──────────────────────────────────────────────
+
+# mise 환경 활성화 (mise로 설치된 도구 사용)
+eval "$(mise activate bash --shims)" 2>/dev/null || true
+
+# 스테이징된 Swift 파일만 대상
+STAGED_SWIFT_FILES=$(git diff --cached --name-only --diff-filter=ACM | grep '\.swift$' || true)
+
+if [ -z "$STAGED_SWIFT_FILES" ]; then
+    exit 0
+fi
+
+# SwiftFormat, SwiftLint 설치 확인
+if ! command -v swiftformat >/dev/null 2>&1; then
+    echo "❌ SwiftFormat이 설치되어 있지 않습니다. 'make setup'을 실행해주세요."
+    exit 1
+fi
+
+if ! command -v swiftlint >/dev/null 2>&1; then
+    echo "❌ SwiftLint가 설치되어 있지 않습니다. 'make setup'을 실행해주세요."
+    exit 1
+fi
+
+# 스테이징된 파일 목록을 배열로 변환 (공백 경로 안전)
+FILES=()
+while IFS= read -r file; do
+    [ -f "$file" ] && FILES+=("$file")
+done <<< "$STAGED_SWIFT_FILES"
+
+if [ ${#FILES[@]} -eq 0 ]; then
+    exit 0
+fi
+
+# SwiftFormat + SwiftLint 자동 수정 적용 (배치 실행)
+swiftformat "${FILES[@]}" --quiet || exit 1
+swiftlint lint --fix --quiet -- "${FILES[@]}" || exit 1
+git add "${FILES[@]}"
