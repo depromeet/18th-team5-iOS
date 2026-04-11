@@ -1,8 +1,8 @@
 .PHONY: generate setup clean reset
 
 generate:
-	eval "$$(mise activate bash --shims)" && tuist install
-	eval "$$(mise activate bash --shims)" && tuist generate
+	@eval "$$(mise activate bash --shims)" && tuist install
+	@eval "$$(mise activate bash --shims)" && tuist generate
 
 setup:
 	@echo "🔧 개발 환경 설정을 시작합니다..."
@@ -40,12 +40,12 @@ setup:
 	@echo "추가 후 터미널을 재시작하거나 'source ~/.zshrc'를 실행해주세요."
 
 clean:
-	rm -rf Projects/**/*.xcodeproj
-	rm -rf Projects/**/Derived
-	rm -rf *.xcworkspace
+	@rm -rf Projects/**/*.xcodeproj
+	@rm -rf Projects/**/Derived
+	@rm -rf *.xcworkspace
 
 reset:
-	tuist clean
+	@tuist clean
 	@if [ -e ./Tuist/Package.resolved ] ; then \
 		rm Tuist/Package.resolved; \
 	fi
