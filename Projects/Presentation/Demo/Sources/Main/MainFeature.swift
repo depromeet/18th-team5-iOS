@@ -1,29 +1,23 @@
 //
-//  RootFeature.swift
+//  MainFeature.swift
 //  PresentationDemo
 //
-//  Created by 이정원 on 4/11/26.
+//  Created by 이정원 on 4/12/26.
 //  Copyright © 2026 Orange. All rights reserved.
 //
 
 import ComposableArchitecture
 
 @Reducer
-struct RootFeature {
+struct MainFeature {
     @ObservableState
-    struct State {
-        var path: Path.State = .signIn(.init())
-    }
+    struct State {}
 
     enum Action {
-        case path(Path.Action)
+        case signOutButtonTapped
     }
 
     var body: some ReducerOf<Self> {
-        Scope(state: \.path, action: \.path) {
-            Path()
-        }
-
         Reduce { _, _ in
             return .none
         }

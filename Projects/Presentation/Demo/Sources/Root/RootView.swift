@@ -17,6 +17,10 @@ struct RootView: View {
     }
 
     var body: some View {
-        Text(store.title)
+        if let store = store.scope(state: \.path.signIn, action: \.path.signIn) {
+            SignInView(store: store)
+        } else if let store = store.scope(state: \.path.main, action: \.path.main) {
+            MainView(store: store)
+        }
     }
 }
