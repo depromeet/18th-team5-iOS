@@ -30,7 +30,7 @@ private extension Module {
         case .app: [.firebaseRemoteConfig]
         case .presentation: [.composableArchitecture]
         case .domain: [.dependencies, .dependenciesMacros]
-        case .data: [.alamofire, .dependencies]
+        case .data: [.alamofire, .dependencies, .firebaseRemoteConfig]
         default: []
         }
     }
