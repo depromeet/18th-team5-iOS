@@ -6,9 +6,15 @@
 //  Copyright © 2026 Orange. All rights reserved.
 //
 
-import Foundation
+public struct LaunchConfig {
+    public let maintenance: Bool
+    public let minimumAppVersion: AppVersion
 
-struct LaunchConfig {
-    let maintenance: Bool
-    let minimumAppVersion: AppVersion
+    public init(
+        maintenance: Bool,
+        minimumAppVersion: AppVersion
+    ) {
+        self.maintenance = maintenance
+        self.minimumAppVersion = minimumAppVersion
+    }
 }

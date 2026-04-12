@@ -6,4 +6,12 @@
 //  Copyright © 2026 Orange. All rights reserved.
 //
 
-final class LaunchConfigRepository {}
+public final class LaunchConfigRepository {
+    public private(set) var fetch: () async throws -> LaunchConfig
+
+    public init(
+        fetch: @escaping () async throws -> LaunchConfig
+    ) {
+        self.fetch = fetch
+    }
+}

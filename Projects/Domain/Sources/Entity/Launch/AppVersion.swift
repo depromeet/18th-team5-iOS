@@ -8,13 +8,13 @@
 
 import Foundation
 
-struct AppVersion: Comparable {
-    let major: Int
-    let minor: Int
-    let patch: Int
+public struct AppVersion: Comparable {
+    public let major: Int
+    public let minor: Int
+    public let patch: Int
 }
 
-extension AppVersion {
+public extension AppVersion {
     static func < (lhs: AppVersion, rhs: AppVersion) -> Bool {
         if lhs.major != rhs.major {
             return lhs.major < rhs.major
@@ -26,7 +26,7 @@ extension AppVersion {
     }
 }
 
-extension AppVersion {
+public extension AppVersion {
     static var current: AppVersion? {
         guard let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String
         else {
