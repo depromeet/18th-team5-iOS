@@ -13,9 +13,7 @@ struct MainFeature {
     @ObservableState
     struct State {}
 
-    enum Action {
-        case signOutButtonTapped
-    }
+    enum Action {}
 
     var body: some ReducerOf<Self> {
         Reduce { _, _ in
