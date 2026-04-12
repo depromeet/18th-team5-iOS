@@ -12,7 +12,7 @@ import ComposableArchitecture
 struct RootFeature {
     @ObservableState
     struct State {
-        var path: Path.State = .signIn(.init())
+        var path: Path.State = .onboarding(.init())
     }
 
     enum Action {

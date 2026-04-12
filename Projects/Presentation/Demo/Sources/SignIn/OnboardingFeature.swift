@@ -1,5 +1,5 @@
 //
-//  SignInFeature.swift
+//  OnboardingFeature.swift
 //  PresentationDemo
 //
 //  Created by 이정원 on 4/12/26.
@@ -9,12 +9,12 @@
 import ComposableArchitecture
 
 @Reducer
-struct SignInFeature {
+struct OnboardingFeature {
     @ObservableState
     struct State {}
 
     enum Action {
-        case signInButtonTapped
+        case doneButtonTapped
     }
 
     var body: some ReducerOf<Self> {

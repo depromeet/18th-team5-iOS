@@ -1,5 +1,5 @@
 //
-//  SignInView.swift
+//  OnboardingView.swift
 //  PresentationDemo
 //
 //  Created by 이정원 on 4/12/26.
@@ -9,19 +9,19 @@
 import ComposableArchitecture
 import SwiftUI
 
-struct SignInView: View {
-    private let store: StoreOf<SignInFeature>
+struct OnboardingView: View {
+    private let store: StoreOf<OnboardingFeature>
 
-    init(store: StoreOf<SignInFeature>) {
+    init(store: StoreOf<OnboardingFeature>) {
         self.store = store
     }
 
     var body: some View {
         VStack(spacing: 20) {
-            Text("로그인 화면")
+            Text("온보딩 화면")
 
-            Button("로그인") {
-                store.send(.signInButtonTapped)
+            Button("확인") {
+                store.send(.doneButtonTapped)
             }
         }
     }

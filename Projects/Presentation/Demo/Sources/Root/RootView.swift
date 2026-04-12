@@ -17,8 +17,8 @@ struct RootView: View {
     }
 
     var body: some View {
-        if let store = store.scope(state: \.path.signIn, action: \.path.signIn) {
-            SignInView(store: store)
+        if let store = store.scope(state: \.path.onboarding, action: \.path.onboarding) {
+            OnboardingView(store: store)
         } else if let store = store.scope(state: \.path.main, action: \.path.main) {
             MainView(store: store)
         }
