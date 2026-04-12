@@ -12,7 +12,12 @@ import ComposableArchitecture
 struct SplashFeature {
     @ObservableState
     struct State {
-        var timeLeft: Int = 3
+        let duration: Int = 3
+        var timeLeft: Int
+
+        init() {
+            self.timeLeft = duration
+        }
     }
 
     enum Action {
@@ -25,8 +30,8 @@ struct SplashFeature {
         Reduce { state, action in
             switch action {
             case .onAppear:
-                return .run { send in
-                    for _ in 1 ... 3 {
+                return .run { [state] send in
+                    for _ in 1 ... state.duration {
                         try await Task.sleep(for: .seconds(1))
                         await send(.timeElapsed)
                     }
