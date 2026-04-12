@@ -6,12 +6,31 @@
 //  Copyright © 2026 Orange. All rights reserved.
 //
 
+import Core
 import Foundation
 
 public struct AppVersion: Comparable {
     public let major: Int
     public let minor: Int
     public let patch: Int
+
+    public init(major: Int, minor: Int, patch: Int) {
+        self.major = major
+        self.minor = minor
+        self.patch = patch
+    }
+
+    public init?(version: String) {
+        let versionParts = version.split(separator: ".").compactMap { Int($0) }
+        guard let major = versionParts[safe: 0],
+              let minor = versionParts[safe: 1],
+              let patch = versionParts[safe: 2]
+        else { return nil }
+
+        self.major = major
+        self.minor = minor
+        self.patch = patch
+    }
 }
 
 public extension AppVersion {
