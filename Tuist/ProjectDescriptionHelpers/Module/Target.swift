@@ -7,6 +7,36 @@
 
 import ProjectDescription
 
+// MARK: - Lint Scripts
+
+// 빌드 스크립트에서는 lint 경고 표시만 수행 (파일 수정 없음)
+// 자동 수정(--fix)은 pre-commit hook에서 처리하여 incremental build 안정성 확보
+// app 타겟에서만 ${SRCROOT} 전체를 린트하므로 다른 타겟에는 부착하지 않음
+private extension TargetScript {
+    static let lint: TargetScript = .pre(
+        script: """
+        if command -v swiftlint >/dev/null 2>&1; then
+            swiftlint lint --quiet "${SRCROOT}"
+        fi
+        """,
+        name: "SwiftLint",
+        basedOnDependencyAnalysis: false
+    )
+    
+    static let googleServiceInfo: TargetScript = .pre(
+        script: """
+        if [ "${CONFIGURATION}" = "Dev" ]; then
+            cp cp ${PROJECT_DIR}/../../Secrets/GoogleService-Info/Dev/GoogleService-Info.plist \
+               ${BUILT_PRODUCTS_DIR}/${PRODUCT_NAME}.app/GoogleService-Info.plist
+        else
+            cp ${PROJECT_DIR}/../../Secrets/GoogleService-Info/Dev/GoogleService-Info.plist \
+               ${BUILT_PRODUCTS_DIR}/${PRODUCT_NAME}.app/GoogleService-Info.plist
+        fi
+        """,
+        name: "Firebase Config Switch"
+    )
+}
+
 extension Target {
     static var app: Target {
         let module = Module.app
@@ -18,7 +48,10 @@ extension Target {
             deploymentTargets: ProjectInfo.deploymentTargets,
             infoPlist: .file(path: "Info.plist"),
             buildableFolders: module.buildableFolders,
-            scripts: [.lint],
+            scripts: [
+                .lint,
+                .googleServiceInfo,
+            ],
             dependencies: module.dependencies,
             settings: .settings(configurations: .default)
         )
