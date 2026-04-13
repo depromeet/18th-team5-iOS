@@ -39,10 +39,10 @@ struct SplashFeature {
             case .timeElapsed:
                 state.timeLeft -= 1
 
-                switch state.timeLeft == 0 {
-                case true: return .send(.splashDone)
-                case false: return .none
+                if state.timeLeft == 0 {
+                    return .send(.splashDone)
                 }
+                return .none
             case .splashDone: return .none
             }
         }
