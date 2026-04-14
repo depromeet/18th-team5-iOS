@@ -17,12 +17,10 @@ struct RootView: View {
     }
 
     var body: some View {
-        if let store = store.scope(state: \.path.splash, action: \.path.splash) {
-            SplashView(store: store)
-        } else if let store = store.scope(state: \.path.onboarding, action: \.path.onboarding) {
-            OnboardingView(store: store)
-        } else if let store = store.scope(state: \.path.main, action: \.path.main) {
-            MainView(store: store)
+        switch store.scope(state: \.path, action: \.path).case {
+        case let .splash(store): SplashView(store: store)
+        case let .onboarding(store): OnboardingView(store: store)
+        case let .main(store): MainView(store: store)
         }
     }
 }

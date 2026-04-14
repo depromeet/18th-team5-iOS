@@ -21,11 +21,29 @@ struct RootFeature {
 
     var body: some ReducerOf<Self> {
         Scope(state: \.path, action: \.path) {
-            Path()
+            Path.body
         }
 
-        Reduce { _, _ in
-            return .none
+        Reduce { state, action in
+            switch action {
+            case .path(.splash(.splashDone)):
+                state.path = .onboarding(.init())
+                return .none
+            case .path(.onboarding(.doneButtonTapped)):
+                state.path = .main(.init())
+                return .none
+            default:
+                return .none
+            }
         }
+    }
+}
+
+extension RootFeature {
+    @Reducer
+    enum Path {
+        case splash(SplashFeature)
+        case onboarding(OnboardingFeature)
+        case main(MainFeature)
     }
 }
