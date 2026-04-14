@@ -27,6 +27,8 @@ private extension Module {
     
     var dependentExternalModules: [ExternalModule] {
         switch self {
+        case .presentation: [.composableArchitecture]
+        case .domain: [.dependencies]
         case .data: [.alamofire]
         default: []
         }
