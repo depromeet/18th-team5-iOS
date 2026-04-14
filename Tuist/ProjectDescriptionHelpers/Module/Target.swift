@@ -7,23 +7,6 @@
 
 import ProjectDescription
 
-// MARK: - Lint Scripts
-
-// 빌드 스크립트에서는 lint 경고 표시만 수행 (파일 수정 없음)
-// 자동 수정(--fix)은 pre-commit hook에서 처리하여 incremental build 안정성 확보
-// app 타겟에서만 ${SRCROOT} 전체를 린트하므로 다른 타겟에는 부착하지 않음
-private extension TargetScript {
-    static let lint: TargetScript = .pre(
-        script: """
-        if command -v swiftlint >/dev/null 2>&1; then
-            swiftlint lint --quiet "${SRCROOT}"
-        fi
-        """,
-        name: "SwiftLint",
-        basedOnDependencyAnalysis: false
-    )
-}
-
 extension Target {
     static var app: Target {
         let module = Module.app
@@ -76,6 +59,7 @@ extension Module {
             product: .app,
             bundleId: "\(bundleID)Demo",
             deploymentTargets: ProjectInfo.deploymentTargets,
+            infoPlist: .demo,
             buildableFolders: ["Demo/Sources"],
             dependencies: [.target(implements)],
             settings: .settings(configurations: .default)
@@ -97,4 +81,32 @@ private extension Module {
         default: ["Sources"]
         }
     }
+}
+
+// MARK: - Lint Scripts
+
+// 빌드 스크립트에서는 lint 경고 표시만 수행 (파일 수정 없음)
+// 자동 수정(--fix)은 pre-commit hook에서 처리하여 incremental build 안정성 확보
+// app 타겟에서만 ${SRCROOT} 전체를 린트하므로 다른 타겟에는 부착하지 않음
+private extension TargetScript {
+    static let lint: TargetScript = .pre(
+        script: """
+        if command -v swiftlint >/dev/null 2>&1; then
+            swiftlint lint --quiet "${SRCROOT}"
+        fi
+        """,
+        name: "SwiftLint",
+        basedOnDependencyAnalysis: false
+    )
+}
+
+private extension InfoPlist {
+    static let demo: InfoPlist = .extendingDefault(
+        with: [
+            "UILaunchScreen": .dictionary([:]),
+            "UISupportedInterfaceOrientations": .array([
+                .string("UIInterfaceOrientationPortrait"),
+            ])
+        ]
+    )
 }
