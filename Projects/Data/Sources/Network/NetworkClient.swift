@@ -7,7 +7,6 @@
 //
 
 import Alamofire
-import Core
 import Foundation
 
 final class NetworkClient {

@@ -22,17 +22,25 @@ public final class ExampleRepositoryImpl: ExampleRepository {
     }
 
     public func fetchItems() async throws -> [ExampleItem] {
-        let dtos: [ExampleItemResponseDTO] = try await client.request(
-            ExampleEndpoint.fetchItems
-        )
-        return dtos.map { $0.toDomain() }
+        do {
+            let dtos: [ExampleItemResponseDTO] = try await client.request(
+                ExampleEndpoint.fetchItems
+            )
+            return dtos.map { $0.toDomain() }
+        } catch {
+            throw error.toDomainError()
+        }
     }
 
     public func fetchDetail(id: Int) async throws -> ExampleDetail {
-        let dto: ExampleDetailResponseDTO = try await client.request(
-            ExampleEndpoint.fetchDetail(id: id)
-        )
-        return dto.toDomain()
+        do {
+            let dto: ExampleDetailResponseDTO = try await client.request(
+                ExampleEndpoint.fetchDetail(id: id)
+            )
+            return dto.toDomain()
+        } catch {
+            throw error.toDomainError()
+        }
     }
 
     public func createItem(
@@ -40,32 +48,66 @@ public final class ExampleRepositoryImpl: ExampleRepository {
         content: String,
         category: ExampleDetail.Category
     ) async throws -> ExampleDetail {
-        let requestDTO = CreateExampleRequestDTO(
-            title: title,
-            content: content,
-            category: category.rawValue
-        )
-        let dto: ExampleDetailResponseDTO = try await client.request(
-            ExampleEndpoint.createItem(body: requestDTO)
-        )
-        return dto.toDomain()
+        do {
+            let requestDTO = CreateExampleRequestDTO(
+                title: title,
+                content: content,
+                category: category.rawValue
+            )
+            let dto: ExampleDetailResponseDTO = try await client.request(
+                ExampleEndpoint.createItem(body: requestDTO)
+            )
+            return dto.toDomain()
+        } catch {
+            throw error.toDomainError()
+        }
     }
 
     public func updateItem(id: Int, title: String, isCompleted: Bool) async throws -> ExampleItem {
-        let requestDTO = UpdateExampleRequestDTO(
-            title: title,
-            isCompleted: isCompleted
-        )
-        let dto: ExampleItemResponseDTO = try await client.request(
-            ExampleEndpoint.updateItem(id: id, body: requestDTO)
-        )
-        return dto.toDomain()
+        do {
+            let requestDTO = UpdateExampleRequestDTO(
+                title: title,
+                isCompleted: isCompleted
+            )
+            let dto: ExampleItemResponseDTO = try await client.request(
+                ExampleEndpoint.updateItem(id: id, body: requestDTO)
+            )
+            return dto.toDomain()
+        } catch {
+            throw error.toDomainError()
+        }
     }
 
     public func deleteItem(id: Int) async throws {
-        let _: EmptyResponse = try await client.request(
-            ExampleEndpoint.deleteItem(id: id)
-        )
+        do {
+            let _: EmptyResponse = try await client.request(
+                ExampleEndpoint.deleteItem(id: id)
+            )
+        } catch {
+            throw error.toDomainError()
+        }
+    }
+}
+
+// MARK: - NetworkError → DomainError 매핑
+
+private extension Error {
+    func toDomainError() -> DomainError {
+        guard let networkError = self as? NetworkError else {
+            return .unknown(localizedDescription)
+        }
+        switch networkError {
+        case .invalidURL:
+            return .invalidRequest
+        case let .requestFailed(statusCode):
+            return .serverError(statusCode: statusCode)
+        case .decodingFailed:
+            return .decodingFailed
+        case .networkUnavailable:
+            return .networkUnavailable
+        case let .unknown(message):
+            return .unknown(message)
+        }
     }
 }
 
