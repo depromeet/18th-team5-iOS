@@ -6,7 +6,6 @@
 //  Copyright © 2026 Orange. All rights reserved.
 //
 
-import Domain
 import Foundation
 
 /// POST 요청 Body DTO 예시 - Encodable 사용

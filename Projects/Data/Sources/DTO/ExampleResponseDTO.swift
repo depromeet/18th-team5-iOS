@@ -54,9 +54,9 @@ struct ExampleDetailResponseDTO: Decodable {
 }
 
 extension ExampleDetailResponseDTO {
-    func toDomain() -> ExampleDetail {
-        let dateFormatter = ISO8601DateFormatter()
+    private static let iso8601Formatter = ISO8601DateFormatter()
 
+    func toDomain() -> ExampleDetail {
         return ExampleDetail(
             id: id,
             title: title,
@@ -64,7 +64,7 @@ extension ExampleDetailResponseDTO {
             category: ExampleDetail.Category(rawValue: category) ?? .general,
             tags: tags,
             imageURL: imageURL.flatMap { URL(string: $0) },
-            createdAt: dateFormatter.date(from: createdAt) ?? Date()
+            createdAt: Self.iso8601Formatter.date(from: createdAt) ?? Date()
         )
     }
 }

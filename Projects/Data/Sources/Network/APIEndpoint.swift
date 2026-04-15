@@ -20,7 +20,9 @@ protocol APIEndpoint: URLRequestConvertible {
 
 extension APIEndpoint {
     var baseURL: String {
-        guard let url = Bundle.main.object(forInfoDictionaryKey: "BaseURL") as? String else {
+        guard let url = Bundle.main.object(forInfoDictionaryKey: "BaseURL") as? String,
+              !url.isEmpty else {
+            assertionFailure("Info.plist에 BaseURL이 설정되지 않았습니다. 빌드 설정을 확인하세요.")
             return ""
         }
         return url

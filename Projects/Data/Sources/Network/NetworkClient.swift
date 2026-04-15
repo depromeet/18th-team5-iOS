@@ -13,7 +13,7 @@ final class NetworkClient {
     static let shared = NetworkClient()
     private let session: Session
 
-    private init(session: Session = .default) {
+    init(session: Session = .default) {
         self.session = session
     }
 
@@ -22,6 +22,20 @@ final class NetworkClient {
             return try await session.request(endpoint)
                 .validate(statusCode: 200 ..< 300)
                 .serializingDecodable(T.self)
+                .value
+        } catch let afError as AFError {
+            throw afError.toNetworkError()
+        } catch {
+            throw NetworkError.unknown(error.localizedDescription)
+        }
+    }
+
+    /// 빈 응답(204 No Content 등)을 처리하기 위한 오버로드
+    func requestEmpty(_ endpoint: APIEndpoint) async throws {
+        do {
+            _ = try await session.request(endpoint)
+                .validate(statusCode: 200 ..< 300)
+                .serializingData(emptyResponseCodes: [200, 204])
                 .value
         } catch let afError as AFError {
             throw afError.toNetworkError()

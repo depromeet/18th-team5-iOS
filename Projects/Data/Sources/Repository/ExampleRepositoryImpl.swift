@@ -13,11 +13,7 @@ import Foundation
 public final class ExampleRepositoryImpl: ExampleRepository {
     private let client: NetworkClient
 
-    public init() {
-        self.client = .shared
-    }
-
-    init(client: NetworkClient) {
+    public init(client: NetworkClient = .shared) {
         self.client = client
     }
 
@@ -80,7 +76,7 @@ public final class ExampleRepositoryImpl: ExampleRepository {
 
     public func deleteItem(id: Int) async throws {
         do {
-            let _: EmptyResponse = try await client.request(
+            try await client.requestEmpty(
                 ExampleEndpoint.deleteItem(id: id)
             )
         } catch {
@@ -110,6 +106,3 @@ private extension Error {
         }
     }
 }
-
-/// DELETE 등 빈 응답을 처리하기 위한 타입
-struct EmptyResponse: Decodable {}

@@ -68,6 +68,7 @@ private extension Encodable {
     func toDictionary() -> Parameters? {
         guard let data = try? JSONEncoder().encode(self),
               let dict = try? JSONSerialization.jsonObject(with: data) as? Parameters else {
+            assertionFailure("Encodable → Dictionary 변환에 실패했습니다: \(type(of: self))")
             return nil
         }
         return dict
