@@ -9,17 +9,10 @@
 import Domain
 import Foundation
 
-/// 목록 조회 응답 DTO 예시 - 간단한 필드 매핑
 struct ExampleItemResponseDTO: Decodable {
     let id: Int
     let title: String
     let isCompleted: Bool
-
-    enum CodingKeys: String, CodingKey {
-        case id
-        case title
-        case isCompleted = "is_completed"
-    }
 }
 
 extension ExampleItemResponseDTO {
@@ -32,39 +25,32 @@ extension ExampleItemResponseDTO {
     }
 }
 
-/// 상세 조회 응답 DTO 예시 - 중첩 구조, Optional, Date 변환 포함
 struct ExampleDetailResponseDTO: Decodable {
     let id: Int
     let title: String
     let content: String
     let category: String
     let tags: [String]
-    let imageURL: String?
+    let imageUrl: String?
     let createdAt: String
-
-    enum CodingKeys: String, CodingKey {
-        case id
-        case title
-        case content
-        case category
-        case tags
-        case imageURL = "image_url"
-        case createdAt = "created_at"
-    }
 }
 
 extension ExampleDetailResponseDTO {
     private static let iso8601Formatter = ISO8601DateFormatter()
 
-    func toDomain() -> ExampleDetail {
+    func toDomain() throws -> ExampleDetail {
+        guard let parsedDate = Self.iso8601Formatter.date(from: createdAt) else {
+            throw NetworkError.decodingFailed
+        }
+
         return ExampleDetail(
             id: id,
             title: title,
             content: content,
             category: ExampleDetail.Category(rawValue: category) ?? .general,
             tags: tags,
-            imageURL: imageURL.flatMap { URL(string: $0) },
-            createdAt: Self.iso8601Formatter.date(from: createdAt) ?? Date()
+            imageURL: imageUrl.flatMap { URL(string: $0) },
+            createdAt: parsedDate
         )
     }
 }

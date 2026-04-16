@@ -9,17 +9,11 @@
 import Alamofire
 import Foundation
 
-/// Endpoint 예시 - GET, POST, PUT, DELETE 전체 HTTP 메서드 포함
 enum ExampleEndpoint: APIEndpoint {
-    /// 목록 조회
     case fetchItems
-    /// 상세 조회
     case fetchDetail(id: Int)
-    /// 생성
     case createItem(body: CreateExampleRequestDTO)
-    /// 수정
     case updateItem(id: Int, body: UpdateExampleRequestDTO)
-    /// 삭제
     case deleteItem(id: Int)
 
     var path: String {
@@ -50,27 +44,14 @@ enum ExampleEndpoint: APIEndpoint {
         }
     }
 
-    var parameters: Parameters? {
+    func encodedBodyData() throws -> Data? {
         switch self {
         case let .createItem(body):
-            return body.toDictionary()
+            return try JSONEncoder().encode(body)
         case let .updateItem(_, body):
-            return body.toDictionary()
+            return try JSONEncoder().encode(body)
         default:
             return nil
         }
-    }
-}
-
-// MARK: - Encodable을 Parameters(Dictionary)로 변환하는 헬퍼
-
-private extension Encodable {
-    func toDictionary() -> Parameters? {
-        guard let data = try? JSONEncoder().encode(self),
-              let dict = try? JSONSerialization.jsonObject(with: data) as? Parameters else {
-            assertionFailure("Encodable → Dictionary 변환에 실패했습니다: \(type(of: self))")
-            return nil
-        }
-        return dict
     }
 }

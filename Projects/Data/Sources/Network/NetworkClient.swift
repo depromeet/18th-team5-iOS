@@ -7,45 +7,79 @@
 //
 
 import Alamofire
+import Dependencies
+import DependenciesMacros
 import Foundation
 
-final class NetworkClient {
-    static let shared = NetworkClient()
-    private let session: Session
+/// @DependencyClient 매크로가 제네릭 메서드를 지원하지 않으므로 Data를 반환하고, 편의 메서드에서 디코딩
+@DependencyClient
+struct NetworkClient: Sendable {
+    var requestData: @Sendable (_ endpoint: any APIEndpoint) async throws -> Data
+    var requestEmpty: @Sendable (_ endpoint: any APIEndpoint) async throws -> Void
+}
 
-    init(session: Session = .default) {
-        self.session = session
-    }
+// MARK: - 편의 디코딩 메서드
 
-    func request<T: Decodable>(_ endpoint: APIEndpoint) async throws -> T {
+extension NetworkClient {
+    func request<T: Decodable>(_ endpoint: any APIEndpoint) async throws -> T {
+        let data = try await requestData(endpoint)
         do {
-            return try await session.request(endpoint)
-                .validate(statusCode: 200 ..< 300)
-                .serializingDecodable(T.self)
-                .value
-        } catch let afError as AFError {
-            throw afError.toNetworkError()
+            let decoder = JSONDecoder()
+            decoder.keyDecodingStrategy = .convertFromSnakeCase
+            return try decoder.decode(T.self, from: data)
         } catch {
-            throw NetworkError.unknown(error.localizedDescription)
-        }
-    }
-
-    /// 빈 응답(204 No Content 등)을 처리하기 위한 오버로드
-    func requestEmpty(_ endpoint: APIEndpoint) async throws {
-        do {
-            _ = try await session.request(endpoint)
-                .validate(statusCode: 200 ..< 300)
-                .serializingData(emptyResponseCodes: [200, 204])
-                .value
-        } catch let afError as AFError {
-            throw afError.toNetworkError()
-        } catch {
-            throw NetworkError.unknown(error.localizedDescription)
+            throw NetworkError.decodingFailed
         }
     }
 }
 
-private extension AFError {
+// MARK: - DependencyKey
+
+extension NetworkClient: DependencyKey {
+    static let liveValue = NetworkClient(
+        requestData: { endpoint in
+            let urlRequest = try endpoint.asURLRequest()
+            do {
+                return try await AF.request(urlRequest)
+                    .validate(statusCode: 200 ..< 300)
+                    .serializingData()
+                    .value
+            } catch let afError as AFError {
+                throw afError.toNetworkError()
+            } catch let networkError as NetworkError {
+                throw networkError
+            } catch {
+                throw NetworkError.unknown(error.localizedDescription)
+            }
+        },
+        requestEmpty: { endpoint in
+            let urlRequest = try endpoint.asURLRequest()
+            do {
+                _ = try await AF.request(urlRequest)
+                    .validate(statusCode: 200 ..< 300)
+                    .serializingData(emptyResponseCodes: [200, 204])
+                    .value
+            } catch let afError as AFError {
+                throw afError.toNetworkError()
+            } catch let networkError as NetworkError {
+                throw networkError
+            } catch {
+                throw NetworkError.unknown(error.localizedDescription)
+            }
+        }
+    )
+}
+
+extension DependencyValues {
+    var networkClient: NetworkClient {
+        get { self[NetworkClient.self] }
+        set { self[NetworkClient.self] = newValue }
+    }
+}
+
+// MARK: - AFError 변환
+
+extension AFError {
     func toNetworkError() -> NetworkError {
         switch self {
         case let .responseValidationFailed(reason):

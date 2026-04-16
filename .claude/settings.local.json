@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(tuist generate:*)",
+      "Bash(tuist graph:*)",
+      "Bash(head -10 MoviesDomain/UseCases/*.swift)",
+      "Bash(head -10 AnimeDomain/UseCases/*.swift)",
+      "Bash(gh pr:*)",
+      "WebSearch",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:pointfreeco.github.io)",
+      "WebFetch(domain:swiftinit.org)",
+      "Bash(gh api:*)",
+      "WebFetch(domain:swiftpackageindex.com)"
+    ]
+  }
+}

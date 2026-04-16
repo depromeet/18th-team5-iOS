@@ -6,25 +6,39 @@
 //  Copyright © 2026 Orange. All rights reserved.
 //
 
+import Dependencies
+import DependenciesMacros
 import Foundation
 
-/// UseCase 예시 - 데이터 생성 (POST에 대응)
-public struct CreateExampleItemUseCase {
-    private let repository: ExampleRepository
+@DependencyClient
+public struct CreateExampleItemUseCase: Sendable {
+    public var execute: @Sendable (_ title: String, _ content: String, _ category: ExampleDetail.Category) async throws
+        -> ExampleDetail
+}
 
-    public init(repository: ExampleRepository) {
-        self.repository = repository
-    }
+// MARK: - TestDependencyKey
 
-    public func execute(
-        title: String,
-        content: String,
-        category: ExampleDetail.Category
-    ) async throws -> ExampleDetail {
-        try await repository.createItem(
-            title: title,
-            content: content,
-            category: category
-        )
+extension CreateExampleItemUseCase: TestDependencyKey {
+    public static let testValue = CreateExampleItemUseCase()
+
+    public static let previewValue = CreateExampleItemUseCase(
+        execute: { title, content, category in
+            ExampleDetail(
+                id: Int.random(in: 100 ... 999),
+                title: title,
+                content: content,
+                category: category,
+                tags: [],
+                imageURL: nil,
+                createdAt: Date()
+            )
+        }
+    )
+}
+
+public extension DependencyValues {
+    var createExampleItemUseCase: CreateExampleItemUseCase {
+        get { self[CreateExampleItemUseCase.self] }
+        set { self[CreateExampleItemUseCase.self] = newValue }
     }
 }

@@ -8,8 +8,7 @@
 
 import Foundation
 
-/// 기본적인 Entity 예시 - 간단한 값 타입
-public struct ExampleItem: Equatable {
+public struct ExampleItem: Equatable, Sendable {
     public let id: Int
     public let title: String
     public let isCompleted: Bool

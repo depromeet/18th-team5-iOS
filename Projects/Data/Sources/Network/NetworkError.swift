@@ -8,9 +8,9 @@
 
 import Foundation
 
-/// Data 계층 내부에서만 사용하는 네트워크 에러 타입
 enum NetworkError: Error, Equatable {
     case invalidURL
+    case encodingFailed
     case requestFailed(statusCode: Int)
     case decodingFailed
     case networkUnavailable

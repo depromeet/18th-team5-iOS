@@ -6,22 +6,33 @@
 //  Copyright © 2026 Orange. All rights reserved.
 //
 
+import Dependencies
+import DependenciesMacros
 import Foundation
 
-/// Repository 프로토콜 예시 - CRUD 전체 케이스 포함
-public protocol ExampleRepository {
-    /// 목록 조회 (GET)
-    func fetchItems() async throws -> [ExampleItem]
+/// Protocol 대신 struct-of-closures 패턴으로 개별 엔드포인트 단위의 테스트 오버라이드 지원
+@DependencyClient
+public struct ExampleRepository: Sendable {
+    public var fetchItems: @Sendable () async throws -> [ExampleItem] = { [] }
+    public var fetchDetail: @Sendable (_ id: Int) async throws -> ExampleDetail
+    public var createItem: @Sendable (
+        _ title: String,
+        _ content: String,
+        _ category: ExampleDetail.Category
+    ) async throws -> ExampleDetail
+    public var updateItem: @Sendable (_ id: Int, _ title: String, _ isCompleted: Bool) async throws -> ExampleItem
+    public var deleteItem: @Sendable (_ id: Int) async throws -> Void
+}
 
-    /// 단건 상세 조회 (GET)
-    func fetchDetail(id: Int) async throws -> ExampleDetail
+// MARK: - TestDependencyKey
 
-    /// 생성 (POST)
-    func createItem(title: String, content: String, category: ExampleDetail.Category) async throws -> ExampleDetail
+extension ExampleRepository: TestDependencyKey {
+    public static let testValue = ExampleRepository()
+}
 
-    /// 수정 (PUT)
-    func updateItem(id: Int, title: String, isCompleted: Bool) async throws -> ExampleItem
-
-    /// 삭제 (DELETE)
-    func deleteItem(id: Int) async throws
+public extension DependencyValues {
+    var exampleRepository: ExampleRepository {
+        get { self[ExampleRepository.self] }
+        set { self[ExampleRepository.self] = newValue }
+    }
 }

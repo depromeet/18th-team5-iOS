@@ -8,8 +8,7 @@
 
 import Foundation
 
-/// 복잡한 Entity 예시 - Optional, 중첩 타입, Date 포함
-public struct ExampleDetail: Equatable {
+public struct ExampleDetail: Equatable, Sendable {
     public let id: Int
     public let title: String
     public let content: String
@@ -38,8 +37,7 @@ public struct ExampleDetail: Equatable {
 }
 
 public extension ExampleDetail {
-    /// 중첩 enum 예시
-    enum Category: String, Equatable {
+    enum Category: String, Equatable, Sendable {
         case general
         case important
         case archived
