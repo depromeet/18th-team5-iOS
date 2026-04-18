@@ -16,8 +16,8 @@ protocol APIEndpoint: URLRequestConvertible {
     var headers: HTTPHeaders? { get }
     var queryItems: [URLQueryItem]? { get }
 
-    /// 각 Endpoint에서 concrete 타입을 직접 인코딩하므로 타입 이레이저 불필요
-    func encodedBodyData() throws -> Data?
+    /// body가 있는 경우 Encodable 타입을 반환하면 extension에서 자동 인코딩
+    var body: Encodable? { get }
 }
 
 extension APIEndpoint {
@@ -38,7 +38,7 @@ extension APIEndpoint {
         nil
     }
 
-    func encodedBodyData() throws -> Data? {
+    var body: Encodable? {
         nil
     }
 
@@ -61,15 +61,29 @@ extension APIEndpoint {
         request.method = method
         request.headers = headers ?? .default
 
-        do {
-            if let bodyData = try encodedBodyData() {
-                request.httpBody = bodyData
+        if let body {
+            do {
+                request.httpBody = try JSONEncoder().encode(AnyEncodable(body))
                 request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+            } catch {
+                throw NetworkError.encodingFailed
             }
-        } catch {
-            throw NetworkError.encodingFailed
         }
 
         return request
+    }
+}
+
+// MARK: - Encodable 타입 이레이저
+
+private struct AnyEncodable: Encodable {
+    private let encodeClosure: (Encoder) throws -> Void
+
+    init(_ value: Encodable) {
+        self.encodeClosure = value.encode(to:)
+    }
+
+    func encode(to encoder: Encoder) throws {
+        try encodeClosure(encoder)
     }
 }

@@ -38,36 +38,32 @@ extension NetworkClient {
 extension NetworkClient: DependencyKey {
     static let liveValue = NetworkClient(
         requestData: { endpoint in
-            let urlRequest = try endpoint.asURLRequest()
-            do {
-                return try await AF.request(urlRequest)
-                    .validate(statusCode: 200 ..< 300)
-                    .serializingData()
-                    .value
-            } catch let afError as AFError {
-                throw afError.toNetworkError()
-            } catch let networkError as NetworkError {
-                throw networkError
-            } catch {
-                throw NetworkError.unknown(error.localizedDescription)
-            }
+            try await performRequest(endpoint: endpoint)
         },
         requestEmpty: { endpoint in
-            let urlRequest = try endpoint.asURLRequest()
-            do {
-                _ = try await AF.request(urlRequest)
-                    .validate(statusCode: 200 ..< 300)
-                    .serializingData(emptyResponseCodes: [200, 204])
-                    .value
-            } catch let afError as AFError {
-                throw afError.toNetworkError()
-            } catch let networkError as NetworkError {
-                throw networkError
-            } catch {
-                throw NetworkError.unknown(error.localizedDescription)
-            }
+            _ = try await performRequest(endpoint: endpoint, emptyResponseCodes: [200, 204])
         }
     )
+
+    /// requestData/requestEmpty 공통 네트워크 요청 로직
+    private static func performRequest(
+        endpoint: any APIEndpoint,
+        emptyResponseCodes: Set<Int> = []
+    ) async throws -> Data {
+        let urlRequest = try endpoint.asURLRequest()
+        do {
+            return try await AF.request(urlRequest)
+                .validate(statusCode: 200 ..< 300)
+                .serializingData(emptyResponseCodes: emptyResponseCodes)
+                .value
+        } catch let afError as AFError {
+            throw afError.toNetworkError()
+        } catch let networkError as NetworkError {
+            throw networkError
+        } catch {
+            throw NetworkError.unknown(error.localizedDescription)
+        }
+    }
 }
 
 extension DependencyValues {

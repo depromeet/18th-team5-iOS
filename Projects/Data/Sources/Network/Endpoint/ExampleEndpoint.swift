@@ -44,12 +44,12 @@ enum ExampleEndpoint: APIEndpoint {
         }
     }
 
-    func encodedBodyData() throws -> Data? {
+    var body: Encodable? {
         switch self {
         case let .createItem(body):
-            return try JSONEncoder().encode(body)
+            return body
         case let .updateItem(_, body):
-            return try JSONEncoder().encode(body)
+            return body
         default:
             return nil
         }
