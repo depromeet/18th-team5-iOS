@@ -8,7 +8,7 @@
 
 import Foundation
 
-public struct ExampleDetail: Equatable, Sendable {
+public struct ExampleDetail: Equatable {
     public let id: Int
     public let title: String
     public let content: String
@@ -37,7 +37,7 @@ public struct ExampleDetail: Equatable, Sendable {
 }
 
 public extension ExampleDetail {
-    enum Category: String, Equatable, Sendable {
+    enum Category: String, Equatable {
         case general
         case important
         case archived

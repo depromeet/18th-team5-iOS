@@ -12,25 +12,22 @@ import Foundation
 
 @DependencyClient
 public struct FetchExampleDetailUseCase: Sendable {
-    public var execute: @Sendable (_ id: Int) async throws -> ExampleDetail
+    public var run: @Sendable (Int) async throws -> ExampleDetail
 }
 
-// MARK: - TestDependencyKey
+public extension FetchExampleDetailUseCase {
+    func execute(id: Int) async throws -> ExampleDetail {
+        try await run(id)
+    }
+}
 
-extension FetchExampleDetailUseCase: TestDependencyKey {
-    public static let testValue = FetchExampleDetailUseCase()
+// MARK: - DependencyKey
 
-    public static let previewValue = FetchExampleDetailUseCase(
-        execute: { id in
-            ExampleDetail(
-                id: id,
-                title: "Preview 상세 아이템",
-                content: "Preview에서 보여지는 샘플 콘텐츠입니다.",
-                category: .general,
-                tags: ["preview"],
-                imageURL: nil,
-                createdAt: Date()
-            )
+extension FetchExampleDetailUseCase: DependencyKey {
+    public static let liveValue = FetchExampleDetailUseCase(
+        run: { id in
+            @Dependency(\.exampleRepository) var repository
+            return try await repository.fetchDetail(id: id)
         }
     )
 }

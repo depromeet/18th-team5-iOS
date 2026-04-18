@@ -8,7 +8,7 @@
 
 import Foundation
 
-public enum DomainError: Error, Equatable, Sendable {
+public enum DomainError: Error, Equatable {
     /// 인증이 필요하거나 만료된 경우 (401)
     case unauthorized
     /// 권한이 없는 리소스에 접근한 경우 (403)

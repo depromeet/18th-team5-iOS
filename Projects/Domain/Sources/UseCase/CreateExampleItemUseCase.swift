@@ -12,25 +12,27 @@ import Foundation
 
 @DependencyClient
 public struct CreateExampleItemUseCase: Sendable {
-    public var execute: @Sendable (_ title: String, _ content: String, _ category: ExampleDetail.Category) async throws
-        -> ExampleDetail
+    public var run: @Sendable (String, String, ExampleDetail.Category) async throws -> ExampleDetail
 }
 
-// MARK: - TestDependencyKey
+public extension CreateExampleItemUseCase {
+    func execute(
+        title: String,
+        content: String,
+        category: ExampleDetail.Category
+    ) async throws -> ExampleDetail {
+        try await run(title, content, category)
+    }
+}
 
-extension CreateExampleItemUseCase: TestDependencyKey {
-    public static let testValue = CreateExampleItemUseCase()
+// MARK: - DependencyKey
 
-    public static let previewValue = CreateExampleItemUseCase(
-        execute: { title, content, category in
-            ExampleDetail(
-                id: Int.random(in: 100 ... 999),
-                title: title,
-                content: content,
-                category: category,
-                tags: [],
-                imageURL: nil,
-                createdAt: Date()
+extension CreateExampleItemUseCase: DependencyKey {
+    public static let liveValue = CreateExampleItemUseCase(
+        run: { title, content, category in
+            @Dependency(\.exampleRepository) var repository
+            return try await repository.createItem(
+                title: title, content: content, category: category
             )
         }
     )

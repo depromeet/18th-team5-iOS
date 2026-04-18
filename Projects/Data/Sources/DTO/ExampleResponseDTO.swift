@@ -35,12 +35,17 @@ struct ExampleDetailResponseDTO: Decodable {
     let createdAt: String
 }
 
+/// 날짜 파싱 실패 시 사용하는 DTO 변환 에러
+enum DTOMappingError: Error {
+    case invalidDateFormat(String)
+}
+
 extension ExampleDetailResponseDTO {
     private static let iso8601Formatter = ISO8601DateFormatter()
 
     func toDomain() throws -> ExampleDetail {
         guard let parsedDate = Self.iso8601Formatter.date(from: createdAt) else {
-            throw NetworkError.decodingFailed
+            throw DTOMappingError.invalidDateFormat(createdAt)
         }
 
         return ExampleDetail(

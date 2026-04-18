@@ -8,7 +8,7 @@
 
 import Foundation
 
-public struct ExampleItem: Equatable, Sendable {
+public struct ExampleItem: Equatable {
     public let id: Int
     public let title: String
     public let isCompleted: Bool

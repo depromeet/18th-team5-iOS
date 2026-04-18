@@ -12,20 +12,22 @@ import Foundation
 
 @DependencyClient
 public struct FetchExampleItemsUseCase: Sendable {
-    public var execute: @Sendable () async throws -> [ExampleItem] = { [] }
+    public var run: @Sendable () async throws -> [ExampleItem]
 }
 
-// MARK: - TestDependencyKey
+public extension FetchExampleItemsUseCase {
+    func execute() async throws -> [ExampleItem] {
+        try await run()
+    }
+}
 
-extension FetchExampleItemsUseCase: TestDependencyKey {
-    public static let testValue = FetchExampleItemsUseCase()
+// MARK: - DependencyKey
 
-    public static let previewValue = FetchExampleItemsUseCase(
-        execute: {
-            [
-                ExampleItem(id: 1, title: "Preview 아이템 1", isCompleted: false),
-                ExampleItem(id: 2, title: "Preview 아이템 2", isCompleted: true)
-            ]
+extension FetchExampleItemsUseCase: DependencyKey {
+    public static let liveValue = FetchExampleItemsUseCase(
+        run: {
+            @Dependency(\.exampleRepository) var repository
+            return try await repository.fetchItems()
         }
     )
 }
