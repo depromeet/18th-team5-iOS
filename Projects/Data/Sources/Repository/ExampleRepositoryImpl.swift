@@ -30,7 +30,7 @@ public enum ExampleRepositoryImpl {
                     )
                     return dtos.map { $0.toDomain() }
                 } catch {
-                    throw error.toDomainError()
+                    throw mapToDomainError(error)
                 }
             },
             fetchDetail: { id in
@@ -41,7 +41,7 @@ public enum ExampleRepositoryImpl {
                     )
                     return try dto.toDomain()
                 } catch {
-                    throw error.toDomainError()
+                    throw mapToDomainError(error)
                 }
             },
             createItem: { title, content, category in
@@ -57,7 +57,7 @@ public enum ExampleRepositoryImpl {
                     )
                     return try dto.toDomain()
                 } catch {
-                    throw error.toDomainError()
+                    throw mapToDomainError(error)
                 }
             },
             updateItem: { id, title, isCompleted in
@@ -72,7 +72,7 @@ public enum ExampleRepositoryImpl {
                     )
                     return dto.toDomain()
                 } catch {
-                    throw error.toDomainError()
+                    throw mapToDomainError(error)
                 }
             },
             deleteItem: { id in
@@ -82,7 +82,7 @@ public enum ExampleRepositoryImpl {
                         ExampleEndpoint.deleteItem(id: id)
                     )
                 } catch {
-                    throw error.toDomainError()
+                    throw mapToDomainError(error)
                 }
             }
         )

@@ -9,15 +9,11 @@
 import Domain
 import Foundation
 
-extension Error {
+// MARK: - NetworkError → DomainError
+
+extension NetworkError {
     func toDomainError() -> DomainError {
-        if self is DTOMappingError {
-            return .dataCorrupted
-        }
-        guard let networkError = self as? NetworkError else {
-            return .unknown(localizedDescription)
-        }
-        switch networkError {
+        switch self {
         case .invalidURL, .encodingFailed:
             return .invalidRequest(nil)
         case let .requestFailed(statusCode):
@@ -43,4 +39,31 @@ extension Error {
             return .unknown(message)
         }
     }
+}
+
+// MARK: - DTOMappingError → DomainError
+
+extension DTOMappingError {
+    func toDomainError() -> DomainError {
+        .dataCorrupted
+    }
+}
+
+// MARK: - Error → DomainError (Repository catch 블록용)
+
+/// Repository의 catch 블록에서 에러를 DomainError로 변환하는 헬퍼
+/// - DomainError는 그대로 패스스루
+/// - NetworkError, DTOMappingError는 각 타입의 toDomainError() 사용
+/// - 그 외는 .unknown으로 변환
+func mapToDomainError(_ error: Error) -> DomainError {
+    if let domainError = error as? DomainError {
+        return domainError
+    }
+    if let networkError = error as? NetworkError {
+        return networkError.toDomainError()
+    }
+    if let mappingError = error as? DTOMappingError {
+        return mappingError.toDomainError()
+    }
+    return .unknown(error.localizedDescription)
 }
