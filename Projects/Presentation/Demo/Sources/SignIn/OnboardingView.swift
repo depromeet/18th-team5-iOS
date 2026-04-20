@@ -23,6 +23,7 @@ struct OnboardingView: View {
             Button("확인") {
                 store.send(.doneButtonTapped)
             }
+            .buttonStyle(.borderedProminent)
         }
     }
 }

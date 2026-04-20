@@ -11,13 +11,23 @@ import ComposableArchitecture
 @Reducer
 struct MyPageFeature {
     @ObservableState
-    struct State {}
+    struct State {
+        var path: StackState<Path.State> = .init()
+    }
 
-    enum Action {}
+    enum Action {
+        case path(StackActionOf<Path>)
+    }
 
     var body: some ReducerOf<Self> {
         Reduce { _, _ in
             return .none
         }
+        .forEach(\.path, action: \.path)
     }
+}
+
+extension MyPageFeature {
+    @Reducer
+    enum Path {}
 }

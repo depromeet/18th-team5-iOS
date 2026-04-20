@@ -10,13 +10,17 @@ import ComposableArchitecture
 import SwiftUI
 
 struct ArchiveView: View {
-    private let store: StoreOf<ArchiveFeature>
+    @Bindable private var store: StoreOf<ArchiveFeature>
 
     init(store: StoreOf<ArchiveFeature>) {
         self.store = store
     }
 
     var body: some View {
-        Text("아카이빙 화면")
+        NavigationStack(path: $store.scope(state: \.path, action: \.path)) {
+            VStack {}
+                .navigationTitle("아카이빙")
+        } destination: { _ in
+        }
     }
 }
