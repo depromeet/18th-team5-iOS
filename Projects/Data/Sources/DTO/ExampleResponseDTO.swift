@@ -1,0 +1,61 @@
+//
+//  ExampleResponseDTO.swift
+//  Data
+//
+//  Created by 진준호 on 4/11/26.
+//  Copyright © 2026 Orange. All rights reserved.
+//
+
+import Domain
+import Foundation
+
+struct ExampleItemResponseDTO: Decodable {
+    let id: Int
+    let title: String
+    let isCompleted: Bool
+}
+
+extension ExampleItemResponseDTO {
+    func toDomain() -> ExampleItem {
+        ExampleItem(
+            id: id,
+            title: title,
+            isCompleted: isCompleted
+        )
+    }
+}
+
+struct ExampleDetailResponseDTO: Decodable {
+    let id: Int
+    let title: String
+    let content: String
+    let category: String
+    let tags: [String]
+    let imageUrl: String?
+    let createdAt: String
+}
+
+/// 날짜 파싱 실패 시 사용하는 DTO 변환 에러
+enum DTOMappingError: Error {
+    case invalidDateFormat(String)
+}
+
+extension ExampleDetailResponseDTO {
+    private static let iso8601Formatter = ISO8601DateFormatter()
+
+    func toDomain() throws -> ExampleDetail {
+        guard let parsedDate = Self.iso8601Formatter.date(from: createdAt) else {
+            throw DTOMappingError.invalidDateFormat(createdAt)
+        }
+
+        return ExampleDetail(
+            id: id,
+            title: title,
+            content: content,
+            category: ExampleDetail.Category(rawValue: category) ?? .general,
+            tags: tags,
+            imageURL: imageUrl.flatMap { URL(string: $0) },
+            createdAt: parsedDate
+        )
+    }
+}
