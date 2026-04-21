@@ -10,13 +10,17 @@ import ComposableArchitecture
 import SwiftUI
 
 struct MyPageView: View {
-    private let store: StoreOf<MyPageFeature>
+    @Bindable private var store: StoreOf<MyPageFeature>
 
     init(store: StoreOf<MyPageFeature>) {
         self.store = store
     }
 
     var body: some View {
-        Text("마이페이지 화면")
+        NavigationStack(path: $store.scope(state: \.path, action: \.path)) {
+            VStack {}
+                .navigationTitle("마이페이지")
+        } destination: { _ in
+        }
     }
 }

@@ -40,8 +40,11 @@ struct MainFeature {
             MyPageFeature()
         }
 
-        Reduce { _, _ in
-            return .none
+        Reduce { _, action in
+            switch action {
+            case .home, .archive, .myPage: return .none
+            case .binding: return .none
+            }
         }
     }
 }
