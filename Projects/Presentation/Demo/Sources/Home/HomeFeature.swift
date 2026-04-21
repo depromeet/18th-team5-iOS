@@ -16,7 +16,6 @@ struct HomeFeature {
     }
 
     enum Action {
-        case onAppear
         case outerPushButtonTapped
         case innerPushButtonTapped
         case path(StackActionOf<HomePath>)
@@ -25,8 +24,6 @@ struct HomeFeature {
     var body: some ReducerOf<Self> {
         Reduce { state, action in
             switch action {
-            case .onAppear:
-                return .none
             case .innerPushButtonTapped:
                 state.path.append(.mission(.init()))
                 return .none

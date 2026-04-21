@@ -7,7 +7,6 @@
 //
 
 import ComposableArchitecture
-import DesignSystem
 import SwiftUI
 
 struct NotificationView: View {
