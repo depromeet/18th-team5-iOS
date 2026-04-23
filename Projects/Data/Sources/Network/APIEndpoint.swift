@@ -59,7 +59,10 @@ extension APIEndpoint {
 
         var request = URLRequest(url: url)
         request.method = method
-        request.headers = headers ?? .default
+
+        var merged = HTTPHeaders.default
+        headers?.forEach { merged.add($0) }
+        request.headers = merged
 
         if let body {
             do {

@@ -88,3 +88,35 @@ public enum ExampleRepositoryImpl {
         )
     }
 }
+
+// MARK: - toDomain
+
+extension ExampleItemResponseDTO {
+    func toDomain() -> ExampleItem {
+        ExampleItem(
+            id: id,
+            title: title,
+            isCompleted: isCompleted
+        )
+    }
+}
+
+extension ExampleDetailResponseDTO {
+    private static let iso8601Formatter = ISO8601DateFormatter()
+
+    func toDomain() throws -> ExampleDetail {
+        guard let parsedDate = Self.iso8601Formatter.date(from: createdAt) else {
+            throw DTOMappingError.invalidDateFormat(createdAt)
+        }
+
+        return ExampleDetail(
+            id: id,
+            title: title,
+            content: content,
+            category: ExampleDetail.Category(rawValue: category) ?? .general,
+            tags: tags,
+            imageURL: imageUrl.flatMap { URL(string: $0) },
+            createdAt: parsedDate
+        )
+    }
+}

@@ -15,16 +15,6 @@ struct ExampleItemResponseDTO: Decodable {
     let isCompleted: Bool
 }
 
-extension ExampleItemResponseDTO {
-    func toDomain() -> ExampleItem {
-        ExampleItem(
-            id: id,
-            title: title,
-            isCompleted: isCompleted
-        )
-    }
-}
-
 struct ExampleDetailResponseDTO: Decodable {
     let id: Int
     let title: String
@@ -33,24 +23,4 @@ struct ExampleDetailResponseDTO: Decodable {
     let tags: [String]
     let imageUrl: String?
     let createdAt: String
-}
-
-extension ExampleDetailResponseDTO {
-    private static let iso8601Formatter = ISO8601DateFormatter()
-
-    func toDomain() throws -> ExampleDetail {
-        guard let parsedDate = Self.iso8601Formatter.date(from: createdAt) else {
-            throw DTOMappingError.invalidDateFormat(createdAt)
-        }
-
-        return ExampleDetail(
-            id: id,
-            title: title,
-            content: content,
-            category: ExampleDetail.Category(rawValue: category) ?? .general,
-            tags: tags,
-            imageURL: imageUrl.flatMap { URL(string: $0) },
-            createdAt: parsedDate
-        )
-    }
 }

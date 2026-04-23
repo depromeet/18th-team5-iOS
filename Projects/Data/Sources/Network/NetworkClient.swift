@@ -21,12 +21,16 @@ struct NetworkClient: Sendable {
 // MARK: - 편의 디코딩 메서드
 
 extension NetworkClient {
+    private static func makeDecoder() -> JSONDecoder {
+        let decoder = JSONDecoder()
+        decoder.keyDecodingStrategy = .convertFromSnakeCase
+        return decoder
+    }
+
     func request<T: Decodable>(_ endpoint: any APIEndpoint) async throws -> T {
         let data = try await requestData(endpoint)
         do {
-            let decoder = JSONDecoder()
-            decoder.keyDecodingStrategy = .convertFromSnakeCase
-            return try decoder.decode(T.self, from: data)
+            return try Self.makeDecoder().decode(T.self, from: data)
         } catch {
             throw NetworkError.decodingFailed
         }
