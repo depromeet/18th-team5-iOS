@@ -3,3 +3,4 @@
 PRODUCT_BUNDLE_IDENTIFIER = com.orange.peaktime
 BUNDLE_DISPLAY_NAME = Peaktime
 ENV = Prod
+BASE_URL = https:/$()/api.peaktime.com
