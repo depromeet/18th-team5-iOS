@@ -45,7 +45,7 @@ extension NetworkClient: DependencyKey {
             try await performRequest(endpoint: endpoint)
         },
         requestEmpty: { endpoint in
-            _ = try await performRequest(endpoint: endpoint, emptyResponseCodes: [200, 204])
+            _ = try await performRequest(endpoint: endpoint, emptyResponseCodes: [200, 204, 205])
         }
     )
 
