@@ -1,4 +1,4 @@
-# Peaktime — Claude Code Rules
+# Picktime — Claude Code Rules
 
 ## 언어 및 플랫폼
 - Swift 5.9+, iOS 17.0+, TCA(The Composable Architecture) 1.25 기반으로 작성한다.
@@ -37,7 +37,7 @@
 - 에러는 반드시 `AFError` → `NetworkError` → `DomainError` 3단계로 매핑한다.
 - `any Encodable` 파라미터는 `AnyEncodable`로 래핑한다.
 - 응답 Body가 있으면 `requestData`, 없으면(204) `requestEmpty`를 사용한다.
-- Repository에서 `requestData`를 직접 호출하지 않는다. `NetworkClient`의 제네릭 편의 메서드 `request<T: Decodable>(_:)`을 사용하고, 디코딩은 `NetworkClient` 내부에서 처리된다.
+- Repository에서 `requestData`를 직접 호출하지 않는다. `NetworkClient`의 제네릭 편의 메서드 `request<T: Decodable>(_:)`을 사용하고 디코딩은 `NetworkClient` 내부에서 처리된다.
 - JSON 디코딩 전략은 `convertFromSnakeCase`를 기본으로 하고, 예외 필드만 `CodingKeys`를 정의한다.
 - API Endpoint는 도메인별 `enum` + `APIEndpoint` 프로토콜 조합으로 정의한다.
 
@@ -45,5 +45,5 @@
 - 테스트 프레임워크는 Swift Testing(`@Test`, `#expect`)을 사용한다. XCTest는 사용하지 않는다.
 - 테스트 함수명은 한글로 작성한다. 예: `func 로그인_실패시_다이얼로그_표출()`
 - Given / When / Then 구조를 반드시 주석으로 명시한다.
-- 핵심 유저 동작 위주로만 작성하고, 사소한 유틸 함수는 테스트하지 않는다.
-- 주 테스트 대상은 Reducer이며, 필요 시 Repository와 DataSource도 포함한다.
+- 핵심 유저 동작 위주로만 작성하고 사소한 유틸 함수는 테스트하지 않는다.
+- 주 테스트 대상은 Reducer이고 필요 시 Repository와 DataSource도 포함한다.
