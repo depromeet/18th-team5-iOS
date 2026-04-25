@@ -29,7 +29,7 @@ private extension TargetScript {
             cp cp ${PROJECT_DIR}/../../Secrets/GoogleService-Info/Dev/GoogleService-Info.plist \
                ${BUILT_PRODUCTS_DIR}/${PRODUCT_NAME}.app/GoogleService-Info.plist
         else
-            cp ${PROJECT_DIR}/../../Secrets/GoogleService-Info/Dev/GoogleService-Info.plist \
+            cp ${PROJECT_DIR}/../../Secrets/GoogleService-Info/Prod/GoogleService-Info.plist \
                ${BUILT_PRODUCTS_DIR}/${PRODUCT_NAME}.app/GoogleService-Info.plist
         fi
         """,

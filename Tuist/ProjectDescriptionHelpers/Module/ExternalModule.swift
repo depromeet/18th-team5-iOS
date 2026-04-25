@@ -12,7 +12,7 @@ enum ExternalModule {
     case composableArchitecture
     case dependencies
 	case dependenciesMacros
-    case firebase
+    case firebaseCore
     case firebaseRemoteConfig
     
     var name: String {
@@ -21,7 +21,7 @@ enum ExternalModule {
         case .composableArchitecture: "ComposableArchitecture"
         case .dependencies: "Dependencies"
 		case .dependenciesMacros: "DependenciesMacros"
-        case .firebase: "Firebase"
+        case .firebaseCore: "FirebaseCore"
         case .firebaseRemoteConfig: "FirebaseRemoteConfig"
         }
     }
