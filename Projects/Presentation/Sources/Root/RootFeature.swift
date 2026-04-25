@@ -29,7 +29,6 @@ public struct RootFeature {
     }
 
     @Dependency(\.launchConfigRepository) var launchConfigRepository
-    @Dependency(\.exampleRepository) var example
     @Dependency(\.openURL) var openURL
 
     public init() {}
