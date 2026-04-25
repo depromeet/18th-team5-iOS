@@ -11,14 +11,18 @@ enum ExternalModule {
     case alamofire
     case composableArchitecture
     case dependencies
-    case dependenciesMacros
-
+	case dependenciesMacros
+    case firebaseCore
+    case firebaseRemoteConfig
+    
     var name: String {
         switch self {
         case .alamofire: "Alamofire"
         case .composableArchitecture: "ComposableArchitecture"
         case .dependencies: "Dependencies"
-        case .dependenciesMacros: "DependenciesMacros"
+		case .dependenciesMacros: "DependenciesMacros"
+        case .firebaseCore: "FirebaseCore"
+        case .firebaseRemoteConfig: "FirebaseRemoteConfig"
         }
     }
 }
