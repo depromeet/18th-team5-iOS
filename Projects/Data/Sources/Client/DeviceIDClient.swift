@@ -14,7 +14,8 @@ import os
 
 @DependencyClient
 struct DeviceIDClient: Sendable {
-    var getDeviceID: @Sendable () -> String
+    var getDeviceID: @Sendable () -> String?
+    var createDeviceID: @Sendable () -> String = { UUID().uuidString }
 }
 
 // MARK: - DependencyKey
@@ -34,14 +35,16 @@ extension DeviceIDClient: DependencyKey {
                     return id
                 }
 
-                let newID = UUID().uuidString
-                if let data = newID.data(using: .utf8) {
-                    _ = KeychainHelper.save(data: data, forKey: keychainKey)
-                }
-
-                cached = newID
-                return newID
+                return nil
             }
+        },
+        createDeviceID: {
+            let newID = UUID().uuidString
+            cachedID.withLock { $0 = newID }
+            if let data = newID.data(using: .utf8) {
+                _ = KeychainHelper.save(data: data, forKey: keychainKey)
+            }
+            return newID
         }
     )
 }

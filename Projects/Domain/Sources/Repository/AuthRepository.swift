@@ -15,6 +15,12 @@ public struct AuthRepository: Sendable {
     public var login: @Sendable () async throws -> Void
 }
 
+// MARK: - TestDependencyKey
+
+extension AuthRepository: TestDependencyKey {
+    public static let testValue = AuthRepository()
+}
+
 public extension DependencyValues {
     var authRepository: AuthRepository {
         get { self[AuthRepository.self] }

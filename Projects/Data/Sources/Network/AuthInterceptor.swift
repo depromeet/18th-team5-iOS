@@ -9,6 +9,7 @@
 import Alamofire
 import Dependencies
 import Foundation
+import os
 
 final class AuthInterceptor: RequestInterceptor, @unchecked Sendable {
     static let shared = AuthInterceptor()
@@ -17,9 +18,9 @@ final class AuthInterceptor: RequestInterceptor, @unchecked Sendable {
     @Dependency(\.networkClient) private var networkClient
     @Dependency(\.deviceIDClient) private var deviceIDClient
 
-    private let lock = NSLock()
-    private var isRefreshing = false
-    private var pendingCompletions: [(RetryResult) -> Void] = []
+    private let state = OSAllocatedUnfairLock(
+        initialState: (isRefreshing: false, pendingCompletions: [(RetryResult) -> Void]())
+    )
 
     private init() {}
 
@@ -47,27 +48,26 @@ final class AuthInterceptor: RequestInterceptor, @unchecked Sendable {
             return
         }
 
-        lock.lock()
-        pendingCompletions.append(completion)
-
-        guard !isRefreshing else {
-            lock.unlock()
-            return
+        let shouldStart = state.withLock { state in
+            state.pendingCompletions.append(completion)
+            guard !state.isRefreshing else { return false }
+            state.isRefreshing = true
+            return true
         }
 
-        isRefreshing = true
-        lock.unlock()
+        guard shouldStart else { return }
 
         Task { [weak self] in
             guard let self else { return }
 
             let result = await refreshToken()
 
-            lock.lock()
-            let completions = pendingCompletions
-            pendingCompletions = []
-            isRefreshing = false
-            lock.unlock()
+            let completions = state.withLock { state in
+                let pending = state.pendingCompletions
+                state.pendingCompletions = []
+                state.isRefreshing = false
+                return pending
+            }
 
             completions.forEach { $0(result) }
         }
@@ -89,7 +89,7 @@ final class AuthInterceptor: RequestInterceptor, @unchecked Sendable {
         }
 
         do {
-            let deviceID = deviceIDClient.getDeviceID()
+            let deviceID = deviceIDClient.getDeviceID() ?? deviceIDClient.createDeviceID()
             let response: AuthTokenDTO = try await networkClient.request(
                 AuthEndpoint.login(deviceID: deviceID)
             )

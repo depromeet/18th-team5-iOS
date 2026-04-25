@@ -27,7 +27,7 @@ enum AuthRepositoryImpl {
                 @Dependency(\.tokenClient) var tokenClient
 
                 do {
-                    let deviceID = deviceIDClient.getDeviceID()
+                    let deviceID = deviceIDClient.getDeviceID() ?? deviceIDClient.createDeviceID()
                     let response: AuthTokenDTO = try await networkClient.request(
                         AuthEndpoint.login(deviceID: deviceID)
                     )
