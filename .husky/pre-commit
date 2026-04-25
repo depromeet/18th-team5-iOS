@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-. "$(dirname -- "$0")/_/husky.sh"
 
 # ──────────────────────────────────────────────
 # Pre-commit Hook: SwiftFormat + SwiftLint 자동 수정
