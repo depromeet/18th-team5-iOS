@@ -60,7 +60,6 @@ let data = try await client.requestData(ExampleEndpoint.fetchItems)
 - **Endpoint:** 도메인별 `enum` + `APIEndpoint` 프로토콜 조합으로 관리.
 
 ### 4. 레이어별 역할 정리
- 
 #### Data 레이어
 - **Repository:** `liveValue` 구현체 제공
 - **NetworkClient:** 전역 단일 객체로 관리
@@ -124,29 +123,3 @@ case let .sender(.delegate(.messageSend(message))):
 - **Safety:** `force_unwrapping` 금지, `fatalError` 대신 `assertionFailure`.
 - **Naming:** TODO/FIXME 작성 시 담당자 명시 (`// TODO: 내용 - @이름`).
 - **Formatting:** 4-space indent, `redundantSelf` 허용.
-
-## 테스트 전략
- 
-### 기본 방침
-- **행동 기반 테스트** 작성 (과도한 테스트는 지양)
-- **핵심 유저 동작**에 대해서만 작성하고, PR에서 팀원들과 공유
-- **테스트 라이브러리:** Swift Testing 사용
-### 테스트 대상
-- **주 대상:** Reducer
-- **필요 시:** Repository, DataSource
-### 테스트 템플릿
- 
-테스트 케이스 명은 **한글**로 작성
- 
-```swift
-func 로그인_실패시_다이얼로그_표출() {
-    // Given
-    let sut = reducer
- 
-    // When
-    sut.send(.someAction)
- 
-    // Then
-    #expect(sut.state.title == "hello world")
-}
-```
