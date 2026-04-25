@@ -94,17 +94,22 @@ extension RootFeature {
     ) -> Effect<Action> {
         state.launchConfig = config
 
-        if config.maintenance {
-            state.path = .maintenance(.init())
-            return .none
-        }
-
+        // #1. 강제업데이트 확인
         if config.isForceUpdateEnabled {
             if let currentVersion = AppVersion.current,
                currentVersion < config.minimumAppVersion {
                 state.path = .forceUpdate(.init())
                 return .none
+            } else {
+                // 현재 버전 획득 불가시 스플래쉬 유지
+                return .none
             }
+        }
+
+        // #2. 서버 점검 여부 확인
+        if config.maintenance {
+            state.path = .maintenance(.init())
+            return .none
         }
 
         // TODO: 온보딩 수행 여부 확인 @준영
