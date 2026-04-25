@@ -6,10 +6,38 @@
 //  Copyright © 2026 Orange. All rights reserved.
 //
 
+import DesignSystem
 import SwiftUI
 
 struct CarouselDemoView: View {
     var body: some View {
-        Text("Carousel Demo")
+        VStack(spacing: 0) {
+            carousel
+            button
+                .padding(.top, 32)
+        }
+    }
+}
+
+private extension CarouselDemoView {
+    var carousel: some View {
+        Carousel(
+            items: Array(0 ..< 6),
+            spacing: 16,
+            aspectRatio: 1.5
+        ) { _ in
+            Color.gray
+                .clipShape(RoundedRectangle(cornerRadius: 8))
+        }
+    }
+
+    var button: some View {
+        Button {} label: {
+            Text("자세히 보기")
+                .frame(width: 144, height: 50)
+                .foregroundStyle(Color.white)
+                .background(Color.mint)
+                .clipShape(Capsule())
+        }
     }
 }
