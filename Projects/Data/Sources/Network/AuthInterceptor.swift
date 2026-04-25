@@ -76,12 +76,16 @@ final class AuthInterceptor: RequestInterceptor, @unchecked Sendable {
     // MARK: - 토큰 갱신 전략: refresh → deviceID 재로그인 → 실패
 
     private func refreshToken() async -> RetryResult {
-        if let token = tokenClient.getRefreshToken(),
-           let response: AuthTokenDTO = try? await networkClient.request(
-               AuthEndpoint.refresh(refreshToken: token)
-           ) {
-            tokenClient.saveTokens(response.accessToken, response.refreshToken)
-            return .retry
+        if let token = tokenClient.getRefreshToken() {
+            do {
+                let response: AuthTokenDTO = try await networkClient.request(
+                    AuthEndpoint.refresh(refreshToken: token)
+                )
+                tokenClient.saveTokens(response.accessToken, response.refreshToken)
+                return .retry
+            } catch {
+                assertionFailure("토큰 갱신 실패: \(error)")
+            }
         }
 
         do {

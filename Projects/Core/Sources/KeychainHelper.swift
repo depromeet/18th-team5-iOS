@@ -11,16 +11,24 @@ import Security
 
 public enum KeychainHelper {
     public static func save(data: Data, forKey key: String) -> Bool {
-        delete(forKey: key)
-
-        let query: [String: Any] = [
+        let searchQuery: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
-            kSecAttrAccount as String: key,
+            kSecAttrAccount as String: key
+        ]
+
+        let updateAttributes: [String: Any] = [
             kSecValueData as String: data,
             kSecAttrAccessible as String: kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly
         ]
 
-        return SecItemAdd(query as CFDictionary, nil) == errSecSuccess
+        let status = SecItemUpdate(searchQuery as CFDictionary, updateAttributes as CFDictionary)
+
+        if status == errSecItemNotFound {
+            let addQuery = searchQuery.merging(updateAttributes) { _, new in new }
+            return SecItemAdd(addQuery as CFDictionary, nil) == errSecSuccess
+        }
+
+        return status == errSecSuccess
     }
 
     @discardableResult

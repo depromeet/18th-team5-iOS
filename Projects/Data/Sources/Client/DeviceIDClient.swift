@@ -14,7 +14,7 @@ import os
 
 @DependencyClient
 struct DeviceIDClient: Sendable {
-    var getDeviceID: @Sendable () -> String = { "" }
+    var getDeviceID: @Sendable () -> String
 }
 
 // MARK: - DependencyKey
