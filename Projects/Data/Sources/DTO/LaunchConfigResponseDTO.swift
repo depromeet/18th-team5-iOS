@@ -6,8 +6,6 @@
 //  Copyright © 2026 Orange. All rights reserved.
 //
 
-import Domain
-
 struct LaunchConfigResponseDTO {
     let maintenance: Bool
     let isForceUpdateEnabled: Bool

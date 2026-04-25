@@ -21,10 +21,11 @@ public struct AppVersion: Comparable {
     }
 
     public init?(version: String) {
-        let versionParts = version.split(separator: ".").compactMap { Int($0) }
-        guard let major = versionParts[safe: 0],
-              let minor = versionParts[safe: 1],
-              let patch = versionParts[safe: 2]
+        let splited = version.split(separator: ".")
+            .compactMap { Int($0) }
+        guard let major = splited[safe: 0],
+              let minor = splited[safe: 1],
+              let patch = splited[safe: 2]
         else { return nil }
 
         self.major = major
@@ -58,7 +59,7 @@ public extension AppVersion {
               let minor = Int(splited[1]),
               let patch = Int(splited[2])
         else {
-            assertionFailure("번들 버전 문자열 형식이 잘못됬습니다.")
+            assertionFailure("번들 버전 문자열 형식이 잘못되었습니다.")
             return nil
         }
         return AppVersion(major: major, minor: minor, patch: patch)
