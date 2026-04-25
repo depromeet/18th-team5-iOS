@@ -7,6 +7,7 @@
 //
 
 import Alamofire
+import Core
 import Dependencies
 import Foundation
 import os
@@ -84,7 +85,7 @@ final class AuthInterceptor: RequestInterceptor, @unchecked Sendable {
                 tokenClient.saveTokens(response.accessToken, response.refreshToken)
                 return .retry
             } catch {
-                assertionFailure("토큰 갱신 실패: \(error)")
+                Logger.auth.error("토큰 갱신 실패: \(error)")
             }
         }
 

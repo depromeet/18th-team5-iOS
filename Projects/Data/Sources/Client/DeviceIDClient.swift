@@ -40,9 +40,13 @@ extension DeviceIDClient: DependencyKey {
         },
         createDeviceID: {
             let newID = UUID().uuidString
-            cachedID.withLock { $0 = newID }
-            if let data = newID.data(using: .utf8) {
-                _ = KeychainHelper.save(data: data, forKey: keychainKey)
+            cachedID.withLock { cached in
+                if let data = newID.data(using: .utf8) {
+                    if !KeychainHelper.save(data: data, forKey: keychainKey) {
+                        Logger.auth.error("DeviceID Keychain 저장 실패")
+                    }
+                }
+                cached = newID
             }
             return newID
         }

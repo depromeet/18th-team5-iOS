@@ -58,22 +58,29 @@ extension TokenClient: DependencyKey {
         },
         saveTokens: { accessToken, refreshToken in
             storage.withLock { state in
+                if let data = accessToken.data(using: .utf8) {
+                    if !KeychainHelper.save(data: data, forKey: accessTokenKey) {
+                        Logger.auth.error("AccessToken Keychain 저장 실패")
+                    }
+                }
+                if let data = refreshToken.data(using: .utf8) {
+                    if !KeychainHelper.save(data: data, forKey: refreshTokenKey) {
+                        Logger.auth.error("RefreshToken Keychain 저장 실패")
+                    }
+                }
                 state = (accessToken, refreshToken)
-            }
-
-            if let data = accessToken.data(using: .utf8) {
-                _ = KeychainHelper.save(data: data, forKey: accessTokenKey)
-            }
-            if let data = refreshToken.data(using: .utf8) {
-                _ = KeychainHelper.save(data: data, forKey: refreshTokenKey)
             }
         },
         clearTokens: {
             storage.withLock { state in
+                if !KeychainHelper.delete(forKey: accessTokenKey) {
+                    Logger.auth.error("AccessToken Keychain 삭제 실패")
+                }
+                if !KeychainHelper.delete(forKey: refreshTokenKey) {
+                    Logger.auth.error("RefreshToken Keychain 삭제 실패")
+                }
                 state = (nil, nil)
             }
-            KeychainHelper.delete(forKey: accessTokenKey)
-            KeychainHelper.delete(forKey: refreshTokenKey)
         }
     )
 }
