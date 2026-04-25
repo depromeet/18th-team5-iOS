@@ -29,7 +29,7 @@ public enum LaunchConfigRepositoryImpl {
 
                 let status = try await remoteConfig.fetchAndActivate()
 
-                guard status == .successFetchedFromRemote else {
+                guard status != .error else {
                     throw LaunchConfigError.firebaseError
                 }
 
