@@ -28,9 +28,7 @@ public enum Module {
     
     var bundleID: String {
         if case .app = self { return "${PRODUCT_BUNDLE_IDENTIFIER}" }
-        
-        let organizationName = ProjectInfo.organizationName
         let appName = ProjectInfo.appName
-        return "com.\(organizationName).\(appName).\(name)".lowercased()
+        return "com.\(appName).\(name)".lowercased()
     }
 }

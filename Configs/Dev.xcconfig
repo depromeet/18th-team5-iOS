@@ -1,6 +1,6 @@
 #include "./Shared.xcconfig"
 
-PRODUCT_BUNDLE_IDENTIFIER = com.orange.peaktime.dev
+PRODUCT_BUNDLE_IDENTIFIER = com.peaktime.app.dev
 BUNDLE_DISPLAY_NAME = Peaktime DEV
 ENV = Dev
 BASE_URL = https:/$()/jsonplaceholder.typicode.com

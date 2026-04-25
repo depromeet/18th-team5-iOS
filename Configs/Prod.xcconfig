@@ -1,6 +1,6 @@
 #include "./Shared.xcconfig"
 
-PRODUCT_BUNDLE_IDENTIFIER = com.orange.peaktime
+PRODUCT_BUNDLE_IDENTIFIER = com.peaktime.app
 BUNDLE_DISPLAY_NAME = Peaktime
 ENV = Prod
 BASE_URL = https:/$()/api.peaktime.com
