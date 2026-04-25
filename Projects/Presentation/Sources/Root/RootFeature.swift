@@ -14,11 +14,14 @@ import Foundation
 public struct RootFeature {
     @ObservableState
     public struct State: Equatable {
+        let currentAppVersion: AppVersion
         var path: Path.State = .splash(.init())
         var launchConfig: LaunchConfig?
         var hasFetchedConfig: Bool = false
 
-        public init() {}
+        public init(currentAppVersion: AppVersion = .current) {
+            self.currentAppVersion = currentAppVersion
+        }
     }
 
     public enum Action {
@@ -98,12 +101,8 @@ extension RootFeature {
 
         // #1. 강제업데이트 확인
         if config.isForceUpdateEnabled {
-            if let currentVersion = AppVersion.current,
-               currentVersion < config.minimumAppVersion {
+            if state.currentAppVersion < config.minimumAppVersion {
                 state.path = .forceUpdate(.init())
-                return .none
-            } else {
-                // 현재 버전 획득 불가시 스플래쉬 유지
                 return .none
             }
         }

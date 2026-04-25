@@ -47,20 +47,20 @@ public extension AppVersion {
 }
 
 public extension AppVersion {
-    static var current: AppVersion? {
+    static var current: AppVersion {
         guard let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String
         else {
             assertionFailure("번들 정보를 획득할 수 없습니다.")
-            return nil
+            return .init(major: 0, minor: 0, patch: 0)
         }
         let splited = version.split(separator: ".")
 
-        guard let major = Int(splited[0]),
-              let minor = Int(splited[1]),
-              let patch = Int(splited[2])
+        guard let major = Int(splited[safe: 0] ?? "0"),
+              let minor = Int(splited[safe: 1] ?? "0"),
+              let patch = Int(splited[safe: 2] ?? "0")
         else {
             assertionFailure("번들 버전 문자열 형식이 잘못되었습니다.")
-            return nil
+            return .init(major: 0, minor: 0, patch: 0)
         }
         return AppVersion(major: major, minor: minor, patch: patch)
     }

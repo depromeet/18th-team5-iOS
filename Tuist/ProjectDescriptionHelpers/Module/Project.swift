@@ -13,7 +13,7 @@ extension Project {
             name: module.name,
             organizationName: ProjectInfo.organizationName,
             options: .options(automaticSchemesOptions: .disabled),
-            settings: module.settings,
+            settings: .settings(configurations: .default),
             targets: module.targets,
             schemes: module.schemes,
             additionalFiles: module.additionalFiles,
@@ -52,20 +52,6 @@ private extension Module {
         switch self {
         case .designSystem: [.fonts(), .images, .colors]
         default: []
-        }
-    }
-    
-    var settings: Settings {
-        switch self {
-        case .app:
-            .settings(
-                base: [
-                    "OTHER_LDFLAGS": "-ObjC"
-                ],
-                configurations: .default
-            )
-        default:
-            .settings(configurations: .default)
         }
     }
 }
