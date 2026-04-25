@@ -9,7 +9,7 @@
 import SwiftUI
 
 @main
-struct PresentationDemoApp: App {
+struct DesignSystemDemoApp: App {
     var body: some Scene {
         WindowGroup {
             RootView()
