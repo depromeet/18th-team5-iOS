@@ -8,5 +8,6 @@
 
 public enum LaunchConfigError: Error {
     case firebaseError
-    case invalidVersionFormat
+    case decondigFailure
+    case unknown
 }

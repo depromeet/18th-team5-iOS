@@ -34,6 +34,7 @@ public extension LaunchConfigRepository {
         fetch: {
             LaunchConfig(
                 maintenance: false,
+                isForceUpdateEnabled: false,
                 minimumAppVersion: AppVersion(version: "0.0.0")!
             )
         }
