@@ -10,14 +10,17 @@ public struct LaunchConfig {
     public let maintenance: Bool
     public let isForceUpdateEnabled: Bool
     public let minimumAppVersion: AppVersion
+    public let appStoreLink: String
 
     public init(
         maintenance: Bool,
         isForceUpdateEnabled: Bool,
-        minimumAppVersion: AppVersion
+        minimumAppVersion: AppVersion,
+        appStoreLink: String
     ) {
         self.maintenance = maintenance
         self.isForceUpdateEnabled = isForceUpdateEnabled
         self.minimumAppVersion = minimumAppVersion
+        self.appStoreLink = appStoreLink
     }
 }

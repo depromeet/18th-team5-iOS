@@ -59,7 +59,8 @@ extension LaunchConfigResponseDTO {
         LaunchConfig(
             maintenance: maintenance,
             isForceUpdateEnabled: isForceUpdateEnabled,
-            minimumAppVersion: AppVersion(version: minimumVersion) ?? .init(major: 0, minor: 0, patch: 0)
+            minimumAppVersion: AppVersion(version: minimumVersion) ?? .init(major: 0, minor: 0, patch: 0),
+            appStoreLink: appStoreLink
         )
     }
 }

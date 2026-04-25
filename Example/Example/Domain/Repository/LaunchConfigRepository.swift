@@ -35,7 +35,8 @@ public extension LaunchConfigRepository {
             LaunchConfig(
                 maintenance: false,
                 isForceUpdateEnabled: false,
-                minimumAppVersion: AppVersion(version: "0.0.0")!
+                minimumAppVersion: AppVersion(version: "0.0.0")!,
+                appStoreLink: ""
             )
         }
     )
