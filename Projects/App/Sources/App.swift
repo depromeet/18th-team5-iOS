@@ -15,12 +15,6 @@ import SwiftUI
 struct PeaktimeApp: App {
     @UIApplicationDelegateAdaptor var appDelegate: AppDelegate
 
-    init() {
-//        prepareDependencies {
-//            $0.launchConfigRepository = LaunchConfigRepositoryImpl.live()
-//        }
-    }
-
     var body: some Scene {
         WindowGroup {
             RootView(store: Store(initialState: .init(), reducer: {
