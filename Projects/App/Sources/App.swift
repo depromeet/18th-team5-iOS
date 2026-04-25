@@ -6,15 +6,26 @@
 //  Copyright © 2026 Orange. All rights reserved.
 //
 
+import ComposableArchitecture
+import Data
+import Presentation
 import SwiftUI
 
 @main
 struct PeaktimeApp: App {
     @UIApplicationDelegateAdaptor var appDelegate: AppDelegate
 
+    init() {
+//        prepareDependencies {
+//            $0.launchConfigRepository = LaunchConfigRepositoryImpl.live()
+//        }
+    }
+
     var body: some Scene {
         WindowGroup {
-            Text("Hello World!")
+            RootView(store: Store(initialState: .init(), reducer: {
+                RootFeature()
+            }))
         }
     }
 }
