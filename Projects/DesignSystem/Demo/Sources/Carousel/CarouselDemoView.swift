@@ -16,6 +16,7 @@ struct CarouselDemoView: View {
             button
                 .padding(.top, 32)
         }
+        .navigationTitle("Carousel")
     }
 }
 
@@ -24,7 +25,7 @@ private extension CarouselDemoView {
         Carousel(
             items: Array(0 ..< 6),
             spacing: 16,
-            aspectRatio: 1.5
+            aspectRatio: 2.0 / 3.0
         ) { _ in
             Color.gray
                 .clipShape(RoundedRectangle(cornerRadius: 8))

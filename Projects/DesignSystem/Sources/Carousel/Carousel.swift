@@ -63,7 +63,7 @@ private extension Carousel {
     }
 
     var itemHeight: CGFloat {
-        max(itemWidth * aspectRatio, 0)
+        max(itemWidth / aspectRatio, 0)
     }
 
     var padding: CGFloat {
