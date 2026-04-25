@@ -10,23 +10,12 @@ import Dependencies
 import Domain
 import FirebaseRemoteConfig
 
-// MARK: - Cache Dependency
-
-private enum LaunchConfigCacheKey: DependencyKey {
-    static let liveValue = MemoryCache<LaunchConfig>()
-}
-
-extension DependencyValues {
-    var launchConfigCache: MemoryCache<LaunchConfig> {
-        get { self[LaunchConfigCacheKey.self] }
-        set { self[LaunchConfigCacheKey.self] = newValue }
-    }
-}
-
-// MARK: - Live Implementation
-
 extension LaunchConfigRepository: @retroactive DependencyKey {
-    public static var liveValue: LaunchConfigRepository {
+    public static let liveValue: LaunchConfigRepository = LaunchConfigRepositoryImpl.live()
+}
+
+public enum LaunchConfigRepositoryImpl {
+    public static func live() -> LaunchConfigRepository {
         LaunchConfigRepository(
             fetch: {
                 @Dependency(\.launchConfigCache) var cache
@@ -35,14 +24,24 @@ extension LaunchConfigRepository: @retroactive DependencyKey {
                     return cached
                 }
 
-                let remoteConfig = RemoteConfig.remoteConfig()
+                let settings = RemoteConfigSettings()
+                settings.minimumFetchInterval = 0
+                settings.fetchTimeout = 10
 
-                guard let _ = try? await remoteConfig.fetchAndActivate()
-                else { throw LaunchConfigError.firebaseError }
+                let remoteConfig = RemoteConfig.remoteConfig()
+                remoteConfig.configSettings = settings
+
+                let status = try await remoteConfig.fetchAndActivate()
+
+                guard status == .successFetchedFromRemote else {
+                    throw LaunchConfigError.firebaseError
+                }
 
                 guard let json = remoteConfig["remote_config"].jsonValue as? [String: Any],
                       let dto = LaunchConfigResponseDTO(json: json)
-                else { throw LaunchConfigError.unknown }
+                else {
+                    throw LaunchConfigError.unknown
+                }
 
                 let config = dto.toDomain()
                 await cache.set(value: config)
