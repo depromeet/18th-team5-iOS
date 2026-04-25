@@ -79,15 +79,13 @@ public struct RootFeature {
     }
 }
 
-public extension RootFeature {
-    @Reducer
-    enum Path {
-        case splash(SplashFeature)
-        case forceUpdate(ForceUpdateFeature)
-        case maintenance(MaintenanceFeature)
-        case onboarding(OnboardingFeature)
-        case main(MainFeature)
-    }
+@Reducer
+public enum Path {
+    case splash(SplashFeature)
+    case forceUpdate(ForceUpdateFeature)
+    case maintenance(MaintenanceFeature)
+    case onboarding(OnboardingFeature)
+    case main(MainFeature)
 }
 
 extension RootFeature {
