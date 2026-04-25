@@ -7,6 +7,7 @@
 //
 
 import SwiftUI
+import UIKit
 
 // MARK: - FontStyle
 
@@ -36,7 +37,8 @@ public struct FontStyle {
 
     init(size: CGFloat, lineHeight: CGFloat) {
         self.size = size
-        self.lineSpacing = lineHeight - size
+        let uiFont = UIFont(name: "Pretendard-Regular", size: size) ?? .systemFont(ofSize: size)
+        self.lineSpacing = lineHeight - uiFont.lineHeight
     }
 }
 
