@@ -18,6 +18,9 @@ protocol APIEndpoint: URLRequestConvertible {
 
     /// body가 있는 경우 Encodable 타입을 반환하면 extension에서 자동 인코딩
     var body: Encodable? { get }
+
+    /// 인증 토큰이 필요한 엔드포인트 여부 (기본값: true)
+    var requiresAuth: Bool { get }
 }
 
 extension APIEndpoint {
@@ -40,6 +43,10 @@ extension APIEndpoint {
 
     var body: Encodable? {
         nil
+    }
+
+    var requiresAuth: Bool {
+        true
     }
 
     func asURLRequest() throws -> URLRequest {

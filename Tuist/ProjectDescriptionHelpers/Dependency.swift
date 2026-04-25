@@ -19,7 +19,7 @@ private extension Module {
         case .app: [.presentation, .data]
         case .presentation: [.domain, .designSystem]
         case .domain: [.core]
-        case .data: [.domain]
+        case .data: [.domain, .core]
         case .designSystem: [.core]
         default: []
         }
@@ -29,7 +29,7 @@ private extension Module {
         switch self {
         case .presentation: [.composableArchitecture]
         case .domain: [.dependencies, .dependenciesMacros]
-        case .data: [.alamofire, .dependencies]
+        case .data: [.alamofire, .dependencies, .dependenciesMacros]
         default: []
         }
     }

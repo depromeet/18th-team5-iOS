@@ -55,8 +55,9 @@ extension NetworkClient: DependencyKey {
         emptyResponseCodes: Set<Int> = []
     ) async throws -> Data {
         let urlRequest = try endpoint.asURLRequest()
+        let interceptor: AuthInterceptor? = endpoint.requiresAuth ? .shared : nil
         do {
-            return try await AF.request(urlRequest)
+            return try await AF.request(urlRequest, interceptor: interceptor)
                 .validate(statusCode: 200 ..< 300)
                 .serializingData(emptyResponseCodes: emptyResponseCodes)
                 .value
