@@ -17,6 +17,10 @@ struct RootView: View {
     }
 
     var body: some View {
-        Text("Hello World!")
+        switch store.scope(state: \.path, action: \.path).case {
+        case let .splash(store): SplashView(store: store)
+        case let .onboarding(store): OnboardingView(store: store)
+        case let .main(store): MainView(store: store)
+        }
     }
 }

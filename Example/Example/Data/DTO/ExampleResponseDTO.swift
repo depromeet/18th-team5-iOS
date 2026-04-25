@@ -6,7 +6,6 @@
 //  Copyright © 2026 Orange. All rights reserved.
 //
 
-import Domain
 import Foundation
 
 struct ExampleItemResponseDTO: Decodable {

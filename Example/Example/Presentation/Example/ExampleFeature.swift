@@ -1,13 +1,4 @@
-//
-//  ExampleFeature.swift
-//  PresentationDemo
-//
-//  Created by 진준호 on 4/20/26.
-//  Copyright © 2026 Orange. All rights reserved.
-//
-
 import ComposableArchitecture
-import Domain
 
 @Reducer
 struct ExampleFeature {
@@ -31,7 +22,6 @@ struct ExampleFeature {
         case dismissDetail
     }
 
-    /// TCA 공식 권장: Reducer에서 직접 @Dependency로 Repository 접근
     @Dependency(\.exampleRepository) var repository
 
     var body: some ReducerOf<Self> {
@@ -108,7 +98,6 @@ struct ExampleFeature {
         }
     }
 
-    /// 각 아이템의 상세 정보를 병렬로 조회
     private func fetchAllDetails(for items: [ExampleItem]) async throws -> [ExampleDetail] {
         try await withThrowingTaskGroup(
             of: ExampleDetail.self,
@@ -127,7 +116,6 @@ struct ExampleFeature {
         }
     }
 
-    /// 카테고리별 그룹핑 + 완료율 계산
     private func buildCategoryGroups(
         items: [ExampleItem],
         details: [ExampleDetail]

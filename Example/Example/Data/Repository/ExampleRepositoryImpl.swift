@@ -1,28 +1,18 @@
-//
-//  ExampleRepositoryImpl.swift
-//  Data
-//
-//  Created by 진준호 on 4/11/26.
-//  Copyright © 2026 Orange. All rights reserved.
-//
-
 import Dependencies
-import Domain
 import Foundation
 
 // MARK: - DependencyKey
 
-extension ExampleRepository: @retroactive DependencyKey {
-    public static let liveValue: ExampleRepository = ExampleRepositoryImpl.live()
+extension ExampleRepository: DependencyKey {
+    static let liveValue: ExampleRepository = ExampleRepositoryImpl.live()
 }
 
 // MARK: - liveValue
 
-public enum ExampleRepositoryImpl {
+enum ExampleRepositoryImpl {
     static func live() -> ExampleRepository {
         ExampleRepository(
             fetchItems: {
-                // 클로저 내부에서 resolve해야 live context 유지
                 @Dependency(\.networkClient) var client
                 do {
                     let dtos: [ExampleItemResponseDTO] = try await client.request(
