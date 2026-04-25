@@ -31,6 +31,7 @@ public struct RootFeature {
     }
 
     @Dependency(\.launchConfigRepository) var launchConfigRepository
+    @Dependency(\.onboardingRepository) var onboardingRepository
     @Dependency(\.openURL) var openURL
 
     public init() {}
@@ -70,7 +71,8 @@ public struct RootFeature {
                     }
                 }
 
-            case .path(.onboarding(.doneButtonTapped)):
+            case .path(.onboarding(.delegate(.onboardingCompleted))):
+                onboardingRepository.setOnboardingCompleted()
                 state.path = .main(.init())
                 return .none
 
@@ -113,7 +115,11 @@ extension RootFeature {
             return .none
         }
 
-        // TODO: 온보딩 수행 여부 확인 @준영
+        // #3. 온보딩 수행 여부 확인
+        if !onboardingRepository.isOnboardingCompleted() {
+            state.path = .onboarding(.init())
+            return .none
+        }
 
         state.path = .main(.init())
         return .none

@@ -43,7 +43,7 @@ public struct OnboardingFeature {
             switch action {
             case .onAppear:
                 return .run { send in
-                    let status = await notificationClient.getAuthorizationStatus()
+                    let status = try await notificationClient.getAuthorizationStatus()
                     await send(.authorizationStatusChecked(status))
                 }
 
