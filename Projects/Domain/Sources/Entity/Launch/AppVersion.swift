@@ -1,0 +1,67 @@
+//
+//  AppVersion.swift
+//  Domain
+//
+//  Created by choijunios on 4/12/26.
+//  Copyright © 2026 Orange. All rights reserved.
+//
+
+import Core
+import Foundation
+
+public struct AppVersion: Comparable {
+    public let major: Int
+    public let minor: Int
+    public let patch: Int
+
+    public init(major: Int, minor: Int, patch: Int) {
+        self.major = major
+        self.minor = minor
+        self.patch = patch
+    }
+
+    public init?(version: String) {
+        let splited = version.split(separator: ".")
+            .compactMap { Int($0) }
+        guard let major = splited[safe: 0],
+              let minor = splited[safe: 1],
+              let patch = splited[safe: 2]
+        else { return nil }
+
+        self.major = major
+        self.minor = minor
+        self.patch = patch
+    }
+}
+
+public extension AppVersion {
+    static func < (lhs: AppVersion, rhs: AppVersion) -> Bool {
+        if lhs.major != rhs.major {
+            return lhs.major < rhs.major
+        }
+        if lhs.minor != rhs.minor {
+            return lhs.minor < rhs.minor
+        }
+        return lhs.patch < rhs.patch
+    }
+}
+
+public extension AppVersion {
+    static var current: AppVersion {
+        guard let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String
+        else {
+            assertionFailure("번들 정보를 획득할 수 없습니다.")
+            return .init(major: 0, minor: 0, patch: 0)
+        }
+        let splited = version.split(separator: ".")
+
+        guard let major = Int(splited[safe: 0] ?? "0"),
+              let minor = Int(splited[safe: 1] ?? "0"),
+              let patch = Int(splited[safe: 2] ?? "0")
+        else {
+            assertionFailure("번들 버전 문자열 형식이 잘못되었습니다.")
+            return .init(major: 0, minor: 0, patch: 0)
+        }
+        return AppVersion(major: major, minor: minor, patch: patch)
+    }
+}
