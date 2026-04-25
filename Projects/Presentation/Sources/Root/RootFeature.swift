@@ -106,6 +106,9 @@ extension RootFeature {
                 return .none
             }
         }
+
+        // TODO: 온보딩 수행 여부 확인 @준영
+
         state.path = .main(.init())
         return .none
     }
