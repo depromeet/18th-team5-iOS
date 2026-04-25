@@ -22,12 +22,8 @@ public enum NotificationClientImpl {
                 return settings.authorizationStatus.toDomain()
             },
             requestAuthorization: {
-                do {
-                    return try await UNUserNotificationCenter.current()
-                        .requestAuthorization(options: [.alert, .badge, .sound])
-                } catch {
-                    return false
-                }
+                try await UNUserNotificationCenter.current()
+                    .requestAuthorization(options: [.alert, .badge, .sound])
             },
             requestProvisionalAuthorization: {
                 try await UNUserNotificationCenter.current()

@@ -72,7 +72,7 @@ public struct RootFeature {
                 }
 
             case .path(.onboarding(.delegate(.onboardingCompleted))):
-                onboardingRepository.setOnboardingCompleted()
+                try? onboardingRepository.setOnboardingCompleted()
                 state.path = .main(.init())
                 return .none
 
@@ -116,7 +116,8 @@ extension RootFeature {
         }
 
         // #3. 온보딩 수행 여부 확인
-        if !onboardingRepository.isOnboardingCompleted() {
+        let isOnboardingCompleted = try? onboardingRepository.isOnboardingCompleted()
+        if isOnboardingCompleted == false {
             state.path = .onboarding(.init())
             return .none
         }

@@ -20,7 +20,6 @@ public struct NotificationConsentFeature {
         case delegate(Delegate)
         case agreeButtonTapped
         case disagreeButtonTapped
-        case authorizationResponse(granted: Bool)
     }
 
     public enum Delegate {
@@ -36,18 +35,25 @@ public struct NotificationConsentFeature {
             switch action {
             case .agreeButtonTapped:
                 return .run { send in
-                    let granted = await notificationClient.requestAuthorization()
-                    await send(.authorizationResponse(granted: granted))
+                    do {
+                        _ = try await notificationClient.requestAuthorization()
+                        await send(.delegate(.completed))
+                    } catch {
+                        assertionFailure("최초 알림 동의 요청 오류")
+                        await send(.delegate(.completed))
+                    }
                 }
 
             case .disagreeButtonTapped:
                 return .run { send in
-                    await notificationClient.requestProvisionalAuthorization()
-                    await send(.delegate(.completed))
+                    do {
+                        _ = try await notificationClient.requestProvisionalAuthorization()
+                        await send(.delegate(.completed))
+                    } catch {
+                        assertionFailure("provisional 알림 동의 요청 오류")
+                        await send(.delegate(.completed))
+                    }
                 }
-
-            case let .authorizationResponse(granted: _):
-                return .send(.delegate(.completed))
 
             case .delegate:
                 return .none
