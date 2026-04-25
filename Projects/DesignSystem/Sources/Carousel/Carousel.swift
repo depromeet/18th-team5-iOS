@@ -28,7 +28,7 @@ public struct Carousel<Item: Hashable, Content: View>: View {
         self.spacing = spacing
         self.aspectRatio = aspectRatio
         self.edgeRatio = min(max(edgeRatio, 0.0), 1.0)
-        self.shrinkRatio = min(max(shrinkRatio, 0.0), 1.0)
+        self.shrinkRatio = min(max(shrinkRatio, 0.5), 1.0)
         self.content = content
     }
 
