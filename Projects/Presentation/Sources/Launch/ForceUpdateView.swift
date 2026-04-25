@@ -12,7 +12,7 @@ import SwiftUI
 @Reducer
 public struct ForceUpdateFeature {
     @ObservableState
-    public struct State {
+    public struct State: Equatable {
         public init() {}
     }
 

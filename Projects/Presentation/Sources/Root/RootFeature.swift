@@ -13,7 +13,7 @@ import Foundation
 @Reducer
 public struct RootFeature {
     @ObservableState
-    public struct State {
+    public struct State: Equatable {
         var path: Path.State = .splash(.init())
         var launchConfig: LaunchConfig?
         var hasFetchedConfig: Bool = false
@@ -86,6 +86,8 @@ public enum Path {
     case onboarding(OnboardingFeature)
     case main(MainFeature)
 }
+
+extension Path.State: Equatable {}
 
 extension RootFeature {
     private func handleLaunchCofig(

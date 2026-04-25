@@ -11,7 +11,7 @@ import ComposableArchitecture
 @Reducer
 public struct SplashFeature {
     @ObservableState
-    public struct State {
+    public struct State: Equatable {
         public init() {}
     }
 

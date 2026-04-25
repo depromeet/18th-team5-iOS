@@ -6,7 +6,7 @@
 //  Copyright © 2026 Orange. All rights reserved.
 //
 
-public struct LaunchConfig {
+public struct LaunchConfig: Equatable {
     public let maintenance: Bool
     public let isForceUpdateEnabled: Bool
     public let minimumAppVersion: AppVersion

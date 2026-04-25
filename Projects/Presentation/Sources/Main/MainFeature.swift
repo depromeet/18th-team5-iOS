@@ -11,7 +11,7 @@ import ComposableArchitecture
 @Reducer
 public struct MainFeature {
     @ObservableState
-    public struct State {
+    public struct State: Equatable {
         public var tab: Tab = .home
 
         public init() {}

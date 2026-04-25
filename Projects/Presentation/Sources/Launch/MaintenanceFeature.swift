@@ -11,7 +11,7 @@ import ComposableArchitecture
 @Reducer
 public struct MaintenanceFeature {
     @ObservableState
-    public struct State {
+    public struct State: Equatable {
         public init() {}
     }
 
