@@ -23,8 +23,6 @@ struct TokenClient: Sendable {
 // MARK: - DependencyKey
 
 extension TokenClient: DependencyKey {
-    private static let accessTokenKey = "com.peaktime.access-token"
-    private static let refreshTokenKey = "com.peaktime.refresh-token"
     private static let storage = OSAllocatedUnfairLock<(access: String?, refresh: String?)>(
         initialState: (nil, nil)
     )
@@ -34,7 +32,7 @@ extension TokenClient: DependencyKey {
             storage.withLock { state in
                 if let token = state.access { return token }
 
-                if let data = KeychainHelper.load(forKey: accessTokenKey),
+                if let data = KeychainHelper.load(forKey: .accessToken),
                    let token = String(data: data, encoding: .utf8) {
                     state.access = token
                     return token
@@ -47,7 +45,7 @@ extension TokenClient: DependencyKey {
             storage.withLock { state in
                 if let token = state.refresh { return token }
 
-                if let data = KeychainHelper.load(forKey: refreshTokenKey),
+                if let data = KeychainHelper.load(forKey: .refreshToken),
                    let token = String(data: data, encoding: .utf8) {
                     state.refresh = token
                     return token
@@ -59,12 +57,12 @@ extension TokenClient: DependencyKey {
         saveTokens: { accessToken, refreshToken in
             storage.withLock { state in
                 if let data = accessToken.data(using: .utf8) {
-                    if !KeychainHelper.save(data: data, forKey: accessTokenKey) {
+                    if !KeychainHelper.save(data: data, forKey: .accessToken) {
                         Logger.auth.error("AccessToken Keychain 저장 실패")
                     }
                 }
                 if let data = refreshToken.data(using: .utf8) {
-                    if !KeychainHelper.save(data: data, forKey: refreshTokenKey) {
+                    if !KeychainHelper.save(data: data, forKey: .refreshToken) {
                         Logger.auth.error("RefreshToken Keychain 저장 실패")
                     }
                 }
@@ -73,10 +71,10 @@ extension TokenClient: DependencyKey {
         },
         clearTokens: {
             storage.withLock { state in
-                if !KeychainHelper.delete(forKey: accessTokenKey) {
+                if !KeychainHelper.delete(forKey: .accessToken) {
                     Logger.auth.error("AccessToken Keychain 삭제 실패")
                 }
-                if !KeychainHelper.delete(forKey: refreshTokenKey) {
+                if !KeychainHelper.delete(forKey: .refreshToken) {
                     Logger.auth.error("RefreshToken Keychain 삭제 실패")
                 }
                 state = (nil, nil)

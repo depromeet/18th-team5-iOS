@@ -9,11 +9,17 @@
 import Foundation
 import Security
 
+public enum KeychainKey: String, Sendable {
+    case deviceID = "com.peaktime.device-id"
+    case accessToken = "com.peaktime.access-token"
+    case refreshToken = "com.peaktime.refresh-token"
+}
+
 public enum KeychainHelper {
-    public static func save(data: Data, forKey key: String) -> Bool {
+    public static func save(data: Data, forKey key: KeychainKey) -> Bool {
         let searchQuery: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
-            kSecAttrAccount as String: key
+            kSecAttrAccount as String: key.rawValue
         ]
 
         let updateAttributes: [String: Any] = [
@@ -32,19 +38,19 @@ public enum KeychainHelper {
     }
 
     @discardableResult
-    public static func delete(forKey key: String) -> Bool {
+    public static func delete(forKey key: KeychainKey) -> Bool {
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
-            kSecAttrAccount as String: key
+            kSecAttrAccount as String: key.rawValue
         ]
 
         return SecItemDelete(query as CFDictionary) == errSecSuccess
     }
 
-    public static func load(forKey key: String) -> Data? {
+    public static func load(forKey key: KeychainKey) -> Data? {
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
-            kSecAttrAccount as String: key,
+            kSecAttrAccount as String: key.rawValue,
             kSecReturnData as String: true,
             kSecMatchLimit as String: kSecMatchLimitOne
         ]

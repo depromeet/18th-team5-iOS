@@ -21,7 +21,6 @@ struct DeviceIDClient: Sendable {
 // MARK: - DependencyKey
 
 extension DeviceIDClient: DependencyKey {
-    private static let keychainKey = "com.peaktime.device-id"
     private static let cachedID = OSAllocatedUnfairLock<String?>(initialState: nil)
 
     static let liveValue = DeviceIDClient(
@@ -29,7 +28,7 @@ extension DeviceIDClient: DependencyKey {
             cachedID.withLock { cached in
                 if let cached { return cached }
 
-                if let data = KeychainHelper.load(forKey: keychainKey),
+                if let data = KeychainHelper.load(forKey: .deviceID),
                    let id = String(data: data, encoding: .utf8) {
                     cached = id
                     return id
@@ -42,7 +41,7 @@ extension DeviceIDClient: DependencyKey {
             let newID = UUID().uuidString
             cachedID.withLock { cached in
                 if let data = newID.data(using: .utf8) {
-                    if !KeychainHelper.save(data: data, forKey: keychainKey) {
+                    if !KeychainHelper.save(data: data, forKey: .deviceID) {
                         Logger.auth.error("DeviceID Keychain 저장 실패")
                     }
                 }
