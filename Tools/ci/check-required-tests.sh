@@ -44,7 +44,7 @@ while IFS= read -r source_file; do
             fi
             ;;
     esac
-done < <(git diff --name-only --diff-filter=A "$BASE_REF"...HEAD -- '*.swift')
+done < <(git diff --name-only --diff-filter=AM "$BASE_REF"...HEAD -- '*.swift')
 
 if [[ "$missing_count" -gt 0 ]]; then
     echo "Required test file check completed with ${missing_count} warning(s)."
