@@ -128,7 +128,6 @@ struct CardStackView: View {
     /// 순환 구조라 마지막 카드 이후엔 첫 카드로 돌아옴
     private var visibleIndices: [Int] {
         let count = cards.count
-        guard !isEmpty else { return [] }
         let visible = min(maxVisible, count)
         // (0..<visible).reversed() → 뒤 카드(position=2)부터, 앞 카드(position=0)가 마지막에 추가
         return (0 ..< visible).reversed().map { (currentIndex + $0) % count }
