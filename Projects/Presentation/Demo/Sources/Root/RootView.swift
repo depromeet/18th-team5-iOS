@@ -7,16 +7,16 @@
 //
 
 import ComposableArchitecture
+import Presentation
 import SwiftUI
 
 struct RootView: View {
-    private let store: StoreOf<RootFeature>
-
-    init(store: StoreOf<RootFeature>) {
-        self.store = store
-    }
+    let store: StoreOf<RootFeature>
 
     var body: some View {
-        Text("Hello World!")
+        ScrollView {
+            CalendarView(store: store.scope(state: \.calendar, action: \.calendar))
+        }
+        .background(Color(UIColor.systemBackground))
     }
 }
