@@ -1,0 +1,133 @@
+name: iOS CI
+
+on:
+  pull_request:
+
+jobs:
+  build-and-test:
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+
+      - name: Merge develop into PR branch
+        run: |
+          git fetch origin develop
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          if ! git merge --no-edit --no-ff origin/develop; then
+            echo "::error::develop 브랜치와 충돌이 발생했습니다. CI 빌드 전에 PR 브랜치에서 develop을 merge하고 conflict를 먼저 해결해주세요."
+            git merge --abort || true
+            exit 1
+          fi
+
+      - name: Check required test files
+        run: Tools/ci/check-required-tests.sh origin/develop
+
+      - name: Show Xcode and simulator versions
+        run: |
+          xcodebuild -version
+          xcrun simctl list devices available
+
+      - name: Install mise
+        uses: jdx/mise-action@v2
+
+      - name: Restore Firebase Dev config
+        env:
+          GOOGLE_SERVICE_INFO_DEV_PLIST_BASE64: ${{ secrets.GOOGLE_SERVICE_INFO_DEV_PLIST_BASE64 }}
+        run: |
+          if [ -z "${GOOGLE_SERVICE_INFO_DEV_PLIST_BASE64}" ]; then
+            echo "::error::GOOGLE_SERVICE_INFO_DEV_PLIST_BASE64 GitHub Actions Secret이 등록되어 있지 않습니다."
+            exit 1
+          fi
+
+          mkdir -p Secrets/GoogleService-Info/Dev
+          printf '%s' "${GOOGLE_SERVICE_INFO_DEV_PLIST_BASE64}" | base64 -D > Secrets/GoogleService-Info/Dev/GoogleService-Info.plist
+
+      - name: Install Tuist dependencies
+        run: tuist install
+
+      - name: Generate Xcode workspace
+        run: tuist generate
+
+      - name: Build Peaktime DEV
+        run: |
+          set -o pipefail
+          xcodebuild build \
+            -workspace Peaktime.xcworkspace \
+            -scheme "Peaktime DEV" \
+            -configuration DebugDev \
+            -destination "platform=iOS Simulator,name=iPhone 17,OS=latest"
+
+      - name: Test Core
+        id: test-core
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          mkdir -p TestResults
+          xcodebuild test \
+            -workspace Peaktime.xcworkspace \
+            -scheme "CoreTests" \
+            -configuration DebugDev \
+            -destination "platform=iOS Simulator,name=iPhone 17,OS=latest" \
+            -resultBundlePath TestResults/CoreTests.xcresult
+
+      - name: Test Data
+        id: test-data
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          mkdir -p TestResults
+          xcodebuild test \
+            -workspace Peaktime.xcworkspace \
+            -scheme "DataTests" \
+            -configuration DebugDev \
+            -destination "platform=iOS Simulator,name=iPhone 17,OS=latest" \
+            -resultBundlePath TestResults/DataTests.xcresult
+
+      - name: Test Domain
+        id: test-domain
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          mkdir -p TestResults
+          xcodebuild test \
+            -workspace Peaktime.xcworkspace \
+            -scheme "DomainTests" \
+            -configuration DebugDev \
+            -destination "platform=iOS Simulator,name=iPhone 17,OS=latest" \
+            -resultBundlePath TestResults/DomainTests.xcresult
+
+      - name: Test Presentation
+        id: test-presentation
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          mkdir -p TestResults
+          xcodebuild test \
+            -workspace Peaktime.xcworkspace \
+            -scheme "PresentationTests" \
+            -configuration DebugDev \
+            -destination "platform=iOS Simulator,name=iPhone 17,OS=latest" \
+            -resultBundlePath TestResults/PresentationTests.xcresult
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: TestResults/*.xcresult
+          if-no-files-found: ignore
+
+      - name: Fail on test failure
+        if: >-
+          steps.test-core.outcome == 'failure' ||
+          steps.test-data.outcome == 'failure' ||
+          steps.test-domain.outcome == 'failure' ||
+          steps.test-presentation.outcome == 'failure'
+        run: exit 1
