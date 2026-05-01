@@ -25,7 +25,7 @@ private extension TargetScript {
     
     static let googleServiceInfo: TargetScript = .pre(
         script: """
-        if [ "${CONFIGURATION}" = "Dev" ]; then
+        if [ "${ENV}" = "Dev" ]; then
             cp ${PROJECT_DIR}/../../Secrets/GoogleService-Info/Dev/GoogleService-Info.plist \
                ${BUILT_PRODUCTS_DIR}/${PRODUCT_NAME}.app/GoogleService-Info.plist
         else
