@@ -29,10 +29,42 @@ jobs:
       - name: Check required test files
         run: Tools/ci/check-required-tests.sh origin/develop
 
-      - name: Show Xcode and simulator versions
+      - name: Select iOS simulator
+        id: simulator
         run: |
+          set -euo pipefail
+
           xcodebuild -version
           xcrun simctl list devices available
+
+          destination="$(xcrun simctl list devices available --json | python3 -c '
+          import json
+          import re
+          import sys
+
+          devices_by_runtime = json.load(sys.stdin).get("devices", {})
+          candidates = []
+
+          for runtime, devices in devices_by_runtime.items():
+              match = re.search(r"iOS-(\\d+)-(\\d+)", runtime)
+              if not match:
+                  continue
+
+              runtime_version = tuple(map(int, match.groups()))
+              for index, device in enumerate(devices):
+                  if device.get("isAvailable") and device.get("name", "").startswith("iPhone"):
+                      candidates.append((runtime_version, -index, device["name"]))
+
+          if not candidates:
+              sys.exit("No available iPhone simulator found")
+
+          candidates.sort(reverse=True)
+          _, _, device_name = candidates[0]
+          print(f"platform=iOS Simulator,name={device_name},OS=latest")
+          ')"
+
+          echo "destination=${destination}" >> "$GITHUB_OUTPUT"
+          echo "Selected simulator destination: ${destination}"
 
       - name: Install mise
         uses: jdx/mise-action@v2
@@ -62,7 +94,7 @@ jobs:
             -workspace Peaktime.xcworkspace \
             -scheme "Peaktime DEV" \
             -configuration DebugDev \
-            -destination "platform=iOS Simulator,name=iPhone 17,OS=latest"
+            -destination "${{ steps.simulator.outputs.destination }}"
 
       - name: Test Core
         id: test-core
@@ -74,7 +106,7 @@ jobs:
             -workspace Peaktime.xcworkspace \
             -scheme "CoreTests" \
             -configuration DebugDev \
-            -destination "platform=iOS Simulator,name=iPhone 17,OS=latest" \
+            -destination "${{ steps.simulator.outputs.destination }}" \
             -resultBundlePath TestResults/CoreTests.xcresult
 
       - name: Test Data
@@ -87,7 +119,7 @@ jobs:
             -workspace Peaktime.xcworkspace \
             -scheme "DataTests" \
             -configuration DebugDev \
-            -destination "platform=iOS Simulator,name=iPhone 17,OS=latest" \
+            -destination "${{ steps.simulator.outputs.destination }}" \
             -resultBundlePath TestResults/DataTests.xcresult
 
       - name: Test Domain
@@ -100,7 +132,7 @@ jobs:
             -workspace Peaktime.xcworkspace \
             -scheme "DomainTests" \
             -configuration DebugDev \
-            -destination "platform=iOS Simulator,name=iPhone 17,OS=latest" \
+            -destination "${{ steps.simulator.outputs.destination }}" \
             -resultBundlePath TestResults/DomainTests.xcresult
 
       - name: Test Presentation
@@ -113,7 +145,7 @@ jobs:
             -workspace Peaktime.xcworkspace \
             -scheme "PresentationTests" \
             -configuration DebugDev \
-            -destination "platform=iOS Simulator,name=iPhone 17,OS=latest" \
+            -destination "${{ steps.simulator.outputs.destination }}" \
             -resultBundlePath TestResults/PresentationTests.xcresult
 
       - name: Upload test results
