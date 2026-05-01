@@ -74,6 +74,17 @@ jobs:
       - name: Install mise
         uses: jdx/mise-action@v2
 
+      - name: Cache Tuist and SPM dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            Tuist/.build
+            ~/Library/Caches/org.swift.swiftpm
+            ~/Library/Developer/Xcode/DerivedData/SourcePackages
+          key: ${{ runner.os }}-tuist-spm-${{ hashFiles('Tuist/Package.resolved', 'Tuist/Package.swift', 'mise.toml') }}
+          restore-keys: |
+            ${{ runner.os }}-tuist-spm-
+
       - name: Restore Firebase Dev config
         env:
           GOOGLE_SERVICE_INFO_DEV_PLIST_BASE64: ${{ secrets.GOOGLE_SERVICE_INFO_DEV_PLIST_BASE64 }}
