@@ -2,19 +2,22 @@
 set -euo pipefail
 
 output_file="${GITHUB_OUTPUT:-}"
+available_simulators_json="$(mktemp)"
+trap 'rm -f "$available_simulators_json"' EXIT
 
 xcodebuild -version
 xcrun simctl list devices available
 
-xcrun simctl list devices available --json > /tmp/available-simulators.json
+xcrun simctl list devices available --json > "$available_simulators_json"
 
 destination="$(
-    python3 <<'PY'
+    AVAILABLE_SIMULATORS_JSON="$available_simulators_json" python3 <<'PY'
 import json
+import os
 import re
 import sys
 
-with open("/tmp/available-simulators.json") as file:
+with open(os.environ["AVAILABLE_SIMULATORS_JSON"]) as file:
     devices_by_runtime = json.load(file).get("devices", {})
 
 candidates = []
