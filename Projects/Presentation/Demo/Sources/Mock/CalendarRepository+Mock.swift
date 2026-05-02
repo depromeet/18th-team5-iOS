@@ -10,11 +10,11 @@ import Foundation
 
 extension CalendarRepository {
     static let mock = CalendarRepository(
-        fetchMonthRecords: { _, _ in
+        fetchMonthRecords: { year, month in
             let formatter = DateFormatter()
             formatter.dateFormat = "yyyy-MM-dd"
             let base = Calendar.current.date(
-                from: Calendar.current.dateComponents([.year, .month], from: Date())
+                from: DateComponents(year: year, month: month, day: 1)
             ) ?? Date()
             return (1 ... 15).compactMap { day -> CalendarRecord? in
                 guard day % 2 != 0,
