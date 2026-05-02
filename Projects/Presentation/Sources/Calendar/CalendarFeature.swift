@@ -36,6 +36,7 @@ public struct CalendarFeature {
                 return fetchRecords(for: state.currentMonth)
 
             case .previousMonthTap:
+                state.isLoading = true
                 state.selectedDate = nil
                 state.currentMonth = Calendar.current.date(
                     byAdding: .month, value: -1, to: state.currentMonth
@@ -43,6 +44,7 @@ public struct CalendarFeature {
                 return fetchRecords(for: state.currentMonth)
 
             case .nextMonthTap:
+                state.isLoading = true
                 state.selectedDate = nil
                 state.currentMonth = Calendar.current.date(
                     byAdding: .month, value: 1, to: state.currentMonth
