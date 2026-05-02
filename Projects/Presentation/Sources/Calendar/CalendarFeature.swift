@@ -32,6 +32,7 @@ public struct CalendarFeature {
         Reduce { state, action in
             switch action {
             case .onAppear:
+                state.isLoading = true
                 return fetchRecords(for: state.currentMonth)
 
             case .previousMonthTap:
@@ -89,10 +90,10 @@ public struct CalendarFeature {
 
     private func fetchRecords(for month: Date) -> Effect<Action> {
         let components = Calendar.current.dateComponents([.year, .month], from: month)
-        guard let year = components.year, let month = components.month else { return .none }
+        guard let yearValue = components.year, let monthValue = components.month else { return .none }
         return .run { send in
             await send(.recordsLoad(
-                Result { try await calendarRepository.fetchMonthRecords(year, month) }
+                Result { try await calendarRepository.fetchMonthRecords(yearValue, monthValue) }
             ))
         }
     }
