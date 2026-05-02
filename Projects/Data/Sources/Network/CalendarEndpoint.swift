@@ -4,7 +4,11 @@ import Foundation
 enum CalendarEndpoint: APIEndpoint {
     case fetchMonthRecords(year: Int, month: Int)
     case fetchDayDetail(date: Date)
-    private static let iso8601Formatter = ISO8601DateFormatter()
+    private static let iso8601Formatter: ISO8601DateFormatter = {
+        let f = ISO8601DateFormatter()
+        f.timeZone = .current
+        return f
+    }()
 
     var path: String {
         switch self {
