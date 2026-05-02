@@ -36,7 +36,7 @@ extension CalendarRepository {
                         id: 1001,
                         missionId: 101,
                         missionType: "DAILY",
-                        imageURL: URL(string: "https://picsum.photos/seed/42/400/300")!,
+                        imageURL: URL(string: "https://picsum.photos/seed/42/400/300") ?? URL(fileURLWithPath: ""),
                         memo: "오늘 공원에서 찍은 사진이에요.",
                         completedAt: date
                     ),
@@ -44,7 +44,7 @@ extension CalendarRepository {
                         id: 1002,
                         missionId: 102,
                         missionType: "WEEKLY",
-                        imageURL: URL(string: "https://picsum.photos/seed/77/400/300")!,
+                        imageURL: URL(string: "https://picsum.photos/seed/77/400/300") ?? URL(fileURLWithPath: ""),
                         memo: "친구랑 같이 카페 다녀왔어요.",
                         completedAt: date
                     ),
@@ -52,7 +52,7 @@ extension CalendarRepository {
                         id: 1003,
                         missionId: 103,
                         missionType: "DAILY",
-                        imageURL: URL(string: "https://picsum.photos/seed/13/400/300")!,
+                        imageURL: URL(string: "https://picsum.photos/seed/13/400/300") ?? URL(fileURLWithPath: ""),
                         memo: "저녁 노을이 예뻤던 하루.",
                         completedAt: date
                     ),
@@ -60,7 +60,7 @@ extension CalendarRepository {
                         id: 1004,
                         missionId: 104,
                         missionType: "MONTHLY",
-                        imageURL: URL(string: "https://picsum.photos/seed/99/400/300")!,
+                        imageURL: URL(string: "https://picsum.photos/seed/99/400/300") ?? URL(fileURLWithPath: ""),
                         memo: "드디어 첫 번째 달 미션 완료!",
                         completedAt: date
                     )
