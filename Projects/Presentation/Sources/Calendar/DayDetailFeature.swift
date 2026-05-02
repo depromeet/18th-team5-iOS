@@ -54,18 +54,21 @@ public struct DayDetailFeature {
 
     public init() {}
 
-    public var body: some Reducer<State, Action> {
+    public var body: some ReducerOf<Self> {
         Reduce { state, action in
             switch action {
             case .onAppear:
+                state.isLoading = true
                 return fetchCompletions(for: state.selectedDate)
 
             case .previousWeekTap:
                 guard let newDate = state.moveWeek(by: -1) else { return .none }
+                state.isLoading = true
                 return fetchCompletions(for: newDate)
 
             case .nextWeekTap:
                 guard let newDate = state.moveWeek(by: 1) else { return .none }
+                state.isLoading = true
                 return fetchCompletions(for: newDate)
 
             case .saveImageTap:
