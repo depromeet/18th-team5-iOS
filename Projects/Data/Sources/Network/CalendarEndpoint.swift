@@ -4,13 +4,14 @@ import Foundation
 enum CalendarEndpoint: APIEndpoint {
     case fetchMonthRecords(year: Int, month: Int)
     case fetchDayDetail(date: Date)
+    private static let iso8601Formatter = ISO8601DateFormatter()
 
     var path: String {
         switch self {
         case .fetchMonthRecords:
             return "/calendar/records"
         case let .fetchDayDetail(date):
-            let formatted = ISO8601DateFormatter().string(from: date).prefix(10)
+            let formatted = Self.iso8601Formatter.string(from: date).prefix(10)
             return "/calendar/records/\(formatted)"
         }
     }
