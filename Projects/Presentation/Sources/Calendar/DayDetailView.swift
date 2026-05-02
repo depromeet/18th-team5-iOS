@@ -231,14 +231,3 @@ struct MissionCardView: View {
         .clipShape(RoundedRectangle(cornerRadius: 44))
     }
 }
-
-// MARK: - Helpers
-
-private extension Date {
-    var yearMonthString: String {
-        let formatter = DateFormatter()
-        formatter.locale = Locale(identifier: "ko_KR")
-        formatter.dateFormat = "yyyy년 M월"
-        return formatter.string(from: self)
-    }
-}
