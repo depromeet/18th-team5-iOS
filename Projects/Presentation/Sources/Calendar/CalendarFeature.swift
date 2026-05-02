@@ -56,6 +56,7 @@ public struct CalendarFeature {
                 guard state.dailyRecords[key] != nil else { return .none }
 
                 state.selectedDate = date
+                // TODO: 월 경계 주간에서 인접 월 기록 누락 가능(API 연동 시 인접 월 데이터도 함께 주입하거나 주 단위 별도 로드로 대응 필요) - @minkyo
                 state.dayDetail = DayDetailFeature.State(
                     selectedDate: date,
                     weekRecords: state.dailyRecords
