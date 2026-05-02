@@ -43,6 +43,7 @@ public struct DayDetailFeature {
         case saveLinkTap
         case cardSwipe
         case completionsLoad(Result<DayDetail, Error>)
+        case dateTap(Date)
         case delegate(Delegate)
 
         public enum Delegate {
@@ -94,6 +95,11 @@ public struct DayDetailFeature {
             case .completionsLoad(.failure):
                 state.isLoading = false
                 return .none
+
+            case let .dateTap(date):
+                state.isLoading = true
+                state.selectedDate = date
+                return fetchCompletions(for: date)
 
             case .delegate:
                 return .none

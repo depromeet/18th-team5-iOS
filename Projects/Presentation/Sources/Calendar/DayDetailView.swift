@@ -57,7 +57,7 @@ public struct DayDetailView: View {
                         date: date,
                         record: record,
                         isSelected: isSelected,
-                        onTap: nil // 미니 캘린더에서는 날짜 탭 비활성화
+                        onTap: { store.send(.dateTap(date)) }
                     )
                     .frame(maxWidth: .infinity) // 7칸이 가로 공간을 균등하게 차지
                 }
