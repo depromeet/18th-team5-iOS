@@ -14,7 +14,7 @@ struct FontDemoView: View {
         ScrollView {
             VStack(spacing: 20) {
                 ForEach(Typography.allCases, id: \.self) { typography in
-                    Text("피크타임에서 오늘의 절기 미션에 참여볼까요?")
+                    Text("피크타임에서 오늘의 절기 미션에 참여해볼까요?")
                         .font(typography)
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .padding(.horizontal, 20)
