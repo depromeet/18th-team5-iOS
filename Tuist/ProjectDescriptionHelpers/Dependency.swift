@@ -19,7 +19,7 @@ private extension Module {
         case .app: [.presentation, .data]
         case .presentation: [.domain, .designSystem]
         case .domain: [.core]
-        case .data: [.domain]
+        case .data: [.domain, .core]
         case .designSystem: [.core]
         default: []
         }
