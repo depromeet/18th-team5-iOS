@@ -10,23 +10,16 @@ import ComposableArchitecture
 import SwiftUI
 
 public struct OnboardingView: View {
-    @Bindable private var store: StoreOf<OnboardingFeature>
+    private let store: StoreOf<OnboardingFeature>
 
     public init(store: StoreOf<OnboardingFeature>) {
         self.store = store
     }
 
     public var body: some View {
-        NavigationStack(path: $store.scope(state: \.path, action: \.path)) {
-            Color.clear
-                .onAppear {
-                    store.send(.onAppear)
-                }
-        } destination: { store in
-            switch store.case {
-            case let .notificationConsent(store):
-                NotificationConsentView(store: store)
-            }
+        switch store.scope(state: \.path, action: \.path).case {
+        case let .notificationConsent(store): NotificationConsentView(store: store)
+        case let .survey(store): OnboardingSurveyView(store: store)
         }
     }
 }

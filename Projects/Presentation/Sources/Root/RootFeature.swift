@@ -28,10 +28,12 @@ public struct RootFeature {
         case onAppear
         case path(Path.Action)
         case launchConfigLoaded(Result<LaunchConfig, Error>)
+        case notificationAuthorizatonChecked(NotificationAuthorizationStatus?)
     }
 
     @Dependency(\.launchConfigRepository) var launchConfigRepository
     @Dependency(\.onboardingRepository) var onboardingRepository
+    @Dependency(\.notificationClient) private var notificationClient
     @Dependency(\.openURL) var openURL
 
     public init() {}
@@ -59,6 +61,10 @@ public struct RootFeature {
 
             case .launchConfigLoaded(.failure):
                 // 스플래쉬 노출 유지
+                return .none
+
+            case let .notificationAuthorizatonChecked(status):
+                state.path = .onboarding(.init(status))
                 return .none
 
             case .path(.forceUpdate(.updateButtonTapped)):
@@ -94,8 +100,8 @@ public enum Path {
 
 extension Path.State: Equatable {}
 
-extension RootFeature {
-    private func handleLaunchCofig(
+private extension RootFeature {
+    func handleLaunchCofig(
         _ config: LaunchConfig,
         _ state: inout State
     ) -> Effect<Action> {
@@ -117,12 +123,15 @@ extension RootFeature {
 
         // #3. 온보딩 수행 여부 확인
         let isOnboardingCompleted = try? onboardingRepository.isOnboardingCompleted()
-        if isOnboardingCompleted == false {
-            state.path = .onboarding(.init())
+        if isOnboardingCompleted == true {
+            state.path = .main(.init())
             return .none
         }
 
-        state.path = .main(.init())
-        return .none
+        // #4. 알림 동의 여부 확인
+        return .run { send in
+            let status = try? await notificationClient.getAuthorizationStatus()
+            await send(.notificationAuthorizatonChecked(status))
+        }
     }
 }
