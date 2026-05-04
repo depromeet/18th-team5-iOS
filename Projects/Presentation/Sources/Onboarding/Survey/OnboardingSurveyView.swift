@@ -7,6 +7,7 @@
 //
 
 import ComposableArchitecture
+import DesignSystem
 import SwiftUI
 
 public struct OnboardingSurveyView: View {
@@ -17,6 +18,25 @@ public struct OnboardingSurveyView: View {
     }
 
     public var body: some View {
-        Text("온보딩 시작 화면")
+        VStack(spacing: 0) {
+            OnboardingReadyView()
+            startButton
+        }
+    }
+}
+
+private extension OnboardingSurveyView {
+    var startButton: some View {
+        Button {} label: {
+            Text("시작하기")
+                .font(.body2Medium)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 16)
+                .foregroundStyle(Color(hex: 0xF9FAFB))
+                .background(Color(hex: 0x1F2937))
+                .clipShape(RoundedRectangle(cornerRadius: 6))
+        }
+        .padding(.horizontal, 20)
+        .padding(.bottom, 16)
     }
 }
