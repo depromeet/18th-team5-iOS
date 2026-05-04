@@ -9,10 +9,10 @@
 import SwiftUI
 
 public struct CircularWheelPicker<Item: Hashable, Content: View>: View {
-    private let items: [Item]
-    @Binding private var selection: Item
-    private let content: (Item) -> Content
     @State private var scrollID: Item?
+    @Binding private var selection: Item
+    private let items: [Item]
+    private let content: (Item) -> Content
     private let scrollIntensity: CGFloat = 0.5 // (0<..<1)
 
     public init(
