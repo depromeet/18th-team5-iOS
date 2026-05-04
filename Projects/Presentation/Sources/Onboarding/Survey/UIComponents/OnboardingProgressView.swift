@@ -24,7 +24,7 @@ struct OnboardingProgressView: View {
                     .foregroundStyle(color(step))
             }
         }
-        .animation(.easeInOut, value: currentStep)
+        .animation(.easeInOut(duration: 0.2), value: currentStep)
     }
 }
 

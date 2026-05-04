@@ -19,11 +19,14 @@ public struct OnboardingSurveyView: View {
 
     public var body: some View {
         VStack(spacing: 0) {
-            switch store.status {
-            case .ready: OnboardingReadyView()
-            case .inProgress: surveyView
-            case .result: EmptyView()
+            ZStack {
+                switch store.status {
+                case .ready: OnboardingReadyView()
+                case .inProgress: surveyView
+                case .result: Spacer()
+                }
             }
+            .animation(.easeInOut, value: store.status)
 
             bottomButton
         }
