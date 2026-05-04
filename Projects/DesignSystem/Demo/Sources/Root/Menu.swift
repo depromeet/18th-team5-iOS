@@ -8,11 +8,13 @@
 
 enum Menu: CaseIterable {
     case carousel
+    case circularWheelPicker
     case font
 
     var name: String {
         switch self {
         case .carousel: "Carousel"
+        case .circularWheelPicker: "Circular Wheel Picker"
         case .font: "Font"
         }
     }
