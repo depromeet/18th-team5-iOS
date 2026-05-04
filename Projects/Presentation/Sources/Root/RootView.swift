@@ -26,6 +26,7 @@ public struct RootView: View {
             case let .main(store): MainView(store: store)
             }
         }
+        .animation(.easeInOut, value: store.path)
         .onAppear { store.send(.onAppear) }
     }
 }

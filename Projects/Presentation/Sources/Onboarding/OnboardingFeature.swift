@@ -41,8 +41,16 @@ public struct OnboardingFeature {
             Path.body
         }
 
-        Reduce { _, _ in
-            return .none
+        Reduce { state, action in
+            switch action {
+            case .path(.notificationConsent(.delegate(.completed))):
+                state.path = .survey(.init())
+                return .none
+
+            case .path: return .none
+
+            case .delegate: return .none
+            }
         }
     }
 }

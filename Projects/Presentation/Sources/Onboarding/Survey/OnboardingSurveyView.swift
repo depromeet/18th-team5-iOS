@@ -17,6 +17,6 @@ public struct OnboardingSurveyView: View {
     }
 
     public var body: some View {
-        Text("Survey")
+        Text("온보딩 시작 화면")
     }
 }

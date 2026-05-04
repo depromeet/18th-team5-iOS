@@ -17,9 +17,12 @@ public struct OnboardingView: View {
     }
 
     public var body: some View {
-        switch store.scope(state: \.path, action: \.path).case {
-        case let .notificationConsent(store): NotificationConsentView(store: store)
-        case let .survey(store): OnboardingSurveyView(store: store)
+        ZStack {
+            switch store.scope(state: \.path, action: \.path).case {
+            case let .notificationConsent(store): NotificationConsentView(store: store)
+            case let .survey(store): OnboardingSurveyView(store: store)
+            }
         }
+        .animation(.easeInOut, value: store.path)
     }
 }

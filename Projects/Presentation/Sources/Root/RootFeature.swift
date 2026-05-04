@@ -128,7 +128,7 @@ private extension RootFeature {
             return .none
         }
 
-        // #4. 알림 동의 여부 확인
+        // #4. 알림 권한 확인
         return .run { send in
             let status = try? await notificationClient.getAuthorizationStatus()
             await send(.notificationAuthorizatonChecked(status))
