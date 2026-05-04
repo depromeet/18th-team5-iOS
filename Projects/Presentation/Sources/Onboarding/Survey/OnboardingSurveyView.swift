@@ -121,7 +121,9 @@ private extension OnboardingSurveyView {
     }
 
     var backButton: some View {
-        Button {} label: {
+        Button {
+            store.send(.backButtonTapped)
+        } label: {
             Image.icArrowLeft
                 .resizable()
                 .frame(width: 24, height: 24)
@@ -153,10 +155,12 @@ private extension OnboardingSurveyView {
     }
 
     var bottomButton: some View {
-        BottomButton(title: buttonTitle) {}
-            .disabled(!isButtonEnabled)
-            .padding(.horizontal, 20)
-            .padding(.top, 8)
-            .padding(.bottom, 16)
+        BottomButton(title: buttonTitle) {
+            store.send(.bottomButtonTapped)
+        }
+        .disabled(!isButtonEnabled)
+        .padding(.horizontal, 20)
+        .padding(.top, 8)
+        .padding(.bottom, 16)
     }
 }

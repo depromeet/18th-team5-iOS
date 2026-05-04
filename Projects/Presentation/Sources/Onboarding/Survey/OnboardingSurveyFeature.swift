@@ -23,8 +23,8 @@ public struct OnboardingSurveyFeature {
 
     @ObservableState
     public struct State: Equatable {
-        var status: Status = .inProgress
-        var step: Int = 1
+        var status: Status = .ready
+        var step: Int = 0
         var firstSelection: Selection?
         var secondSelection: Selection?
 
@@ -32,6 +32,8 @@ public struct OnboardingSurveyFeature {
     }
 
     public enum Action: BindableAction {
+        case backButtonTapped
+        case bottomButtonTapped
         case binding(BindingAction<State>)
     }
 
@@ -39,8 +41,27 @@ public struct OnboardingSurveyFeature {
     public var body: some ReducerOf<Self> {
         BindingReducer()
 
-        Reduce { _, _ in
-            return .none
+        Reduce { state, action in
+            switch action {
+            case .backButtonTapped:
+                switch state.step {
+                case 0: state.status = .ready
+                default: state.step -= 1
+                }
+                return .none
+            case .bottomButtonTapped:
+                switch state.status {
+                case .ready:
+                    state.status = .inProgress
+                case .inProgress:
+                    if state.step == 2 { state.status = .result } else { state.step += 1 }
+                    return .none
+                case .result:
+                    return .none
+                }
+                return .none
+            case .binding: return .none
+            }
         }
     }
 }
