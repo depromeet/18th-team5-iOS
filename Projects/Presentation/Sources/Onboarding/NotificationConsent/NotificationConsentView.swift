@@ -36,16 +36,8 @@ public struct NotificationConsentView: View {
 
 private extension NotificationConsentView {
     var doneButton: some View {
-        Button {
+        BottomButton(title: "네, 확인했어요") {
             store.send(.agreeButtonTapped)
-        } label: {
-            Text("네, 확인했어요")
-                .font(.body2Medium)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 16)
-                .foregroundStyle(Color(hex: 0xF9FAFB))
-                .background(Color(hex: 0x1F2937))
-                .clipShape(RoundedRectangle(cornerRadius: 6))
         }
         .padding(.horizontal, 20)
         .padding(.bottom, 16)
