@@ -28,7 +28,7 @@ public struct RootFeature {
         case onAppear
         case path(Path.Action)
         case launchConfigLoaded(Result<LaunchConfig, Error>)
-        case notificationAuthorizatonChecked(NotificationAuthorizationStatus?)
+        case notificationAuthorizationChecked(NotificationAuthorizationStatus?)
     }
 
     @Dependency(\.launchConfigRepository) var launchConfigRepository
@@ -57,13 +57,13 @@ public struct RootFeature {
                 }
 
             case let .launchConfigLoaded(.success(config)):
-                return handleLaunchCofig(config, &state)
+                return handleLaunchConfig(config, &state)
 
             case .launchConfigLoaded(.failure):
                 // 스플래쉬 노출 유지
                 return .none
 
-            case let .notificationAuthorizatonChecked(status):
+            case let .notificationAuthorizationChecked(status):
                 state.path = .onboarding(.init(status))
                 return .none
 
@@ -101,7 +101,7 @@ public enum Path {
 extension Path.State: Equatable {}
 
 private extension RootFeature {
-    func handleLaunchCofig(
+    func handleLaunchConfig(
         _ config: LaunchConfig,
         _ state: inout State
     ) -> Effect<Action> {
@@ -131,7 +131,7 @@ private extension RootFeature {
         // #4. 알림 권한 확인
         return .run { send in
             let status = try? await notificationClient.getAuthorizationStatus()
-            await send(.notificationAuthorizatonChecked(status))
+            await send(.notificationAuthorizationChecked(status))
         }
     }
 }
