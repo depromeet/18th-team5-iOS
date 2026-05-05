@@ -6,6 +6,7 @@
 //  Copyright © 2026 Orange. All rights reserved.
 //
 
+import Core
 import SwiftUI
 
 private enum Constants {
@@ -21,14 +22,14 @@ private enum Constants {
     static let stackMinScale: CGFloat = 0.75
 }
 
-public struct CardStackView<Item: Identifiable, CardView: View>: View {
+public struct CardStackView<Item, CardView: View>: View {
     @Binding var topCardIndex: Int
     private let items: [Item]
     @State private var currentDragableCardOffsetY: CGFloat = 0
     @State private var prevDragOffset: CGPoint?
     @State private var dragPercent: CGFloat = 0
-    @State private var cardOffsets: [Item.ID: CGFloat] = [:]
-    @State private var dismissingIds: [Item.ID] = []
+    @State private var cardOffsets: [Int: CGFloat] = [:]
+    @State private var dismissingIndices: [Int] = []
 
     private var cardView: (Item) -> CardView
 
@@ -44,7 +45,7 @@ public struct CardStackView<Item: Identifiable, CardView: View>: View {
 
     public var body: some View {
         ZStack {
-            ForEach(renderedEntries, id: \.item.id) { entry in
+            ForEach(renderedEntries, id: \.realIndex) { entry in
                 cardView(entry.item)
                     .frame(width: Constants.cardWidth, height: Constants.cardHeight)
                     .offset(x: 0, y: offsetY(for: entry))
@@ -70,7 +71,7 @@ extension CardStackView {
         let endIndex = min(topCardIndex + Constants.maxDisplayCardCount, items.endIndex)
         for index in topCardIndex ..< endIndex {
             let item = items[index]
-            if !dismissingIds.contains(item.id) {
+            if !dismissingIndices.contains(index) {
                 stack.append(RenderEntry(
                     item: item,
                     realIndex: index,
@@ -81,12 +82,11 @@ extension CardStackView {
         }
         let stackInDrawOrder = Array(stack.reversed())
 
-        let dismissing: [RenderEntry] = dismissingIds.compactMap { id in
-            guard let itemIndex = items.firstIndex(where: { $0.id == id })
-            else { return nil }
+        let dismissing: [RenderEntry] = dismissingIndices.compactMap { index in
+            guard let item = items[safe: index] else { return nil }
             return RenderEntry(
-                item: items[itemIndex],
-                realIndex: itemIndex,
+                item: item,
+                realIndex: index,
                 relativePosition: 0,
                 isDismissing: true
             )
@@ -99,7 +99,7 @@ extension CardStackView {
 
 extension CardStackView {
     private func offsetY(for entry: RenderEntry) -> CGFloat {
-        if entry.isDismissing { return cardOffsets[entry.item.id] ?? 0 }
+        if entry.isDismissing { return cardOffsets[entry.realIndex] ?? 0 }
         if entry.realIndex == topCardIndex { return currentDragableCardOffsetY }
         let chunk = Constants.stackOffsetSpan / CGFloat(Constants.maxDisplayCardCount)
         return chunk * (dragPercent - CGFloat(entry.relativePosition))
@@ -162,11 +162,11 @@ extension CardStackView {
 
         prevDragOffset = nil
 
-        let dismissingId = items[topCardIndex].id
+        let dismissingIndex = topCardIndex
         let startOffsetY = currentDragableCardOffsetY
 
-        cardOffsets[dismissingId] = startOffsetY
-        dismissingIds.append(dismissingId)
+        cardOffsets[dismissingIndex] = startOffsetY
+        dismissingIndices.append(dismissingIndex)
         currentDragableCardOffsetY = 0
 
         let remainingDistance = Constants.dismissTargetY - startOffsetY
@@ -180,18 +180,17 @@ extension CardStackView {
         }
 
         withAnimation(.interpolatingSpring(stiffness: 120, damping: 18, initialVelocity: initialVelocity)) {
-            cardOffsets[dismissingId] = Constants.dismissTargetY
+            cardOffsets[dismissingIndex] = Constants.dismissTargetY
         } completion: {
-            dismissingIds.removeAll { $0 == dismissingId }
-            cardOffsets[dismissingId] = nil
+            dismissingIndices.removeAll { $0 == dismissingIndex }
+            cardOffsets[dismissingIndex] = nil
         }
     }
 }
 
 // TODO: 삭제예정 - @준영
 
-public struct CardModel: Identifiable, Hashable {
-    public let id = UUID()
+public struct CardModel: Hashable {
     public let color: Color = .random()
 
     public init() {}
@@ -209,26 +208,16 @@ extension Color {
     }
 }
 
-// TODO: 삭제예정 - @준영
-
-struct CardView: View {
-    var item: CardModel
-    var body: some View {
-        ZStack {
-            RoundedRectangle(cornerRadius: 15)
-                .foregroundStyle(item.color)
-            Text(item.id.uuidString)
-                .font(.body)
-                .fontWeight(.bold)
-        }
-    }
-}
-
 #Preview {
     @Previewable @State var topCardIndex = 0
 
     CardStackView(
         topCardIndex: $topCardIndex,
         items: (0 ..< 10).map { _ in CardModel() }
-    ) { CardView(item: $0) }
+    ) { item in
+        ZStack {
+            RoundedRectangle(cornerRadius: 15)
+                .foregroundStyle(item.color)
+        }
+    }
 }
