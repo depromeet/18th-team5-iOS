@@ -59,9 +59,7 @@ public struct OnboardingSurveyFeature {
                     case 2: state.status = .result
                     default: break
                     }
-                    return .none
-                case .result:
-                    return .none
+                case .result: break
                 }
                 return .none
             case .binding: return .none
