@@ -32,7 +32,7 @@ public enum EngagementLevel {
     case casual
 }
 
-public enum ActivityTheme: CaseIterable {
+public enum ActivityTheme {
     case nature
     case food
     case culture

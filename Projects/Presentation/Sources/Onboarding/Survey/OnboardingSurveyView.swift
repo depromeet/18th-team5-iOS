@@ -157,7 +157,7 @@ private extension OnboardingSurveyView {
 
     var rankingView: some View {
         OnboardingRankingView(
-            items: ActivityTheme.allCases,
+            items: [.nature, .food, .culture],
             ranking: $store.preference.themeRanking,
             title: { $0.title },
             subtitle: { $0.subtitle }
