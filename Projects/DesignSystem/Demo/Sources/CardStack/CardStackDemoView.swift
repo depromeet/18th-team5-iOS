@@ -22,13 +22,46 @@ struct CardStackDemoView: View {
     }
 
     var body: some View {
+        ZStack {
+            Color.clear
+            cardStack
+            navigateButtons
+        }
+        .navigationTitle("Card Stack")
+    }
+
+    var cardStack: some View {
         CardStackView(
             topCardIndex: $topCardIndex,
             items: cards
         ) {
             $0.color
         }
-        .navigationTitle("Card Stack")
+    }
+
+    var navigateButtons: some View {
+        VStack {
+            Spacer()
+            HStack {
+                Spacer()
+                VStack {
+                    Button("다음") {
+                        withAnimation {
+                            topCardIndex += 1
+                        }
+                    }
+                    .disabled(topCardIndex == cards.endIndex - 1)
+
+                    Button("이전") {
+                        withAnimation {
+                            topCardIndex -= 1
+                        }
+                    }
+                    .disabled(topCardIndex == 0)
+                }
+                .padding([.trailing, .bottom], 30)
+            }
+        }
     }
 }
 

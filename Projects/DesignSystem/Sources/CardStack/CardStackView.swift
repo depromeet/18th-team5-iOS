@@ -22,12 +22,11 @@ private enum Constants {
 
 public struct CardStackView<Item: Identifiable, CardView: View>: View {
     // 화면에 노출되는 카드중 가장 상단에 위치한 카드 인덱스입니다.
-    @Binding var displayPointer: Int
+    @Binding var topCardIndex: Int
 
     // 배열의 앞쪽에 위치할 수록 먼저 노출됩니다.
     @State private var items: [Item]
 
-    @State private var dragableCardId: Item.ID?
     @State private var currentDragableCardOffsetY: CGFloat = 0
     @State private var prevDragOffset: CGPoint?
 
@@ -46,30 +45,28 @@ public struct CardStackView<Item: Identifiable, CardView: View>: View {
         items: [Item],
         cardView: @escaping (Item) -> CardView
     ) {
-        self._displayPointer = topCardIndex
+        self._topCardIndex = topCardIndex
         self.items = items
         self.cardView = cardView
 
         guard !items.isEmpty else { return }
-        self._dragableCardId = State(initialValue: items.first!.id)
     }
 
     public var body: some View {
         ZStack {
-            Color.clear
             ForEach(renderedEntries, id: \.item.id) { entry in
                 cardView(entry.item)
                     .frame(width: Constants.cardWidth, height: Constants.cardHeight)
                     .offset(x: 0, y: offsetY(for: entry))
                     .scaleEffect(scale(for: entry))
             }
-            navigationButtons
         }
         .gesture(dragGesture)
     }
 
     private struct RenderEntry {
         let item: Item
+        let realIndex: Int
         let relativePosition: Int
         let isDismissing: Bool
     }
@@ -79,13 +76,14 @@ public struct CardStackView<Item: Identifiable, CardView: View>: View {
     // 카드는 stack 범위에서 빠진 뒤에도 화면에 그대로 남아 애니메이션을 마칩니다.
     private var renderedEntries: [RenderEntry] {
         var stack: [RenderEntry] = []
-        let endIndex = min(displayPointer + Constants.maxDisplayCardCount, items.endIndex)
-        for index in displayPointer ..< endIndex {
+        let endIndex = min(topCardIndex + Constants.maxDisplayCardCount, items.endIndex)
+        for index in topCardIndex ..< endIndex {
             let item = items[index]
             if !dismissingIds.contains(item.id) {
                 stack.append(RenderEntry(
                     item: item,
-                    relativePosition: index - displayPointer,
+                    realIndex: index,
+                    relativePosition: index - topCardIndex,
                     isDismissing: false
                 ))
             }
@@ -95,8 +93,14 @@ public struct CardStackView<Item: Identifiable, CardView: View>: View {
 
         // dismiss 카드는 항상 스택 위에 그림
         let dismissing: [RenderEntry] = dismissingIds.compactMap { id in
-            guard let item = items.first(where: { $0.id == id }) else { return nil }
-            return RenderEntry(item: item, relativePosition: 0, isDismissing: true)
+            guard let itemIndex = items.firstIndex(where: { $0.id == id })
+            else { return nil }
+            return RenderEntry(
+                item: items[itemIndex],
+                realIndex: itemIndex,
+                relativePosition: 0,
+                isDismissing: true
+            )
         }
 
         return stackInDrawOrder + dismissing
@@ -107,7 +111,7 @@ public struct CardStackView<Item: Identifiable, CardView: View>: View {
     // isDismissing이 먼저 검사되므로 옛 카드는 cardOffsets로 정확히 그려집니다.
     private func offsetY(for entry: RenderEntry) -> CGFloat {
         if entry.isDismissing { return cardOffsets[entry.item.id] ?? 0 }
-        if entry.item.id == dragableCardId { return currentDragableCardOffsetY }
+        if entry.realIndex == topCardIndex { return currentDragableCardOffsetY }
         let chunk = Constants.stackOffsetSpan / CGFloat(Constants.maxDisplayCardCount)
         return chunk * (dragPercent - CGFloat(entry.relativePosition))
     }
@@ -117,33 +121,6 @@ public struct CardStackView<Item: Identifiable, CardView: View>: View {
         let scaleRange = 1.0 - Constants.stackMinScale
         let chunk = scaleRange / CGFloat(Constants.maxDisplayCardCount)
         return 1.0 - chunk * (CGFloat(entry.relativePosition) - dragPercent)
-    }
-
-    private var navigationButtons: some View {
-        VStack {
-            Spacer()
-            HStack {
-                Spacer()
-                VStack {
-                    Button("다음") {
-                        withAnimation {
-                            displayPointer += 1
-                            dragableCardId = items[displayPointer].id
-                        }
-                    }
-                    .disabled(displayPointer == items.endIndex - 1)
-
-                    Button("이전") {
-                        withAnimation {
-                            displayPointer -= 1
-                            dragableCardId = items[displayPointer].id
-                        }
-                    }
-                    .disabled(displayPointer == 0)
-                }
-                .padding([.trailing, .bottom], 30)
-            }
-        }
     }
 
     private var dragThreshold: CGFloat {
@@ -180,17 +157,14 @@ public struct CardStackView<Item: Identifiable, CardView: View>: View {
     }
 
     private func snapToDismiss(verticalVelocity: CGFloat) {
-        guard let frontIndex = items.firstIndex(where: { $0.id == dragableCardId })
-        else { return }
-
-        if frontIndex == items.endIndex - 1 {
+        if topCardIndex == items.endIndex - 1 {
             snapToIdentity()
             return
         }
 
         prevDragOffset = nil
 
-        let dismissingId = items[frontIndex].id
+        let dismissingId = items[topCardIndex].id
         let startOffsetY = currentDragableCardOffsetY
 
         // 현재 드래그 위치를 사라지는 카드에게 이관.
@@ -209,8 +183,7 @@ public struct CardStackView<Item: Identifiable, CardView: View>: View {
         // 뒤 카드들을 한 단계씩 앞으로 정렬
         withAnimation {
             dragPercent = 0
-            displayPointer += 1
-            dragableCardId = items[displayPointer].id
+            topCardIndex += 1
         }
 
         // 사라지는 카드를 화면 밖으로 — 드래그 속도가 spring 초기 속도로 그대로 이어집니다.
@@ -260,8 +233,10 @@ struct CardView: View {
 }
 
 #Preview {
+    @Previewable @State var topCardIndex: Int = 0
+
     CardStackView(
-        topCardIndex: .constant(0),
+        topCardIndex: $topCardIndex,
         items: (0 ..< 10).map { _ in CardModel() }
     ) { CardView(item: $0) }
 }
