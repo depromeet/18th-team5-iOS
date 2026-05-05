@@ -21,12 +21,19 @@ public struct OnboardingSurveyFeature {
         case right
     }
 
+    enum Lifestyle: CaseIterable {
+        case activity
+        case food
+        case contents
+    }
+
     @ObservableState
     public struct State: Equatable {
         var status: Status = .ready
         var step: Int = 0
         var firstSelection: Selection?
         var secondSelection: Selection?
+        var lifestyleRanking: [Lifestyle] = []
 
         public init() {}
     }

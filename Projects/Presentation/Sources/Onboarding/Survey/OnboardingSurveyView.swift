@@ -67,6 +67,22 @@ private extension OnboardingSurveyView {
         }
     }
 
+    func optionTitle(_ lifestyle: OnboardingSurveyFeature.Lifestyle) -> String {
+        switch lifestyle {
+        case .activity: "자연이나 야외 활동"
+        case .food: "제철 음식이나 요리"
+        case .contents: "감성 콘텐츠나 문화"
+        }
+    }
+
+    func optionSubtitle(_ lifestyle: OnboardingSurveyFeature.Lifestyle) -> String {
+        switch lifestyle {
+        case .activity: "봄나들이, 단풍 구경, 산책 등"
+        case .food: "봄나물, 제철 과일, 계절 음료 등"
+        case .contents: "전시, 독서, 영화, 음악 등"
+        }
+    }
+
     var selection: Binding<OnboardingSurveyFeature.Selection?> {
         switch store.step {
         case 0: $store.firstSelection
@@ -107,7 +123,7 @@ private extension OnboardingSurveyView {
                     if store.step < 2 {
                         selectionView
                     } else if store.step == 2 {
-                        EmptyView() // TODO: @정원 - 구현 예정
+                        rankingView
                     }
                 }
                 .padding(.horizontal, 20)
@@ -159,6 +175,15 @@ private extension OnboardingSurveyView {
             title: optionTitle,
             subtitle: optionSubtitle,
             selection: selection
+        )
+    }
+
+    var rankingView: some View {
+        OnboardingRankingView(
+            items: OnboardingSurveyFeature.Lifestyle.allCases,
+            ranking: $store.lifestyleRanking,
+            title: optionTitle,
+            subtitle: optionSubtitle
         )
     }
 
