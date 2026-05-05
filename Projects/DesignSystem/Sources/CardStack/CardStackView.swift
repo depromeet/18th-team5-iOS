@@ -128,7 +128,8 @@ extension CardStackView {
                 if prevDragOffset == nil {
                     prevDragOffset = state.startLocation
                 }
-                let dY = state.location.y - prevDragOffset!.y
+                guard let prev = prevDragOffset else { return }
+                let dY = state.location.y - prev.y
                 prevDragOffset = state.location
 
                 currentDragableCardOffsetY += dY
