@@ -17,17 +17,10 @@ public struct OnboardingSurveyFeature {
         case result
     }
 
-    enum Selection {
-        case left
-        case right
-    }
-
     @ObservableState
     public struct State: Equatable {
         var status: Status = .ready
         var step: Int = 0
-        var firstSelection: Selection?
-        var secondSelection: Selection?
         var preference: UserPreference = .init()
 
         public init() {}

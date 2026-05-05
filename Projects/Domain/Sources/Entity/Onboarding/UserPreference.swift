@@ -8,16 +8,16 @@
 
 public struct UserPreference: Equatable {
     public var activityStyle: ActivityStyle?
-    public var activityIntensity: ActivityIntensity?
+    public var engagementLevel: EngagementLevel?
     public var themeRanking: [ActivityTheme]
 
     public init(
         activityStyle: ActivityStyle? = nil,
-        activityIntensity: ActivityIntensity? = nil,
+        engagementLevel: EngagementLevel? = nil,
         themeRanking: [ActivityTheme] = []
     ) {
         self.activityStyle = activityStyle
-        self.activityIntensity = activityIntensity
+        self.engagementLevel = engagementLevel
         self.themeRanking = themeRanking
     }
 }
@@ -27,7 +27,7 @@ public enum ActivityStyle {
     case indoor
 }
 
-public enum ActivityIntensity {
+public enum EngagementLevel {
     case active
     case casual
 }
