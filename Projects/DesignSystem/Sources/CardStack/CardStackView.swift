@@ -13,6 +13,7 @@ private enum Constants {
 
     static let cardWidth: CGFloat = 200
     static let cardHeight: CGFloat = 300
+
     static let maxDisplayCardCount: Int = 5
     static let dragToDismissThresholdPercent: CGFloat = 0.5
     static let dismissTargetY: CGFloat = 700
@@ -21,20 +22,11 @@ private enum Constants {
 }
 
 public struct CardStackView<Item: Identifiable, CardView: View>: View {
-    // 화면에 노출되는 카드중 가장 상단에 위치한 카드 인덱스입니다.
     @Binding var topCardIndex: Int
-
-    // 배열의 앞쪽에 위치할 수록 먼저 노출됩니다.
     @State private var items: [Item]
-
     @State private var currentDragableCardOffsetY: CGFloat = 0
     @State private var prevDragOffset: CGPoint?
-
-    // 드래그 임계값 대비 진행도(0~1) — 스택 카드의 stair-step 보간에 사용.
     @State private var dragPercent: CGFloat = 0
-
-    // 사라지는 카드는 별도 뷰가 아니라 같은 ForEach 안에서 자기만의 offset을
-    // 들고 슬라이드합니다. 드래그 → dismiss 순간에 뷰 정체성이 끊기지 않습니다.
     @State private var cardOffsets: [Item.ID: CGFloat] = [:]
     @State private var dismissingIds: [Item.ID] = []
 
@@ -63,7 +55,11 @@ public struct CardStackView<Item: Identifiable, CardView: View>: View {
         }
         .gesture(dragGesture)
     }
+}
 
+// MARK: - Render Entry
+
+extension CardStackView {
     private struct RenderEntry {
         let item: Item
         let realIndex: Int
@@ -71,9 +67,6 @@ public struct CardStackView<Item: Identifiable, CardView: View>: View {
         let isDismissing: Bool
     }
 
-    // 스택 카드 + dismiss 진행 중인 카드를 하나의 ForEach에 합쳐서 그립니다.
-    // displayPointer가 옮겨가도 dismissingIds로 별도 식별되므로, 사라지는
-    // 카드는 stack 범위에서 빠진 뒤에도 화면에 그대로 남아 애니메이션을 마칩니다.
     private var renderedEntries: [RenderEntry] {
         var stack: [RenderEntry] = []
         let endIndex = min(topCardIndex + Constants.maxDisplayCardCount, items.endIndex)
@@ -88,10 +81,8 @@ public struct CardStackView<Item: Identifiable, CardView: View>: View {
                 ))
             }
         }
-        // 뒤 카드 → 앞 카드 순으로 그려야 z-order가 맞음
         let stackInDrawOrder = Array(stack.reversed())
 
-        // dismiss 카드는 항상 스택 위에 그림
         let dismissing: [RenderEntry] = dismissingIds.compactMap { id in
             guard let itemIndex = items.firstIndex(where: { $0.id == id })
             else { return nil }
@@ -102,13 +93,13 @@ public struct CardStackView<Item: Identifiable, CardView: View>: View {
                 isDismissing: true
             )
         }
-
         return stackInDrawOrder + dismissing
     }
+}
 
-    // 분기 우선순위: dismiss > front > stack.
-    // release 직후 dragableCardId가 잠깐 옛 카드를 가리키는 동안에도
-    // isDismissing이 먼저 검사되므로 옛 카드는 cardOffsets로 정확히 그려집니다.
+// MARK: - Card Transform
+
+extension CardStackView {
     private func offsetY(for entry: RenderEntry) -> CGFloat {
         if entry.isDismissing { return cardOffsets[entry.item.id] ?? 0 }
         if entry.realIndex == topCardIndex { return currentDragableCardOffsetY }
@@ -122,7 +113,11 @@ public struct CardStackView<Item: Identifiable, CardView: View>: View {
         let chunk = scaleRange / CGFloat(Constants.maxDisplayCardCount)
         return 1.0 - chunk * (CGFloat(entry.relativePosition) - dragPercent)
     }
+}
 
+// MARK: - Drag Gesture
+
+extension CardStackView {
     private var dragThreshold: CGFloat {
         Constants.cardHeight * Constants.dragToDismissThresholdPercent
     }
@@ -147,7 +142,11 @@ public struct CardStackView<Item: Identifiable, CardView: View>: View {
                 }
             }
     }
+}
 
+// MARK: - Snap Actions
+
+extension CardStackView {
     private func snapToIdentity() {
         prevDragOffset = nil
         withAnimation {
@@ -167,26 +166,20 @@ public struct CardStackView<Item: Identifiable, CardView: View>: View {
         let dismissingId = items[topCardIndex].id
         let startOffsetY = currentDragableCardOffsetY
 
-        // 현재 드래그 위치를 사라지는 카드에게 이관.
-        // dragableCardId는 아직 옛 카드를 가리키지만 isDismissing 분기가 우선이라 안전.
         cardOffsets[dismissingId] = startOffsetY
         dismissingIds.append(dismissingId)
         currentDragableCardOffsetY = 0
 
-        // 손가락 속도(pt/s) ÷ 남은 거리(pt) = interpolatingSpring의 initialVelocity 단위(/s).
-        // 예: 1500pt/s로 던졌고 남은 거리가 500pt라면 초기 속도는 3.0/s.
         let remainingDistance = Constants.dismissTargetY - startOffsetY
         let initialVelocity: CGFloat = remainingDistance > 0
             ? max(0, verticalVelocity / remainingDistance)
             : 0
 
-        // 뒤 카드들을 한 단계씩 앞으로 정렬
         withAnimation {
             dragPercent = 0
             topCardIndex += 1
         }
 
-        // 사라지는 카드를 화면 밖으로 — 드래그 속도가 spring 초기 속도로 그대로 이어집니다.
         withAnimation(.interpolatingSpring(stiffness: 120, damping: 18, initialVelocity: initialVelocity)) {
             cardOffsets[dismissingId] = Constants.dismissTargetY
         } completion: {
@@ -233,7 +226,7 @@ struct CardView: View {
 }
 
 #Preview {
-    @Previewable @State var topCardIndex: Int = 0
+    @Previewable @State var topCardIndex = 0
 
     CardStackView(
         topCardIndex: $topCardIndex,
