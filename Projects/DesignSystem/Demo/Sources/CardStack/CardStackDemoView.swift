@@ -15,11 +15,18 @@ private struct CardModel: Identifiable, Hashable {
 }
 
 struct CardStackDemoView: View {
-    private let cards: [CardModel] = (0 ..< 10).map { CardModel(id: $0, color: .random()) }
+    @State private var topCardIndex: Int = 0
+
+    private let cards: [CardModel] = (0 ..< 10).map {
+        CardModel(id: $0, color: .random())
+    }
 
     var body: some View {
-        CardStackView(items: cards) { card in
-            card.color
+        CardStackView(
+            topCardIndex: $topCardIndex,
+            items: cards
+        ) {
+            $0.color
         }
         .navigationTitle("Card Stack")
     }
