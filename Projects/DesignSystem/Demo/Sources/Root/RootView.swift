@@ -30,6 +30,7 @@ private extension RootView {
         switch menu {
         case .carousel: CarouselDemoView()
         case .circularWheelPicker: CircularWheelPickerDemoView()
+        case .cardStack: CardStackDemoView()
         case .font: FontDemoView()
         }
     }
