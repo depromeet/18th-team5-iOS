@@ -8,6 +8,7 @@
 
 import ComposableArchitecture
 import DesignSystem
+import Domain
 import SwiftUI
 
 public struct OnboardingSurveyView: View {
@@ -23,7 +24,7 @@ public struct OnboardingSurveyView: View {
                 switch store.status {
                 case .ready: OnboardingReadyView()
                 case .inProgress: surveyView
-                case .result: Spacer()
+                case .result: Spacer() // TODO: @정원 - 구현 예정
                 }
             }
             .animation(.easeInOut, value: store.status)
@@ -67,22 +68,6 @@ private extension OnboardingSurveyView {
         }
     }
 
-    func optionTitle(_ lifestyle: OnboardingSurveyFeature.Lifestyle) -> String {
-        switch lifestyle {
-        case .activity: "자연이나 야외 활동"
-        case .food: "제철 음식이나 요리"
-        case .contents: "감성 콘텐츠나 문화"
-        }
-    }
-
-    func optionSubtitle(_ lifestyle: OnboardingSurveyFeature.Lifestyle) -> String {
-        switch lifestyle {
-        case .activity: "봄나들이, 단풍 구경, 산책 등"
-        case .food: "봄나물, 제철 과일, 계절 음료 등"
-        case .contents: "전시, 독서, 영화, 음악 등"
-        }
-    }
-
     var selection: Binding<OnboardingSurveyFeature.Selection?> {
         switch store.step {
         case 0: $store.firstSelection
@@ -105,7 +90,7 @@ private extension OnboardingSurveyView {
             switch store.step {
             case 0: store.firstSelection != nil
             case 1: store.secondSelection != nil
-            case 2: store.lifestyleRanking.count == 3
+            case 2: store.preference.themeRanking.count == 3
             default: false
             }
         }
@@ -181,10 +166,10 @@ private extension OnboardingSurveyView {
 
     var rankingView: some View {
         OnboardingRankingView(
-            items: OnboardingSurveyFeature.Lifestyle.allCases,
-            ranking: $store.lifestyleRanking,
-            title: optionTitle,
-            subtitle: optionSubtitle
+            items: ActivityTheme.allCases,
+            ranking: $store.preference.themeRanking,
+            title: { $0.title },
+            subtitle: { $0.subtitle }
         )
     }
 
@@ -196,5 +181,23 @@ private extension OnboardingSurveyView {
         .padding(.horizontal, 20)
         .padding(.top, 8)
         .padding(.bottom, 16)
+    }
+}
+
+private extension ActivityTheme {
+    var title: String {
+        switch self {
+        case .nature: "자연이나 야외 활동"
+        case .food: "제철 음식이나 요리"
+        case .culture: "감성 콘텐츠나 문화"
+        }
+    }
+
+    var subtitle: String {
+        switch self {
+        case .nature: "봄나들이, 단풍 구경, 산책 등"
+        case .food: "봄나물, 제철 과일, 계절 음료 등"
+        case .culture: "전시, 독서, 영화, 음악 등"
+        }
     }
 }
