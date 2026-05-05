@@ -34,6 +34,11 @@ public struct OnboardingSurveyFeature {
         case backButtonTapped
         case bottomButtonTapped
         case binding(BindingAction<State>)
+        case delegate(Delegate)
+    }
+
+    public enum Delegate {
+        case onboardingCompleted
     }
 
     public init() {}
@@ -52,16 +57,19 @@ public struct OnboardingSurveyFeature {
                 switch state.status {
                 case .ready:
                     state.status = .inProgress
+                    return .none
                 case .inProgress:
                     switch state.step {
                     case 0 ..< 2: state.step += 1
                     case 2: state.status = .result
                     default: break
                     }
-                case .result: break
+                    return .none
+                case .result:
+                    return .send(.delegate(.onboardingCompleted))
                 }
-                return .none
             case .binding: return .none
+            case .delegate: return .none
             }
         }
     }
