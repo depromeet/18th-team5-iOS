@@ -54,7 +54,11 @@ public struct OnboardingSurveyFeature {
                 case .ready:
                     state.status = .inProgress
                 case .inProgress:
-                    if state.step == 2 { state.status = .result } else { state.step += 1 }
+                    switch state.step {
+                    case 0 ..< 2: state.step += 1
+                    case 2: state.status = .result
+                    default: break
+                    }
                     return .none
                 case .result:
                     return .none

@@ -103,7 +103,12 @@ private extension OnboardingSurveyView {
             ScrollView {
                 VStack(spacing: 40) {
                     titleView
-                    if store.step < 2 { selectionView } else { EmptyView() }
+
+                    if store.step < 2 {
+                        selectionView
+                    } else if store.step == 2 {
+                        EmptyView() // TODO: @정원 - 구현 예정
+                    }
                 }
                 .padding(.horizontal, 20)
                 .padding(.top, 24)
