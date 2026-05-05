@@ -105,7 +105,8 @@ private extension OnboardingSurveyView {
             switch store.step {
             case 0: store.firstSelection != nil
             case 1: store.secondSelection != nil
-            default: true
+            case 2: store.lifestyleRanking.count == 3
+            default: false
             }
         }
     }
