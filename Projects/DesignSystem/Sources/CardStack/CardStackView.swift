@@ -23,7 +23,7 @@ private enum Constants {
 
 public struct CardStackView<Item: Identifiable, CardView: View>: View {
     @Binding var topCardIndex: Int
-    @State private var items: [Item]
+    private let items: [Item]
     @State private var currentDragableCardOffsetY: CGFloat = 0
     @State private var prevDragOffset: CGPoint?
     @State private var dragPercent: CGFloat = 0
@@ -40,12 +40,6 @@ public struct CardStackView<Item: Identifiable, CardView: View>: View {
         self._topCardIndex = topCardIndex
         self.items = items
         self.cardView = cardView
-
-    ) {
-        self._topCardIndex = topCardIndex
-        self.items = items
-        self.cardView = cardView
-    }
     }
 
     public var body: some View {
@@ -181,9 +175,6 @@ extension CardStackView {
             : 0
 
         withAnimation(.easeInOut) {
-            dragPercent = 0
-            topCardIndex += 1
-        }
             dragPercent = 0
             topCardIndex += 1
         }
