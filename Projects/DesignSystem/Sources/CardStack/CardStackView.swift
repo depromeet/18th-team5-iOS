@@ -41,7 +41,11 @@ public struct CardStackView<Item: Identifiable, CardView: View>: View {
         self.items = items
         self.cardView = cardView
 
-        guard !items.isEmpty else { return }
+    ) {
+        self._topCardIndex = topCardIndex
+        self.items = items
+        self.cardView = cardView
+    }
     }
 
     public var body: some View {
