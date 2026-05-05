@@ -22,9 +22,9 @@ public struct OnboardingSurveyView: View {
         VStack(spacing: 0) {
             ZStack {
                 switch store.status {
-                case .ready: OnboardingReadyView()
+                case .ready: readyView
                 case .inProgress: surveyView
-                case .result: Spacer() // TODO: @정원 - 구현 예정
+                case .result: resultView
                 }
             }
             .animation(.easeInOut, value: store.status)
@@ -71,6 +71,10 @@ private extension OnboardingSurveyView {
 }
 
 private extension OnboardingSurveyView {
+    var readyView: some View {
+        OnboardingReadyView()
+    }
+
     var surveyView: some View {
         VStack(spacing: 0) {
             headerView
@@ -162,6 +166,13 @@ private extension OnboardingSurveyView {
             title: { $0.title },
             subtitle: { $0.subtitle }
         )
+    }
+
+    @ViewBuilder
+    var resultView: some View {
+        if let userType = store.userType {
+            OnboardingResultView(userType: userType)
+        }
     }
 
     var bottomButton: some View {

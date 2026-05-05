@@ -24,6 +24,10 @@ public struct OnboardingSurveyFeature {
         var preference: UserPreference = .init()
 
         public init() {}
+
+        var userType: UserType? {
+            preference.userType
+        }
     }
 
     public enum Action: BindableAction {
