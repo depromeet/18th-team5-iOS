@@ -176,7 +176,10 @@ extension CardStackView {
             ? max(0, verticalVelocity / remainingDistance)
             : 0
 
-        withAnimation {
+        withAnimation(.easeInOut) {
+            dragPercent = 0
+            topCardIndex += 1
+        }
             dragPercent = 0
             topCardIndex += 1
         }
