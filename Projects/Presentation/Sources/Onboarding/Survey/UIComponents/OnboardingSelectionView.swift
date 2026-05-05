@@ -63,8 +63,8 @@ private extension OnboardingSelectionView {
     }
 
     func cardView(
-        title: String?,
-        subtitle: String?,
+        title: String,
+        subtitle: String,
         isSelected: Bool,
         action: @escaping () -> Void
     ) -> some View {
@@ -77,13 +77,13 @@ private extension OnboardingSelectionView {
                     .foregroundStyle(iconColor(isSelected))
 
                 VStack(spacing: 6) {
-                    Text(title ?? "")
+                    Text(title)
                         .font(.body1Semibold)
                         .foregroundStyle(titleColor(isSelected))
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .multilineTextAlignment(.leading)
 
-                    Text(subtitle ?? "")
+                    Text(subtitle)
                         .font(.body2Regular)
                         .foregroundStyle(Color(hex: 0x9CA3AF))
                         .frame(maxWidth: .infinity, alignment: .leading)
