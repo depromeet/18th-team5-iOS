@@ -6,6 +6,8 @@
 //  Copyright © 2026 Orange. All rights reserved.
 //
 
+import Dependencies
+
 public final class Logger: Sendable {
     private let handlers: [LogHandler]
 
@@ -41,7 +43,14 @@ public final class Logger: Sendable {
         function: String = #function,
         line: UInt = #line
     ) {
-        log(level: .debug, message: message, metadata: metadata, file: file, function: function, line: line)
+        log(
+            level: .debug,
+            message: message,
+            metadata: metadata,
+            file: file,
+            function: function,
+            line: line
+        )
     }
 
     public func info(
@@ -51,7 +60,14 @@ public final class Logger: Sendable {
         function: String = #function,
         line: UInt = #line
     ) {
-        log(level: .info, message: message, metadata: metadata, file: file, function: function, line: line)
+        log(
+            level: .info,
+            message: message,
+            metadata: metadata,
+            file: file,
+            function: function,
+            line: line
+        )
     }
 
     public func warning(
@@ -61,7 +77,14 @@ public final class Logger: Sendable {
         function: String = #function,
         line: UInt = #line
     ) {
-        log(level: .warning, message: message, metadata: metadata, file: file, function: function, line: line)
+        log(
+            level: .warning,
+            message: message,
+            metadata: metadata,
+            file: file,
+            function: function,
+            line: line
+        )
     }
 
     public func error(
@@ -71,7 +94,14 @@ public final class Logger: Sendable {
         function: String = #function,
         line: UInt = #line
     ) {
-        log(level: .error, message: message, metadata: metadata, file: file, function: function, line: line)
+        log(
+            level: .error,
+            message: message,
+            metadata: metadata,
+            file: file,
+            function: function,
+            line: line
+        )
     }
 
     public func fatal(
@@ -81,6 +111,28 @@ public final class Logger: Sendable {
         function: String = #function,
         line: UInt = #line
     ) {
-        log(level: .fatal, message: message, metadata: metadata, file: file, function: function, line: line)
+        log(
+            level: .fatal,
+            message: message,
+            metadata: metadata,
+            file: file,
+            function: function,
+            line: line
+        )
+    }
+}
+
+// MARK: Dependencies
+
+public enum LoggerKey: DependencyKey {
+    public static let liveValue = Logger(handlers: [DebugLogHandler()])
+    public static let previewValue = Logger(handlers: [DebugLogHandler()])
+    public static let testValue = Logger(handlers: [DebugLogHandler()])
+}
+
+public extension DependencyValues {
+    var logger: Logger {
+        get { self[LoggerKey.self] }
+        set { self[LoggerKey.self] = newValue }
     }
 }
