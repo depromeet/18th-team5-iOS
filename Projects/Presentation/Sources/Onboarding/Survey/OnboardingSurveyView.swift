@@ -119,7 +119,7 @@ private extension OnboardingSurveyView {
     var headerView: some View {
         ZStack {
             OnboardingProgressView(
-                stepCounts: store.stepCounts,
+                stepCount: store.stepCount,
                 currentStep: store.step
             )
 
