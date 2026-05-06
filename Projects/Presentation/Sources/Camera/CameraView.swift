@@ -8,7 +8,6 @@
 
 import AVFoundation
 import ComposableArchitecture
-import Dependencies
 import DesignSystem
 import Domain
 import SwiftUI
@@ -16,12 +15,9 @@ import SwiftUI
 public struct CameraView: View {
     @Environment(\.dismiss) private var dismiss
     private let store: StoreOf<CameraFeature>
-    private let session: AVCaptureSession
 
     public init(store: StoreOf<CameraFeature>) {
         self.store = store
-        @Dependency(\.cameraClient) var cameraClient
-        self.session = cameraClient.getSession()
     }
 
     public var body: some View {
@@ -55,7 +51,7 @@ private extension CameraView {
             dismiss()
         } label: {
             Image(systemName: "xmark")
-                .font(.system(size: 24))
+                .font(.system(size: 20))
                 .foregroundStyle(.black)
                 .frame(width: 44, height: 44)
                 .background(Color.gray300)
@@ -71,9 +67,11 @@ private extension CameraView {
             let size = geometry.size.width
 
             ZStack {
-                CameraPreviewView(session: session)
-                    .frame(width: size, height: size)
-                    .clipShape(RoundedRectangle(cornerRadius: 34))
+                if let session = store.captureSession?.session {
+                    CameraPreviewView(session: session)
+                        .frame(width: size, height: size)
+                        .clipShape(RoundedRectangle(cornerRadius: 34))
+                }
 
                 VStack {
                     HStack {
@@ -154,38 +152,50 @@ private extension CameraView {
             .padding(.vertical, 8)
             .background(.black.opacity(0.5))
             .clipShape(Capsule())
-        } else {
-            Text(store.zoomLevelText)
-                .font(.system(size: 13, weight: .semibold))
-                .foregroundStyle(.yellow)
-                .monospacedDigit()
-                .padding(.horizontal, 12)
-                .padding(.vertical, 6)
-                .background(.black.opacity(0.5))
-                .clipShape(Capsule())
         }
     }
 
     // MARK: - 줌 프리셋 버튼 (후면 카메라 전용)
 
     var zoomSelector: some View {
-        HStack(spacing: 16) {
-            ForEach(CameraFeature.ZoomLevel.allCases, id: \.self) { level in
-                Button { store.send(.zoomSelected(level)) } label: {
-                    Text(level.displayText)
-                        .font(.system(size: 14, weight: .semibold))
-                        .foregroundStyle(store.activePreset == level ? .black : .gray500)
-                        .frame(width: 32, height: 32)
-                        .background(
-                            store.activePreset == level
-                                ? Color.gray200
-                                : Color.clear
-                        )
-                        .clipShape(Circle())
+        GeometryReader { geometry in
+            let sidePadding = geometry.size.width / 2 - 16
+
+            ScrollViewReader { proxy in
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 16) {
+                        ForEach(CameraFeature.ZoomLevel.allCases, id: \.self) { level in
+                            zoomButton(for: level)
+                                .id(level)
+                        }
+                    }
+                    .padding(.horizontal, sidePadding)
+                }
+                .onAppear {
+                    proxy.scrollTo(store.activePreset, anchor: .center)
+                }
+                .onChange(of: store.activePreset) { _, newValue in
+                    withAnimation(.easeInOut(duration: 0.3)) {
+                        proxy.scrollTo(newValue, anchor: .center)
+                    }
                 }
             }
         }
+        .frame(height: 32)
         .padding(.top, 24)
+    }
+
+    func zoomButton(for level: CameraFeature.ZoomLevel) -> some View {
+        let isActive = store.activePreset == level
+        let text = store.zoomButtonTexts[level] ?? level.displayText
+        return Button { store.send(.zoomSelected(level)) } label: {
+            Text(text)
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundStyle(isActive ? .black : .gray500)
+                .frame(width: 32, height: 32)
+                .background(isActive ? Color.gray200 : Color.clear)
+                .clipShape(Circle())
+        }
     }
 
     // MARK: - 하단 컨트롤

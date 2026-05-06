@@ -6,9 +6,17 @@
 //  Copyright © 2026 Orange. All rights reserved.
 //
 
+import AVFoundation
 import ComposableArchitecture
 import Domain
 import Foundation
+
+public struct CaptureSessionBox: Equatable, @unchecked Sendable {
+    public let session: AVCaptureSession
+    public static func == (lhs: Self, rhs: Self) -> Bool {
+        lhs.session === rhs.session
+    }
+}
 
 @Reducer
 public struct CameraFeature {
@@ -21,14 +29,46 @@ public struct CameraFeature {
         public var isFrontCamera: Bool = false
         public var currentZoomFactor: CGFloat = 1.0
         var baseZoomFactor: CGFloat = 1.0
+        public var captureSession: CaptureSessionBox?
 
         public init(overlayDate: String, overlayLabel: String) {
             self.overlayDate = overlayDate
             self.overlayLabel = overlayLabel
         }
 
-        var activePreset: ZoomLevel? {
-            ZoomLevel.allCases.first { abs($0.rawValue - currentZoomFactor) < 0.05 }
+        var activePreset: ZoomLevel {
+            if currentZoomFactor < 1.0 {
+                return .x0_5
+            } else if currentZoomFactor < 2.0 {
+                return .x1
+            } else if currentZoomFactor < 3.0 {
+                return .x2
+            } else {
+                return .x3
+            }
+        }
+
+        var zoomButtonTexts: [ZoomLevel: String] {
+            var result: [ZoomLevel: String] = [:]
+            for level in ZoomLevel.allCases {
+                if activePreset == level {
+                    if currentZoomFactor < 1.0 {
+                        let digit = Int(round(currentZoomFactor * 10)) % 10
+                        result[level] = ".\(digit)x"
+                    } else {
+                        let intPart = Int(currentZoomFactor)
+                        let fraction = currentZoomFactor - CGFloat(intPart)
+                        if fraction < 0.05 {
+                            result[level] = "\(intPart)x"
+                        } else {
+                            result[level] = String(format: "%.1fx", currentZoomFactor)
+                        }
+                    }
+                } else {
+                    result[level] = level.displayText
+                }
+            }
+            return result
         }
 
         var minZoomFactor: CGFloat {
@@ -53,7 +93,7 @@ public struct CameraFeature {
         var displayText: String {
             switch self {
             case .x0_5: ".5"
-            case .x1: "1x"
+            case .x1: "1"
             case .x2: "2"
             case .x3: "3"
             }
@@ -90,6 +130,7 @@ public struct CameraFeature {
         Reduce { state, action in
             switch action {
             case .onAppear:
+                state.captureSession = CaptureSessionBox(session: cameraClient.getSession())
                 return .run { [zoom = state.currentZoomFactor] _ in
                     try await cameraClient.startSession()
                     try await cameraClient.setZoomFactor(zoom, false)
