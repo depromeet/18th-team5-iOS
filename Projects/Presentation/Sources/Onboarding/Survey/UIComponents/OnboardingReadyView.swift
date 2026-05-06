@@ -30,6 +30,7 @@ struct OnboardingReadyView: View {
 }
 
 private extension OnboardingReadyView {
+    // TODO: Wireframe에 있는 임시 뷰. 추후 삭제 예정 - 정원
     var graphicView: some View {
         Text("Graphic")
             .font(.headline1Semibold)
