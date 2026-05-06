@@ -20,16 +20,6 @@ public struct UserPreference: Equatable {
         self.engagementLevel = engagementLevel
         self.themeRanking = themeRanking
     }
-
-    public var userType: UserType? {
-        switch (activityStyle, engagementLevel) {
-        case (.outdoor, .active): .natureExplorer
-        case (.outdoor, .casual): .localWanderer
-        case (.indoor, .active): .seasonalGourmet
-        case (.indoor, .casual): .dailyObserver
-        default: nil
-        }
-    }
 }
 
 public enum ActivityStyle {

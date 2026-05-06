@@ -27,7 +27,10 @@ public struct OnboardingSurveyFeature {
         public init() {}
 
         var userType: UserType? {
-            preference.userType
+            UserType(
+                activityStyle: preference.activityStyle,
+                engagementLevel: preference.engagementLevel
+            )
         }
     }
 

@@ -12,6 +12,22 @@ public enum UserType {
     case seasonalGourmet
     case dailyObserver
 
+    public init?(
+        activityStyle: ActivityStyle?,
+        engagementLevel: EngagementLevel?
+    ) {
+        guard let activityStyle, let engagementLevel else {
+            return nil
+        }
+
+        self = switch (activityStyle, engagementLevel) {
+        case (.outdoor, .active): .natureExplorer
+        case (.outdoor, .casual): .localWanderer
+        case (.indoor, .active): .seasonalGourmet
+        case (.indoor, .casual): .dailyObserver
+        }
+    }
+
     public var name: String {
         switch self {
         case .natureExplorer: "자연 탐험가"
