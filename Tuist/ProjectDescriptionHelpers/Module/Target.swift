@@ -94,9 +94,21 @@ extension Module {
             deploymentTargets: ProjectInfo.deploymentTargets,
             infoPlist: .demo,
             buildableFolders: ["Demo/Sources"],
-            dependencies: [.target(implements)],
+            dependencies: [.target(implements)] + demoDependencies,
             settings: .settings(configurations: .default)
         )
+    }
+
+    private var demoDependencies: [TargetDependency] {
+        switch self {
+        case .presentation:
+            [
+                .project(target: Module.data.name, path: .relativeToRoot("Projects/\(Module.data.name)")),
+                .external(name: ExternalModule.composableArchitecture.name),
+            ]
+        default:
+            []
+        }
     }
 }
 
@@ -122,7 +134,8 @@ private extension InfoPlist {
             "UILaunchScreen": .dictionary([:]),
             "UISupportedInterfaceOrientations": .array([
                 .string("UIInterfaceOrientationPortrait"),
-            ])
+            ]),
+            "NSCameraUsageDescription": .string("사진 촬영을 위해 카메라 접근 권한이 필요합니다."),
         ]
     )
 }
