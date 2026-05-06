@@ -28,12 +28,10 @@ public struct RootFeature {
         case onAppear
         case path(Path.Action)
         case launchConfigLoaded(Result<LaunchConfig, Error>)
-        case notificationAuthorizationChecked(NotificationAuthorizationStatus?)
     }
 
     @Dependency(\.launchConfigRepository) var launchConfigRepository
     @Dependency(\.onboardingRepository) var onboardingRepository
-    @Dependency(\.notificationClient) private var notificationClient
     @Dependency(\.openURL) var openURL
 
     public init() {}
@@ -61,10 +59,6 @@ public struct RootFeature {
 
             case .launchConfigLoaded(.failure):
                 // 스플래쉬 노출 유지
-                return .none
-
-            case let .notificationAuthorizationChecked(status):
-                state.path = .onboarding(.init(status))
                 return .none
 
             case .path(.forceUpdate(.updateButtonTapped)):
@@ -128,10 +122,7 @@ private extension RootFeature {
             return .none
         }
 
-        // #4. 알림 권한 확인
-        return .run { send in
-            let status = try? await notificationClient.getAuthorizationStatus()
-            await send(.notificationAuthorizationChecked(status))
-        }
+        state.path = .onboarding(.init())
+        return .none
     }
 }

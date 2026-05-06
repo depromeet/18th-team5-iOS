@@ -22,7 +22,7 @@ public struct OnboardingSurveyView: View {
         VStack(spacing: 0) {
             ZStack {
                 switch store.status {
-                case .ready: readyView
+                case .initial: initialView
                 case .inProgress: surveyView
                 case .result: resultView
                 }
@@ -50,7 +50,7 @@ private extension OnboardingSurveyView {
 
     var buttonTitle: String {
         switch store.status {
-        case .ready, .result: "시작하기"
+        case .initial, .result: "시작하기"
         case .inProgress:
             store.step == 2 ? "완료" : "다음"
         }
@@ -58,7 +58,7 @@ private extension OnboardingSurveyView {
 
     var isButtonEnabled: Bool {
         switch store.status {
-        case .ready, .result: true
+        case .initial, .result: true
         case .inProgress:
             switch store.step {
             case 0: store.preference.activityStyle != nil
@@ -71,8 +71,8 @@ private extension OnboardingSurveyView {
 }
 
 private extension OnboardingSurveyView {
-    var readyView: some View {
-        OnboardingReadyView()
+    var initialView: some View {
+        OnboardingInitialView()
     }
 
     var surveyView: some View {
@@ -97,7 +97,11 @@ private extension OnboardingSurveyView {
 
     var headerView: some View {
         ZStack {
-            OnboardingProgressView(step: store.step)
+            OnboardingProgressView(
+                stepCount: store.stepCount,
+                currentStep: store.step
+            )
+
             HStack {
                 backButton
                 Spacer()

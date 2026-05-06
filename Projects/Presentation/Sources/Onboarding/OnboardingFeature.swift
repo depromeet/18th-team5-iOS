@@ -13,17 +13,14 @@ import Domain
 public struct OnboardingFeature {
     @ObservableState
     public struct State: Equatable {
-        public var path: Path.State
+        public var path: Path.State?
 
-        public init(_ status: NotificationAuthorizationStatus?) {
-            path = switch status {
-            case .notDetermined, .none: .notificationConsent(.init())
-            case .denied, .authorized, .provisional: .survey(.init())
-            }
-        }
+        public init() {}
     }
 
     public enum Action {
+        case onAppear
+        case authorizationStatusChecked(NotificationAuthorizationStatus)
         case delegate(Delegate)
         case path(Path.Action)
     }
@@ -32,17 +29,29 @@ public struct OnboardingFeature {
         case onboardingCompleted
     }
 
-    @Dependency(\.notificationClient) var notificationClient
+    @Dependency(\.notificationClient) private var notificationClient
 
     public init() {}
 
     public var body: some ReducerOf<Self> {
-        Scope(state: \.path, action: \.path) {
-            Path.body
-        }
-
         Reduce { state, action in
             switch action {
+            case .onAppear:
+                return .run { send in
+                    let status = try await notificationClient.getAuthorizationStatus()
+                    await send(.authorizationStatusChecked(status))
+                }
+
+            case let .authorizationStatusChecked(status):
+                switch status {
+                case .notDetermined:
+                    state.path = .notificationConsent(.init())
+                    return .none
+                case .denied, .authorized, .provisional:
+                    state.path = .survey(.init())
+                    return .none
+                }
+
             case .path(.notificationConsent(.delegate(.completed))):
                 state.path = .survey(.init())
                 return .none
@@ -54,6 +63,9 @@ public struct OnboardingFeature {
 
             case .path: return .none
             }
+        }
+        .ifLet(\.path, action: \.path) {
+            Path.body
         }
     }
 }
