@@ -118,7 +118,11 @@ private extension OnboardingSurveyView {
 
     var headerView: some View {
         ZStack {
-            OnboardingProgressView(step: store.step)
+            OnboardingProgressView(
+                stepCounts: store.stepCounts,
+                currentStep: store.step
+            )
+
             HStack {
                 backButton
                 Spacer()

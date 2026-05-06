@@ -24,6 +24,7 @@ public struct OnboardingSurveyFeature {
     @ObservableState
     public struct State: Equatable {
         var status: Status = .ready
+        let stepCounts: Int = 3
         var step: Int = 0
         var firstSelection: Selection?
         var secondSelection: Selection?
