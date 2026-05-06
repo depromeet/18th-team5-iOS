@@ -37,6 +37,8 @@
 # redundantSelf: 명시적 self. 사용 허용 (.swiftlint.yml의 redundant_self와 일치)
 --disable redundantSelf
 --disable wrapMultilineStatementBraces
+# extensionAccessControl: TCA @Reducer 매크로가 public extension 내부에서 접근 제어자를 인식하지 못해 빌드 실패 유발
+--disable extensionAccessControl
 
 # 제외 경로
 --exclude Tuist,.build,Tools,Configs,**/Derived,**/Generated
