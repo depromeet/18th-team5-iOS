@@ -37,6 +37,7 @@ private extension Module {
             .firebaseCore,
             .firebaseRemoteConfig
         ]
+        case .core: [.dependencies, .dependenciesMacros]
         default: []
         }
     }
