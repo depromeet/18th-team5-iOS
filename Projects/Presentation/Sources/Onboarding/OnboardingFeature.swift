@@ -67,9 +67,9 @@ public struct OnboardingFeature {
     }
 }
 
-public extension OnboardingFeature {
+extension OnboardingFeature {
     @Reducer
-    enum Path {
+    public enum Path {
         case notificationConsent(NotificationConsentFeature)
         case survey(OnboardingSurveyFeature)
     }
