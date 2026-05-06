@@ -1,5 +1,5 @@
 //
-//  OnboardingReadyView.swift
+//  OnboardingInitialView.swift
 //  Presentation
 //
 //  Created by 이정원 on 5/5/26.
@@ -9,7 +9,7 @@
 import DesignSystem
 import SwiftUI
 
-struct OnboardingReadyView: View {
+struct OnboardingInitialView: View {
     var body: some View {
         VStack(spacing: 40) {
             VStack(spacing: 24) {
@@ -29,7 +29,7 @@ struct OnboardingReadyView: View {
     }
 }
 
-private extension OnboardingReadyView {
+private extension OnboardingInitialView {
     // TODO: Wireframe에 있는 임시 뷰. 추후 삭제 예정 - 정원
     var graphicView: some View {
         Text("Graphic")

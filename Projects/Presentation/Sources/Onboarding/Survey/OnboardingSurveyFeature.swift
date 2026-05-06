@@ -11,7 +11,7 @@ import ComposableArchitecture
 @Reducer
 public struct OnboardingSurveyFeature {
     enum Status: Equatable {
-        case ready
+        case initial
         case inProgress
         case result
     }
@@ -23,7 +23,7 @@ public struct OnboardingSurveyFeature {
 
     @ObservableState
     public struct State: Equatable {
-        var status: Status = .ready
+        var status: Status = .initial
         let stepCount: Int = 3
         var step: Int = 0
         var firstSelection: Selection?
@@ -46,13 +46,13 @@ public struct OnboardingSurveyFeature {
             switch action {
             case .backButtonTapped:
                 switch state.step {
-                case 0: state.status = .ready
+                case 0: state.status = .initial
                 default: state.step -= 1
                 }
                 return .none
             case .bottomButtonTapped:
                 switch state.status {
-                case .ready:
+                case .initial:
                     state.status = .inProgress
                 case .inProgress:
                     switch state.step {
