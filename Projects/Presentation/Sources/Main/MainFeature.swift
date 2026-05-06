@@ -18,8 +18,11 @@ public struct MainFeature {
     }
 
     public enum Action: BindableAction {
+        case onAppear
         case binding(BindingAction<State>)
     }
+
+    @Dependency(\.logger) var logger
 
     public init() {}
 
@@ -28,6 +31,9 @@ public struct MainFeature {
 
         Reduce { _, action in
             switch action {
+            case .onAppear:
+                logger.debug(message: "MainView did appear")
+                return .none
             case .binding:
                 return .none
             }

@@ -24,6 +24,9 @@ public struct MainView: View {
                     .tag(tab)
             }
         }
+        .onAppear {
+            store.send(.onAppear)
+        }
     }
 }
 
