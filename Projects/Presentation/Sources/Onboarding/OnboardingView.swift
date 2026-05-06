@@ -18,11 +18,14 @@ public struct OnboardingView: View {
 
     public var body: some View {
         ZStack {
-            switch store.scope(state: \.path, action: \.path).case {
-            case let .notificationConsent(store): NotificationConsentView(store: store)
-            case let .survey(store): OnboardingSurveyView(store: store)
+            if let store = store.scope(state: \.path, action: \.path) {
+                switch store.case {
+                case let .notificationConsent(store): NotificationConsentView(store: store)
+                case let .survey(store): OnboardingSurveyView(store: store)
+                }
             }
         }
         .animation(.easeInOut, value: store.path)
+        .onAppear { store.send(.onAppear) }
     }
 }

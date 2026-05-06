@@ -10,15 +10,20 @@ import DesignSystem
 import SwiftUI
 
 struct OnboardingProgressView: View {
+    private let stepCount: Int
     private let currentStep: Int
 
-    init(step: Int) {
-        self.currentStep = min(max(step, 0), 2)
+    init(
+        stepCount: Int,
+        currentStep: Int
+    ) {
+        self.stepCount = stepCount
+        self.currentStep = min(max(currentStep, 0), stepCount - 1)
     }
 
     var body: some View {
         HStack(spacing: 6) {
-            ForEach(0 ... 2, id: \.self) { step in
+            ForEach(0 ..< stepCount, id: \.self) { step in
                 Capsule()
                     .frame(width: 75, height: 6)
                     .foregroundStyle(color(step))
