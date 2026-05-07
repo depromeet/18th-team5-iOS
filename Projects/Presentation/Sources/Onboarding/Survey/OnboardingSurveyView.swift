@@ -31,6 +31,7 @@ public struct OnboardingSurveyView: View {
 
             bottomButton
         }
+        .background(LinearGradient.onboardingBackground)
     }
 }
 
@@ -50,7 +51,7 @@ private extension OnboardingSurveyView {
 
     var buttonTitle: String {
         switch store.status {
-        case .initial, .result: "시작하기"
+        case .initial, .result: "확인"
         case .inProgress:
             store.step == 2 ? "완료" : "다음"
         }
