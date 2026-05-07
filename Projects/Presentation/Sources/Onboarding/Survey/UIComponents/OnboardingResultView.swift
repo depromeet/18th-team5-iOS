@@ -60,11 +60,11 @@ private extension OnboardingResultView {
 private extension UserType {
     var description: String {
         switch self {
-        case .natureExplorer: "" // TODO: @정원 - 미정
-        case .localWanderer: "" // TODO: @정원 - 미정
-        case .seasonalGourmet:
+        case .explorer: "" // TODO: @정원 - 미정
+        case .walker: "" // TODO: @정원 - 미정
+        case .lifeCreator:
             "지금 이 계절을 가장 맛있게 즐기는 타입이에요."
-        case .dailyObserver: "" // TODO: @정원 - 미정
+        case .aesthete: "" // TODO: @정원 - 미정
         }
     }
 }
