@@ -21,9 +21,9 @@ struct OnboardingInitialView: View {
                     .font(.headline1Semibold)
                     .foregroundStyle(Color.gray800)
                     .multilineTextAlignment(.center)
-
-                graphicView
             }
+
+            graphicView
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
