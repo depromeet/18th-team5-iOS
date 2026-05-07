@@ -22,6 +22,8 @@ public struct CaptureSessionBox: Equatable, @unchecked Sendable {
 public struct CameraFeature {
     @ObservableState
     public struct State: Equatable {
+        static let selfieCloseUpZoom: CGFloat = 1.3
+
         public let overlayDate: String
         public let overlayLabel: String
 
@@ -78,10 +80,6 @@ public struct CameraFeature {
         var maxZoomFactor: CGFloat {
             isFrontCamera ? 5.0 : 10.0
         }
-
-        var zoomLevelText: String {
-            String(format: "%.1fx", currentZoomFactor)
-        }
     }
 
     public enum ZoomLevel: CGFloat, CaseIterable, Equatable {
@@ -102,7 +100,6 @@ public struct CameraFeature {
 
     public enum Action {
         case onAppear
-        case onDisappear
         case captureButtonTapped
         case photoCaptured(Result<CapturedPhoto, Error>)
         case switchCameraTapped
@@ -111,8 +108,7 @@ public struct CameraFeature {
         case zoomSelected(ZoomLevel)
         case pinchZoomChanged(CGFloat)
         case pinchZoomEnded
-        case selfieZoomInTapped
-        case selfieZoomOutTapped
+        case selfieZoomToggleTapped
         case closeButtonTapped
         case delegate(Delegate)
 
@@ -121,6 +117,8 @@ public struct CameraFeature {
             case didCancel
         }
     }
+
+    private enum CancelID { case zoom }
 
     @Dependency(\.cameraClient) var cameraClient
 
@@ -136,11 +134,6 @@ public struct CameraFeature {
                     try await cameraClient.setZoomFactor(zoom, false)
                 }
 
-            case .onDisappear:
-                return .run { _ in
-                    await cameraClient.stopSession()
-                }
-
             case .captureButtonTapped:
                 return .run { send in
                     await send(.photoCaptured(
@@ -149,7 +142,10 @@ public struct CameraFeature {
                 }
 
             case let .photoCaptured(.success(photo)):
-                return .send(.delegate(.didCapture(photo)))
+                return .run { [cameraClient] send in
+                    await cameraClient.stopSession()
+                    await send(.delegate(.didCapture(photo)))
+                }
 
             case .photoCaptured(.failure):
                 return .none
@@ -163,9 +159,13 @@ public struct CameraFeature {
 
             case .cameraSwitched(.success):
                 state.isFrontCamera.toggle()
-                state.currentZoomFactor = 1.0
-                state.baseZoomFactor = 1.0
-                return .none
+                let initialZoom: CGFloat = state.isFrontCamera ? State.selfieCloseUpZoom : 1.0
+                state.currentZoomFactor = initialZoom
+                state.baseZoomFactor = initialZoom
+                return .run { _ in
+                    try? await cameraClient.setZoomFactor(initialZoom, false)
+                }
+                .cancellable(id: CancelID.zoom, cancelInFlight: true)
 
             case .cameraSwitched(.failure):
                 return .none
@@ -182,37 +182,38 @@ public struct CameraFeature {
                 return .run { _ in
                     try await cameraClient.setZoomFactor(level.rawValue, true)
                 }
+                .cancellable(id: CancelID.zoom, cancelInFlight: true)
 
             case let .pinchZoomChanged(magnification):
+                guard !state.isFrontCamera else { return .none }
                 let newFactor = state.baseZoomFactor * magnification
                 let clamped = min(max(newFactor, state.minZoomFactor), state.maxZoomFactor)
+                guard clamped != state.currentZoomFactor else { return .none }
                 state.currentZoomFactor = clamped
                 return .run { _ in
                     try await cameraClient.setZoomFactor(clamped, false)
                 }
+                .cancellable(id: CancelID.zoom, cancelInFlight: true)
 
             case .pinchZoomEnded:
+                guard !state.isFrontCamera else { return .none }
                 state.baseZoomFactor = state.currentZoomFactor
                 return .none
 
-            case .selfieZoomInTapped:
-                let newFactor = min(state.currentZoomFactor + 0.5, state.maxZoomFactor)
+            case .selfieZoomToggleTapped:
+                let newFactor: CGFloat = state.currentZoomFactor <= 1.0 ? State.selfieCloseUpZoom : 1.0
                 state.currentZoomFactor = newFactor
                 state.baseZoomFactor = newFactor
                 return .run { _ in
-                    try await cameraClient.setZoomFactor(newFactor, true)
+                    try? await cameraClient.setZoomFactor(newFactor, true)
                 }
-
-            case .selfieZoomOutTapped:
-                let newFactor = max(state.currentZoomFactor - 0.5, state.minZoomFactor)
-                state.currentZoomFactor = newFactor
-                state.baseZoomFactor = newFactor
-                return .run { _ in
-                    try await cameraClient.setZoomFactor(newFactor, true)
-                }
+                .cancellable(id: CancelID.zoom, cancelInFlight: true)
 
             case .closeButtonTapped:
-                return .send(.delegate(.didCancel))
+                return .run { [cameraClient] send in
+                    await cameraClient.stopSession()
+                    await send(.delegate(.didCancel))
+                }
 
             case .delegate:
                 return .none

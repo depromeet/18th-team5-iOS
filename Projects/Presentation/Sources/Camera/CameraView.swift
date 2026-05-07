@@ -13,7 +13,6 @@ import Domain
 import SwiftUI
 
 public struct CameraView: View {
-    @Environment(\.dismiss) private var dismiss
     private let store: StoreOf<CameraFeature>
 
     public init(store: StoreOf<CameraFeature>) {
@@ -29,7 +28,9 @@ public struct CameraView: View {
                 closeButton
                 previewSection
 
-                if !store.isFrontCamera {
+                if store.isFrontCamera {
+                    selfieZoomToggle
+                } else {
                     zoomSelector
                 }
 
@@ -40,7 +41,6 @@ public struct CameraView: View {
             }
         }
         .onAppear { store.send(.onAppear) }
-        .onDisappear { store.send(.onDisappear) }
     }
 }
 
@@ -48,7 +48,6 @@ private extension CameraView {
     var closeButton: some View {
         Button {
             store.send(.closeButtonTapped)
-            dismiss()
         } label: {
             Image(systemName: "xmark")
                 .font(.system(size: 20))
@@ -82,9 +81,6 @@ private extension CameraView {
                     .padding(.leading, 16)
 
                     Spacer()
-
-                    zoomLevelOverlay
-                        .padding(.bottom, 16)
                 }
                 .frame(width: size, height: size)
             }
@@ -125,34 +121,24 @@ private extension CameraView {
         }
     }
 
-    // MARK: - 줌 레벨 오버레이 (프리뷰 하단)
+    // MARK: - 전면 카메라 줌 토글 (프리셋 버튼 위치)
 
-    @ViewBuilder
-    var zoomLevelOverlay: some View {
-        if store.isFrontCamera {
-            HStack(spacing: 16) {
-                Button { store.send(.selfieZoomOutTapped) } label: {
-                    Image(systemName: "minus.magnifyingglass")
-                        .font(.system(size: 14, weight: .medium))
-                        .foregroundStyle(.white)
-                }
-
-                Text(store.zoomLevelText)
-                    .font(.system(size: 13, weight: .semibold))
-                    .foregroundStyle(.yellow)
-                    .monospacedDigit()
-
-                Button { store.send(.selfieZoomInTapped) } label: {
-                    Image(systemName: "plus.magnifyingglass")
-                        .font(.system(size: 14, weight: .medium))
-                        .foregroundStyle(.white)
-                }
-            }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 8)
-            .background(.black.opacity(0.5))
-            .clipShape(Capsule())
+    var selfieZoomToggle: some View {
+        let isWide = store.currentZoomFactor <= 1.0
+        return Button {
+            store.send(.selfieZoomToggleTapped)
+        } label: {
+            Image(systemName: isWide
+                ? "arrow.down.right.and.arrow.up.left"
+                : "arrow.up.left.and.arrow.down.right")
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundStyle(.white)
+                .frame(width: 32, height: 32)
+                .background(Color.gray500.opacity(0.5))
+                .clipShape(Circle())
         }
+        .frame(height: 32)
+        .padding(.top, 24)
     }
 
     // MARK: - 줌 프리셋 버튼 (후면 카메라 전용)

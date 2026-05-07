@@ -9,6 +9,7 @@
 import AVFoundation
 import Dependencies
 import Domain
+import os
 import UIKit
 
 // MARK: - DependencyKey
@@ -21,14 +22,19 @@ extension CameraClient: @retroactive DependencyKey {
 
 private final class CameraClientImpl: NSObject, @unchecked Sendable {
     let session = AVCaptureSession()
+    private let sessionQueue = DispatchQueue(label: "com.orange.peaktime.camera.session")
     private let photoOutput = AVCapturePhotoOutput()
-    private var currentPosition: AVCaptureDevice.Position = .back
-    private var flashMode: AVCaptureDevice.FlashMode = .off
-    private var photoContinuation: CheckedContinuation<CapturedPhoto, Error>?
+    private struct MutableState {
+        var currentPosition: AVCaptureDevice.Position = .back
+        var flashMode: AVCaptureDevice.FlashMode = .off
+        var photoContinuation: CheckedContinuation<CapturedPhoto, Error>?
+        var wasRunningBeforeBackground = false
+    }
+
+    private let state = OSAllocatedUnfairLock(initialState: MutableState())
     private var lensSwitchObservation: NSKeyValueObservation?
     private var backgroundObserver: NSObjectProtocol?
     private var foregroundObserver: NSObjectProtocol?
-    private var wasRunningBeforeBackground = false
 
     static func live() -> CameraClient {
         let manager = CameraClientImpl()
@@ -40,7 +46,7 @@ private final class CameraClientImpl: NSObject, @unchecked Sendable {
                 manager.startRunning()
             },
             stopSession: {
-                manager.stopRunning()
+                manager.stopAndReset()
             },
             capturePhoto: {
                 try await manager.capturePhoto()
@@ -52,7 +58,7 @@ private final class CameraClientImpl: NSObject, @unchecked Sendable {
                 try manager.setZoomFactor(factor, animated: animated)
             },
             setFlashMode: { isOn in
-                manager.flashMode = isOn ? .on : .off
+                manager.state.withLock { $0.flashMode = isOn ? .on : .off }
             },
             getSession: {
                 manager.session
@@ -63,15 +69,22 @@ private final class CameraClientImpl: NSObject, @unchecked Sendable {
     // MARK: - Session Configuration
 
     private func configureSession() throws {
+        try sessionQueue.sync { [self] in
+            try configureSessionOnQueue()
+        }
+    }
+
+    private func configureSessionOnQueue() throws {
         session.beginConfiguration()
         defer { session.commitConfiguration() }
 
-        session.sessionPreset = .high
+        session.sessionPreset = .photo
 
         session.inputs.forEach { session.removeInput($0) }
         session.outputs.forEach { session.removeOutput($0) }
 
-        guard let device = cameraDevice(for: currentPosition),
+        let position = state.withLock { $0.currentPosition }
+        guard let device = cameraDevice(for: position),
               let input = try? AVCaptureDeviceInput(device: device) else {
             throw CameraError.deviceNotAvailable
         }
@@ -116,20 +129,43 @@ private final class CameraClientImpl: NSObject, @unchecked Sendable {
     }
 
     private func startRunning() {
-        guard !session.isRunning else { return }
-        session.startRunning()
+        sessionQueue.async { [self] in
+            guard !session.isRunning else { return }
+            session.startRunning()
+        }
+    }
+
+    private func stopAndReset() {
+        sessionQueue.sync { [self] in
+            state.withLock {
+                $0.currentPosition = .back
+                $0.flashMode = .off
+            }
+
+            guard session.isRunning else { return }
+            lensSwitchObservation?.invalidate()
+            lensSwitchObservation = nil
+            session.stopRunning()
+
+            session.beginConfiguration()
+            session.inputs.forEach { session.removeInput($0) }
+            session.outputs.forEach { session.removeOutput($0) }
+            session.commitConfiguration()
+        }
     }
 
     private func stopRunning() {
-        guard session.isRunning else { return }
-        lensSwitchObservation?.invalidate()
-        lensSwitchObservation = nil
-        session.stopRunning()
+        sessionQueue.async { [self] in
+            guard session.isRunning else { return }
+            lensSwitchObservation?.invalidate()
+            lensSwitchObservation = nil
+            session.stopRunning()
 
-        session.beginConfiguration()
-        session.inputs.forEach { session.removeInput($0) }
-        session.outputs.forEach { session.removeOutput($0) }
-        session.commitConfiguration()
+            session.beginConfiguration()
+            session.inputs.forEach { session.removeInput($0) }
+            session.outputs.forEach { session.removeOutput($0) }
+            session.commitConfiguration()
+        }
     }
 
     // MARK: - App Lifecycle
@@ -141,7 +177,7 @@ private final class CameraClientImpl: NSObject, @unchecked Sendable {
             queue: .main
         ) { [weak self] _ in
             guard let self, self.session.isRunning else { return }
-            self.wasRunningBeforeBackground = true
+            self.state.withLock { $0.wasRunningBeforeBackground = true }
             self.stopRunning()
         }
 
@@ -150,10 +186,19 @@ private final class CameraClientImpl: NSObject, @unchecked Sendable {
             object: nil,
             queue: .main
         ) { [weak self] _ in
-            guard let self, self.wasRunningBeforeBackground else { return }
-            self.wasRunningBeforeBackground = false
-            try? self.configureSession()
-            self.startRunning()
+            guard let self else { return }
+            let wasRunning = self.state.withLock {
+                let value = $0.wasRunningBeforeBackground
+                $0.wasRunningBeforeBackground = false
+                return value
+            }
+            guard wasRunning else { return }
+            self.sessionQueue.async { [self] in
+                guard (try? self.configureSessionOnQueue()) != nil else { return }
+                if !self.session.isRunning {
+                    self.session.startRunning()
+                }
+            }
         }
     }
 
@@ -161,7 +206,16 @@ private final class CameraClientImpl: NSObject, @unchecked Sendable {
 
     private func capturePhoto() async throws -> CapturedPhoto {
         try await withCheckedThrowingContinuation { continuation in
-            self.photoContinuation = continuation
+            let flashMode = self.state.withLock { s -> AVCaptureDevice.FlashMode? in
+                guard s.photoContinuation == nil else { return nil }
+                s.photoContinuation = continuation
+                return s.flashMode
+            }
+
+            guard let flashMode else {
+                continuation.resume(throwing: CameraError.captureAlreadyInProgress)
+                return
+            }
 
             let settings = AVCapturePhotoSettings()
             if photoOutput.supportedFlashModes.contains(flashMode) {
@@ -175,28 +229,34 @@ private final class CameraClientImpl: NSObject, @unchecked Sendable {
     // MARK: - Switch Camera
 
     private func switchCamera() throws {
-        currentPosition = (currentPosition == .back) ? .front : .back
-        try configureSession()
+        try sessionQueue.sync { [self] in
+            state.withLock {
+                $0.currentPosition = ($0.currentPosition == .back) ? .front : .back
+            }
+            try configureSessionOnQueue()
+        }
     }
 
     // MARK: - Zoom
 
     private func setZoomFactor(_ factor: CGFloat, animated: Bool) throws {
-        guard let device = currentDevice() else {
-            throw CameraError.deviceNotAvailable
-        }
+        try sessionQueue.sync {
+            guard let device = currentDevice() else {
+                throw CameraError.deviceNotAvailable
+            }
 
-        try device.lockForConfiguration()
-        defer { device.unlockForConfiguration() }
+            try device.lockForConfiguration()
+            defer { device.unlockForConfiguration() }
 
-        let wideAngleBase = device.virtualDeviceSwitchOverVideoZoomFactors.first?.doubleValue ?? 1.0
-        let deviceFactor = factor * wideAngleBase
-        let clamped = min(max(deviceFactor, device.minAvailableVideoZoomFactor), device.maxAvailableVideoZoomFactor)
+            let wideAngleBase = device.virtualDeviceSwitchOverVideoZoomFactors.first?.doubleValue ?? 1.0
+            let deviceFactor = factor * wideAngleBase
+            let clamped = min(max(deviceFactor, device.minAvailableVideoZoomFactor), device.maxAvailableVideoZoomFactor)
 
-        if animated {
-            device.ramp(toVideoZoomFactor: clamped, withRate: 3.0)
-        } else {
-            device.videoZoomFactor = clamped
+            if animated {
+                device.ramp(toVideoZoomFactor: clamped, withRate: 3.0)
+            } else {
+                device.videoZoomFactor = clamped
+            }
         }
     }
 
@@ -239,41 +299,44 @@ extension CameraClientImpl: AVCapturePhotoCaptureDelegate {
         didFinishProcessingPhoto photo: AVCapturePhoto,
         error: Error?
     ) {
+        let continuation = state.withLock { s -> CheckedContinuation<CapturedPhoto, Error>? in
+            let c = s.photoContinuation
+            s.photoContinuation = nil
+            return c
+        }
+        guard let continuation else { return }
+
         if let error {
-            photoContinuation?.resume(throwing: error)
-            photoContinuation = nil
+            continuation.resume(throwing: error)
             return
         }
 
         guard let data = photo.fileDataRepresentation() else {
-            photoContinuation?.resume(throwing: CameraError.captureDataMissing)
-            photoContinuation = nil
+            continuation.resume(throwing: CameraError.captureDataMissing)
             return
         }
 
         guard let originalImage = UIImage(data: data) else {
-            photoContinuation?.resume(throwing: CameraError.captureDataMissing)
-            photoContinuation = nil
+            continuation.resume(throwing: CameraError.captureDataMissing)
             return
         }
 
         let squareImage = cropToSquare(originalImage)
         guard let squareData = squareImage.jpegData(compressionQuality: 0.9) else {
-            photoContinuation?.resume(throwing: CameraError.captureDataMissing)
-            photoContinuation = nil
+            continuation.resume(throwing: CameraError.captureDataMissing)
             return
         }
 
+        let position = state.withLock { $0.currentPosition }
         let device = currentDevice()
         let capturedPhoto = CapturedPhoto(
             imageData: squareData,
             capturedAt: Date(),
-            cameraPosition: currentPosition == .front ? .front : .back,
+            cameraPosition: position == .front ? .front : .back,
             zoomLevel: device?.videoZoomFactor ?? 1.0
         )
 
-        photoContinuation?.resume(returning: capturedPhoto)
-        photoContinuation = nil
+        continuation.resume(returning: capturedPhoto)
     }
 }
 
@@ -284,4 +347,5 @@ private enum CameraError: Error {
     case cannotAddInput
     case cannotAddOutput
     case captureDataMissing
+    case captureAlreadyInProgress
 }
