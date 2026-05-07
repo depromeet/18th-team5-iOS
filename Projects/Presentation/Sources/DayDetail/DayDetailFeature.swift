@@ -17,6 +17,7 @@ public struct DayDetailFeature {
         var weekDays: [Date]
         var weekRecords: [DateComponents: CalendarRecord] // CalendarFeature에서 주입
         var isLoading: Bool = false
+        var detail: DayDetail?
 
         public init(selectedDate: Date, weekRecords: [DateComponents: CalendarRecord]) {
             self.selectedDate = selectedDate
@@ -84,8 +85,9 @@ public struct DayDetailFeature {
                 // TODO: 링크 저장 구현 - 민교
                 return .none
 
-            case .completionsLoad(.success):
+            case let .completionsLoad(.success(detail)):
                 state.isLoading = false
+                state.detail = detail
                 return .none
 
             case .completionsLoad(.failure):
@@ -103,11 +105,14 @@ public struct DayDetailFeature {
         }
     }
 
+    private enum CancelID { case fetchCompletions }
+
     private func fetchCompletions(for date: Date) -> Effect<Action> {
         .run { send in
             await send(.completionsLoad(
                 Result { try await calendarRepository.fetchDayDetail(date) }
             ))
         }
+        .cancellable(id: CancelID.fetchCompletions, cancelInFlight: true)
     }
 }

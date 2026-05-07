@@ -98,6 +98,8 @@ public struct CalendarFeature {
         }
     }
 
+    private enum CancelID { case fetchRecords }
+
     private func fetchRecords(for month: Date) -> Effect<Action> {
         let components = Calendar.current.dateComponents([.year, .month], from: month)
         guard let yearValue = components.year, let monthValue = components.month else { return .none }
@@ -106,6 +108,7 @@ public struct CalendarFeature {
                 Result { try await calendarRepository.fetchMonthRecords(yearValue, monthValue) }
             ))
         }
+        .cancellable(id: CancelID.fetchRecords, cancelInFlight: true)
     }
 
     private func dateKey(from date: Date) -> DateComponents {
