@@ -9,24 +9,6 @@
 import ComposableArchitecture
 import SwiftUI
 
-@Reducer
-public struct ForceUpdateFeature {
-    @ObservableState
-    public struct State: Equatable {
-        public init() {}
-    }
-
-    public enum Action {
-        case updateButtonTapped
-    }
-
-    public init() {}
-
-    public var body: some ReducerOf<Self> {
-        Reduce { _, _ in .none }
-    }
-}
-
 public struct ForceUpdateView: View {
     private let store: StoreOf<ForceUpdateFeature>
 

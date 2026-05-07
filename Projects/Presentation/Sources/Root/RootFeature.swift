@@ -55,7 +55,7 @@ public struct RootFeature {
                 }
 
             case let .launchConfigLoaded(.success(config)):
-                return handleLaunchCofig(config, &state)
+                return handleLaunchConfig(config, &state)
 
             case .launchConfigLoaded(.failure):
                 // 스플래쉬 노출 유지
@@ -94,8 +94,8 @@ public enum Path {
 
 extension Path.State: Equatable {}
 
-extension RootFeature {
-    private func handleLaunchCofig(
+private extension RootFeature {
+    func handleLaunchConfig(
         _ config: LaunchConfig,
         _ state: inout State
     ) -> Effect<Action> {
@@ -117,12 +117,12 @@ extension RootFeature {
 
         // #3. 온보딩 수행 여부 확인
         let isOnboardingCompleted = try? onboardingRepository.isOnboardingCompleted()
-        if isOnboardingCompleted == false {
-            state.path = .onboarding(.init())
+        if isOnboardingCompleted == true {
+            state.path = .main(.init())
             return .none
         }
 
-        state.path = .main(.init())
+        state.path = .onboarding(.init())
         return .none
     }
 }
