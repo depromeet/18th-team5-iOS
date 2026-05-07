@@ -131,7 +131,7 @@ private extension OnboardingSurveyView {
             if store.step == 2 {
                 Text(subtitle)
                     .font(.body2Regular)
-                    .foregroundStyle(Color(hex: 0x9CA3AF))
+                    .foregroundStyle(Color.gray600)
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
         }
@@ -165,8 +165,7 @@ private extension OnboardingSurveyView {
         OnboardingRankingView(
             items: [.nature, .food, .culture],
             ranking: $store.preference.themeRanking,
-            title: { $0.title },
-            subtitle: { $0.subtitle }
+            viewState: { $0.viewState }
         )
     }
 
@@ -199,7 +198,7 @@ private extension OnboardingSurveyView {
 }
 
 private extension ActivityStyle {
-    var viewState: OnboardingSelectionViewState {
+    var viewState: OnboardingViewState {
         switch self {
         case .outdoor:
             .init(
@@ -218,7 +217,7 @@ private extension ActivityStyle {
 }
 
 private extension EngagementLevel {
-    var viewState: OnboardingSelectionViewState {
+    var viewState: OnboardingViewState {
         return switch self {
         case .active:
             .init(
@@ -237,19 +236,26 @@ private extension EngagementLevel {
 }
 
 private extension ActivityTheme {
-    var title: String {
+    var viewState: OnboardingViewState {
         switch self {
-        case .nature: "자연이나 야외 활동"
-        case .food: "제철 음식이나 요리"
-        case .culture: "감성 콘텐츠나 문화"
-        }
-    }
-
-    var subtitle: String {
-        switch self {
-        case .nature: "봄나들이, 단풍 구경, 산책 등"
-        case .food: "봄나물, 제철 과일, 계절 음료 등"
-        case .culture: "전시, 독서, 영화, 음악 등"
+        case .nature:
+            .init(
+                title: "자연이나 야외 활동",
+                subtitle: "봄나들이, 단풍 구경, 산책 등",
+                image: .icPineTree
+            )
+        case .food:
+            .init(
+                title: "제철 음식이나 요리",
+                subtitle: "봄나물, 제철 과일, 계절 음료 등",
+                image: .icFryingPan
+            )
+        case .culture:
+            .init(
+                title: "감성 콘텐츠나 문화",
+                subtitle: "전시, 독서, 영화, 음악 등",
+                image: .icMovieProjecter
+            )
         }
     }
 }

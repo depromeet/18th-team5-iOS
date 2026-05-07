@@ -12,23 +12,20 @@ import SwiftUI
 struct OnboardingRankingView<Item: Hashable>: View {
     @Binding private var ranking: [Item]
     private let items: [Item]
-    private let title: (Item) -> String
-    private let subtitle: (Item) -> String
+    private let viewState: (Item) -> OnboardingViewState
 
     init(
         items: [Item],
         ranking: Binding<[Item]>,
-        title: @escaping (Item) -> String,
-        subtitle: @escaping (Item) -> String
+        viewState: @escaping (Item) -> OnboardingViewState
     ) {
         self.items = items
         self._ranking = ranking
-        self.title = title
-        self.subtitle = subtitle
+        self.viewState = viewState
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
+        VStack(alignment: .leading, spacing: 24) {
             VStack(spacing: 12) {
                 ForEach(items, id: \.self) { item in
                     itemView(item: item) {
@@ -47,20 +44,12 @@ struct OnboardingRankingView<Item: Hashable>: View {
 }
 
 private extension OnboardingRankingView {
-    func iconColor(_ isSelected: Bool) -> Color {
-        isSelected ? .init(hex: 0x0077FF) : .init(hex: 0x1A1C20)
-    }
-
-    func titleColor(_ isSelected: Bool) -> Color {
-        isSelected ? .init(hex: 0x0077FF) : .gray900
-    }
-
     func backgroundColor(_ isSelected: Bool) -> Color {
-        isSelected ? .init(hex: 0x0077FF, alpha: 0.05) : .white
+        isSelected ? .init(hex: 0x43DA87, alpha: 0.05) : .white
     }
 
     func strokeColor(_ isSelected: Bool) -> Color {
-        isSelected ? .init(hex: 0x0077FF) : .gray300
+        isSelected ? .init(hex: 0x43DA87) : .gray300
     }
 }
 
@@ -71,38 +60,37 @@ private extension OnboardingRankingView {
     ) -> some View {
         Button(action: action) {
             let rank = ranking.firstIndex(of: item)
+            let viewState = viewState(item)
             let isSelected = rank != nil
 
             HStack(spacing: 20) {
                 VStack(spacing: 4) {
-                    HStack(spacing: 4) {
-                        Image.icDashedBorderSquare
-                            .renderingMode(.template)
+                    HStack(spacing: 6) {
+                        viewState.image
                             .resizable()
                             .frame(width: 24, height: 24)
-                            .foregroundStyle(iconColor(isSelected))
 
-                        Text(title(item))
+                        Text(viewState.title)
                             .font(.body1Semibold)
-                            .foregroundStyle(titleColor(isSelected))
+                            .foregroundStyle(Color.gray900)
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .multilineTextAlignment(.leading)
                     }
 
-                    Text(subtitle(item))
+                    Text(viewState.subtitle)
                         .font(.body2Regular)
-                        .foregroundStyle(Color(hex: 0x9CA3AF))
+                        .foregroundStyle(Color.gray600)
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .multilineTextAlignment(.leading)
                 }
 
                 if let rank {
                     Text("\(rank + 1)순위")
-                        .font(.body2Regular)
-                        .foregroundStyle(Color.gray900)
+                        .font(.body2Medium)
+                        .foregroundStyle(Color(hex: 0x3DC67B))
                         .frame(height: 24)
                         .padding(.horizontal, 8)
-                        .background(Color(hex: 0xE5E7EB))
+                        .background(Color.blackAlpha200)
                         .clipShape(RoundedRectangle(cornerRadius: .radius4))
                 }
             }
@@ -115,14 +103,14 @@ private extension OnboardingRankingView {
 
     var resetButton: some View {
         let isEnabled = !ranking.isEmpty
-        let textColor: Color = isEnabled ? .gray800 : .white
+        let textColor: Color = isEnabled ? .gray900 : .white
         let backgroundColor: Color = isEnabled ? .gray200 : .gray400
 
         return Button {
             ranking.removeAll()
         } label: {
             Text("초기화")
-                .font(.body2Regular)
+                .font(.body2Medium)
                 .foregroundStyle(textColor)
                 .frame(height: 36)
                 .padding(.horizontal, 16)

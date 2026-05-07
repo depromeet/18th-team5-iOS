@@ -9,20 +9,14 @@
 import DesignSystem
 import SwiftUI
 
-struct OnboardingSelectionViewState {
-    let title: String
-    let subtitle: String
-    let image: Image
-}
-
 struct OnboardingSelectionView<Item: Hashable>: View {
     private let items: [Item]
-    private let viewState: (Item) -> OnboardingSelectionViewState
+    private let viewState: (Item) -> OnboardingViewState
     @Binding private var selection: Item?
 
     init(
         items: [Item],
-        viewState: @escaping (Item) -> OnboardingSelectionViewState,
+        viewState: @escaping (Item) -> OnboardingViewState,
         selection: Binding<Item?>
     ) {
         self.items = items
@@ -67,7 +61,7 @@ private extension OnboardingSelectionView {
     }
 
     func itemView(
-        viewState: OnboardingSelectionViewState,
+        viewState: OnboardingViewState,
         isSelected: Bool,
         action: @escaping () -> Void
     ) -> some View {
