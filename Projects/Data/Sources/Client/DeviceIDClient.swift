@@ -23,33 +23,36 @@ struct DeviceIDClient: Sendable {
 extension DeviceIDClient: DependencyKey {
     private static let cachedID = OSAllocatedUnfairLock<String?>(initialState: nil)
 
-    static let liveValue = DeviceIDClient(
-        getDeviceID: {
-            cachedID.withLock { cached in
-                if let cached { return cached }
+    static let liveValue = {
+        @Dependency(\.logger) var logger
+        return DeviceIDClient(
+            getDeviceID: {
+                cachedID.withLock { cached in
+                    if let cached { return cached }
 
-                if let data = KeychainHelper.load(forKey: .deviceID),
-                   let id = String(data: data, encoding: .utf8) {
-                    cached = id
-                    return id
-                }
-
-                return nil
-            }
-        },
-        createDeviceID: {
-            let newID = UUID().uuidString
-            cachedID.withLock { cached in
-                if let data = newID.data(using: .utf8) {
-                    if !KeychainHelper.save(data: data, forKey: .deviceID) {
-                        Logger.auth.error("DeviceID Keychain 저장 실패")
+                    if let data = KeychainHelper.load(forKey: .deviceID),
+                       let id = String(data: data, encoding: .utf8) {
+                        cached = id
+                        return id
                     }
+
+                    return nil
                 }
-                cached = newID
+            },
+            createDeviceID: {
+                let newID = UUID().uuidString
+                cachedID.withLock { cached in
+                    if let data = newID.data(using: .utf8) {
+                        if !KeychainHelper.save(data: data, forKey: .deviceID) {
+                            logger.error(message: "DeviceID Keychain 저장 실패")
+                        }
+                    }
+                    cached = newID
+                }
+                return newID
             }
-            return newID
-        }
-    )
+        )
+    }()
 }
 
 extension DependencyValues {

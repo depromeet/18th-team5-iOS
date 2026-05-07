@@ -18,6 +18,7 @@ final class AuthInterceptor: RequestInterceptor, @unchecked Sendable {
     @Dependency(\.tokenClient) private var tokenClient
     @Dependency(\.networkClient) private var networkClient
     @Dependency(\.deviceIDClient) private var deviceIDClient
+    @Dependency(\.logger) private var logger
 
     private let state = OSAllocatedUnfairLock(
         initialState: (isRefreshing: false, pendingCompletions: [(RetryResult) -> Void]())
@@ -85,7 +86,7 @@ final class AuthInterceptor: RequestInterceptor, @unchecked Sendable {
                 tokenClient.saveTokens(response.accessToken, response.refreshToken)
                 return .retry
             } catch {
-                Logger.auth.error("토큰 갱신 실패: \(error)")
+                logger.error(message: "토큰 갱신 실패: \(error)")
             }
         }
 
