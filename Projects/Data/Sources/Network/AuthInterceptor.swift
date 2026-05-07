@@ -41,11 +41,18 @@ final class AuthInterceptor: RequestInterceptor, @unchecked Sendable {
     func retry(
         _ request: Request,
         for _: Session,
-        dueTo _: any Error,
+        dueTo error: Error,
         completion: @escaping (RetryResult) -> Void
     ) {
         guard let response = request.task?.response as? HTTPURLResponse,
               response.statusCode == 401 else {
+            completion(.doNotRetry)
+            return
+        }
+
+        // AUTH_401_* 에러: refresh token이 만료/무효하므로 재시도 불가
+        if let serverError = extractServerDomainError(from: error),
+           serverError.isAuthRefreshError {
             completion(.doNotRetry)
             return
         }
@@ -73,6 +80,19 @@ final class AuthInterceptor: RequestInterceptor, @unchecked Sendable {
 
             completions.forEach { $0(result) }
         }
+    }
+
+    // MARK: - 에러 추출
+
+    /// Alamofire AFError에 래핑된 ServerDomainError를 추출합니다.
+    private func extractServerDomainError(from error: Error) -> ServerDomainError? {
+        guard let afError = error.asAFError,
+              case let .responseValidationFailed(reason) = afError,
+              case let .customValidationFailed(underlyingError) = reason,
+              let serverError = underlyingError as? ServerDomainError else {
+            return nil
+        }
+        return serverError
     }
 
     // MARK: - 토큰 갱신 전략: refresh → deviceID 재로그인 → 실패
