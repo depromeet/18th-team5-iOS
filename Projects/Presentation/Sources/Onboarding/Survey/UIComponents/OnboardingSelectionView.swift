@@ -9,18 +9,19 @@
 import DesignSystem
 import SwiftUI
 
-private typealias Selection = OnboardingSurveyFeature.Selection
-
-struct OnboardingSelectionView: View {
-    private let title: (Selection) -> String
-    private let subtitle: (Selection) -> String
-    @Binding private var selection: Selection?
+struct OnboardingSelectionView<Item: Hashable>: View {
+    private let items: [Item]
+    private let title: (Item) -> String
+    private let subtitle: (Item) -> String
+    @Binding private var selection: Item?
 
     init(
-        title: @escaping (OnboardingSurveyFeature.Selection) -> String,
-        subtitle: @escaping (OnboardingSurveyFeature.Selection) -> String,
-        selection: Binding<OnboardingSurveyFeature.Selection?>
+        items: [Item],
+        title: @escaping (Item) -> String,
+        subtitle: @escaping (Item) -> String,
+        selection: Binding<Item?>
     ) {
+        self.items = items
         self.title = title
         self.subtitle = subtitle
         self._selection = selection
@@ -28,8 +29,9 @@ struct OnboardingSelectionView: View {
 
     var body: some View {
         HStack(alignment: .top, spacing: 10) {
-            cardView(selection: .left)
-            cardView(selection: .right)
+            ForEach(items, id: \.self) { item in
+                itemView(item)
+            }
         }
     }
 }
@@ -53,16 +55,16 @@ private extension OnboardingSelectionView {
 }
 
 private extension OnboardingSelectionView {
-    func cardView(selection: Selection) -> some View {
-        cardView(
-            title: title(selection),
-            subtitle: subtitle(selection),
-            isSelected: self.selection == selection,
-            action: { self.selection = selection }
+    func itemView(_ item: Item) -> some View {
+        itemView(
+            title: title(item),
+            subtitle: subtitle(item),
+            isSelected: item == selection,
+            action: { selection = item }
         )
     }
 
-    func cardView(
+    func itemView(
         title: String,
         subtitle: String,
         isSelected: Bool,

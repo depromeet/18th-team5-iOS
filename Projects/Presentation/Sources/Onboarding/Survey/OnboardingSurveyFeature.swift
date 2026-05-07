@@ -7,6 +7,7 @@
 //
 
 import ComposableArchitecture
+import Domain
 
 @Reducer
 public struct OnboardingSurveyFeature {
@@ -16,18 +17,12 @@ public struct OnboardingSurveyFeature {
         case result
     }
 
-    enum Selection {
-        case left
-        case right
-    }
-
     @ObservableState
     public struct State: Equatable {
         var status: Status = .initial
         let stepCount: Int = 3
         var step: Int = 0
-        var firstSelection: Selection?
-        var secondSelection: Selection?
+        var preference: UserPreference = .init()
 
         public init() {}
     }
