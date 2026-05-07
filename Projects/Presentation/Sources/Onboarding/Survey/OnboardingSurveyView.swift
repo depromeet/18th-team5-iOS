@@ -189,10 +189,10 @@ private extension OnboardingSurveyView {
     @ViewBuilder
     var background: some View {
         switch store.status {
-        case .initial:
+        case .initial, .result:
             LinearGradient.onboardingBackground
                 .ignoresSafeArea()
-        default: Color.white
+        case .inProgress: Color.white
         }
     }
 }
