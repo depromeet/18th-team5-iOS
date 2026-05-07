@@ -7,6 +7,7 @@
 //
 
 import ComposableArchitecture
+import Core
 import Domain
 import Foundation
 
@@ -28,11 +29,15 @@ public struct RootFeature {
         case onAppear
         case path(Path.Action)
         case launchConfigLoaded(Result<LaunchConfig, Error>)
+        case loginCompleted(Result<Void, Error>)
     }
 
     @Dependency(\.launchConfigRepository) var launchConfigRepository
     @Dependency(\.onboardingRepository) var onboardingRepository
+    @Dependency(\.tokenRepository) var tokenRepository
+    @Dependency(\.authRepository) var authRepository
     @Dependency(\.openURL) var openURL
+    @Dependency(\.logger) var logger
 
     public init() {}
 
@@ -59,6 +64,14 @@ public struct RootFeature {
 
             case .launchConfigLoaded(.failure):
                 // 스플래쉬 노출 유지
+                return .none
+
+            case .loginCompleted(.success(())):
+                return navigateAfterAuth(state: &state)
+
+            case let .loginCompleted(.failure(error)):
+                // TODO: 로그인 실패 에러처리 - @준영
+                logger.error(message: "로그인 실패 \(error.localizedDescription)")
                 return .none
 
             case .path(.forceUpdate(.updateButtonTapped)):
@@ -115,7 +128,18 @@ private extension RootFeature {
             return .none
         }
 
-        // #3. 온보딩 수행 여부 확인
+        // #3. 토큰 유무 확인 → 로그인 필요 시 요청
+        if tokenRepository.hasTokens() {
+            return navigateAfterAuth(state: &state)
+        }
+
+        return .run { send in
+            await send(.loginCompleted(Result { try await authRepository.login() }))
+        }
+    }
+
+    /// 로그인(또는 토큰 존재) 이후 온보딩 수행 여부에 따라 화면 분기
+    func navigateAfterAuth(state: inout State) -> Effect<Action> {
         let isOnboardingCompleted = try? onboardingRepository.isOnboardingCompleted()
         if isOnboardingCompleted == true {
             state.path = .main(.init())

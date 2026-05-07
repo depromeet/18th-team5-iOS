@@ -14,7 +14,7 @@ import Foundation
 /// @DependencyClient 매크로가 제네릭 메서드를 지원하지 않으므로 Data를 반환하고, 편의 메서드에서 디코딩
 @DependencyClient
 struct NetworkClient: Sendable {
-    var requestData: @Sendable (_ endpoint: any APIEndpoint) async throws -> Data
+    var requestData: @Sendable (_ endpoint: any APIEndpoint, _ retryCount: Int) async throws -> Data
     var requestEmpty: @Sendable (_ endpoint: any APIEndpoint) async throws -> Void
 }
 
@@ -27,8 +27,8 @@ extension NetworkClient {
         return decoder
     }
 
-    func request<T: Decodable>(_ endpoint: any APIEndpoint) async throws -> T {
-        let data = try await requestData(endpoint)
+    func request<T: Decodable>(_ endpoint: any APIEndpoint, retryCount: Int = 0) async throws -> T {
+        let data = try await requestData(endpoint, retryCount)
         do {
             let response = try Self.makeDecoder().decode(BaseResponse<T>.self, from: data)
             return response.data
@@ -42,8 +42,8 @@ extension NetworkClient {
 
 extension NetworkClient: DependencyKey {
     static let liveValue = NetworkClient(
-        requestData: { endpoint in
-            try await performRequest(endpoint: endpoint)
+        requestData: { endpoint, retryCount in
+            try await performRequest(endpoint: endpoint, retryCount: retryCount)
         },
         requestEmpty: { endpoint in
             _ = try await performRequest(endpoint: endpoint, emptyResponseCodes: [200, 204, 205])
@@ -56,8 +56,27 @@ extension NetworkClient: DependencyKey {
         let message: String
     }
 
-    /// requestData/requestEmpty 공통 네트워크 요청 로직
+    /// 재시도 래퍼. ServerDomainError는 재시도하지 않고, 나머지 에러는 retryCount만큼 재시도합니다.
     private static func performRequest(
+        endpoint: any APIEndpoint,
+        emptyResponseCodes: Set<Int> = [],
+        retryCount: Int = 0
+    ) async throws -> Data {
+        var lastError: Error?
+        for _ in 0 ... retryCount {
+            do {
+                return try await executeRequest(endpoint: endpoint, emptyResponseCodes: emptyResponseCodes)
+            } catch let error as ServerDomainError {
+                throw error
+            } catch {
+                lastError = error
+            }
+        }
+        throw lastError ?? NetworkError.unknown("Unknown error")
+    }
+
+    /// 단일 네트워크 요청 (재시도 없음)
+    private static func executeRequest(
         endpoint: any APIEndpoint,
         emptyResponseCodes: Set<Int> = []
     ) async throws -> Data {

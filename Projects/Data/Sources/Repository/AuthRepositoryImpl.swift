@@ -29,7 +29,7 @@ enum AuthRepositoryImpl {
                 do {
                     let deviceID = deviceIDClient.getDeviceID() ?? deviceIDClient.createDeviceID()
                     let response: AuthTokenDTO = try await networkClient.request(
-                        AuthEndpoint.login(deviceID: deviceID)
+                        AuthEndpoint.login(deviceID: deviceID), retryCount: 2
                     )
                     tokenClient.saveTokens(response.accessToken, response.refreshToken)
                 } catch {
