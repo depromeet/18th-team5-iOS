@@ -7,6 +7,7 @@
 //
 
 import ComposableArchitecture
+import DesignSystem
 import SwiftUI
 
 public struct NotificationConsentView: View {
@@ -17,35 +18,28 @@ public struct NotificationConsentView: View {
     }
 
     public var body: some View {
-        VStack(spacing: 24) {
-            Spacer()
+        VStack(spacing: 0) {
+            VStack(spacing: 56) {
+                Text("절기 알림과 미션을 위해\n알림 허용이 필요해요")
+                    .font(.headline2Semibold)
+                    .foregroundStyle(Color.gray800)
+                    .multilineTextAlignment(.center)
 
-            Text("알림을 허용하면\n중요한 소식을 받아볼 수 있어요")
-                .multilineTextAlignment(.center)
-                .font(.title3.bold())
-
-            Spacer()
-
-            VStack(spacing: 12) {
-                Button {
-                    store.send(.agreeButtonTapped)
-                } label: {
-                    Text("동의하기")
-                        .frame(maxWidth: .infinity)
-                }
-                .buttonStyle(.borderedProminent)
-
-                Button {
-                    store.send(.disagreeButtonTapped)
-                } label: {
-                    Text("동의하지 않기")
-                        .frame(maxWidth: .infinity)
-                }
-                .buttonStyle(.bordered)
+                Image.imgNotificationGuide
             }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+
+            doneButton
         }
-        .padding(.horizontal, 24)
-        .padding(.bottom, 32)
-        .navigationBarBackButtonHidden(true)
+    }
+}
+
+private extension NotificationConsentView {
+    var doneButton: some View {
+        BottomButton(title: "네, 확인했어요") {
+            store.send(.agreeButtonTapped)
+        }
+        .padding(.horizontal, 20)
+        .padding(.bottom, 16)
     }
 }

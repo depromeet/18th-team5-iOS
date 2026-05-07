@@ -10,17 +10,61 @@ import ComposableArchitecture
 
 @Reducer
 public struct OnboardingSurveyFeature {
+    enum Status: Equatable {
+        case initial
+        case inProgress
+        case result
+    }
+
+    enum Selection {
+        case left
+        case right
+    }
+
     @ObservableState
     public struct State: Equatable {
+        var status: Status = .initial
+        let stepCount: Int = 3
+        var step: Int = 0
+        var firstSelection: Selection?
+        var secondSelection: Selection?
+
         public init() {}
     }
 
-    public enum Action {}
+    public enum Action: BindableAction {
+        case backButtonTapped
+        case bottomButtonTapped
+        case binding(BindingAction<State>)
+    }
 
     public init() {}
     public var body: some ReducerOf<Self> {
-        Reduce { _, _ in
-            return .none
+        BindingReducer()
+
+        Reduce { state, action in
+            switch action {
+            case .backButtonTapped:
+                switch state.step {
+                case 0: state.status = .initial
+                default: state.step -= 1
+                }
+                return .none
+            case .bottomButtonTapped:
+                switch state.status {
+                case .initial:
+                    state.status = .inProgress
+                case .inProgress:
+                    switch state.step {
+                    case 0 ..< 2: state.step += 1
+                    case 2: state.status = .result
+                    default: break
+                    }
+                case .result: break
+                }
+                return .none
+            case .binding: return .none
+            }
         }
     }
 }

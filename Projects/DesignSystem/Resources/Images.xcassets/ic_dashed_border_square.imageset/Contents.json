@@ -1,0 +1,12 @@
+{
+  "images" : [
+    {
+      "filename" : "ic_dashed_border_square.pdf",
+      "idiom" : "universal"
+    }
+  ],
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  }
+}
