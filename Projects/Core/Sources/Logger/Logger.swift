@@ -127,7 +127,7 @@ public final class Logger: Sendable {
 public enum LoggerKey: DependencyKey {
     public static let liveValue = Logger(handlers: [DebugLogHandler()])
     public static let previewValue = Logger(handlers: [DebugLogHandler()])
-    public static let testValue = Logger(handlers: [DebugLogHandler()])
+    public static let testValue = Logger(handlers: [])
 }
 
 public extension DependencyValues {

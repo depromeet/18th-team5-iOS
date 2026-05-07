@@ -6,7 +6,7 @@
 //  Copyright © 2026 Orange. All rights reserved.
 //
 
-public protocol LogHandler: Sendable {
+public protocol LogHandler {
     var minimumLevel: LogLevel { get }
 
     func log(

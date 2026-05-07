@@ -32,6 +32,7 @@ public struct MainFeature {
         Reduce { _, action in
             switch action {
             case .onAppear:
+                // TODO: 로깅 테스트용 호출입니다. 추후 제거부탁드립니다.
                 logger.debug(message: "MainView did appear")
                 return .none
             case .binding:
