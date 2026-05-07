@@ -228,7 +228,7 @@ private extension EngagementLevel {
         case .casual:
             .init(
                 title: "일상 안에서\n부담 없이",
-                subtitle: "동네 범위,\n이동 없이 5분이면 완료",
+                subtitle: "동네 범위,\n이동 없이 5분이면 끝",
                 image: .icWalkingWoman
             )
         }
