@@ -56,9 +56,12 @@ public struct OnboardingFeature {
                 state.path = .survey(.init())
                 return .none
 
-            case .path: return .none
+            case .path(.survey(.delegate(.onboardingCompleted))):
+                return .send(.delegate(.onboardingCompleted))
 
             case .delegate: return .none
+
+            case .path: return .none
             }
         }
         .ifLet(\.path, action: \.path) {
