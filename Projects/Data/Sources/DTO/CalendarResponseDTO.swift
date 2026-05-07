@@ -1,3 +1,10 @@
+//  CalendarResponseDTO.swift
+//  Data
+//
+//  Created by 송민교 on 5/7/26.
+//  Copyright © 2026 Orange. All rights reserved.
+//
+
 import Foundation
 
 // MARK: - 월별 기록 조회 응답
@@ -30,14 +37,4 @@ struct DayDetailResponseWrapperDTO: Decodable {
 
 struct DayDetailDataDTO: Decodable {
     let date: String
-    let completions: [MissionCompletionDTO]
-}
-
-struct MissionCompletionDTO: Decodable {
-    let completionId: Int
-    let missionId: Int
-    let missionType: String
-    let imageUrl: String
-    let memo: String
-    let completedAt: String
 }

@@ -1,3 +1,10 @@
+//  CalendarRecord.swift
+//  Domain
+//
+//  Created by 송민교 on 5/7/26.
+//  Copyright © 2026 Orange. All rights reserved.
+//
+
 import Foundation
 
 public struct CalendarRecord: Equatable, Identifiable, Sendable {

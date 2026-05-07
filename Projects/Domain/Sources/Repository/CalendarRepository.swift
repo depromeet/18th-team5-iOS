@@ -1,3 +1,10 @@
+//  CalendarRepository.swift
+//  Domain
+//
+//  Created by 송민교 on 5/7/26.
+//  Copyright © 2026 Orange. All rights reserved.
+//
+
 import Dependencies
 import DependenciesMacros
 import Foundation
@@ -23,7 +30,7 @@ public extension CalendarRepository {
     static let previewValue = CalendarRepository(
         fetchMonthRecords: { _, _ in [] },
         fetchDayDetail: { date in
-            DayDetail(date: date, completions: [])
+            DayDetail(date: date)
         }
     )
 }
