@@ -1,3 +1,10 @@
+//  CalendarView.swift
+//  Presentation
+//
+//  Created by 송민교 on 5/7/26.
+//  Copyright © 2026 Orange. All rights reserved.
+//
+
 import ComposableArchitecture
 import DesignSystem
 import Domain
@@ -39,64 +46,6 @@ public struct CalendarView: View {
     }
 }
 
-// MARK: - CalendarHeaderView
-
-struct CalendarHeaderView: View {
-    let title: String
-    let onPrevious: () -> Void
-    let onNext: () -> Void
-
-    var body: some View {
-        VStack(spacing: 0) {
-            HStack {
-                Text(title)
-                    .font(.body2, \.semiBold)
-                    .foregroundStyle(Color.gray500)
-
-                Spacer()
-
-                HStack(spacing: 12) {
-                    Button(action: onPrevious) {
-                        Image(systemName: "chevron.left")
-                            .resizable()
-                            .scaledToFit()
-                            .frame(width: 8, height: 13)
-                            .foregroundStyle(Color.gray900)
-                    }
-                    Button(action: onNext) {
-                        Image(systemName: "chevron.right")
-                            .resizable()
-                            .scaledToFit()
-                            .frame(width: 8, height: 13)
-                            .foregroundStyle(Color.gray900)
-                    }
-                }
-            }
-            .padding(.bottom, 12)
-
-            Divider()
-                .foregroundStyle(Color.gray100)
-        }
-    }
-}
-
-// MARK: - WeekdayLabelRow
-
-struct WeekdayLabelRow: View {
-    private let labels = ["월", "화", "수", "목", "금", "토", "일"]
-
-    var body: some View {
-        HStack(spacing: 6) {
-            ForEach(labels, id: \.self) { label in
-                Text(label)
-                    .font(.caption2, \.regular)
-                    .foregroundStyle(Color.gray400)
-                    .frame(maxWidth: .infinity)
-            }
-        }
-    }
-}
-
 // MARK: - CalendarGridView
 
 struct CalendarGridView: View {
@@ -118,8 +67,8 @@ struct CalendarGridView: View {
                             } ?? false
 
                             DayCell(
-                                date: date,
-                                record: record,
+                                day: Calendar.current.component(.day, from: date),
+                                imageURL: record?.imageURL,
                                 isSelected: isSelected,
                                 onTap: record != nil ? { onDayTap(date) } : nil
                             )
@@ -136,59 +85,14 @@ struct CalendarGridView: View {
     }
 }
 
-// MARK: - DayCell
-
-struct DayCell: View {
-    let date: Date
-    let record: CalendarRecord?
-    let isSelected: Bool
-    let onTap: (() -> Void)?
-
-    var body: some View {
-        VStack(spacing: 2) {
-            Text("\(Calendar.current.component(.day, from: date))")
-                .font(.caption1, \.regular)
-                .foregroundStyle(isSelected ? Color.monoWhite : Color.gray900)
-
-            DayPhotoView(record: record, isSelected: isSelected)
+#Preview {
+    CalendarView(
+        store: .init(initialState: .init()) {
+            CalendarFeature()
+        } withDependencies: {
+            $0.calendarRepository = .mock
         }
-        .padding(.horizontal, 4)
-        .padding(.vertical, 8)
-        .background(isSelected ? Color.gray900 : Color.clear)
-        .clipShape(RoundedRectangle(cornerRadius: 6))
-        .onTapGesture {
-            onTap?()
-        }
-    }
-}
-
-// MARK: - DayPhotoView
-
-struct DayPhotoView: View {
-    let record: CalendarRecord?
-    let isSelected: Bool
-
-    var body: some View {
-        Group {
-            if let record {
-                AsyncImage(url: record.imageURL) { phase in
-                    switch phase {
-                    case let .success(image):
-                        image
-                            .resizable()
-                            .scaledToFill()
-                    default:
-                        Color.gray100
-                    }
-                }
-                .frame(width: 34, height: 34)
-                .clipShape(CalendarPhotoShape())
-            } else {
-                Color.clear
-                    .frame(width: 34, height: 34)
-            }
-        }
-    }
+    )
 }
 
 // MARK: - Date Helpers
