@@ -254,7 +254,7 @@ private extension ActivityTheme {
             .init(
                 title: "감성 콘텐츠나 문화",
                 subtitle: "전시, 독서, 영화, 음악 등",
-                image: .icMovieProjecter
+                image: .icMovieProjector
             )
         }
     }
