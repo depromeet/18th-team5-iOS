@@ -7,6 +7,7 @@
 //
 
 import ComposableArchitecture
+import Domain
 import Foundation
 
 @Reducer
@@ -17,7 +18,8 @@ public struct MissionRecordFeature {
         var selectedImageData: Data?
         var memo: String = ""
         var isSubmitting: Bool = false
-        var showCamera: Bool = false
+        var showCompletionModal: Bool = false
+        @Presents var camera: CameraFeature.State?
 
         public init(missionTitle: String) {
             self.missionTitle = missionTitle
@@ -31,6 +33,8 @@ public struct MissionRecordFeature {
         case cameraButtonTapped
         case imageSelected(Data?)
         case submitButtonTapped
+        case completionModalConfirmTapped
+        case camera(PresentationAction<CameraFeature.Action>)
     }
 
     public enum Delegate {
@@ -52,7 +56,13 @@ public struct MissionRecordFeature {
                 return .send(.delegate(.dismiss))
 
             case .cameraButtonTapped:
-                state.showCamera = true
+                let formatter = DateFormatter()
+                formatter.dateFormat = "yyyy. M. d"
+                let dateString = formatter.string(from: Date())
+                state.camera = CameraFeature.State(
+                    overlayDate: dateString,
+                    overlayLabel: state.missionTitle
+                )
                 return .none
 
             case let .imageSelected(data):
@@ -60,14 +70,31 @@ public struct MissionRecordFeature {
                 return .none
 
             case .submitButtonTapped:
-                return .send(.delegate(.submitted(
-                    imageData: state.selectedImageData,
-                    memo: state.memo
-                )))
+                state.showCompletionModal = true
+                return .none
+
+            case .completionModalConfirmTapped:
+                state.showCompletionModal = false
+                return .send(.delegate(.dismiss))
+
+            case let .camera(.presented(.delegate(.didCapture(photo)))):
+                state.selectedImageData = photo.imageData
+                state.camera = nil
+                return .none
+
+            case .camera(.presented(.delegate(.didCancel))):
+                state.camera = nil
+                return .none
+
+            case .camera:
+                return .none
 
             case .delegate:
                 return .none
             }
+        }
+        .ifLet(\.$camera, action: \.camera) {
+            CameraFeature()
         }
     }
 }

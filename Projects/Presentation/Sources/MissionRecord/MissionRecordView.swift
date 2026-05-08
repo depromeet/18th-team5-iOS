@@ -21,27 +21,38 @@ public struct MissionRecordView: View {
     }
 
     public var body: some View {
-        VStack(spacing: 0) {
-            navigationBar
+        ZStack {
+            VStack(spacing: 0) {
+                navigationBar
 
-            ScrollView {
-                VStack(spacing: 24) {
-                    missionTitleCard
-                    photoArea
-                    memoSection
+                ScrollView {
+                    VStack(spacing: 24) {
+                        missionTitleCard
+                        photoArea
+                        memoSection
+                    }
+                    .padding(.horizontal, 20)
+                    .padding(.top, 16)
+                    .padding(.bottom, 120)
                 }
-                .padding(.horizontal, 20)
-                .padding(.top, 16)
-                .padding(.bottom, 120)
+                .scrollDismissesKeyboard(.interactively)
+
+                Spacer()
+
+                submitButton
             }
-            .scrollDismissesKeyboard(.interactively)
+            .background(Color.gray50)
 
-            Spacer()
-
-            submitButton
+            if store.showCompletionModal {
+                completionModal
+            }
         }
-        .background(Color.gray50)
         .navigationBarBackButtonHidden(true)
+        .fullScreenCover(
+            item: $store.scope(state: \.camera, action: \.camera)
+        ) { cameraStore in
+            CameraView(store: cameraStore)
+        }
     }
 }
 
@@ -189,6 +200,10 @@ private extension MissionRecordView {
 // MARK: - Submit Button
 
 private extension MissionRecordView {
+    var isSubmitEnabled: Bool {
+        store.selectedImageData != nil && !store.isSubmitting
+    }
+
     var submitButton: some View {
         Button {
             store.send(.submitButtonTapped)
@@ -198,12 +213,48 @@ private extension MissionRecordView {
                 .foregroundStyle(Color.monoWhite)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 16)
-                .background(Color.gray400)
+                .background(isSubmitEnabled ? Color.gray900 : Color.gray400)
                 .clipShape(RoundedRectangle(cornerRadius: .radius12))
         }
-        .disabled(store.isSubmitting)
+        .disabled(!isSubmitEnabled)
         .padding(.horizontal, 20)
         .padding(.bottom, 36)
+    }
+}
+
+// MARK: - Completion Modal
+
+private extension MissionRecordView {
+    var completionModal: some View {
+        ZStack {
+            Color.black.opacity(0.6)
+                .ignoresSafeArea()
+                .onTapGesture {}
+
+            VStack(spacing: 24) {
+                Text("기록이 저장되었어요")
+                    .font(.body1Semibold)
+                    .foregroundStyle(Color.gray900)
+
+                Button {
+                    store.send(.completionModalConfirmTapped)
+                } label: {
+                    Text("확인")
+                        .font(.body1Medium)
+                        .foregroundStyle(Color.monoWhite)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 16)
+                        .background(Color.gray900)
+                        .clipShape(RoundedRectangle(cornerRadius: .radius12))
+                }
+            }
+            .padding(24)
+            .background(Color.monoWhite)
+            .clipShape(RoundedRectangle(cornerRadius: .radius16))
+            .padding(.horizontal, 40)
+        }
+        .transition(.opacity)
+        .animation(.easeInOut(duration: 0.2), value: store.showCompletionModal)
     }
 }
 
