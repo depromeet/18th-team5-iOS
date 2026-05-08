@@ -39,28 +39,10 @@ private extension CalendarRecordResponseDTO {
     }
 }
 
-private extension MissionCompletionDTO {
-    func toDomain() -> MissionCard? {
-        guard let url = URL(string: imageUrl) else { return nil }
-        let date = ISO8601DateFormatter().date(from: completedAt) ?? Date()
-        return MissionCard(
-            id: completionId,
-            missionId: missionId,
-            missionType: missionType,
-            imageURL: url,
-            memo: memo,
-            completedAt: date
-        )
-    }
-}
-
 private extension DayDetailDataDTO {
     func toDomain() -> DayDetail {
         let parsedDate = DateFormatter.yyyyMMdd.date(from: date) ?? Date()
-        return DayDetail(
-            date: parsedDate,
-            completions: completions.compactMap { $0.toDomain() }
-        )
+        return DayDetail(date: parsedDate)
     }
 }
 
