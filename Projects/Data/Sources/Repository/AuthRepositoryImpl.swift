@@ -31,7 +31,10 @@ enum AuthRepositoryImpl {
                     let response: AuthTokenDTO = try await networkClient.request(
                         AuthEndpoint.login(deviceID: deviceID), retryCount: 2
                     )
-                    tokenClient.saveTokens(response.accessToken, response.refreshToken)
+                    tokenClient.saveTokens(
+                        response.accessToken,
+                        response.refreshToken
+                    )
                 } catch {
                     throw mapToDomainError(error)
                 }

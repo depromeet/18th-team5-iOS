@@ -31,7 +31,7 @@ extension NetworkClient {
         let data = try await requestData(endpoint, retryCount)
         do {
             let response = try Self.makeDecoder().decode(BaseResponse<T>.self, from: data)
-            return response.data
+            return response.result
         } catch {
             throw NetworkError.decodingFailed
         }
