@@ -136,9 +136,10 @@ private struct MissionCardView: View {
         .padding(.top, 20)
         .padding(.horizontal, 16)
         .padding(.bottom, 15)
-        .frame(width: 313)
+        .frame(maxWidth: .infinity)
         .background(Color.white.opacity(0.9))
         .clipShape(RoundedRectangle(cornerRadius: 12))
+        .padding()
     }
 }
 
