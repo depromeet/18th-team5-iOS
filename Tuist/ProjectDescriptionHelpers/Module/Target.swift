@@ -22,7 +22,7 @@ private extension TargetScript {
         name: "SwiftLint",
         basedOnDependencyAnalysis: false
     )
-    
+
     static let googleServiceInfo: TargetScript = .pre(
         script: """
         if [ "${ENV}" = "Dev" ]; then
@@ -71,7 +71,7 @@ extension Module {
             settings: .settings(configurations: .default)
         )
     }
-    
+
     var tests: Target {
         return .target(
             name: "\(name)Tests",
@@ -84,7 +84,7 @@ extension Module {
             settings: .settings(configurations: .default)
         )
     }
-    
+
     var demo: Target {
         return .target(
             name: "\(name)Demo",
@@ -107,7 +107,7 @@ private extension Module {
         case .presentation, .data, .designSystem, .domain, .core: .staticFramework
         }
     }
-    
+
     var buildableFolders: [BuildableFolder] {
         switch self {
         case .app, .designSystem: ["Sources", "Resources"]
