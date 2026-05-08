@@ -24,7 +24,7 @@ public struct CalendarHeaderView: View {
         VStack(spacing: 0) {
             HStack {
                 Text(title)
-                    .font(.body2, \.semiBold)
+                    .font(.body2Semibold)
                     .foregroundStyle(Color.gray500)
 
                 Spacer()
@@ -65,7 +65,7 @@ public struct WeekdayLabelRow: View {
         HStack(spacing: 6) {
             ForEach(labels, id: \.self) { label in
                 Text(label)
-                    .font(.caption2, \.regular)
+                    .font(.caption2Medium)
                     .foregroundStyle(Color.gray400)
                     .frame(maxWidth: .infinity)
             }
@@ -94,7 +94,7 @@ public struct DayCell: View {
         } label: {
             VStack(spacing: 2) {
                 Text("\(day)")
-                    .font(.caption1, \.regular)
+                    .font(.caption1Regular)
                     .foregroundStyle(isSelected ? Color.monoWhite : Color.gray900)
 
                 DayPhotoView(imageURL: imageURL, isSelected: isSelected)
