@@ -42,6 +42,7 @@ extension HomeResultDTO {
         HomeData(
             solarTerm: solarTerm?.toDomain(),
             currentMission: dailyMission?.toDomain(),
+            // TODO: seasonRecord API 연동 후 실제 데이터 매핑
             seasonRecord: .mock
         )
     }

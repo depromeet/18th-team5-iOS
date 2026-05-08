@@ -56,6 +56,7 @@ public struct HomeFeature {
 
             case .homeLoad(.failure):
                 state.isLoading = false
+                // TODO: 에러 처리 결정 후 추후 추가 - @minkyo
                 return .none
 
             case .onMissionTap:
