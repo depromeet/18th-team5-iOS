@@ -17,38 +17,8 @@ struct SolarTermCardView: View {
 
     var body: some View {
         ZStack(alignment: .bottom) {
-            // 배경 + 장식 이미지 (overlay로 레이아웃 영향 차단)
-            RoundedRectangle(cornerRadius: 16)
-                .fill(Color(hex: 0xA9EEC8))
-                .frame(height: 400)
-                .overlay(alignment: .topLeading) {
-                    Image.homeDiamond
-                        .renderingMode(.original)
-                        .resizable()
-                        .frame(width: 346, height: 346)
-                        .padding(.leading, 20)
-                }
-                .overlay {
-                    Image.homeLine
-                        .renderingMode(.original)
-                        .resizable()
-                        .frame(width: 1332, height: 520)
-                        .rotationEffect(.degrees(-10))
-                        .offset(x: -30, y: 15)
-                }
-                .clipShape(RoundedRectangle(cornerRadius: 16))
-
-            // 상단 그라디언트 오버레이
-            VStack {
-                LinearGradient(
-                    colors: [Color(hex: 0x35B26D), Color(hex: 0x35B26D).opacity(0)],
-                    startPoint: .top,
-                    endPoint: .bottom
-                )
-                .frame(height: 234)
-                Spacer()
-            }
-            .clipShape(RoundedRectangle(cornerRadius: 16))
+            Image.homeSeasonCard
+                .resizable()
 
             // 상단 텍스트 영역
             VStack(alignment: .leading, spacing: 12) {
@@ -83,7 +53,7 @@ struct SolarTermCardView: View {
         }
         .frame(maxWidth: .infinity)
         .frame(height: 400)
-        .clipShape(RoundedRectangle(cornerRadius: 16))
+        .clipShape(RoundedRectangle(cornerRadius: .radius16))
     }
 }
 
@@ -93,6 +63,7 @@ private func formattedDate(_ dateString: String) -> String {
     return "\(parts[1]).\(parts[2])"
 }
 
+// TODO: - 멘트 형식 확정(\n포함 받기) 후 추후 삭제
 private func descriptionLines(_ description: String) -> [String] {
     let parts = description.components(separatedBy: ", ")
     guard parts.count == 2 else { return [description] }
@@ -137,7 +108,7 @@ private struct MissionCardView: View {
         .padding(.bottom, 15)
         .frame(maxWidth: .infinity)
         .background(Color.white.opacity(0.9))
-        .clipShape(RoundedRectangle(cornerRadius: 12))
+        .clipShape(RoundedRectangle(cornerRadius: .radius12))
         .padding()
     }
 }

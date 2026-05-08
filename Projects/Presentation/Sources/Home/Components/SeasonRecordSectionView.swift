@@ -29,9 +29,9 @@ struct SeasonRecordSectionView: View {
                         Text("자세히 보기 ")
                             .font(.body2Medium)
                             .foregroundStyle(Color.gray600)
-                        Image(systemName: "chevron.right")
-                            .font(.system(size: 10, weight: .medium))
-                            .foregroundStyle(Color.gray700)
+                        Image.icArrowRight
+                            .resizable()
+                            .frame(width: 24, height: 24)
                     }
                 }
             }
@@ -56,7 +56,7 @@ struct SeasonRecordSectionView: View {
             .frame(maxWidth: .infinity)
             .padding(.vertical, 14)
             .background(Color.gray100)
-            .clipShape(RoundedRectangle(cornerRadius: 12))
+            .clipShape(RoundedRectangle(cornerRadius: .radius12))
         }
     }
 }
@@ -97,15 +97,15 @@ private struct PhotoCollageView: View {
             }
         }
         .frame(width: size, height: size)
-        .clipShape(RoundedRectangle(cornerRadius: 16))
+        .clipShape(RoundedRectangle(cornerRadius: .radius16))
         .overlay(
-            RoundedRectangle(cornerRadius: 16)
+            RoundedRectangle(cornerRadius: .radius16)
                 .stroke(Color.white, lineWidth: 2)
         )
     }
 
     private var photoPlaceholder: some View {
-        RoundedRectangle(cornerRadius: 16)
+        RoundedRectangle(cornerRadius: .radius16)
             .fill(Color(hex: 0xDCDEE3))
     }
 }

@@ -15,8 +15,8 @@ struct MissionRecommendBannerView: View {
     var body: some View {
         HStack {
             HStack(spacing: 8) {
-                Text("💡")
-                    .font(.system(size: 24))
+                Image.lamp
+                    .resizable()
                     .frame(width: 32, height: 32)
 
                 VStack(alignment: .leading, spacing: 2) {
@@ -44,7 +44,7 @@ struct MissionRecommendBannerView: View {
         }
         .padding(20)
         .background(
-            RoundedRectangle(cornerRadius: 16)
+            RoundedRectangle(cornerRadius: .radius16)
                 .fill(
                     LinearGradient(
                         colors: [Color(hex: 0xECFBF3), Color(hex: 0xF3F4F5)],

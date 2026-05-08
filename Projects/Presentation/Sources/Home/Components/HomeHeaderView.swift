@@ -20,10 +20,9 @@ struct HomeHeaderView: View {
             Spacer()
 
             Button(action: {}) {
-                Image(systemName: "bell")
+                Image.bellEmptyAlarmIcon
                     .resizable()
                     .frame(width: 24, height: 24)
-                    .foregroundStyle(Color.gray900)
             }
         }
         .padding(.horizontal, 20)
