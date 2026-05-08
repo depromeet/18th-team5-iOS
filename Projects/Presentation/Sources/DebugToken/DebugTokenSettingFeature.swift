@@ -8,6 +8,10 @@
 import ComposableArchitecture
 import Domain
 
+private enum Constants {
+    static let commonDebugToken = "AAAAAAAA-AAAA-AAAA-AAAA-AAAAAAAAAAAA"
+}
+
 @Reducer
 public struct DebugTokenSettingFeature {
     @ObservableState
@@ -37,14 +41,9 @@ public struct DebugTokenSettingFeature {
 
         Reduce { state, action in
             switch action {
-            case .binding:
-                return .none
-
             case .useCommonTokenButtonTapped:
-                let commonToken = "AAAA-AAAA-AAAA-AAAA"
-                state.tokenText = commonToken
-                tokenRepository.setDebugDeviceToken(commonToken)
-                return .send(.delegate(.completed))
+                state.tokenText = Constants.commonDebugToken
+                return .none
 
             case .confirmButtonTapped:
                 let token = state.tokenText
@@ -52,7 +51,7 @@ public struct DebugTokenSettingFeature {
                 tokenRepository.setDebugDeviceToken(token)
                 return .send(.delegate(.completed))
 
-            case .delegate:
+            default:
                 return .none
             }
         }

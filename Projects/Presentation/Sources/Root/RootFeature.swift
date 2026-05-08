@@ -89,6 +89,10 @@ public struct RootFeature {
                 state.path = .main(.init())
                 return .none
 
+            case .setDebugTokenFinished:
+                state.path = .splash(.init())
+                return login()
+
             case .path(.forceUpdate(.updateButtonTapped)):
                 guard let config = state.launchConfig else {
                     return .none
@@ -169,11 +173,14 @@ private extension RootFeature {
         }
 
         // #2. 로그인 시도
-        return .run { send in
+        return login()
+    }
+
+    func login() -> Effect<Action> {
+        .run { send in
             await send(.loginFlowFinished(
                 with: Result { try await authRepository.login() }
-            )
-            )
+            ))
         }
     }
 }
