@@ -29,6 +29,9 @@ private extension RootView {
     func demoView(menu: Menu) -> some View {
         switch menu {
         case .carousel: CarouselDemoView()
+        case .circularWheelPicker: CircularWheelPickerDemoView()
+        case .cardStack: CardStackDemoView()
+        case .font: FontDemoView()
         }
     }
 

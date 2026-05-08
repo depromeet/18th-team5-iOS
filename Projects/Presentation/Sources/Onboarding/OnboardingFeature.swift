@@ -13,28 +13,23 @@ import Domain
 public struct OnboardingFeature {
     @ObservableState
     public struct State: Equatable {
-        public var path = StackState<Path.State>()
+        public var path: Path.State?
 
         public init() {}
     }
 
     public enum Action {
-        case delegate(Delegate)
         case onAppear
         case authorizationStatusChecked(NotificationAuthorizationStatus)
-        case path(StackActionOf<Path>)
+        case delegate(Delegate)
+        case path(Path.Action)
     }
 
     public enum Delegate {
         case onboardingCompleted
     }
 
-    @Reducer
-    public enum Path {
-        case notificationConsent(NotificationConsentFeature)
-    }
-
-    @Dependency(\.notificationClient) var notificationClient
+    @Dependency(\.notificationClient) private var notificationClient
 
     public init() {}
 
@@ -50,22 +45,36 @@ public struct OnboardingFeature {
             case let .authorizationStatusChecked(status):
                 switch status {
                 case .notDetermined:
-                    state.path.append(.notificationConsent(.init()))
+                    state.path = .notificationConsent(.init())
                     return .none
                 case .denied, .authorized, .provisional:
-                    return .send(.delegate(.onboardingCompleted))
+                    state.path = .survey(.init())
+                    return .none
                 }
 
-            case .path(.element(
-                id: _, action: .notificationConsent(.delegate(.completed))
-            )):
+            case .path(.notificationConsent(.delegate(.completed))):
+                state.path = .survey(.init())
+                return .none
+
+            case .path(.survey(.delegate(.onboardingCompleted))):
                 return .send(.delegate(.onboardingCompleted))
 
-            case .delegate, .path:
-                return .none
+            case .delegate: return .none
+
+            case .path: return .none
             }
         }
-        .forEach(\.path, action: \.path)
+        .ifLet(\.path, action: \.path) {
+            Path.body
+        }
+    }
+}
+
+extension OnboardingFeature {
+    @Reducer
+    public enum Path {
+        case notificationConsent(NotificationConsentFeature)
+        case survey(OnboardingSurveyFeature)
     }
 }
 

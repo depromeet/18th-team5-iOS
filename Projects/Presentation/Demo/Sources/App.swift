@@ -8,6 +8,8 @@
 
 import ComposableArchitecture
 import Data
+import Domain
+import Foundation
 import Presentation
 import SwiftUI
 
@@ -52,9 +54,10 @@ struct DemoRootFeature {
 struct PresentationDemoApp: App {
     var body: some Scene {
         WindowGroup {
-            DemoRootView(
-                store: Store(initialState: DemoRootFeature.State()) {
-                    DemoRootFeature()
+            RootView(store:
+                .init(initialState: .init()) {
+                    RootFeature()
+                        .dependency(\.calendarRepository, .mock)
                 }
             )
         }
