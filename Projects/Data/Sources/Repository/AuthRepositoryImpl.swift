@@ -35,7 +35,7 @@ enum AuthRepositoryImpl {
                     )
 
                     guard let response else {
-                        throw DomainError.unknown("데이터 획득불가")
+                        throw DomainError.unknown("데이터 획득 실패")
                     }
 
                     tokenClient.saveTokens(
