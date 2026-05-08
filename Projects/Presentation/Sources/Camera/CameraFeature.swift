@@ -128,7 +128,11 @@ public struct CameraFeature {
         Reduce { state, action in
             switch action {
             case .onAppear:
-                state.captureSession = CaptureSessionBox(session: cameraClient.getSession())
+                guard let session = cameraClient.getSession() as? AVCaptureSession else {
+                    assertionFailure("getSession must return AVCaptureSession")
+                    return .none
+                }
+                state.captureSession = CaptureSessionBox(session: session)
                 return .run { [zoom = state.currentZoomFactor] _ in
                     try await cameraClient.startSession()
                     try await cameraClient.setZoomFactor(zoom, false)

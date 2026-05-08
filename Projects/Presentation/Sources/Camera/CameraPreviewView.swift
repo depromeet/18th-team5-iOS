@@ -7,6 +7,7 @@
 //
 
 import AVFoundation
+import Domain
 import SwiftUI
 import UIKit
 
@@ -39,7 +40,11 @@ final class PreviewUIView: UIView {
     }
 
     var previewLayer: AVCaptureVideoPreviewLayer {
-        layer as! AVCaptureVideoPreviewLayer
+        guard let preview = layer as? AVCaptureVideoPreviewLayer else {
+            assertionFailure("layerClass must be AVCaptureVideoPreviewLayer")
+            return AVCaptureVideoPreviewLayer()
+        }
+        return preview
     }
 
     override init(frame: CGRect) {
@@ -67,7 +72,7 @@ final class PreviewUIView: UIView {
 
     private func setupObserver() {
         lensSwitchObserver = NotificationCenter.default.addObserver(
-            forName: Notification.Name("CameraLensSwitched"),
+            forName: .cameraLensSwitched,
             object: nil,
             queue: .main
         ) { [weak self] _ in

@@ -6,7 +6,6 @@
 //  Copyright © 2026 Orange. All rights reserved.
 //
 
-import AVFoundation
 import Dependencies
 import DependenciesMacros
 import Foundation
@@ -17,9 +16,9 @@ public struct CameraClient: Sendable {
     public var stopSession: @Sendable () async -> Void
     public var capturePhoto: @Sendable () async throws -> CapturedPhoto
     public var switchCamera: @Sendable () async throws -> Void
-    public var setZoomFactor: @Sendable (_ factor: CGFloat, _ animated: Bool) async throws -> Void
+    public var setZoomFactor: @Sendable (_ factor: Double, _ animated: Bool) async throws -> Void
     public var setFlashMode: @Sendable (_ isOn: Bool) async -> Void
-    public var getSession: @Sendable () -> AVCaptureSession = { AVCaptureSession() }
+    public var getSession: @Sendable () -> Any = { NSObject() }
 }
 
 // MARK: - TestDependencyKey

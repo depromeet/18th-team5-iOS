@@ -12,13 +12,13 @@ public struct CapturedPhoto: Equatable, Sendable {
     public let imageData: Data
     public let capturedAt: Date
     public let cameraPosition: CameraPosition
-    public let zoomLevel: CGFloat
+    public let zoomLevel: Double
 
     public init(
         imageData: Data,
         capturedAt: Date,
         cameraPosition: CameraPosition,
-        zoomLevel: CGFloat
+        zoomLevel: Double
     ) {
         self.imageData = imageData
         self.capturedAt = capturedAt

@@ -100,9 +100,11 @@ private final class CameraClientImpl: NSObject, @unchecked Sendable {
         session.addOutput(photoOutput)
 
         if let wideAngleFactor = device.virtualDeviceSwitchOverVideoZoomFactors.first?.doubleValue {
-            try? device.lockForConfiguration()
-            device.videoZoomFactor = wideAngleFactor
-            device.unlockForConfiguration()
+            do {
+                try device.lockForConfiguration()
+                device.videoZoomFactor = wideAngleFactor
+                device.unlockForConfiguration()
+            } catch {}
         }
 
         configureLensSwitching(for: device)
@@ -114,16 +116,18 @@ private final class CameraClientImpl: NSObject, @unchecked Sendable {
 
         guard !device.virtualDeviceSwitchOverVideoZoomFactors.isEmpty else { return }
 
-        try? device.lockForConfiguration()
-        device.setPrimaryConstituentDeviceSwitchingBehavior(
-            .restricted,
-            restrictedSwitchingBehaviorConditions: .videoZoomChanged
-        )
-        device.unlockForConfiguration()
+        do {
+            try device.lockForConfiguration()
+            device.setPrimaryConstituentDeviceSwitchingBehavior(
+                .restricted,
+                restrictedSwitchingBehaviorConditions: .videoZoomChanged
+            )
+            device.unlockForConfiguration()
+        } catch {}
 
         lensSwitchObservation = device.observe(\.activePrimaryConstituent) { _, _ in
             DispatchQueue.main.async {
-                NotificationCenter.default.post(name: Notification.Name("CameraLensSwitched"), object: nil)
+                NotificationCenter.default.post(name: .cameraLensSwitched, object: nil)
             }
         }
     }
@@ -143,29 +147,25 @@ private final class CameraClientImpl: NSObject, @unchecked Sendable {
             }
 
             guard session.isRunning else { return }
-            lensSwitchObservation?.invalidate()
-            lensSwitchObservation = nil
-            session.stopRunning()
-
-            session.beginConfiguration()
-            session.inputs.forEach { session.removeInput($0) }
-            session.outputs.forEach { session.removeOutput($0) }
-            session.commitConfiguration()
+            teardownSession()
         }
     }
 
     private func stopRunning() {
         sessionQueue.async { [self] in
             guard session.isRunning else { return }
-            lensSwitchObservation?.invalidate()
-            lensSwitchObservation = nil
-            session.stopRunning()
-
-            session.beginConfiguration()
-            session.inputs.forEach { session.removeInput($0) }
-            session.outputs.forEach { session.removeOutput($0) }
-            session.commitConfiguration()
+            teardownSession()
         }
+    }
+
+    private func teardownSession() {
+        lensSwitchObservation?.invalidate()
+        lensSwitchObservation = nil
+        session.stopRunning()
+        session.beginConfiguration()
+        session.inputs.forEach { session.removeInput($0) }
+        session.outputs.forEach { session.removeOutput($0) }
+        session.commitConfiguration()
     }
 
     // MARK: - App Lifecycle
@@ -333,7 +333,7 @@ extension CameraClientImpl: AVCapturePhotoCaptureDelegate {
             imageData: squareData,
             capturedAt: Date(),
             cameraPosition: position == .front ? .front : .back,
-            zoomLevel: device?.videoZoomFactor ?? 1.0
+            zoomLevel: Double(device?.videoZoomFactor ?? 1.0)
         )
 
         continuation.resume(returning: capturedPhoto)
