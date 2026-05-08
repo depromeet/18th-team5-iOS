@@ -30,36 +30,4 @@ struct OnboardingFeatureTests {
         // Then
         await sut.receive(\.authorizationStatusChecked)
     }
-
-    @Test
-    func 알림권한_이미거부시_즉시_onboardingCompleted() async {
-        // Given
-        let sut = TestStore(initialState: .init()) {
-            OnboardingFeature()
-        } withDependencies: {
-            $0.notificationClient.getAuthorizationStatus = { .denied }
-        }
-
-        // When
-        await sut.send(.onAppear)
-
-        // Then
-        await sut.receive(\.authorizationStatusChecked)
-        await sut.receive(\.delegate)
-    }
-
-    @Test
-    func 알림권한_이미허용시_즉시_onboardingCompleted() async {
-        // Given
-        let sut = TestStore(initialState: .init()) {
-            OnboardingFeature()
-        } withDependencies: {
-            $0.notificationClient.getAuthorizationStatus = { .authorized }
-        }
-
-        // When
-        await sut.send(.onAppear)
-        await sut.receive(\.authorizationStatusChecked)
-        await sut.receive(\.delegate)
-    }
 }

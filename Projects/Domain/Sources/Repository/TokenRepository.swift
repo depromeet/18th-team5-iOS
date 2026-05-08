@@ -11,8 +11,13 @@ import Foundation
 
 public struct TokenRepository: Sendable {
     public var hasTokens: @Sendable () -> Bool
-    public init(hasTokens: @Sendable @escaping () -> Bool) {
+    public var setDebugDeviceToken: @Sendable (_ token: String) -> Void
+    public init(
+        hasTokens: @Sendable @escaping () -> Bool,
+        setDebugDeviceToken: @Sendable @escaping (_ token: String) -> Void = { _ in }
+    ) {
         self.hasTokens = hasTokens
+        self.setDebugDeviceToken = setDebugDeviceToken
     }
 }
 

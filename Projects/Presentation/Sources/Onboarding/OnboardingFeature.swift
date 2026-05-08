@@ -26,7 +26,7 @@ public struct OnboardingFeature {
     }
 
     public enum Delegate {
-        case onboardingCompleted
+        case completed
     }
 
     @Dependency(\.notificationClient) private var notificationClient
@@ -56,12 +56,14 @@ public struct OnboardingFeature {
                 state.path = .survey(.init())
                 return .none
 
-            case .path(.survey(.delegate(.onboardingCompleted))):
-                return .send(.delegate(.onboardingCompleted))
+            case .path(.survey(.delegate(.completed))):
+                return .send(.delegate(.completed))
 
-            case .delegate: return .none
+            case .delegate:
+                return .none
 
-            case .path: return .none
+            case .path:
+                return .none
             }
         }
         .ifLet(\.path, action: \.path) {

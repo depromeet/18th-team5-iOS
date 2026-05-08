@@ -15,9 +15,13 @@ import SwiftUI
 struct PeaktimeApp: App {
     @UIApplicationDelegateAdaptor var appDelegate: AppDelegate
 
+    var isDebug: Bool {
+        Bundle.main.infoDictionary?["Environment"] as? String == "Dev"
+    }
+
     var body: some Scene {
         WindowGroup {
-            RootView(store: Store(initialState: .init(), reducer: {
+            RootView(store: Store(initialState: .init(isDebug: isDebug), reducer: {
                 RootFeature()
             }))
         }

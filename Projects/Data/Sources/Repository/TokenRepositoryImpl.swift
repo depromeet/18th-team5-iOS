@@ -5,6 +5,7 @@
 //  Copyright © 2026 Orange. All rights reserved.
 //
 
+import Core
 import Dependencies
 import Domain
 import Foundation
@@ -23,6 +24,13 @@ enum TokenRepositoryImpl {
             hasTokens: {
                 @Dependency(\.tokenClient) var tokenClient
                 return tokenClient.getAccessToken() != nil && tokenClient.getRefreshToken() != nil
+            },
+            setDebugDeviceToken: { token in
+                let env = Bundle.main.infoDictionary?["Environment"] as? String
+                guard env == "Dev" else {
+                    preconditionFailure("setDebugDeviceToken is only available in Dev environment")
+                }
+                KeychainHelper.save(data: token.data(using: .utf8)!, forKey: .deviceID)
             }
         )
     }

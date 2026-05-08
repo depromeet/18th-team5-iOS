@@ -15,13 +15,15 @@ import Foundation
 public struct RootFeature {
     @ObservableState
     public struct State: Equatable {
+        let isDebug: Bool
         let currentAppVersion: AppVersion
         var path: Path.State = .splash(.init())
         var launchConfig: LaunchConfig?
         var hasFetchedConfig: Bool = false
 
-        public init(currentAppVersion: AppVersion = .current) {
+        public init(currentAppVersion: AppVersion = .current, isDebug: Bool = false) {
             self.currentAppVersion = currentAppVersion
+            self.isDebug = isDebug
         }
     }
 
@@ -29,7 +31,10 @@ public struct RootFeature {
         case onAppear
         case path(Path.Action)
         case launchConfigLoaded(Result<LaunchConfig, Error>)
-        case loginCompleted(Result<Void, Error>)
+        case launchFlowFinished
+        case loginFlowFinished(with: Result<Void, Error>)
+        case onboardingFinished
+        case setDebugTokenFinished
     }
 
     @Dependency(\.launchConfigRepository) var launchConfigRepository
@@ -51,27 +56,37 @@ public struct RootFeature {
             case .onAppear:
                 guard !state.hasFetchedConfig else { return .none }
                 state.hasFetchedConfig = true
+                return loadLaunchConfig()
 
-                return .run { send in
-                    await send(.launchConfigLoaded(
-                        Result { try await launchConfigRepository.fetch()
-                        }
-                    ))
+            case let .launchConfigLoaded(result):
+                switch result {
+                case let .success(config):
+                    return handleLaunchConfig(config, &state)
+                case .failure:
+                    // 스플래쉬화면 유지
+                    return .none
                 }
 
-            case let .launchConfigLoaded(.success(config)):
-                return handleLaunchConfig(config, &state)
+            case .launchFlowFinished:
+                if state.isDebug {
+                    state.path = .debugToken(.init())
+                    return .none
+                } else {
+                    return loginFlow(&state)
+                }
 
-            case .launchConfigLoaded(.failure):
-                // 스플래쉬 노출 유지
-                return .none
+            case let .loginFlowFinished(result):
+                switch result {
+                case .success:
+                    return onboardingFlow(&state)
+                case let .failure(error):
+                    // TODO: 로그인 실패 에러처리 - @준영
+                    logger.error(message: "로그인 실패 \(error.localizedDescription)")
+                    return .none
+                }
 
-            case .loginCompleted(.success(())):
-                return navigateAfterAuth(state: &state)
-
-            case let .loginCompleted(.failure(error)):
-                // TODO: 로그인 실패 에러처리 - @준영
-                logger.error(message: "로그인 실패 \(error.localizedDescription)")
+            case .onboardingFinished:
+                state.path = .main(.init())
                 return .none
 
             case .path(.forceUpdate(.updateButtonTapped)):
@@ -84,10 +99,11 @@ public struct RootFeature {
                     }
                 }
 
-            case .path(.onboarding(.delegate(.onboardingCompleted))):
-                try? onboardingRepository.setOnboardingCompleted()
-                state.path = .main(.init())
-                return .none
+            case .path(.onboarding(.delegate(.completed))):
+                return .send(.onboardingFinished)
+
+            case .path(.debugToken(.delegate(.completed))):
+                return .send(.setDebugTokenFinished)
 
             default:
                 return .none
@@ -103,11 +119,22 @@ public enum Path {
     case maintenance(MaintenanceFeature)
     case onboarding(OnboardingFeature)
     case main(MainFeature)
+    case debugToken(DebugTokenSettingFeature)
 }
 
 extension Path.State: Equatable {}
 
+// MARK: Lauch
+
 private extension RootFeature {
+    func loadLaunchConfig() -> Effect<Action> {
+        .run { send in
+            await send(.launchConfigLoaded(
+                Result { try await launchConfigRepository.fetch() }
+            ))
+        }
+    }
+
     func handleLaunchConfig(
         _ config: LaunchConfig,
         _ state: inout State
@@ -128,24 +155,37 @@ private extension RootFeature {
             return .none
         }
 
-        // #3. 토큰 유무 확인 → 로그인 필요 시 요청
+        return .send(.launchFlowFinished)
+    }
+}
+
+// MARK: Login
+
+private extension RootFeature {
+    func loginFlow(_ state: inout State) -> Effect<Action> {
+        // #1. 토큰 존재로 로그인 유무 확인
         if tokenRepository.hasTokens() {
-            return navigateAfterAuth(state: &state)
+            return .send(.loginFlowFinished(with: .success(())))
         }
 
+        // #2. 로그인 시도
         return .run { send in
-            await send(.loginCompleted(Result { try await authRepository.login() }))
+            await send(.loginFlowFinished(
+                with: Result { try await authRepository.login() }
+            )
+            )
         }
     }
+}
 
-    /// 로그인(또는 토큰 존재) 이후 온보딩 수행 여부에 따라 화면 분기
-    func navigateAfterAuth(state: inout State) -> Effect<Action> {
+// MARK: Onboarding
+
+private extension RootFeature {
+    func onboardingFlow(_ state: inout State) -> Effect<Action> {
         let isOnboardingCompleted = try? onboardingRepository.isOnboardingCompleted()
         if isOnboardingCompleted == true {
-            state.path = .main(.init())
-            return .none
+            return .send(.onboardingFinished)
         }
-
         state.path = .onboarding(.init())
         return .none
     }
