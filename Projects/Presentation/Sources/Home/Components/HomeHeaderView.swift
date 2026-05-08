@@ -11,27 +11,23 @@ import SwiftUI
 
 struct HomeHeaderView: View {
     var body: some View {
-        VStack(spacing: 0) {
-            Color.clear.frame(height: 47) // Status bar
+        HStack {
+            // TODO: 로고 교체 - @minkyo
+            Text("peaktime")
+                .font(.title2Medium)
+                .foregroundStyle(Color.gray600)
 
-            HStack {
-                // TODO: 로고 교체 - @minkyo
-                Text("peaktime")
-                    .font(.title2Medium)
-                    .foregroundStyle(Color(hex: 0x111111).opacity(0.23))
+            Spacer()
 
-                Spacer()
-
-                Button(action: {}) {
-                    Image(systemName: "bell")
-                        .resizable()
-                        .frame(width: 24, height: 24)
-                        .foregroundStyle(Color.gray900)
-                }
+            Button(action: {}) {
+                Image(systemName: "bell")
+                    .resizable()
+                    .frame(width: 24, height: 24)
+                    .foregroundStyle(Color.gray900)
             }
-            .padding(.horizontal, 20)
-            .padding(.vertical, 16)
         }
+        .padding(.horizontal, 20)
+        .padding(.vertical, 16)
     }
 }
 

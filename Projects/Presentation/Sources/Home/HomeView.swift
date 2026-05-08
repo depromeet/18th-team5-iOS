@@ -19,45 +19,44 @@ public struct HomeView: View {
     }
 
     public var body: some View {
-        ZStack(alignment: .top) {
-            background
-
-            ScrollView {
-                VStack(spacing: 24) {
-                    Color.clear.frame(height: 103)
-
-                    if store.isLoading {
-                        ProgressView()
-                            .frame(maxWidth: .infinity)
-                            .padding(.top, 80)
-                    } else if let homeData = store.homeData {
-                        if let solarTerm = homeData.solarTerm, let mission = homeData.currentMission {
-                            SolarTermCardView(
-                                solarTerm: solarTerm,
-                                mission: mission,
-                                onMissionTap: { store.send(.onMissionTap) },
-                                onDetailTap: { store.send(.onMissionEntireTap) }
-                            )
-                        }
-
-                        MissionRecommendBannerView(
-                            onTap: { store.send(.onMissionRecommendTap) }
-                        )
-
-                        SeasonRecordSectionView(
-                            seasonRecord: homeData.seasonRecord,
-                            onDetailTap: { store.send(.onRecordTap) }
+        ScrollView {
+            VStack(spacing: 24) {
+                if store.isLoading {
+                    ProgressView()
+                        .frame(maxWidth: .infinity)
+                        .padding(.top, 80)
+                } else if let homeData = store.homeData {
+                    if let solarTerm = homeData.solarTerm, let mission = homeData.currentMission {
+                        SolarTermCardView(
+                            solarTerm: solarTerm,
+                            mission: mission,
+                            onMissionTap: { store.send(.onMissionTap) },
+                            onDetailTap: { store.send(.onMissionEntireTap) }
                         )
                     }
-                }
-                .padding(.horizontal, 20)
-                .padding(.bottom, 40)
-            }
-            .scrollIndicators(.hidden)
 
-            HomeHeaderView()
+                    MissionRecommendBannerView(
+                        onTap: { store.send(.onMissionRecommendTap) }
+                    )
+
+                    SeasonRecordSectionView(
+                        seasonRecord: homeData.seasonRecord,
+                        onDetailTap: { store.send(.onRecordTap) }
+                    )
+                }
+            }
+            .padding(.horizontal, 20)
+            .padding(.bottom, 40)
         }
-        .ignoresSafeArea(edges: .top)
+        .scrollIndicators(.hidden)
+        .safeAreaInset(edge: .top, spacing: 0) {
+            HomeHeaderView()
+                .background(
+                    Color(.clear)
+                        .ignoresSafeArea(edges: .top)
+                )
+        }
+        .background(background)
         .onAppear { store.send(.onAppear) }
     }
 
