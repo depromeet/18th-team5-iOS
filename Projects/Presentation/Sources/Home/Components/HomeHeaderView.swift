@@ -15,6 +15,7 @@ struct HomeHeaderView: View {
             Color.clear.frame(height: 47) // Status bar
 
             HStack {
+                // TODO: 로고 교체 - @minkyo
                 Text("peaktime")
                     .font(.title2Medium)
                     .foregroundStyle(Color(hex: 0x111111).opacity(0.23))
