@@ -144,8 +144,8 @@ private struct MissionCardView: View {
 
 #Preview {
     SolarTermCardView(
-        solarTerm: HomeData.mock.solarTerm!,
-        mission: HomeData.mock.currentMission!,
+        solarTerm: HomeCard.mock.solarTerm,
+        mission: HomeCard.mock.currentMission,
         onMissionTap: {}
     )
 }

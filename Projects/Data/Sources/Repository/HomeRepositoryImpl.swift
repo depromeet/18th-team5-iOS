@@ -17,12 +17,19 @@ extension HomeRepository: @retroactive DependencyKey {
 public enum HomeRepositoryImpl {
     public static func live() -> HomeRepository {
         HomeRepository(
-            fetchHome: {
-                @Dependency(\.networkClient) var client
-                let response: HomeResponseDTO = try await client.request(
-                    HomeEndpoint.fetchHome
-                )
-                return response.result.toDomain()
+            fetchCard: {
+                @Dependency(\.networkClient) var networkClient
+                do {
+                    let response: HomeCardDTO? = try await networkClient.request(
+                        HomeEndpoint.card
+                    )
+                    guard let response else {
+                        throw DomainError.unknown("데이터 수신 실패")
+                    }
+                    return response.toDomain()
+                } catch {
+                    throw mapToDomainError(error)
+                }
             }
         )
     }

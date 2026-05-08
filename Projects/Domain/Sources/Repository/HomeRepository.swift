@@ -12,7 +12,7 @@ import Foundation
 
 @DependencyClient
 public struct HomeRepository: Sendable {
-    public var fetchHome: @Sendable () async throws -> HomeData
+    public var fetchCard: @Sendable () async throws -> HomeCard
 }
 
 extension HomeRepository: TestDependencyKey {
@@ -28,6 +28,6 @@ public extension DependencyValues {
 
 public extension HomeRepository {
     static let previewValue = HomeRepository(
-        fetchHome: { .mock }
+        fetchCard: { .mock }
     )
 }

@@ -40,21 +40,19 @@ public struct HomeView: View {
                     }
                     .frame(maxWidth: .infinity)
                     .padding(.top, 80)
-                } else if let homeData = store.homeData {
-                    if let solarTerm = homeData.solarTerm, let mission = homeData.currentMission {
-                        SolarTermCardView(
-                            solarTerm: solarTerm,
-                            mission: mission,
-                            onMissionTap: { store.send(.onMissionTap) }
-                        )
-                    }
+                } else if let homeData = store.homeCard {
+                    SolarTermCardView(
+                        solarTerm: homeData.solarTerm,
+                        mission: homeData.currentMission,
+                        onMissionTap: { store.send(.onMissionTap) }
+                    )
 
                     MissionRecommendBannerView(
                         onTap: { store.send(.onMissionRecommendTap) }
                     )
 
                     SeasonRecordSectionView(
-                        seasonRecord: homeData.seasonRecord,
+                        seasonRecord: store.seasonRecord,
                         onDetailTap: { store.send(.onRecordTap) }
                     )
                 }
@@ -99,7 +97,7 @@ public struct HomeView: View {
         store: Store(initialState: HomeFeature.State()) {
             HomeFeature()
         } withDependencies: {
-            $0.homeRepository.fetchHome = {
+            $0.homeRepository.fetchCard = {
                 throw URLError(.notConnectedToInternet)
             }
         }

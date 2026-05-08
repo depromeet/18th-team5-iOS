@@ -13,7 +13,9 @@ import Domain
 public struct HomeFeature {
     @ObservableState
     public struct State: Equatable {
-        var homeData: HomeData?
+        var homeCard: HomeCard?
+        // TODO: 추후 API 연동시 대체
+        var seasonRecord: SeasonRecord = .mock
         var isLoading: Bool = false
         var hasError: Bool = false
 
@@ -23,7 +25,7 @@ public struct HomeFeature {
     public enum Action {
         case onAppear
         case onRetryTap
-        case homeLoad(Result<HomeData, Error>)
+        case homeLoad(Result<HomeCard, Error>)
         case onMissionTap
         case onMissionRecommendTap
         case onRecordTap
@@ -47,7 +49,7 @@ public struct HomeFeature {
                 state.isLoading = true
                 return .run { send in
                     do {
-                        let data = try await homeRepository.fetchHome()
+                        let data = try await homeRepository.fetchCard()
                         await send(.homeLoad(.success(data)))
                     } catch {
                         await send(.homeLoad(.failure(error)))
@@ -56,7 +58,7 @@ public struct HomeFeature {
 
             case let .homeLoad(.success(data)):
                 state.isLoading = false
-                state.homeData = data
+                state.homeCard = data
                 return .none
 
             case .homeLoad(.failure):
@@ -65,7 +67,7 @@ public struct HomeFeature {
                 return .none
 
             case .onMissionTap:
-                guard let mission = state.homeData?.currentMission else { return .none }
+                guard let mission = state.homeCard?.currentMission else { return .none }
                 return .send(.delegate(.navigateToMissionCamera(
                     missionId: mission.id,
                     title: mission.title,
