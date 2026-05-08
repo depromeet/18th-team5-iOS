@@ -22,22 +22,34 @@ struct BottomButton: View {
     var body: some View {
         Button(action: action) {
             Text(title)
-                .font(.body2Medium)
+                .font(.body1Medium)
                 .frame(maxWidth: .infinity)
-                .padding(.vertical, 16)
-                .foregroundStyle(textColor)
-                .background(backgroundColor)
-                .clipShape(RoundedRectangle(cornerRadius: 6))
+                .frame(height: 56)
+                .foregroundStyle(Color.white)
+                .background(background)
+                .clipShape(RoundedRectangle(cornerRadius: .radius16))
         }
     }
 }
 
 private extension BottomButton {
-    var textColor: Color {
-        isEnabled ? .init(hex: 0xF9FAFB) : .white
+    @ViewBuilder
+    var background: some View {
+        if isEnabled {
+            primaryGradient
+        } else {
+            Color.gray400
+        }
     }
 
-    var backgroundColor: Color {
-        isEnabled ? .init(hex: 0x1F2937) : .gray400
+    var primaryGradient: some View {
+        EllipticalGradient(
+            stops: [
+                .init(color: .gray800, location: 0.0),
+                .init(color: .clear, location: 1.0)
+            ],
+            center: .center
+        )
+        .background(Color.gray700)
     }
 }

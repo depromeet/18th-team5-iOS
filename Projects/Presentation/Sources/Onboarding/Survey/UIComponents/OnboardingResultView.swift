@@ -18,11 +18,22 @@ struct OnboardingResultView: View {
     }
 
     var body: some View {
-        VStack(spacing: 40) {
+        VStack(spacing: 36) {
             textView
-            graphicView
+            imageView
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+}
+
+private extension OnboardingResultView {
+    var image: Image {
+        switch userType {
+        case .explorer: .imgExplorer
+        case .walker: .imgWalker
+        case .lifeCreator: .imgLifeCreator
+        case .aesthete: .imgAesthete
+        }
     }
 }
 
@@ -30,41 +41,58 @@ private extension OnboardingResultView {
     var textView: some View {
         VStack(spacing: 24) {
             Text("결과")
-                .font(.body2Regular)
-                .foregroundStyle(Color.gray800)
-                .frame(height: 25)
-                .padding(.horizontal, 8)
-                .background(Color(hex: 0xE5E7EB))
-                .clipShape(RoundedRectangle(cornerRadius: .radius4))
+                .font(.body2Medium)
+                .foregroundStyle(Color.gray900)
+                .frame(height: 28)
+                .padding(.horizontal, 10)
+                .background(Color.blackAlpha200)
+                .clipShape(Capsule())
 
-            Text(userType.name)
-                .font(.headline1Semibold)
-                .foregroundStyle(Color.gray800)
+            VStack(spacing: 12) {
+                Text(userType.name)
+                    .font(.title2Bold)
+                    .foregroundStyle(Color.gray900)
 
-            Text("\(userType.description)\n당신에게 딱 맞는 미션을 준비했어요.")
-                .font(.body2Regular)
-                .foregroundStyle(Color(hex: 0x9CA3AF))
-                .multilineTextAlignment(.center)
+                Text(userType.description)
+                    .font(.body2Regular)
+                    .foregroundStyle(Color.gray600)
+                    .multilineTextAlignment(.center)
+                    .frame(height: 60, alignment: .top)
+            }
         }
     }
 
-    var graphicView: some View {
-        Text("Graphic")
-            .font(.headline1Semibold)
-            .foregroundStyle(Color.gray400)
+    var imageView: some View {
+        image
+            .resizable()
             .frame(width: 200, height: 200)
-            .background(Color.gray200)
     }
 }
 
 private extension UserType {
     var description: String {
         switch self {
-        case .natureExplorer: "" // TODO: @정원 - 미정
-        case .localWanderer: "" // TODO: @정원 - 미정
-        case .seasonalGourmet:
-            "지금 이 계절을 가장 맛있게 즐기는 타입이에요."
-        case .dailyObserver: "" // TODO: @정원 - 미정
+        case .explorer:
+            """
+            꽃이 피면 꽃을 보러, 단풍이 들면 산으로.
+            시간을 내서라도 직접 움직이며
+            제철의 정점을 경험하는 타입이에요.
+            """
+        case .walker:
+            """
+            동네 산책, 공원 한 바퀴처럼
+            부담 없이 가볍게 제철을 느끼는 타입이에요.
+            """
+        case .lifeCreator:
+            """
+            제철 재료로 요리하고, 공간을 바꾸고,
+            내 일상 안에 제철을 채워 넣는 타입이에요.
+            """
+        case .aesthete:
+            """
+            음악, 영화, 전시, 책처럼
+            분위기로 제철을 깊게 즐기는 타입이에요.
+            """
         }
     }
 }

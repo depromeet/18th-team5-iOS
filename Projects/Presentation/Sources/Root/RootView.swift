@@ -24,6 +24,7 @@ public struct RootView: View {
             case let .maintenance(store): MaintenanceView(store: store)
             case let .onboarding(store): OnboardingView(store: store)
             case let .main(store): MainView(store: store)
+            case let .debugToken(store): DebugTokenSettingView(store: store)
             }
         }
         .animation(.easeInOut, value: store.path)

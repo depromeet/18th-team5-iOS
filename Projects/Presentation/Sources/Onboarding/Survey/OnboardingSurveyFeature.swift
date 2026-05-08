@@ -42,7 +42,7 @@ public struct OnboardingSurveyFeature {
     }
 
     public enum Delegate {
-        case onboardingCompleted
+        case completed
     }
 
     public init() {}
@@ -70,7 +70,7 @@ public struct OnboardingSurveyFeature {
                     }
                     return .none
                 case .result:
-                    return .send(.delegate(.onboardingCompleted))
+                    return .send(.delegate(.completed))
                 }
             case .binding: return .none
             case .delegate: return .none
