@@ -25,6 +25,11 @@ public struct DebugTokenSettingView: View {
             }
             .buttonStyle(.borderedProminent)
 
+            Button("랜덤값 생성") {
+                store.send(.randomButtonTapped)
+            }
+            .buttonStyle(.borderedProminent)
+
             TextField(
                 "디바이스 토큰 입력",
                 text: $store.tokenText

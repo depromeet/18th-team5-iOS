@@ -7,6 +7,7 @@
 
 import ComposableArchitecture
 import Domain
+import Foundation
 
 private enum Constants {
     static let commonDebugToken = "AAAAAAAA-AAAA-AAAA-AAAA-AAAAAAAAAAAA"
@@ -25,6 +26,7 @@ public struct DebugTokenSettingFeature {
         case binding(BindingAction<State>)
         case useCommonTokenButtonTapped
         case confirmButtonTapped
+        case randomButtonTapped
         case delegate(Delegate)
     }
 
@@ -43,6 +45,11 @@ public struct DebugTokenSettingFeature {
             switch action {
             case .useCommonTokenButtonTapped:
                 state.tokenText = Constants.commonDebugToken
+                return .none
+
+            case .randomButtonTapped:
+                let randomToken = UUID().uuidString
+                state.tokenText = randomToken
                 return .none
 
             case .confirmButtonTapped:
