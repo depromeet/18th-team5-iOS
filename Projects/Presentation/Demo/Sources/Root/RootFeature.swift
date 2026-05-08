@@ -12,51 +12,17 @@ import Presentation
 @Reducer
 struct RootFeature {
     @ObservableState
-    struct State: Equatable {
-        var path = StackState<Path.State>()
-        @Presents var camera: CameraFeature.State?
+    struct State {
+        var calendar = CalendarFeature.State()
     }
 
     enum Action {
-        case path(StackActionOf<Path>)
-        case camera(PresentationAction<CameraFeature.Action>)
-        case calendarTapped
-        case cameraTapped
+        case calendar(CalendarFeature.Action)
     }
 
     var body: some ReducerOf<Self> {
-        Reduce { state, action in
-            switch action {
-            case .calendarTapped:
-                state.path.append(.calendar(.init()))
-                return .none
-
-            case .cameraTapped:
-                state.camera = CameraFeature.State(
-                    overlayDate: "2026.05.05",
-                    overlayLabel: "Demo"
-                )
-                return .none
-
-            case .camera(.presented(.delegate(.didCancel))),
-                 .camera(.presented(.delegate(.didCapture))):
-                state.camera = nil
-                return .none
-
-            case .camera, .path:
-                return .none
-            }
-        }
-        .forEach(\.path, action: \.path)
-        .ifLet(\.$camera, action: \.camera) {
-            CameraFeature()
+        Scope(state: \.calendar, action: \.calendar) {
+            CalendarFeature()
         }
     }
 }
-
-@Reducer
-enum Path {
-    case calendar(CalendarFeature)
-}
-
-extension Path.State: Equatable {}

@@ -22,7 +22,7 @@ private extension TargetScript {
         name: "SwiftLint",
         basedOnDependencyAnalysis: false
     )
-    
+
     static let googleServiceInfo: TargetScript = .pre(
         script: """
         if [ "${ENV}" = "Dev" ]; then
@@ -71,7 +71,7 @@ extension Module {
             settings: .settings(configurations: .default)
         )
     }
-    
+
     var tests: Target {
         return .target(
             name: "\(name)Tests",
@@ -84,7 +84,7 @@ extension Module {
             settings: .settings(configurations: .default)
         )
     }
-    
+
     var demo: Target {
         return .target(
             name: "\(name)Demo",
@@ -94,21 +94,9 @@ extension Module {
             deploymentTargets: ProjectInfo.deploymentTargets,
             infoPlist: .demo,
             buildableFolders: ["Demo/Sources"],
-            dependencies: [.target(implements)] + demoDependencies,
+            dependencies: [.target(implements)],
             settings: .settings(configurations: .default)
         )
-    }
-
-    private var demoDependencies: [TargetDependency] {
-        switch self {
-        case .presentation:
-            [
-                .project(target: Module.data.name, path: .relativeToRoot("Projects/\(Module.data.name)")),
-                .external(name: ExternalModule.composableArchitecture.name),
-            ]
-        default:
-            []
-        }
     }
 }
 
@@ -119,7 +107,7 @@ private extension Module {
         case .presentation, .data, .designSystem, .domain, .core: .staticFramework
         }
     }
-    
+
     var buildableFolders: [BuildableFolder] {
         switch self {
         case .app, .designSystem: ["Sources", "Resources"]
@@ -134,8 +122,7 @@ private extension InfoPlist {
             "UILaunchScreen": .dictionary([:]),
             "UISupportedInterfaceOrientations": .array([
                 .string("UIInterfaceOrientationPortrait"),
-            ]),
-            "NSCameraUsageDescription": .string("사진 촬영을 위해 카메라 접근 권한이 필요합니다."),
+            ])
         ]
     )
 }
