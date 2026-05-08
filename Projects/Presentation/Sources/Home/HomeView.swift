@@ -41,15 +41,17 @@ public struct HomeView: View {
                     .frame(maxWidth: .infinity)
                     .padding(.top, 80)
                 } else if let homeData = store.homeCard {
-                    SolarTermCardView(
-                        solarTerm: homeData.solarTerm,
-                        mission: homeData.currentMission,
-                        onMissionTap: { store.send(.onMissionTap) }
-                    )
+                    VStack(spacing: 12) {
+                        SolarTermCardView(
+                            solarTerm: homeData.solarTerm,
+                            mission: homeData.currentMission,
+                            onMissionTap: { store.send(.onMissionTap) }
+                        )
 
-                    MissionRecommendBannerView(
-                        onTap: { store.send(.onMissionRecommendTap) }
-                    )
+                        MissionRecommendBannerView(
+                            onTap: { store.send(.onMissionRecommendTap) }
+                        )
+                    }
 
                     SeasonRecordSectionView(
                         seasonRecord: store.seasonRecord,
