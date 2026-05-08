@@ -33,6 +33,7 @@ public struct RootFeature {
         case launchConfigLoaded(Result<LaunchConfig, Error>)
         case launchFlowFinished
         case loginFlowFinished(with: Result<Void, Error>)
+        case onboardingStateLoaded(with: Result<Bool, Error>)
         case onboardingFinished
         case setDebugTokenFinished
     }
@@ -70,14 +71,13 @@ public struct RootFeature {
                 if state.isDebug {
                     state.path = .debugToken(.init())
                     return .none
-                } else {
-                    return loginFlow(&state)
                 }
+                return loginFlow(&state)
 
             case let .loginFlowFinished(result):
                 switch result {
                 case .success:
-                    return onboardingFlow(&state)
+                    return loadOnboardingState(&state)
                 case let .failure(error):
                     // TODO: 로그인 실패 에러처리 - @준영
                     logger.error(message: "로그인 실패 \(error.localizedDescription)")
@@ -87,6 +87,17 @@ public struct RootFeature {
             case .onboardingFinished:
                 state.path = .main(.init())
                 return .none
+
+            case let .onboardingStateLoaded(result):
+                switch result {
+                case let .success(isOnboarded):
+                    state.path = isOnboarded ? .main(.init()) : .onboarding(.init())
+                    return .none
+                case let .failure(error):
+                    // TODO: 온보딩 조회 실패 에러처리 - @준영
+                    logger.error(message: "온보딩 진행여부 확인 실패 \(error.localizedDescription)")
+                    return .none
+                }
 
             case .setDebugTokenFinished:
                 state.path = .splash(.init())
@@ -187,12 +198,11 @@ private extension RootFeature {
 // MARK: Onboarding
 
 private extension RootFeature {
-    func onboardingFlow(_ state: inout State) -> Effect<Action> {
-        let isOnboardingCompleted = try? onboardingRepository.isOnboardingCompleted()
-        if isOnboardingCompleted == true {
-            return .send(.onboardingFinished)
+    func loadOnboardingState(_ state: inout State) -> Effect<Action> {
+        .run { send in
+            await send(.onboardingStateLoaded(
+                with: Result { try await onboardingRepository.isOnboarded() }
+            ))
         }
-        state.path = .onboarding(.init())
-        return .none
     }
 }
