@@ -70,11 +70,13 @@ public struct DayDetailFeature {
             case .previousWeekTap:
                 guard let newDate = state.moveWeek(by: -1) else { return .none }
                 state.isLoading = true
+                state.detail = nil
                 return fetchCompletions(for: newDate)
 
             case .nextWeekTap:
                 guard let newDate = state.moveWeek(by: 1) else { return .none }
                 state.isLoading = true
+                state.detail = nil
                 return fetchCompletions(for: newDate)
 
             case .saveImageTap:
@@ -96,6 +98,7 @@ public struct DayDetailFeature {
 
             case let .dateTap(date):
                 state.isLoading = true
+                state.detail = nil
                 state.selectedDate = date
                 return fetchCompletions(for: date)
 
