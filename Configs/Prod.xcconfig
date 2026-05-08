@@ -2,5 +2,5 @@
 
 PRODUCT_BUNDLE_IDENTIFIER = com.peaktime.app
 BUNDLE_DISPLAY_NAME = Peaktime
-ENV = Prod
+ENV = Dev
 BASE_URL = http:/$()/peaktime-api.swda.cloud
