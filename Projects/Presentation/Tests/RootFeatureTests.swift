@@ -87,7 +87,7 @@ struct RootFeatureTests {
     }
 
     @Test
-    func 런치플로우_온보딩_미완료시_온보딩화면이동() async {
+    func 로그인후_온보딩_미완료시_온보딩화면이동() async {
         // Given
         let sut = TestStore(initialState: .init()) {
             RootFeature()
@@ -106,7 +106,7 @@ struct RootFeatureTests {
 
         // When
         await sut.send(.onAppear)
-        await sut.receive(\.launchConfigLoaded) {
+        await sut.receive(\.loginFlowFinished) {
             // Then
             $0.path = .onboarding(.init())
         }
@@ -132,32 +132,39 @@ struct RootFeatureTests {
 
         // When
         await sut.send(.onAppear)
-        await sut.receive(\.launchConfigLoaded) {
+        await sut.receive(\.onboardingFinished) {
             // Then
             $0.path = .main(.init())
         }
     }
 
     @Test
-    func 온보딩_완료시_플래그_저장() async {
+    func 런치플로우_정상완료_isDebug_참이면_디버그토큰화면이동() async {
         // Given
-        var didSaveFlag = false
-        var state = RootFeature.State()
-        state.path = .onboarding(.init())
-        let sut = TestStore(initialState: state) {
+        let sut = TestStore(initialState: .init(isDebug: true)) {
             RootFeature()
         } withDependencies: {
-            $0.onboardingRepository.setOnboardingCompleted = { didSaveFlag = true }
+            $0.launchConfigRepository = .init(fetch: {
+                .init(
+                    maintenance: false,
+                    isForceUpdateEnabled: false,
+                    minimumAppVersion: .init(major: 0, minor: 0, patch: 0),
+                    appStoreLink: ""
+                )
+            })
+            $0.authRepository = AuthRepository(
+                isSignin: { true },
+                login: {}
+            )
         }
         sut.exhaustivity = .off
 
         // When
-        await sut.send(.path(.onboarding(.delegate(.onboardingCompleted)))) {
-            // Then
-            $0.path = .main(.init())
+        await sut.send(.onAppear)
+        await sut.receive(\.launchFlowFinished) {
+            // Then - isDebug가 참이므로 디버그 토큰 설정 화면이 present 됨
+            $0.path = .debugToken(.init())
         }
-
-        #expect(didSaveFlag == true)
     }
 }
 

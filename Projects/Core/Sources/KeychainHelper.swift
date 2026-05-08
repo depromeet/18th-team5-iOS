@@ -16,6 +16,7 @@ public enum KeychainKey: String, Sendable {
 }
 
 public enum KeychainHelper {
+    @discardableResult
     public static func save(data: Data, forKey key: KeychainKey) -> Bool {
         let searchQuery: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
