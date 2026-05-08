@@ -1,0 +1,12 @@
+{
+  "images" : [
+    {
+      "filename" : "ic_movie_projector.pdf",
+      "idiom" : "universal"
+    }
+  ],
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  }
+}

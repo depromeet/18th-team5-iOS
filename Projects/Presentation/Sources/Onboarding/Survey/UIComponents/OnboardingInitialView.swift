@@ -11,19 +11,19 @@ import SwiftUI
 
 struct OnboardingInitialView: View {
     var body: some View {
-        VStack(spacing: 40) {
-            VStack(spacing: 24) {
+        VStack(spacing: 32) {
+            VStack(spacing: 12) {
                 Text("바쁘게 지나가는 일상도")
-                    .font(.body1Regular)
-                    .foregroundStyle(Color(hex: 0x9CA3AF))
+                    .font(.body2Regular)
+                    .foregroundStyle(Color.gray600)
 
                 Text("절기로 차곡차곡\n기록하세요")
                     .font(.headline1Semibold)
                     .foregroundStyle(Color.gray800)
                     .multilineTextAlignment(.center)
-
-                graphicView
             }
+
+            graphicView
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
