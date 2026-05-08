@@ -11,19 +11,16 @@ import SwiftUI
 
 struct OnboardingSelectionView<Item: Hashable>: View {
     private let items: [Item]
-    private let title: (Item) -> String
-    private let subtitle: (Item) -> String
+    private let viewState: (Item) -> OnboardingViewState
     @Binding private var selection: Item?
 
     init(
         items: [Item],
-        title: @escaping (Item) -> String,
-        subtitle: @escaping (Item) -> String,
+        viewState: @escaping (Item) -> OnboardingViewState,
         selection: Binding<Item?>
     ) {
         self.items = items
-        self.title = title
-        self.subtitle = subtitle
+        self.viewState = viewState
         self._selection = selection
     }
 
@@ -42,60 +39,56 @@ private extension OnboardingSelectionView {
     }
 
     func titleColor(_ isSelected: Bool) -> Color {
-        isSelected ? .init(hex: 0x0077FF) : .gray900
+        isSelected ? .init(hex: 0x3DC67B) : .gray900
     }
 
     func backgroundColor(_ isSelected: Bool) -> Color {
-        isSelected ? .init(hex: 0x0077FF, alpha: 0.05) : .white
+        isSelected ? .init(hex: 0x43DA87, alpha: 0.05) : .white
     }
 
     func strokeColor(_ isSelected: Bool) -> Color {
-        isSelected ? .init(hex: 0x0077FF) : .gray300
+        isSelected ? .init(hex: 0x43DA87) : .gray300
     }
 }
 
 private extension OnboardingSelectionView {
     func itemView(_ item: Item) -> some View {
         itemView(
-            title: title(item),
-            subtitle: subtitle(item),
+            viewState: viewState(item),
             isSelected: item == selection,
             action: { selection = item }
         )
     }
 
     func itemView(
-        title: String,
-        subtitle: String,
+        viewState: OnboardingViewState,
         isSelected: Bool,
         action: @escaping () -> Void
     ) -> some View {
         Button(action: action) {
             VStack(alignment: .leading, spacing: 16) {
-                Image.icDashedBorderSquare
-                    .renderingMode(.template)
+                viewState.image
                     .resizable()
-                    .frame(width: 24, height: 24)
-                    .foregroundStyle(iconColor(isSelected))
+                    .frame(width: 32, height: 32)
 
                 VStack(spacing: 6) {
-                    Text(title)
+                    Text(viewState.title)
                         .font(.body1Semibold)
                         .foregroundStyle(titleColor(isSelected))
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .multilineTextAlignment(.leading)
 
-                    Text(subtitle)
+                    Text(viewState.subtitle)
                         .font(.body2Regular)
-                        .foregroundStyle(Color(hex: 0x9CA3AF))
+                        .foregroundStyle(Color.gray600)
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .multilineTextAlignment(.leading)
                 }
             }
             .padding(20)
             .background(backgroundColor(isSelected))
-            .clipShape(RoundedRectangle(cornerRadius: .radius12))
-            .overlay(RoundedRectangle(cornerRadius: .radius12).stroke(strokeColor(isSelected)))
+            .clipShape(RoundedRectangle(cornerRadius: .radius16))
+            .overlay(RoundedRectangle(cornerRadius: .radius16).stroke(strokeColor(isSelected)))
         }
     }
 }

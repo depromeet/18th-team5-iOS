@@ -7,10 +7,10 @@
 //
 
 public enum UserType {
-    case natureExplorer
-    case localWanderer
-    case seasonalGourmet
-    case dailyObserver
+    case explorer
+    case walker
+    case lifeCreator
+    case aesthete
 
     public init?(
         activityStyle: ActivityStyle?,
@@ -21,19 +21,19 @@ public enum UserType {
         }
 
         self = switch (activityStyle, engagementLevel) {
-        case (.outdoor, .active): .natureExplorer
-        case (.outdoor, .casual): .localWanderer
-        case (.indoor, .active): .seasonalGourmet
-        case (.indoor, .casual): .dailyObserver
+        case (.outdoor, .active): .explorer
+        case (.outdoor, .casual): .walker
+        case (.indoor, .active): .lifeCreator
+        case (.indoor, .casual): .aesthete
         }
     }
 
     public var name: String {
         switch self {
-        case .natureExplorer: "자연 탐험가"
-        case .localWanderer: "동네 산책러"
-        case .seasonalGourmet: "제철 미식가"
-        case .dailyObserver: "일상 관찰자"
+        case .explorer: "제철을 쫓는 탐험가"
+        case .walker: "일상 속 제철 산책가"
+        case .lifeCreator: "제철을 채우는 라이프 크리에이터"
+        case .aesthete: "제철을 음미하는 감상가"
         }
     }
 }
