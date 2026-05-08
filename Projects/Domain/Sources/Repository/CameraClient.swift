@@ -18,7 +18,7 @@ public struct CameraClient: Sendable {
     public var switchCamera: @Sendable () async throws -> Void
     public var setZoomFactor: @Sendable (_ factor: Double, _ animated: Bool) async throws -> Void
     public var setFlashMode: @Sendable (_ isOn: Bool) async -> Void
-    public var getSession: @Sendable () -> Any = { NSObject() }
+    public var getSession: @Sendable () -> CaptureSessionBox? = { nil }
 }
 
 // MARK: - TestDependencyKey

@@ -66,7 +66,7 @@ private extension CameraView {
             let size = geometry.size.width
 
             ZStack {
-                if let session = store.captureSession?.session {
+                if let session = store.captureSession?.session as? AVCaptureSession {
                     CameraPreviewView(session: session)
                         .frame(width: size, height: size)
                         .clipShape(RoundedRectangle(cornerRadius: 34))

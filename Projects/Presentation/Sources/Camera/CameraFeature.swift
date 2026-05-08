@@ -11,13 +11,6 @@ import ComposableArchitecture
 import Domain
 import Foundation
 
-public struct CaptureSessionBox: Equatable, @unchecked Sendable {
-    public let session: AVCaptureSession
-    public static func == (lhs: Self, rhs: Self) -> Bool {
-        lhs.session === rhs.session
-    }
-}
-
 @Reducer
 public struct CameraFeature {
     @ObservableState
@@ -32,6 +25,7 @@ public struct CameraFeature {
         public var currentZoomFactor: CGFloat = 1.0
         var baseZoomFactor: CGFloat = 1.0
         public var captureSession: CaptureSessionBox?
+        public var errorMessage: String?
 
         public init(overlayDate: String, overlayLabel: String) {
             self.overlayDate = overlayDate
@@ -83,6 +77,7 @@ public struct CameraFeature {
     }
 
     public enum ZoomLevel: CGFloat, CaseIterable, Equatable {
+        // swiftlint:disable:next identifier_name
         case x0_5 = 0.5
         case x1 = 1.0
         case x2 = 2.0
@@ -104,6 +99,7 @@ public struct CameraFeature {
         case photoCaptured(Result<CapturedPhoto, Error>)
         case switchCameraTapped
         case cameraSwitched(Result<Void, Error>)
+        case sessionStartFailed
         case flashToggleTapped
         case zoomSelected(ZoomLevel)
         case pinchZoomChanged(CGFloat)
@@ -128,14 +124,18 @@ public struct CameraFeature {
         Reduce { state, action in
             switch action {
             case .onAppear:
-                guard let session = cameraClient.getSession() as? AVCaptureSession else {
+                guard let box = cameraClient.getSession(),
+                      let session = box.session as? AVCaptureSession else {
                     assertionFailure("getSession must return AVCaptureSession")
+                    state.errorMessage = "카메라를 초기화할 수 없습니다."
                     return .none
                 }
-                state.captureSession = CaptureSessionBox(session: session)
+                state.captureSession = CaptureSessionBox(session)
                 return .run { [zoom = state.currentZoomFactor] _ in
                     try await cameraClient.startSession()
                     try await cameraClient.setZoomFactor(zoom, false)
+                } catch: { _, send in
+                    await send(.sessionStartFailed)
                 }
 
             case .captureButtonTapped:
@@ -152,6 +152,11 @@ public struct CameraFeature {
                 }
 
             case .photoCaptured(.failure):
+                state.errorMessage = "사진 촬영에 실패했습니다."
+                return .none
+
+            case .sessionStartFailed:
+                state.errorMessage = "카메라를 시작할 수 없습니다."
                 return .none
 
             case .switchCameraTapped:
@@ -172,6 +177,7 @@ public struct CameraFeature {
                 .cancellable(id: CancelID.zoom, cancelInFlight: true)
 
             case .cameraSwitched(.failure):
+                state.errorMessage = "카메라 전환에 실패했습니다."
                 return .none
 
             case .flashToggleTapped:

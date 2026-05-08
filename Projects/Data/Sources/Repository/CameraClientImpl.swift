@@ -61,7 +61,7 @@ private final class CameraClientImpl: NSObject, @unchecked Sendable {
                 manager.state.withLock { $0.flashMode = isOn ? .on : .off }
             },
             getSession: {
-                manager.session
+                CaptureSessionBox(manager.session)
             }
         )
     }
@@ -104,7 +104,9 @@ private final class CameraClientImpl: NSObject, @unchecked Sendable {
                 try device.lockForConfiguration()
                 device.videoZoomFactor = wideAngleFactor
                 device.unlockForConfiguration()
-            } catch {}
+            } catch {
+                assertionFailure("Failed to set wide angle zoom: \(error)")
+            }
         }
 
         configureLensSwitching(for: device)
@@ -123,7 +125,9 @@ private final class CameraClientImpl: NSObject, @unchecked Sendable {
                 restrictedSwitchingBehaviorConditions: .videoZoomChanged
             )
             device.unlockForConfiguration()
-        } catch {}
+        } catch {
+            assertionFailure("Failed to configure lens switching: \(error)")
+        }
 
         lensSwitchObservation = device.observe(\.activePrimaryConstituent) { _, _ in
             DispatchQueue.main.async {
@@ -159,6 +163,13 @@ private final class CameraClientImpl: NSObject, @unchecked Sendable {
     }
 
     private func teardownSession() {
+        let pendingContinuation = state.withLock { mutableState -> CheckedContinuation<CapturedPhoto, Error>? in
+            let result = mutableState.photoContinuation
+            mutableState.photoContinuation = nil
+            return result
+        }
+        pendingContinuation?.resume(throwing: CameraError.sessionStopped)
+
         lensSwitchObservation?.invalidate()
         lensSwitchObservation = nil
         session.stopRunning()
@@ -206,10 +217,10 @@ private final class CameraClientImpl: NSObject, @unchecked Sendable {
 
     private func capturePhoto() async throws -> CapturedPhoto {
         try await withCheckedThrowingContinuation { continuation in
-            let flashMode = self.state.withLock { s -> AVCaptureDevice.FlashMode? in
-                guard s.photoContinuation == nil else { return nil }
-                s.photoContinuation = continuation
-                return s.flashMode
+            let flashMode = self.state.withLock { mutableState -> AVCaptureDevice.FlashMode? in
+                guard mutableState.photoContinuation == nil else { return nil }
+                mutableState.photoContinuation = continuation
+                return mutableState.flashMode
             }
 
             guard let flashMode else {
@@ -299,10 +310,10 @@ extension CameraClientImpl: AVCapturePhotoCaptureDelegate {
         didFinishProcessingPhoto photo: AVCapturePhoto,
         error: Error?
     ) {
-        let continuation = state.withLock { s -> CheckedContinuation<CapturedPhoto, Error>? in
-            let c = s.photoContinuation
-            s.photoContinuation = nil
-            return c
+        let continuation = state.withLock { mutableState -> CheckedContinuation<CapturedPhoto, Error>? in
+            let result = mutableState.photoContinuation
+            mutableState.photoContinuation = nil
+            return result
         }
         guard let continuation else { return }
 
@@ -348,4 +359,5 @@ private enum CameraError: Error {
     case cannotAddOutput
     case captureDataMissing
     case captureAlreadyInProgress
+    case sessionStopped
 }
