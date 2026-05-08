@@ -11,17 +11,27 @@ public enum CalendarRepositoryImpl {
         CalendarRepository(
             fetchMonthRecords: { year, month in
                 @Dependency(\.networkClient) var client
-                let response: CalendarMonthResponseDTO = try await client.request(
+                let response: CalendarMonthDataDTO? = try await client.request(
                     CalendarEndpoint.fetchMonthRecords(year: year, month: month)
                 )
-                return response.data.records.compactMap { $0.toDomain() }
+
+                guard let response else {
+                    throw DomainError.unknown("데이터 획득 실패")
+                }
+
+                return response.records.compactMap { $0.toDomain() }
             },
             fetchDayDetail: { date in
                 @Dependency(\.networkClient) var client
-                let response: DayDetailResponseWrapperDTO = try await client.request(
+                let response: DayDetailDataDTO? = try await client.request(
                     CalendarEndpoint.fetchDayDetail(date: date)
                 )
-                return response.data.toDomain()
+
+                guard let response else {
+                    throw DomainError.unknown("데이터 획득 실패")
+                }
+
+                return response.toDomain()
             }
         )
     }
