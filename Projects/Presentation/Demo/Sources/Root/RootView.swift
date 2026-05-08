@@ -11,12 +11,29 @@ import Presentation
 import SwiftUI
 
 struct RootView: View {
-    let store: StoreOf<RootFeature>
+    @Bindable var store: StoreOf<RootFeature>
 
     var body: some View {
-        ScrollView {
-            CalendarView(store: store.scope(state: \.calendar, action: \.calendar))
+        NavigationStack(path: $store.scope(state: \.path, action: \.path)) {
+            List {
+                Button("캘린더") {
+                    store.send(.calendarTapped)
+                }
+                Button("카메라") {
+                    store.send(.cameraTapped)
+                }
+            }
+            .navigationTitle("Presentation Demo")
+        } destination: { store in
+            switch store.case {
+            case let .calendar(calendarStore):
+                ScrollView {
+                    CalendarView(store: calendarStore)
+                }
+            }
         }
-        .background(Color(UIColor.systemBackground))
+        .fullScreenCover(item: $store.scope(state: \.camera, action: \.camera)) { cameraStore in
+            CameraView(store: cameraStore)
+        }
     }
 }
