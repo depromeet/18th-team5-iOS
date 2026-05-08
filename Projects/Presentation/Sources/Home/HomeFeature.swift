@@ -61,9 +61,11 @@ public struct HomeFeature {
                 state.homeCard = data
                 return .none
 
-            case .homeLoad(.failure):
+            case let .homeLoad(.failure(error)):
                 state.isLoading = false
                 state.hasError = true
+                // TODO: 디버그용 로그 - 확인 후 제거
+                print("HomeFeature fetchHome 실패: \(error)")
                 return .none
 
             case .onMissionTap:
