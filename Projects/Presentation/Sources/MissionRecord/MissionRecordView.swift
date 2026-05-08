@@ -110,11 +110,26 @@ private extension MissionRecordView {
 
             if let imageData = store.selectedImageData,
                let uiImage = UIImage(data: imageData) {
-                Image(uiImage: uiImage)
-                    .resizable()
-                    .scaledToFill()
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                Color.clear
+                    .overlay {
+                        Image(uiImage: uiImage)
+                            .resizable()
+                            .scaledToFill()
+                    }
                     .clipShape(.rect(cornerRadius: .radius16))
+                    .overlay(alignment: .topTrailing) {
+                        Button {
+                            store.send(.imageDeleteButtonTapped)
+                        } label: {
+                            Image(systemName: "xmark")
+                                .font(.system(size: 14, weight: .bold))
+                                .foregroundStyle(Color.monoWhite)
+                                .frame(width: 32, height: 32)
+                                .background(Color.gray700)
+                                .clipShape(Circle())
+                        }
+                        .padding(12)
+                    }
             } else {
                 photoPlaceholder
             }
@@ -201,7 +216,7 @@ private extension MissionRecordView {
 
 private extension MissionRecordView {
     var isSubmitEnabled: Bool {
-        store.selectedImageData != nil && !store.isSubmitting
+        store.selectedImageData != nil && !store.isSubmitting && !store.memo.isEmpty
     }
 
     var submitButton: some View {
@@ -213,7 +228,7 @@ private extension MissionRecordView {
                 .foregroundStyle(Color.monoWhite)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 16)
-                .background(isSubmitEnabled ? Color.gray900 : Color.gray400)
+                .background(isSubmitEnabled ? Color.gray700 : Color.gray400)
                 .clipShape(RoundedRectangle(cornerRadius: .radius12))
         }
         .disabled(!isSubmitEnabled)
@@ -233,7 +248,7 @@ private extension MissionRecordView {
 
             VStack(spacing: 24) {
                 Text("기록이 저장되었어요")
-                    .font(.body1Semibold)
+                    .font(.body1Medium)
                     .foregroundStyle(Color.gray900)
 
                 Button {
@@ -244,13 +259,13 @@ private extension MissionRecordView {
                         .foregroundStyle(Color.monoWhite)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 16)
-                        .background(Color.gray900)
-                        .clipShape(RoundedRectangle(cornerRadius: .radius12))
+                        .background(Color.gray700)
+                        .clipShape(.rect(cornerRadius: .radius12))
                 }
             }
             .padding(24)
             .background(Color.monoWhite)
-            .clipShape(RoundedRectangle(cornerRadius: .radius16))
+            .clipShape(.rect(cornerRadius: .radius12))
             .padding(.horizontal, 40)
         }
         .transition(.opacity)

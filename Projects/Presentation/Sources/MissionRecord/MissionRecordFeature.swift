@@ -32,6 +32,7 @@ public struct MissionRecordFeature {
         case backButtonTapped
         case cameraButtonTapped
         case imageSelected(Data?)
+        case imageDeleteButtonTapped
         case submitButtonTapped
         case completionModalConfirmTapped
         case camera(PresentationAction<CameraFeature.Action>)
@@ -67,6 +68,10 @@ public struct MissionRecordFeature {
 
             case let .imageSelected(data):
                 state.selectedImageData = data
+                return .none
+
+            case .imageDeleteButtonTapped:
+                state.selectedImageData = nil
                 return .none
 
             case .submitButtonTapped:
