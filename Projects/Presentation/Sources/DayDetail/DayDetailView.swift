@@ -83,7 +83,7 @@ public struct DayDetailView: View {
         HStack(spacing: 13) {
             Button { store.send(.saveImageTap) } label: {
                 Text("이미지 저장")
-                    .font(.body1, \.medium)
+                    .font(.body1Medium)
                     .foregroundStyle(Color.gray50)
                     .frame(maxWidth: .infinity)
                     .frame(height: 47)
@@ -93,7 +93,7 @@ public struct DayDetailView: View {
 
             Button { store.send(.saveLinkTap) } label: {
                 Text("링크 저장")
-                    .font(.body1, \.medium)
+                    .font(.body1Medium)
                     .foregroundStyle(Color.gray50)
                     .frame(maxWidth: .infinity)
                     .frame(height: 47)
