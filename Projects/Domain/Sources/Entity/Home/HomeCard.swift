@@ -1,5 +1,5 @@
 //
-//  HomeData.swift
+//  HomeCard.swift
 //  Domain
 //
 //  Created by 송민교 on 5/8/26.
@@ -8,20 +8,21 @@
 
 import Foundation
 
-public struct HomeData: Equatable {
-    public let solarTerm: SolarTermCard?
-    public let currentMission: CurrentMissionCard?
-    public let seasonRecord: SeasonRecord
-
-    public init(solarTerm: SolarTermCard?, currentMission: CurrentMissionCard?, seasonRecord: SeasonRecord) {
+public struct HomeCard: Equatable {
+    public let solarTerm: SolarTermCard
+    public let currentMission: CurrentMissionCard
+    
+    public init(
+        solarTerm: SolarTermCard,
+        currentMission: CurrentMissionCard
+    ) {
         self.solarTerm = solarTerm
         self.currentMission = currentMission
-        self.seasonRecord = seasonRecord
     }
 }
 
-public extension HomeData {
-    static let mock = HomeData(
+public extension HomeCard {
+    static let mock = HomeCard(
         solarTerm: SolarTermCard(
             id: 9,
             name: "입하",
@@ -34,7 +35,6 @@ public extension HomeData {
             title: "시원한 계곡물에 발 담그기",
             participantCount: 100,
             missionType: "DAILY"
-        ),
-        seasonRecord: .mock
+        )
     )
 }

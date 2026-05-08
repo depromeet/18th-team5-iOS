@@ -9,12 +9,6 @@ import Foundation
 
 // MARK: - 월별 기록 조회 응답
 
-struct CalendarMonthResponseDTO: Decodable {
-    let code: String
-    let message: String
-    let data: CalendarMonthDataDTO
-}
-
 struct CalendarMonthDataDTO: Decodable {
     let year: Int
     let month: Int
@@ -28,12 +22,6 @@ struct CalendarRecordResponseDTO: Decodable {
 }
 
 // MARK: - 날짜별 미션 완료 기록 상세 조회 응답
-
-struct DayDetailResponseWrapperDTO: Decodable {
-    let code: String
-    let message: String
-    let data: DayDetailDataDTO
-}
 
 struct DayDetailDataDTO: Decodable {
     let date: String

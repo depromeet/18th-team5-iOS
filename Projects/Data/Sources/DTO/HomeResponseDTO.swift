@@ -9,15 +9,9 @@
 import Domain
 import Foundation
 
-struct HomeResponseDTO: Decodable {
-    let code: String
-    let message: String
-    let result: HomeResultDTO
-}
-
-struct HomeResultDTO: Decodable {
-    let solarTerm: SolarTermResponseDTO?
-    let dailyMission: DailyMissionResponseDTO?
+struct HomeCardDTO: Decodable {
+    let solarTerm: SolarTermResponseDTO
+    let dailyMission: DailyMissionResponseDTO
 }
 
 struct SolarTermResponseDTO: Decodable {
@@ -37,13 +31,11 @@ struct DailyMissionResponseDTO: Decodable {
 
 // MARK: - Domain Mapping
 
-extension HomeResultDTO {
-    func toDomain() -> HomeData {
-        HomeData(
-            solarTerm: solarTerm?.toDomain(),
-            currentMission: dailyMission?.toDomain(),
-            // TODO: seasonRecord API 연동 후 실제 데이터 매핑
-            seasonRecord: .mock
+extension HomeCardDTO {
+    func toDomain() -> HomeCard {
+        HomeCard(
+            solarTerm: solarTerm.toDomain(),
+            currentMission: dailyMission.toDomain()
         )
     }
 }

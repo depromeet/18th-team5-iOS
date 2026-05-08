@@ -10,13 +10,23 @@ import Alamofire
 import Foundation
 
 enum HomeEndpoint: APIEndpoint {
-    case fetchHome
+    case card
 
     var path: String {
-        "/api/v1/home/card"
+        switch self {
+        case .card: "/api/v1/home/card"
+        }
     }
 
     var method: HTTPMethod {
-        .get
+        switch self {
+        case .card: .get
+        }
+    }
+    
+    var requiresAuth: Bool {
+        switch self {
+        case .card: true
+        }
     }
 }
