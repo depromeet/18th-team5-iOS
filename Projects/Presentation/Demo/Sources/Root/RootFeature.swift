@@ -7,17 +7,22 @@
 //
 
 import ComposableArchitecture
+import Presentation
 
 @Reducer
 struct RootFeature {
     @ObservableState
-    struct State {}
+    struct State {
+        var calendar = CalendarFeature.State()
+    }
 
-    enum Action {}
+    enum Action {
+        case calendar(CalendarFeature.Action)
+    }
 
     var body: some ReducerOf<Self> {
-        Reduce { _, _ in
-            .none
+        Scope(state: \.calendar, action: \.calendar) {
+            CalendarFeature()
         }
     }
 }

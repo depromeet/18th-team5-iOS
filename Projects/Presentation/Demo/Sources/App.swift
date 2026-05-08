@@ -7,6 +7,9 @@
 //
 
 import ComposableArchitecture
+import Domain
+import Foundation
+import Presentation
 import SwiftUI
 
 @main
@@ -16,6 +19,7 @@ struct PresentationDemoApp: App {
             RootView(store:
                 .init(initialState: .init()) {
                     RootFeature()
+                        .dependency(\.calendarRepository, .mock)
                 }
             )
         }
