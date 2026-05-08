@@ -116,8 +116,10 @@ private extension OnboardingSurveyView {
             store.send(.backButtonTapped)
         } label: {
             Image.icArrowLeft
+                .renderingMode(.template)
                 .resizable()
                 .frame(width: 24, height: 24)
+                .foregroundStyle(Color.gray800)
         }
     }
 
@@ -228,7 +230,7 @@ private extension EngagementLevel {
         case .casual:
             .init(
                 title: "일상 안에서\n부담 없이",
-                subtitle: "동네 범위,\n이동 없이 5분이면 끝",
+                subtitle: "동네 범위,\n이동 없이 5분 내에",
                 image: .icWalkingWoman
             )
         }
