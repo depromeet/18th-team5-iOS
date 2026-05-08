@@ -14,7 +14,6 @@ struct SolarTermCardView: View {
     let solarTerm: SolarTermCard
     let mission: CurrentMissionCard
     let onMissionTap: () -> Void
-    let onDetailTap: () -> Void
 
     var body: some View {
         ZStack(alignment: .bottom) {
@@ -147,7 +146,6 @@ private struct MissionCardView: View {
     SolarTermCardView(
         solarTerm: HomeData.mock.solarTerm!,
         mission: HomeData.mock.currentMission!,
-        onMissionTap: {},
-        onDetailTap: {}
+        onMissionTap: {}
     )
 }
