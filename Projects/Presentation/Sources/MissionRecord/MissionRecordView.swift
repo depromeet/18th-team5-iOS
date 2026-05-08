@@ -42,7 +42,6 @@ public struct MissionRecordView: View {
         }
         .background(Color.gray50)
         .navigationBarBackButtonHidden(true)
-        .onTapGesture { isMemoFocused = false }
     }
 }
 
@@ -104,7 +103,7 @@ private extension MissionRecordView {
                     .resizable()
                     .scaledToFill()
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .clipShape(RoundedRectangle(cornerRadius: .radius20))
+                    .clipShape(.rect(cornerRadius: .radius16))
             } else {
                 photoPlaceholder
             }
