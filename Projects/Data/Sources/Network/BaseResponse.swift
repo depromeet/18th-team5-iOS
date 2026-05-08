@@ -10,5 +10,5 @@ import Foundation
 struct BaseResponse<T: Decodable>: Decodable {
     let code: String
     let message: String
-    let result: T
+    let result: T?
 }

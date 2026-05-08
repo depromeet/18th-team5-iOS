@@ -100,11 +100,16 @@ final class AuthInterceptor: RequestInterceptor, @unchecked Sendable {
     private func refreshToken() async -> RetryResult {
         if let token = tokenClient.getRefreshToken() {
             do {
-                let response: AuthTokenDTO = try await networkClient.request(
+                let response: AuthTokenDTO? = try await networkClient.request(
                     AuthEndpoint.refresh(refreshToken: token)
                 )
-                tokenClient.saveTokens(response.accessToken, response.refreshToken)
-                return .retry
+
+                if let response {
+                    tokenClient.saveTokens(response.accessToken, response.refreshToken)
+                    return .retry
+                } else {
+                    logger.error(message: "토큰 갱신 실패: 토큰을 획득할 수 없음")
+                }
             } catch {
                 logger.error(message: "토큰 갱신 실패: \(error)")
             }
@@ -112,12 +117,18 @@ final class AuthInterceptor: RequestInterceptor, @unchecked Sendable {
 
         do {
             let deviceID = deviceIDClient.getDeviceID() ?? deviceIDClient.createDeviceID()
-            let response: AuthTokenDTO = try await networkClient.request(
+            let response: AuthTokenDTO? = try await networkClient.request(
                 AuthEndpoint.login(deviceID: deviceID)
             )
-            tokenClient.saveTokens(response.accessToken, response.refreshToken)
-            return .retry
+            if let response {
+                tokenClient.saveTokens(response.accessToken, response.refreshToken)
+                return .retry
+            } else {
+                logger.error(message: "토큰 갱신 실패: 토큰을 획득할 수 없음")
+                return .doNotRetry
+            }
         } catch {
+            logger.error(message: "토큰 갱신 실패: \(error)")
             return .doNotRetry
         }
     }

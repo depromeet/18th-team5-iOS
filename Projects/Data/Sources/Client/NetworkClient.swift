@@ -27,7 +27,7 @@ extension NetworkClient {
         return decoder
     }
 
-    func request<T: Decodable>(_ endpoint: any APIEndpoint, retryCount: Int = 0) async throws -> T {
+    func request<T: Decodable>(_ endpoint: any APIEndpoint, retryCount: Int = 0) async throws -> T? {
         let data = try await requestData(endpoint, retryCount)
         do {
             let response = try Self.makeDecoder().decode(BaseResponse<T>.self, from: data)
