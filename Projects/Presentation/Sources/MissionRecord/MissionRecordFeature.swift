@@ -12,6 +12,8 @@ import Foundation
 
 @Reducer
 public struct MissionRecordFeature {
+    @Dependency(\.dismiss) private var dismiss
+
     @ObservableState
     public struct State: Equatable {
         var missionTitle: String
@@ -80,7 +82,7 @@ public struct MissionRecordFeature {
 
             case .completionModalConfirmTapped:
                 state.showCompletionModal = false
-                return .send(.delegate(.dismiss))
+                return .run { _ in await dismiss() }
 
             case let .camera(.presented(.delegate(.didCapture(photo)))):
                 state.selectedImageData = photo.imageData

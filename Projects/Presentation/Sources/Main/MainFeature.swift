@@ -14,6 +14,7 @@ public struct MainFeature {
     public struct State: Equatable {
         public var tab: Tab = .home
         var home: HomeFeature.State = .init()
+        var path: StackState<Path.State> = .init()
 
         public init() {}
     }
@@ -25,6 +26,7 @@ public struct MainFeature {
         case logout
         case reset
         case delegate(Delegate)
+        case path(StackActionOf<Path>)
 
         public enum Delegate {
             case reset
@@ -43,15 +45,15 @@ public struct MainFeature {
             HomeFeature()
         }
 
-        Reduce { _, action in
+        Reduce { state, action in
             switch action {
             case .onAppear:
                 // TODO: 로깅 테스트용 호출입니다. 추후 제거부탁드립니다.
                 logger.debug(message: "MainView did appear")
                 return .none
 
-            case .home(.delegate(.navigateToMissionCamera)):
-                // TODO: 카메라 화면(미션 기록하기) 페이지 이동 - @minkyo
+            case let .home(.delegate(.navigateToMissionCamera(id, title, type))):
+                state.path.append(.missionRecord(.init(missionTitle: title)))
                 return .none
 
             case .home(.delegate(.navigateToMissionTab)):
@@ -74,6 +76,7 @@ public struct MainFeature {
                 return .none
             }
         }
+        .forEach(\.path, action: \.path)
     }
 }
 
@@ -84,3 +87,12 @@ public extension MainFeature {
         case myPage
     }
 }
+
+extension MainFeature {
+    @Reducer
+    public enum Path {
+        case missionRecord(MissionRecordFeature)
+    }
+}
+
+extension MainFeature.Path.State: Equatable {}
