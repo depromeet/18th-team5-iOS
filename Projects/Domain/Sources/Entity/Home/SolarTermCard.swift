@@ -14,4 +14,12 @@ public struct SolarTermCard: Equatable {
     public let description: String
     public let startDate: String
     public let endDate: String
+
+    public init(id: Int, name: String, description: String, startDate: String, endDate: String) {
+        self.id = id
+        self.name = name
+        self.description = description
+        self.startDate = startDate
+        self.endDate = endDate
+    }
 }

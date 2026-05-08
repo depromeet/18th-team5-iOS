@@ -12,6 +12,12 @@ public struct HomeData: Equatable {
     public let solarTerm: SolarTermCard?
     public let currentMission: CurrentMissionCard?
     public let seasonRecord: SeasonRecord
+
+    public init(solarTerm: SolarTermCard?, currentMission: CurrentMissionCard?, seasonRecord: SeasonRecord) {
+        self.solarTerm = solarTerm
+        self.currentMission = currentMission
+        self.seasonRecord = seasonRecord
+    }
 }
 
 public extension HomeData {
