@@ -36,10 +36,15 @@ public enum MissionRepositoryImpl {
                 )
 
                 do {
-                    let response: MissionCompleteResponseDTO = try await client.request(
+                    let response: MissionCompleteResultDTO? = try await client.request(
                         MissionEndpoint.complete(missionId: missionId, request: requestDTO)
                     )
-                    return try response.result.toDomain()
+
+                    guard let response else {
+                        throw DomainError.unknown("데이터 획득 실패")
+                    }
+
+                    return try response.toDomain()
                 } catch {
                     throw mapToDomainError(error)
                 }
@@ -48,10 +53,15 @@ public enum MissionRepositoryImpl {
                 @Dependency(\.networkClient) var client
 
                 do {
-                    let response: MissionCompletionsResponseDTO = try await client.request(
+                    let response: [MissionCompletionItemDTO]? = try await client.request(
                         MissionEndpoint.fetchCompletions(missionId: missionId)
                     )
-                    return try response.result.map { try $0.toDomain() }
+
+                    guard let response else {
+                        throw DomainError.unknown("데이터 획득 실패")
+                    }
+
+                    return try response.map { try $0.toDomain() }
                 } catch {
                     throw mapToDomainError(error)
                 }
