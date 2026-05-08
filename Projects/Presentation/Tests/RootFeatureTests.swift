@@ -100,13 +100,17 @@ struct RootFeatureTests {
                     appStoreLink: ""
                 )
             })
-            $0.onboardingRepository.isOnboardingCompleted = { false }
+            $0.authRepository = AuthRepository(
+                isSignin: { true },
+                login: {}
+            )
+            $0.onboardingRepository.isOnboarded = { false }
         }
         sut.exhaustivity = .off
 
         // When
         await sut.send(.onAppear)
-        await sut.receive(\.loginFlowFinished) {
+        await sut.receive(\.onboardingStatusChecked) {
             // Then
             $0.path = .onboarding(.init())
         }
@@ -126,13 +130,17 @@ struct RootFeatureTests {
                     appStoreLink: ""
                 )
             })
-            $0.onboardingRepository.isOnboardingCompleted = { true }
+            $0.authRepository = AuthRepository(
+                isSignin: { true },
+                login: {}
+            )
+            $0.onboardingRepository.isOnboarded = { true }
         }
         sut.exhaustivity = .off
 
         // When
         await sut.send(.onAppear)
-        await sut.receive(\.onboardingFinished) {
+        await sut.receive(\.onboardingStatusChecked) {
             // Then
             $0.path = .main(.init())
         }
