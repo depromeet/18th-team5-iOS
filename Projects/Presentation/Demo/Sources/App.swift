@@ -20,6 +20,7 @@ struct PresentationDemoApp: App {
                 .init(initialState: .init()) {
                     RootFeature()
                         .dependency(\.calendarRepository, .mock)
+                        .dependency(\.homeRepository, .previewValue)
                 }
             )
         }
