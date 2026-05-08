@@ -119,6 +119,13 @@ public struct RootFeature {
             case .path(.debugToken(.delegate(.completed))):
                 return .send(.setDebugTokenFinished)
 
+            case .path(.main(.delegate(.reset))):
+                state.path = .splash(.init())
+                return .run { send in
+                    try await Task.sleep(for: .seconds(1))
+                    await send(.launchFlowFinished)
+                }
+
             default:
                 return .none
             }

@@ -39,7 +39,12 @@ private extension MainView {
         case .archive:
             Text("아카이빙")
         case .myPage:
-            Text("마이페이지")
+            VStack {
+                Text("마이페이지")
+                Button("로그아웃") {
+                    store.send(.logout)
+                }
+            }
         }
     }
 

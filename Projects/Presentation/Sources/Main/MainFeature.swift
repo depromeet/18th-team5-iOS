@@ -22,9 +22,17 @@ public struct MainFeature {
         case onAppear
         case binding(BindingAction<State>)
         case home(HomeFeature.Action)
+        case logout
+        case reset
+        case delegate(Delegate)
+
+        public enum Delegate {
+            case reset
+        }
     }
 
     @Dependency(\.logger) var logger
+    @Dependency(\.authRepository) var authRepository
 
     public init() {}
 
@@ -51,6 +59,18 @@ public struct MainFeature {
                 return .none
 
             case .home, .binding:
+                return .none
+
+            case .logout:
+                return .run { send in
+                    try await authRepository.logout()
+                    await send(.reset)
+                }
+
+            case .reset:
+                return .send(.delegate(.reset))
+
+            default:
                 return .none
             }
         }
