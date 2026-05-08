@@ -20,17 +20,24 @@ extension AuthRepository: @retroactive DependencyKey {
 
 enum AuthRepositoryImpl {
     static func live() -> AuthRepository {
-        AuthRepository(
+        @Dependency(\.networkClient) var networkClient
+        @Dependency(\.deviceIDClient) var deviceIDClient
+        @Dependency(\.tokenClient) var tokenClient
+        return AuthRepository(
+            isSignin: {
+                tokenClient.getRefreshToken() != nil
+            },
             login: {
-                @Dependency(\.networkClient) var networkClient
-                @Dependency(\.deviceIDClient) var deviceIDClient
-                @Dependency(\.tokenClient) var tokenClient
-
                 do {
                     let deviceID = deviceIDClient.getDeviceID() ?? deviceIDClient.createDeviceID()
-                    let response: AuthTokenDTO = try await networkClient.request(
+                    let response: AuthTokenDTO? = try await networkClient.request(
                         AuthEndpoint.login(deviceID: deviceID), retryCount: 2
                     )
+
+                    guard let response else {
+                        throw DomainError.unknown("데이터 획득불가")
+                    }
+
                     tokenClient.saveTokens(
                         response.accessToken,
                         response.refreshToken

@@ -9,22 +9,15 @@ import Dependencies
 import DependenciesMacros
 import Foundation
 
+@DependencyClient
 public struct TokenRepository: Sendable {
-    public var hasTokens: @Sendable () -> Bool
-    public var setDebugDeviceToken: @Sendable (_ token: String) -> Void
-    public init(
-        hasTokens: @Sendable @escaping () -> Bool,
-        setDebugDeviceToken: @Sendable @escaping (_ token: String) -> Void = { _ in }
-    ) {
-        self.hasTokens = hasTokens
-        self.setDebugDeviceToken = setDebugDeviceToken
-    }
+    public var setDebugDeviceToken: @Sendable (_ token: String) -> Void?
 }
 
 // MARK: - TestDependencyKey
 
 extension TokenRepository: TestDependencyKey {
-    public static let testValue = TokenRepository(hasTokens: { return true })
+    public static let testValue = TokenRepository()
 }
 
 public extension DependencyValues {

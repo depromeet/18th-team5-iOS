@@ -152,9 +152,9 @@ struct RootFeatureTests {
                     appStoreLink: ""
                 )
             })
-            $0.tokenRepository = TokenRepository(
-                hasTokens: { true },
-                setDebugDeviceToken: { _ in }
+            $0.authRepository = AuthRepository(
+                isSignin: { true },
+                login: {}
             )
         }
         sut.exhaustivity = .off

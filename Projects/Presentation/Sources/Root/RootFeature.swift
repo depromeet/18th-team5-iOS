@@ -39,7 +39,6 @@ public struct RootFeature {
 
     @Dependency(\.launchConfigRepository) var launchConfigRepository
     @Dependency(\.onboardingRepository) var onboardingRepository
-    @Dependency(\.tokenRepository) var tokenRepository
     @Dependency(\.authRepository) var authRepository
     @Dependency(\.openURL) var openURL
     @Dependency(\.logger) var logger
@@ -168,7 +167,7 @@ private extension RootFeature {
 private extension RootFeature {
     func loginFlow(_ state: inout State) -> Effect<Action> {
         // #1. 토큰 존재로 로그인 유무 확인
-        if tokenRepository.hasTokens() {
+        if authRepository.isSignin() == true {
             return .send(.loginFlowFinished(with: .success(())))
         }
 
