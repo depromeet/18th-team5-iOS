@@ -25,13 +25,27 @@ public struct HomeView: View {
                     ProgressView()
                         .frame(maxWidth: .infinity)
                         .padding(.top, 80)
+                } else if store.hasError {
+                    VStack(spacing: 12) {
+                        Text("데이터를 불러오지 못했어요")
+                            .font(.body1Regular)
+                            .foregroundStyle(Color.gray600)
+                        Button(action: {
+                            store.send(.onRetryTap)
+                        }) {
+                            Text("불러오기")
+                                .foregroundStyle(Color.gray600)
+                                .font(.body2Medium)
+                        }
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.top, 80)
                 } else if let homeData = store.homeData {
                     if let solarTerm = homeData.solarTerm, let mission = homeData.currentMission {
                         SolarTermCardView(
                             solarTerm: solarTerm,
                             mission: mission,
-                            onMissionTap: { store.send(.onMissionTap) },
-                            onDetailTap: { store.send(.onMissionEntireTap) }
+                            onMissionTap: { store.send(.onMissionTap) }
                         )
                     }
 
@@ -76,6 +90,18 @@ public struct HomeView: View {
             HomeFeature()
         } withDependencies: {
             $0.homeRepository = .previewValue
+        }
+    )
+}
+
+#Preview("에러상태") {
+    HomeView(
+        store: Store(initialState: HomeFeature.State()) {
+            HomeFeature()
+        } withDependencies: {
+            $0.homeRepository.fetchHome = {
+                throw URLError(.notConnectedToInternet)
+            }
         }
     )
 }

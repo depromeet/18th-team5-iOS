@@ -15,15 +15,16 @@ public struct HomeFeature {
     public struct State: Equatable {
         var homeData: HomeData?
         var isLoading: Bool = false
+        var hasError: Bool = false
 
         public init() {}
     }
 
     public enum Action {
         case onAppear
+        case onRetryTap
         case homeLoad(Result<HomeData, Error>)
         case onMissionTap
-        case onMissionEntireTap
         case onMissionRecommendTap
         case onRecordTap
         case delegate(Delegate)
@@ -41,12 +42,16 @@ public struct HomeFeature {
     public var body: some ReducerOf<Self> {
         Reduce { state, action in
             switch action {
-            case .onAppear:
+            case .onAppear, .onRetryTap:
+                state.hasError = false
                 state.isLoading = true
                 return .run { send in
-                    await send(.homeLoad(
-                        Result { try await homeRepository.fetchHome() }
-                    ))
+                    do {
+                        let data = try await homeRepository.fetchHome()
+                        await send(.homeLoad(.success(data)))
+                    } catch {
+                        await send(.homeLoad(.failure(error)))
+                    }
                 }
 
             case let .homeLoad(.success(data)):
@@ -56,7 +61,7 @@ public struct HomeFeature {
 
             case .homeLoad(.failure):
                 state.isLoading = false
-                // TODO: 에러 처리 결정 후 추후 추가 - @minkyo
+                state.hasError = true
                 return .none
 
             case .onMissionTap:
@@ -70,7 +75,7 @@ public struct HomeFeature {
             case .onMissionRecommendTap:
                 return .send(.delegate(.navigateToMissionTab))
 
-            case .onMissionEntireTap, .onRecordTap:
+            case .onRecordTap:
                 return .none
 
             case .delegate:
