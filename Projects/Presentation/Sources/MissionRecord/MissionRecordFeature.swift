@@ -56,7 +56,7 @@ public struct MissionRecordFeature {
                 return .none
 
             case .backButtonTapped:
-                return .send(.delegate(.dismiss))
+                return .run { _ in await dismiss() }
 
             case .cameraButtonTapped:
                 let formatter = DateFormatter()
