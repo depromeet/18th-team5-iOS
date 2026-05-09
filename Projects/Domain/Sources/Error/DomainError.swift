@@ -15,6 +15,8 @@ public enum DomainError: Error, Equatable {
     case forbidden
     /// 요청한 리소스를 찾을 수 없는 경우 (404)
     case notFound
+    /// 리소스 충돌 (409, 중복 요청 등)
+    case conflict
     /// 잘못된 요청 데이터 (400, 422 등)
     case invalidRequest(String?)
     /// 서비스를 이용할 수 없는 경우 (네트워크 끊김, 서버 점검 등)

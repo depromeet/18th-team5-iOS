@@ -11,4 +11,5 @@ import Foundation
 /// DTO → Domain 변환 시 발생하는 매핑 에러
 enum DTOMappingError: Error {
     case invalidDateFormat(String)
+    case invalidValue(String)
 }

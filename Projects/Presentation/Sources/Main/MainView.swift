@@ -17,11 +17,17 @@ public struct MainView: View {
     }
 
     public var body: some View {
-        TabView(selection: $store.tab) {
-            ForEach(MainFeature.Tab.allCases, id: \.self) { tab in
-                tabView(tab: tab)
-                    .tabItem { tabItem(tab: tab) }
-                    .tag(tab)
+        NavigationStack(path: $store.scope(state: \.path, action: \.path)) {
+            TabView(selection: $store.tab) {
+                ForEach(MainFeature.Tab.allCases, id: \.self) { tab in
+                    tabView(tab: tab)
+                        .tabItem { tabItem(tab: tab) }
+                        .tag(tab)
+                }
+            }
+        } destination: { store in
+            switch store.case {
+            case let .missionRecord(store): MissionRecordView(store: store)
             }
         }
         .onAppear {
