@@ -23,15 +23,18 @@ enum TokenRepositoryImpl {
         TokenRepository(
             setDebugDeviceToken: { token in
                 @Dependency(\.logger) var logger
+                @Dependency(\.deviceIDClient) var deviceIDClient
 
                 let env = Bundle.main.infoDictionary?["Environment"] as? String
                 guard env == "Dev" else {
                     preconditionFailure("setDebugDeviceToken is only available in Dev environment")
                 }
-                let result = KeychainHelper.save(data: token.data(using: .utf8)!, forKey: .deviceID)
+
+                let result = deviceIDClient.setDeviceID(token)
                 if result == false {
                     logger.error(message: "DebugToken 저장 실패")
                 }
+                return result
             }
         )
     }

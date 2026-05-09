@@ -17,6 +17,7 @@ private enum Constants {
 public struct DebugTokenSettingFeature {
     @ObservableState
     public struct State: Equatable {
+        public var guideText: String = ""
         public var tokenText: String = ""
 
         public init() {}
@@ -55,8 +56,13 @@ public struct DebugTokenSettingFeature {
             case .confirmButtonTapped:
                 let token = state.tokenText
                 guard token.count >= 5 else { return .none }
-                tokenRepository.setDebugDeviceToken(token)
-                return .send(.delegate(.completed))
+                let result = tokenRepository.setDebugDeviceToken(token)
+                if result == true {
+                    return .send(.delegate(.completed))
+                } else {
+                    state.guideText = "오류발생 재시도"
+                    return .none
+                }
 
             default:
                 return .none

@@ -11,7 +11,7 @@ import Foundation
 
 @DependencyClient
 public struct TokenRepository: Sendable {
-    public var setDebugDeviceToken: @Sendable (_ token: String) -> Void?
+    public var setDebugDeviceToken: @Sendable (_ token: String) -> Bool?
 }
 
 // MARK: - TestDependencyKey

@@ -20,6 +20,9 @@ public struct DebugTokenSettingView: View {
             Text("디버그 디바이스 토큰 설정")
                 .font(.headline)
 
+            Text(store.guideText)
+                .font(.caption)
+
             Button("공통값 사용") {
                 store.send(.useCommonTokenButtonTapped)
             }
