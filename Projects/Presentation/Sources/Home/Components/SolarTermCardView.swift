@@ -75,10 +75,11 @@ private struct MissionCardView: View {
     let onMissionTap: () -> Void
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(spacing: 12) {
             Text(mission.title)
                 .font(.body1Semibold)
-                .foregroundStyle(Color(hex: 0x1D293D))
+                .foregroundStyle(Color(hex: 0x1A1C20))
+                .frame(maxWidth: .infinity, alignment: .leading)
 
             VStack(spacing: 8) {
                 Button(action: onMissionTap) {
@@ -100,7 +101,7 @@ private struct MissionCardView: View {
                 Text("해당 미션에 \(mission.participantCount)명이 참여했어요")
                     .font(.caption1Regular)
                     .foregroundStyle(Color(hex: 0x868B94))
-                    .frame(maxWidth: .infinity)
+                    .frame(maxWidth: .infinity, alignment: .center)
             }
         }
         .padding(.top, 20)
@@ -109,7 +110,7 @@ private struct MissionCardView: View {
         .frame(maxWidth: .infinity)
         .background(Color.white.opacity(0.9))
         .clipShape(RoundedRectangle(cornerRadius: .radius12))
-        .padding()
+        .padding(.horizontal, 16)
     }
 }
 
