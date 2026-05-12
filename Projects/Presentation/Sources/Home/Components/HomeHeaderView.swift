@@ -12,10 +12,9 @@ import SwiftUI
 struct HomeHeaderView: View {
     var body: some View {
         HStack {
-            // TODO: 로고 교체 - @minkyo
-            Text("peaktime")
-                .font(.title2Medium)
-                .foregroundStyle(Color.gray600)
+            Image.peaktimeLogo
+                .resizable()
+                .frame(width: 140, height: 28)
 
             Spacer()
 
@@ -27,9 +26,38 @@ struct HomeHeaderView: View {
         }
         .padding(.horizontal, 20)
         .padding(.vertical, 16)
+        .frame(maxWidth: .infinity)
+        .background(alignment: .top) {
+            BackgroundBlurView()
+                .overlay(Color.white.opacity(0.1))
+                .mask(
+                    LinearGradient(
+                        stops: [
+                            .init(color: .black, location: 0),
+                            .init(color: .black, location: 0.93),
+                            .init(color: .clear, location: 1)
+                        ],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                )
+                .ignoresSafeArea(edges: .top)
+        }
     }
 }
 
 #Preview {
-    HomeHeaderView()
+    ZStack {
+        LinearGradient(
+            colors: [Color(hex: 0xECFBF3), .white],
+            startPoint: .topTrailing,
+            endPoint: .bottomLeading
+        )
+        .ignoresSafeArea()
+
+        ScrollView {
+            HomeHeaderView()
+            Spacer()
+        }
+    }
 }
