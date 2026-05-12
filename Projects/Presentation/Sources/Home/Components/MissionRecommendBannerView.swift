@@ -37,7 +37,8 @@ struct MissionRecommendBannerView: View {
                     .font(.body2Medium)
                     .foregroundStyle(Color.gray700)
                     .padding(.horizontal, 10)
-                    .padding(.vertical, 6)
+                    .padding(.vertical, 2)
+                    .frame(minWidth: 52, minHeight: 32)
                     .background(Color.gray300)
                     .clipShape(Capsule())
             }
@@ -46,10 +47,14 @@ struct MissionRecommendBannerView: View {
         .background(
             RoundedRectangle(cornerRadius: .radius16)
                 .fill(
-                    LinearGradient(
-                        colors: [Color(hex: 0xECFBF3), Color(hex: 0xF3F4F5)],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
+                    RadialGradient(
+                        gradient: Gradient(stops: [
+                            .init(color: Color(hex: 0xECFBF3), location: 0),
+                            .init(color: Color(hex: 0xF3F4F5), location: 0.36)
+                        ]),
+                        center: UnitPoint(x: 0.16, y: 0),
+                        startRadius: 0,
+                        endRadius: 300
                     )
                 )
         )
