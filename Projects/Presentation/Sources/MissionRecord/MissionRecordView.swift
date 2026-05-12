@@ -42,8 +42,10 @@ public struct MissionRecordView: View {
                 submitButton
             }
             .background(Color.gray50)
+            .allowsHitTesting(store.completionModal == nil)
+            .accessibilityHidden(store.completionModal != nil)
 
-            if store.showCompletionModal {
+            if store.completionModal != nil {
                 completionModal
             }
         }
@@ -129,6 +131,7 @@ private extension MissionRecordView {
                                 .clipShape(Circle())
                         }
                         .padding(12)
+                        .accessibilityLabel("사진 삭제")
                     }
             } else {
                 photoPlaceholder
@@ -216,7 +219,8 @@ private extension MissionRecordView {
 
 private extension MissionRecordView {
     var isSubmitEnabled: Bool {
-        store.selectedImageData != nil && !store.isSubmitting && !store.memo.isEmpty
+        store.selectedImageData != nil && !store.isSubmitting
+            && !store.memo.trimmingCharacters(in: .whitespaces).isEmpty
     }
 
     var submitButton: some View {
@@ -252,7 +256,7 @@ private extension MissionRecordView {
                     .foregroundStyle(Color.gray900)
 
                 Button {
-                    store.send(.completionModalConfirmTapped)
+                    store.send(.completionModal(.presented(.confirmTapped)))
                 } label: {
                     Text("확인")
                         .font(.body1Medium)
@@ -269,7 +273,7 @@ private extension MissionRecordView {
             .padding(.horizontal, 40)
         }
         .transition(.opacity)
-        .animation(.easeInOut(duration: 0.2), value: store.showCompletionModal)
+        .animation(.easeInOut(duration: 0.2), value: store.completionModal != nil)
     }
 }
 
