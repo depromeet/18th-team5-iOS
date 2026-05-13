@@ -7,17 +7,33 @@
 //
 
 import ComposableArchitecture
+import Domain
 import Foundation
 
 @Reducer
 public struct MissionRecordFeature {
+    @Reducer
+    public struct CompletionModal {
+        @ObservableState
+        public struct State: Equatable {}
+
+        public enum Action {
+            case confirmTapped
+        }
+
+        public var body: some ReducerOf<Self> {
+            EmptyReducer()
+        }
+    }
+
     @ObservableState
     public struct State: Equatable {
         var missionTitle: String
         var selectedImageData: Data?
         var memo: String = ""
         var isSubmitting: Bool = false
-        var showCamera: Bool = false
+        @Presents var completionModal: CompletionModal.State?
+        @Presents var camera: CameraFeature.State?
 
         public init(missionTitle: String) {
             self.missionTitle = missionTitle
@@ -30,13 +46,24 @@ public struct MissionRecordFeature {
         case backButtonTapped
         case cameraButtonTapped
         case imageSelected(Data?)
+        case imageDeleteButtonTapped
         case submitButtonTapped
+        case completionModal(PresentationAction<CompletionModal.Action>)
+        case camera(PresentationAction<CameraFeature.Action>)
     }
 
     public enum Delegate {
         case dismiss
         case submitted(imageData: Data?, memo: String)
     }
+
+    @Dependency(\.date) var date
+
+    private static let dateFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy. M. d"
+        return formatter
+    }()
 
     public init() {}
 
@@ -52,22 +79,56 @@ public struct MissionRecordFeature {
                 return .send(.delegate(.dismiss))
 
             case .cameraButtonTapped:
-                state.showCamera = true
+                let dateString = Self.dateFormatter.string(from: date.now)
+                state.camera = CameraFeature.State(
+                    overlayDate: dateString,
+                    overlayLabel: state.missionTitle
+                )
                 return .none
 
             case let .imageSelected(data):
                 state.selectedImageData = data
                 return .none
 
+            case .imageDeleteButtonTapped:
+                state.selectedImageData = nil
+                return .none
+
             case .submitButtonTapped:
+                state.completionModal = CompletionModal.State()
+                return .none
+
+            case .completionModal(.presented(.confirmTapped)):
+                state.completionModal = nil
                 return .send(.delegate(.submitted(
                     imageData: state.selectedImageData,
                     memo: state.memo
                 )))
 
+            case .completionModal:
+                return .none
+
+            case let .camera(.presented(.delegate(.didCapture(photo)))):
+                state.selectedImageData = photo.imageData
+                state.camera = nil
+                return .none
+
+            case .camera(.presented(.delegate(.didCancel))):
+                state.camera = nil
+                return .none
+
+            case .camera:
+                return .none
+
             case .delegate:
                 return .none
             }
+        }
+        .ifLet(\.$completionModal, action: \.completionModal) {
+            CompletionModal()
+        }
+        .ifLet(\.$camera, action: \.camera) {
+            CameraFeature()
         }
     }
 }
