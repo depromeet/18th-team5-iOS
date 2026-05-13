@@ -1,80 +1,191 @@
 //
-//  CameraClientImpl.swift
-//  Data
+//  CameraController.swift
+//  Camera
 //
-//  Created by 진준호 on 5/4/26.
+//  Created by 진준호 on 5/12/26.
 //  Copyright © 2026 Orange. All rights reserved.
 //
 
 import AVFoundation
-import Dependencies
-import Domain
-import os
+import Core
+import Observation
 import UIKit
 
-// MARK: - DependencyKey
+@Observable
+public final class CameraController: NSObject, @unchecked Sendable {
+    // MARK: - 외부 관찰 가능한 상태
 
-extension CameraClient: @retroactive DependencyKey {
-    public static let liveValue: CameraClient = CameraClientImpl.live()
-}
+    public private(set) var isFlashOn: Bool = false
+    public private(set) var currentZoomFactor: CGFloat = 1.0
+    public private(set) var isFrontCamera: Bool = false
+    public private(set) var isSessionRunning: Bool = false
+    public private(set) var errorMessage: String?
+    public private(set) var baseZoomFactor: CGFloat = 1.0
 
-// MARK: - CameraClientImpl
+    // MARK: - 줌 범위
 
-private final class CameraClientImpl: NSObject, @unchecked Sendable {
-    let session = AVCaptureSession()
+    public var minZoomFactor: CGFloat {
+        isFrontCamera ? 1.0 : 0.5
+    }
+
+    public var maxZoomFactor: CGFloat {
+        isFrontCamera ? 5.0 : 10.0
+    }
+
+    // MARK: - Internal
+
+    private let logger = Logger(handlers: [DebugLogHandler()])
+    private let session = AVCaptureSession()
     private let sessionQueue = DispatchQueue(label: "com.orange.peaktime.camera.session")
     private let photoOutput = AVCapturePhotoOutput()
+
     private struct MutableState {
         var currentPosition: AVCaptureDevice.Position = .back
         var flashMode: AVCaptureDevice.FlashMode = .off
-        var photoContinuation: CheckedContinuation<CapturedPhoto, Error>?
+        var photoContinuation: CheckedContinuation<CapturedResult, Error>?
         var wasRunningBeforeBackground = false
     }
 
-    private let state = OSAllocatedUnfairLock(initialState: MutableState())
+    private let mutableState = OSAllocatedUnfairLock(initialState: MutableState())
     private var lensSwitchObservation: NSKeyValueObservation?
     private var backgroundObserver: NSObjectProtocol?
     private var foregroundObserver: NSObjectProtocol?
 
-    static func live() -> CameraClient {
-        let manager = CameraClientImpl()
-        manager.setupAppLifecycleObservers()
+    // MARK: - Init
 
-        return CameraClient(
-            startSession: {
-                try manager.configureSession()
-                manager.startRunning()
-            },
-            stopSession: {
-                manager.stopAndReset()
-            },
-            capturePhoto: {
-                try await manager.capturePhoto()
-            },
-            switchCamera: {
-                try manager.switchCamera()
-            },
-            setZoomFactor: { factor, animated in
-                try manager.setZoomFactor(factor, animated: animated)
-            },
-            setFlashMode: { isOn in
-                manager.state.withLock { $0.flashMode = isOn ? .on : .off }
-            },
-            getSession: {
-                CaptureSessionBox(manager.session)
-            }
-        )
+    public override init() {
+        super.init()
+        setupAppLifecycleObservers()
     }
 
-    // MARK: - Session Configuration
+    deinit {
+        if let backgroundObserver { NotificationCenter.default.removeObserver(backgroundObserver) }
+        if let foregroundObserver { NotificationCenter.default.removeObserver(foregroundObserver) }
+        lensSwitchObservation?.invalidate()
+    }
 
-    private func configureSession() throws {
+    // MARK: - Public 메서드
+
+    public func clearError() {
+        errorMessage = nil
+    }
+
+    public func startSession() async throws {
+        do {
+            try configureSession()
+            startRunning()
+            let zoom = currentZoomFactor
+            try setZoomOnDevice(zoom, animated: false)
+        } catch {
+            logger.error(message: "카메라 세션 시작 실패: \(error)")
+            errorMessage = "카메라를 시작할 수 없습니다."
+            throw error
+        }
+    }
+
+    public func stopSession() async {
+        stopAndReset()
+    }
+
+    public func capturePhoto() async throws -> CapturedResult {
+        do {
+            return try await withCheckedThrowingContinuation { continuation in
+                let flashMode = self.mutableState.withLock { state -> AVCaptureDevice.FlashMode? in
+                    guard state.photoContinuation == nil else { return nil }
+                    state.photoContinuation = continuation
+                    return state.flashMode
+                }
+
+                guard let flashMode else {
+                    continuation.resume(throwing: CameraError.captureAlreadyInProgress)
+                    return
+                }
+
+                let settings = AVCapturePhotoSettings()
+                if self.photoOutput.supportedFlashModes.contains(flashMode) {
+                    settings.flashMode = flashMode
+                }
+
+                self.photoOutput.capturePhoto(with: settings, delegate: self)
+            }
+        } catch {
+            logger.error(message: "사진 촬영 실패: \(error)")
+            errorMessage = "사진 촬영에 실패했습니다."
+            throw error
+        }
+    }
+
+    public func toggleFlash() {
+        isFlashOn.toggle()
+        mutableState.withLock { $0.flashMode = isFlashOn ? .on : .off }
+    }
+
+    public func switchCamera() async throws {
+        do {
+            try switchCameraOnQueue()
+            isFrontCamera.toggle()
+            let initialZoom: CGFloat = isFrontCamera ? Self.selfieCloseUpZoom : 1.0
+            currentZoomFactor = initialZoom
+            baseZoomFactor = initialZoom
+            try setZoomOnDevice(initialZoom, animated: false)
+        } catch {
+            logger.error(message: "카메라 전환 실패: \(error)")
+            errorMessage = "카메라 전환에 실패했습니다."
+            throw error
+        }
+    }
+
+    public func setZoom(_ factor: CGFloat, animated: Bool) throws {
+        let clamped = min(max(factor, minZoomFactor), maxZoomFactor)
+        currentZoomFactor = clamped
+        baseZoomFactor = clamped
+        try setZoomOnDevice(clamped, animated: animated)
+    }
+
+    public func setZoomFromPinch(_ magnification: CGFloat) throws {
+        guard !isFrontCamera else { return }
+        let newFactor = baseZoomFactor * magnification
+        let clamped = min(max(newFactor, minZoomFactor), maxZoomFactor)
+        guard clamped != currentZoomFactor else { return }
+        currentZoomFactor = clamped
+        try setZoomOnDevice(clamped, animated: false)
+    }
+
+    public func endPinchZoom() {
+        guard !isFrontCamera else { return }
+        baseZoomFactor = currentZoomFactor
+    }
+
+    public func toggleSelfieZoom() {
+        let newFactor: CGFloat = currentZoomFactor <= 1.0 ? Self.selfieCloseUpZoom : 1.0
+        currentZoomFactor = newFactor
+        baseZoomFactor = newFactor
+        do {
+            try setZoomOnDevice(newFactor, animated: true)
+        } catch {
+            logger.warning(message: "셀피 줌 전환 실패: \(error)")
+        }
+    }
+
+    // MARK: - Session Access (프리뷰용)
+
+    public func getAVCaptureSession() -> AVCaptureSession {
+        session
+    }
+}
+
+// MARK: - Private
+
+private extension CameraController {
+    static let selfieCloseUpZoom: CGFloat = 1.3
+
+    func configureSession() throws {
         try sessionQueue.sync { [self] in
             try configureSessionOnQueue()
         }
     }
 
-    private func configureSessionOnQueue() throws {
+    func configureSessionOnQueue() throws {
         session.beginConfiguration()
         defer { session.commitConfiguration() }
 
@@ -83,7 +194,7 @@ private final class CameraClientImpl: NSObject, @unchecked Sendable {
         session.inputs.forEach { session.removeInput($0) }
         session.outputs.forEach { session.removeOutput($0) }
 
-        let position = state.withLock { $0.currentPosition }
+        let position = mutableState.withLock { $0.currentPosition }
         guard let device = cameraDevice(for: position),
               let input = try? AVCaptureDeviceInput(device: device) else {
             throw CameraError.deviceNotAvailable
@@ -112,7 +223,7 @@ private final class CameraClientImpl: NSObject, @unchecked Sendable {
         configureLensSwitching(for: device)
     }
 
-    private func configureLensSwitching(for device: AVCaptureDevice) {
+    func configureLensSwitching(for device: AVCaptureDevice) {
         lensSwitchObservation?.invalidate()
         lensSwitchObservation = nil
 
@@ -136,16 +247,17 @@ private final class CameraClientImpl: NSObject, @unchecked Sendable {
         }
     }
 
-    private func startRunning() {
+    func startRunning() {
         sessionQueue.async { [self] in
             guard !session.isRunning else { return }
             session.startRunning()
+            DispatchQueue.main.async { self.isSessionRunning = true }
         }
     }
 
-    private func stopAndReset() {
+    func stopAndReset() {
         sessionQueue.sync { [self] in
-            state.withLock {
+            mutableState.withLock {
                 $0.currentPosition = .back
                 $0.flashMode = .off
             }
@@ -153,19 +265,27 @@ private final class CameraClientImpl: NSObject, @unchecked Sendable {
             guard session.isRunning else { return }
             teardownSession()
         }
+
+        DispatchQueue.main.async { [self] in
+            isFlashOn = false
+            isFrontCamera = false
+            currentZoomFactor = 1.0
+            baseZoomFactor = 1.0
+            isSessionRunning = false
+        }
     }
 
-    private func stopRunning() {
+    func stopRunning() {
         sessionQueue.async { [self] in
             guard session.isRunning else { return }
             teardownSession()
         }
     }
 
-    private func teardownSession() {
-        let pendingContinuation = state.withLock { mutableState -> CheckedContinuation<CapturedPhoto, Error>? in
-            let result = mutableState.photoContinuation
-            mutableState.photoContinuation = nil
+    func teardownSession() {
+        let pendingContinuation = mutableState.withLock { state -> CheckedContinuation<CapturedResult, Error>? in
+            let result = state.photoContinuation
+            state.photoContinuation = nil
             return result
         }
         pendingContinuation?.resume(throwing: CameraError.sessionStopped)
@@ -181,14 +301,14 @@ private final class CameraClientImpl: NSObject, @unchecked Sendable {
 
     // MARK: - App Lifecycle
 
-    private func setupAppLifecycleObservers() {
+    func setupAppLifecycleObservers() {
         backgroundObserver = NotificationCenter.default.addObserver(
             forName: UIApplication.didEnterBackgroundNotification,
             object: nil,
             queue: .main
         ) { [weak self] _ in
             guard let self, self.session.isRunning else { return }
-            self.state.withLock { $0.wasRunningBeforeBackground = true }
+            self.mutableState.withLock { $0.wasRunningBeforeBackground = true }
             self.stopRunning()
         }
 
@@ -198,7 +318,7 @@ private final class CameraClientImpl: NSObject, @unchecked Sendable {
             queue: .main
         ) { [weak self] _ in
             guard let self else { return }
-            let wasRunning = self.state.withLock {
+            let wasRunning = self.mutableState.withLock {
                 let value = $0.wasRunningBeforeBackground
                 $0.wasRunningBeforeBackground = false
                 return value
@@ -213,35 +333,11 @@ private final class CameraClientImpl: NSObject, @unchecked Sendable {
         }
     }
 
-    // MARK: - Capture
+    // MARK: - Camera Switch
 
-    private func capturePhoto() async throws -> CapturedPhoto {
-        try await withCheckedThrowingContinuation { continuation in
-            let flashMode = self.state.withLock { mutableState -> AVCaptureDevice.FlashMode? in
-                guard mutableState.photoContinuation == nil else { return nil }
-                mutableState.photoContinuation = continuation
-                return mutableState.flashMode
-            }
-
-            guard let flashMode else {
-                continuation.resume(throwing: CameraError.captureAlreadyInProgress)
-                return
-            }
-
-            let settings = AVCapturePhotoSettings()
-            if photoOutput.supportedFlashModes.contains(flashMode) {
-                settings.flashMode = flashMode
-            }
-
-            photoOutput.capturePhoto(with: settings, delegate: self)
-        }
-    }
-
-    // MARK: - Switch Camera
-
-    private func switchCamera() throws {
+    func switchCameraOnQueue() throws {
         try sessionQueue.sync { [self] in
-            state.withLock {
+            mutableState.withLock {
                 $0.currentPosition = ($0.currentPosition == .back) ? .front : .back
             }
             try configureSessionOnQueue()
@@ -250,7 +346,7 @@ private final class CameraClientImpl: NSObject, @unchecked Sendable {
 
     // MARK: - Zoom
 
-    private func setZoomFactor(_ factor: CGFloat, animated: Bool) throws {
+    func setZoomOnDevice(_ factor: CGFloat, animated: Bool) throws {
         try sessionQueue.sync {
             guard let device = currentDevice() else {
                 throw CameraError.deviceNotAvailable
@@ -261,7 +357,10 @@ private final class CameraClientImpl: NSObject, @unchecked Sendable {
 
             let wideAngleBase = device.virtualDeviceSwitchOverVideoZoomFactors.first?.doubleValue ?? 1.0
             let deviceFactor = factor * wideAngleBase
-            let clamped = min(max(deviceFactor, device.minAvailableVideoZoomFactor), device.maxAvailableVideoZoomFactor)
+            let clamped = min(
+                max(deviceFactor, device.minAvailableVideoZoomFactor),
+                device.maxAvailableVideoZoomFactor
+            )
 
             if animated {
                 device.ramp(toVideoZoomFactor: clamped, withRate: 3.0)
@@ -273,7 +372,7 @@ private final class CameraClientImpl: NSObject, @unchecked Sendable {
 
     // MARK: - Helpers
 
-    private func cameraDevice(for position: AVCaptureDevice.Position) -> AVCaptureDevice? {
+    func cameraDevice(for position: AVCaptureDevice.Position) -> AVCaptureDevice? {
         if position == .back {
             let discovery = AVCaptureDevice.DiscoverySession(
                 deviceTypes: [.builtInTripleCamera, .builtInDualWideCamera, .builtInWideAngleCamera],
@@ -285,11 +384,11 @@ private final class CameraClientImpl: NSObject, @unchecked Sendable {
         return AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: position)
     }
 
-    private func currentDevice() -> AVCaptureDevice? {
+    func currentDevice() -> AVCaptureDevice? {
         (session.inputs.first as? AVCaptureDeviceInput)?.device
     }
 
-    private func cropToSquare(_ image: UIImage) -> UIImage {
+    func cropToSquare(_ image: UIImage) -> UIImage {
         guard let cgImage = image.cgImage else { return image }
 
         let size = min(cgImage.width, cgImage.height)
@@ -304,15 +403,15 @@ private final class CameraClientImpl: NSObject, @unchecked Sendable {
 
 // MARK: - AVCapturePhotoCaptureDelegate
 
-extension CameraClientImpl: AVCapturePhotoCaptureDelegate {
-    func photoOutput(
+extension CameraController: AVCapturePhotoCaptureDelegate {
+    public func photoOutput(
         _ output: AVCapturePhotoOutput,
         didFinishProcessingPhoto photo: AVCapturePhoto,
         error: Error?
     ) {
-        let continuation = state.withLock { mutableState -> CheckedContinuation<CapturedPhoto, Error>? in
-            let result = mutableState.photoContinuation
-            mutableState.photoContinuation = nil
+        let continuation = mutableState.withLock { state -> CheckedContinuation<CapturedResult, Error>? in
+            let result = state.photoContinuation
+            state.photoContinuation = nil
             return result
         }
         guard let continuation else { return }
@@ -338,22 +437,28 @@ extension CameraClientImpl: AVCapturePhotoCaptureDelegate {
             return
         }
 
-        let position = state.withLock { $0.currentPosition }
+        let position = mutableState.withLock { $0.currentPosition }
         let device = currentDevice()
-        let capturedPhoto = CapturedPhoto(
+        let capturedResult = CapturedResult(
             imageData: squareData,
             capturedAt: Date(),
             cameraPosition: position == .front ? .front : .back,
             zoomLevel: Double(device?.videoZoomFactor ?? 1.0)
         )
 
-        continuation.resume(returning: capturedPhoto)
+        continuation.resume(returning: capturedResult)
     }
+}
+
+// MARK: - Notification
+
+extension Notification.Name {
+    static let cameraLensSwitched = Notification.Name("CameraLensSwitched")
 }
 
 // MARK: - CameraError
 
-private enum CameraError: Error {
+public enum CameraError: Error {
     case deviceNotAvailable
     case cannotAddInput
     case cannotAddOutput

@@ -17,10 +17,11 @@ private extension Module {
     var dependentModules: [Module] {
         switch self {
         case .app: [.presentation, .data]
-        case .presentation: [.domain, .designSystem]
+        case .presentation: [.domain, .designSystem, .camera]
         case .domain: [.core]
         case .data: [.domain, .core]
         case .designSystem: [.core]
+        case .camera: [.core]
         default: []
         }
     }
@@ -38,6 +39,7 @@ private extension Module {
             .firebaseRemoteConfig
         ]
         case .core: [.dependencies]
+        case .camera: []
         default: []
         }
     }
@@ -50,7 +52,7 @@ private extension Module {
     }
 }
 
-private extension ExternalModule {
+extension ExternalModule {
     var dependency: TargetDependency {
         TargetDependency.external(name: name)
     }

@@ -14,6 +14,7 @@ public struct MainFeature {
     public struct State: Equatable {
         public var tab: Tab = .home
         var home: HomeFeature.State = .init()
+        @Presents var missionRecord: MissionRecordFeature.State?
 
         public init() {}
     }
@@ -22,6 +23,7 @@ public struct MainFeature {
         case onAppear
         case binding(BindingAction<State>)
         case home(HomeFeature.Action)
+        case missionRecord(PresentationAction<MissionRecordFeature.Action>)
     }
 
     @Dependency(\.logger) var logger
@@ -35,24 +37,34 @@ public struct MainFeature {
             HomeFeature()
         }
 
-        Reduce { _, action in
+        Reduce { state, action in
             switch action {
             case .onAppear:
                 // TODO: 로깅 테스트용 호출입니다. 추후 제거부탁드립니다.
                 logger.debug(message: "MainView did appear")
                 return .none
 
-            case .home(.delegate(.navigateToMissionCamera)):
-                // TODO: 카메라 화면(미션 기록하기) 페이지 이동 - @minkyo
+            case let .home(.delegate(.navigateToMissionCamera(_, title, _))):
+                state.missionRecord = MissionRecordFeature.State(missionTitle: title)
                 return .none
 
             case .home(.delegate(.navigateToMissionTab)):
                 // TODO: 미션 추천 페이지 이동 - @minkyo
                 return .none
 
+            case .missionRecord(.presented(.delegate(.dismiss))):
+                state.missionRecord = nil
+                return .none
+
+            case .missionRecord:
+                return .none
+
             case .home, .binding:
                 return .none
             }
+        }
+        .ifLet(\.$missionRecord, action: \.missionRecord) {
+            MissionRecordFeature()
         }
     }
 }

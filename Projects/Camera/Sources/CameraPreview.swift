@@ -1,30 +1,33 @@
 //
-//  CameraPreviewView.swift
-//  Presentation
+//  CameraPreview.swift
+//  Camera
 //
-//  Created by 진준호 on 5/4/26.
+//  Created by 진준호 on 5/12/26.
 //  Copyright © 2026 Orange. All rights reserved.
 //
 
 import AVFoundation
-import Domain
 import SwiftUI
 import UIKit
 
-struct CameraPreviewView: UIViewRepresentable {
-    let session: AVCaptureSession
+public struct CameraPreview: UIViewRepresentable {
+    private let session: AVCaptureSession
 
-    func makeUIView(context: Context) -> PreviewUIView {
+    public init(controller: CameraController) {
+        self.session = controller.getAVCaptureSession()
+    }
+
+    public func makeUIView(context: Context) -> PreviewUIView {
         let view = PreviewUIView()
         view.previewLayer.session = session
         view.previewLayer.videoGravity = .resizeAspectFill
         return view
     }
 
-    func updateUIView(_ uiView: PreviewUIView, context: Context) {}
+    public func updateUIView(_ uiView: PreviewUIView, context: Context) {}
 }
 
-final class PreviewUIView: UIView {
+public final class PreviewUIView: UIView {
     private let transitionOverlay: UIView = {
         let view = UIView()
         view.backgroundColor = .black
@@ -35,11 +38,11 @@ final class PreviewUIView: UIView {
 
     private var lensSwitchObserver: NSObjectProtocol?
 
-    override class var layerClass: AnyClass {
+    override public class var layerClass: AnyClass {
         AVCaptureVideoPreviewLayer.self
     }
 
-    var previewLayer: AVCaptureVideoPreviewLayer {
+    public var previewLayer: AVCaptureVideoPreviewLayer {
         guard let preview = layer as? AVCaptureVideoPreviewLayer else {
             assertionFailure("layerClass must be AVCaptureVideoPreviewLayer")
             return AVCaptureVideoPreviewLayer()
@@ -47,16 +50,15 @@ final class PreviewUIView: UIView {
         return preview
     }
 
-    override init(frame: CGRect) {
+    override public init(frame: CGRect) {
         super.init(frame: frame)
         addSubview(transitionOverlay)
         setupObserver()
     }
 
+    @available(*, unavailable)
     required init?(coder: NSCoder) {
-        super.init(coder: coder)
-        addSubview(transitionOverlay)
-        setupObserver()
+        fatalError("init(coder:) has not been implemented")
     }
 
     deinit {
@@ -65,7 +67,7 @@ final class PreviewUIView: UIView {
         }
     }
 
-    override func layoutSubviews() {
+    override public func layoutSubviews() {
         super.layoutSubviews()
         transitionOverlay.frame = bounds
     }

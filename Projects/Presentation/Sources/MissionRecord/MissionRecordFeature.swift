@@ -6,6 +6,7 @@
 //  Copyright © 2026 Orange. All rights reserved.
 //
 
+import Camera
 import ComposableArchitecture
 import Foundation
 
@@ -17,7 +18,7 @@ public struct MissionRecordFeature {
         var selectedImageData: Data?
         var memo: String = ""
         var isSubmitting: Bool = false
-        var showCamera: Bool = false
+        @Presents var camera: CameraFeature.State?
 
         public init(missionTitle: String) {
             self.missionTitle = missionTitle
@@ -31,6 +32,7 @@ public struct MissionRecordFeature {
         case cameraButtonTapped
         case imageSelected(Data?)
         case submitButtonTapped
+        case camera(PresentationAction<CameraFeature.Action>)
     }
 
     public enum Delegate {
@@ -43,7 +45,7 @@ public struct MissionRecordFeature {
     public var body: some ReducerOf<Self> {
         BindingReducer()
 
-        Reduce { state, action in
+        Reduce<State, Action> { state, action in
             switch action {
             case .binding:
                 return .none
@@ -52,7 +54,9 @@ public struct MissionRecordFeature {
                 return .send(.delegate(.dismiss))
 
             case .cameraButtonTapped:
-                state.showCamera = true
+                state.camera = CameraFeature.State(
+                    overlayLabel: state.missionTitle
+                )
                 return .none
 
             case let .imageSelected(data):
@@ -65,9 +69,24 @@ public struct MissionRecordFeature {
                     memo: state.memo
                 )))
 
+            case let .camera(.presented(.delegate(.didCapture(result)))):
+                state.selectedImageData = result.imageData
+                state.camera = nil
+                return .none
+
+            case .camera(.presented(.delegate(.didCancel))):
+                state.camera = nil
+                return .none
+
+            case .camera:
+                return .none
+
             case .delegate:
                 return .none
             }
+        }
+        .ifLet(\.$camera, action: \.camera) {
+            CameraFeature()
         }
     }
 }

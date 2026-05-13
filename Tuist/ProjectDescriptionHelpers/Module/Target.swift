@@ -92,11 +92,25 @@ extension Module {
             product: .app,
             bundleId: "\(bundleID)Demo",
             deploymentTargets: ProjectInfo.deploymentTargets,
-            infoPlist: .demo,
+            infoPlist: demoInfoPlist,
             buildableFolders: ["Demo/Sources"],
-            dependencies: [.target(implements)],
+            dependencies: [.target(implements)] + demoDependencies,
             settings: .settings(configurations: .default)
         )
+    }
+
+    private var demoInfoPlist: InfoPlist {
+        switch self {
+        case .camera: .cameraDemo
+        default: .demo
+        }
+    }
+
+    private var demoDependencies: [TargetDependency] {
+        switch self {
+        case .camera: [ExternalModule.composableArchitecture.dependency]
+        default: []
+        }
     }
 }
 
@@ -104,7 +118,7 @@ private extension Module {
     var product: Product {
         switch self {
         case .app: .app
-        case .presentation, .data, .designSystem, .domain, .core: .staticFramework
+        case .presentation, .data, .designSystem, .domain, .core, .camera: .staticFramework
         }
     }
 
@@ -123,6 +137,16 @@ private extension InfoPlist {
             "UISupportedInterfaceOrientations": .array([
                 .string("UIInterfaceOrientationPortrait"),
             ])
+        ]
+    )
+
+    static let cameraDemo: InfoPlist = .extendingDefault(
+        with: [
+            "UILaunchScreen": .dictionary([:]),
+            "UISupportedInterfaceOrientations": .array([
+                .string("UIInterfaceOrientationPortrait"),
+            ]),
+            "NSCameraUsageDescription": .string("카메라 촬영을 위해 접근 권한이 필요합니다."),
         ]
     )
 }
