@@ -21,27 +21,40 @@ public struct MissionRecordView: View {
     }
 
     public var body: some View {
-        VStack(spacing: 0) {
-            navigationBar
+        ZStack {
+            VStack(spacing: 0) {
+                navigationBar
 
-            ScrollView {
-                VStack(spacing: 24) {
-                    missionTitleCard
-                    photoArea
-                    memoSection
+                ScrollView {
+                    VStack(spacing: 24) {
+                        missionTitleCard
+                        photoArea
+                        memoSection
+                    }
+                    .padding(.horizontal, 20)
+                    .padding(.top, 16)
+                    .padding(.bottom, 120)
                 }
-                .padding(.horizontal, 20)
-                .padding(.top, 16)
-                .padding(.bottom, 120)
+                .scrollDismissesKeyboard(.interactively)
+
+                Spacer()
+
+                submitButton
             }
-            .scrollDismissesKeyboard(.interactively)
+            .background(Color.gray50)
+            .allowsHitTesting(store.completionModal == nil)
+            .accessibilityHidden(store.completionModal != nil)
 
-            Spacer()
-
-            submitButton
+            if store.completionModal != nil {
+                completionModal
+            }
         }
-        .background(Color.gray50)
         .navigationBarBackButtonHidden(true)
+        .fullScreenCover(
+            item: $store.scope(state: \.camera, action: \.camera)
+        ) { cameraStore in
+            CameraView(store: cameraStore)
+        }
     }
 }
 
@@ -99,11 +112,27 @@ private extension MissionRecordView {
 
             if let imageData = store.selectedImageData,
                let uiImage = UIImage(data: imageData) {
-                Image(uiImage: uiImage)
-                    .resizable()
-                    .scaledToFill()
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                Color.clear
+                    .overlay {
+                        Image(uiImage: uiImage)
+                            .resizable()
+                            .scaledToFill()
+                    }
                     .clipShape(.rect(cornerRadius: .radius16))
+                    .overlay(alignment: .topTrailing) {
+                        Button {
+                            store.send(.imageDeleteButtonTapped)
+                        } label: {
+                            Image(systemName: "xmark")
+                                .font(.system(size: 14, weight: .bold))
+                                .foregroundStyle(Color.monoWhite)
+                                .frame(width: 32, height: 32)
+                                .background(Color.gray700)
+                                .clipShape(Circle())
+                        }
+                        .padding(12)
+                        .accessibilityLabel("사진 삭제")
+                    }
             } else {
                 photoPlaceholder
             }
@@ -189,6 +218,11 @@ private extension MissionRecordView {
 // MARK: - Submit Button
 
 private extension MissionRecordView {
+    var isSubmitEnabled: Bool {
+        store.selectedImageData != nil && !store.isSubmitting
+            && !store.memo.trimmingCharacters(in: .whitespaces).isEmpty
+    }
+
     var submitButton: some View {
         Button {
             store.send(.submitButtonTapped)
@@ -198,12 +232,48 @@ private extension MissionRecordView {
                 .foregroundStyle(Color.monoWhite)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 16)
-                .background(Color.gray400)
+                .background(isSubmitEnabled ? Color.gray700 : Color.gray400)
                 .clipShape(RoundedRectangle(cornerRadius: .radius12))
         }
-        .disabled(store.isSubmitting)
+        .disabled(!isSubmitEnabled)
         .padding(.horizontal, 20)
         .padding(.bottom, 36)
+    }
+}
+
+// MARK: - Completion Modal
+
+private extension MissionRecordView {
+    var completionModal: some View {
+        ZStack {
+            Color.black.opacity(0.6)
+                .ignoresSafeArea()
+                .onTapGesture {}
+
+            VStack(spacing: 24) {
+                Text("기록이 저장되었어요")
+                    .font(.body1Medium)
+                    .foregroundStyle(Color.gray900)
+
+                Button {
+                    store.send(.completionModal(.presented(.confirmTapped)))
+                } label: {
+                    Text("확인")
+                        .font(.body1Medium)
+                        .foregroundStyle(Color.monoWhite)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 16)
+                        .background(Color.gray700)
+                        .clipShape(.rect(cornerRadius: .radius12))
+                }
+            }
+            .padding(24)
+            .background(Color.monoWhite)
+            .clipShape(.rect(cornerRadius: .radius12))
+            .padding(.horizontal, 40)
+        }
+        .transition(.opacity)
+        .animation(.easeInOut(duration: 0.2), value: store.completionModal != nil)
     }
 }
 
