@@ -14,7 +14,7 @@ public struct CameraPreview: UIViewRepresentable {
     private let session: AVCaptureSession
 
     public init(controller: CameraController) {
-        self.session = controller.getAVCaptureSession()
+        self.session = controller.captureSession
     }
 
     public func makeUIView(context: Context) -> PreviewUIView {
@@ -58,7 +58,8 @@ public final class PreviewUIView: UIView {
 
     @available(*, unavailable)
     required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
+        assertionFailure("init(coder:) has not been implemented")
+        return nil
     }
 
     deinit {

@@ -9,6 +9,7 @@
 import AVFoundation
 import Core
 import Observation
+import os
 import UIKit
 
 @Observable
@@ -40,6 +41,14 @@ public final class CameraController: NSObject, @unchecked Sendable {
     private let photoOutput = AVCapturePhotoOutput()
 
     private struct MutableState {
+        enum SessionPhase {
+            case idle
+            case configuring
+            case running
+            case stopping
+        }
+
+        var sessionPhase: SessionPhase = .idle
         var currentPosition: AVCaptureDevice.Position = .back
         var flashMode: AVCaptureDevice.FlashMode = .off
         var photoContinuation: CheckedContinuation<CapturedResult, Error>?
@@ -53,7 +62,7 @@ public final class CameraController: NSObject, @unchecked Sendable {
 
     // MARK: - Init
 
-    public override init() {
+    override public init() {
         super.init()
         setupAppLifecycleObservers()
     }
@@ -169,7 +178,7 @@ public final class CameraController: NSObject, @unchecked Sendable {
 
     // MARK: - Session Access (프리뷰용)
 
-    public func getAVCaptureSession() -> AVCaptureSession {
+    public var captureSession: AVCaptureSession {
         session
     }
 }
@@ -181,7 +190,34 @@ private extension CameraController {
 
     func configureSession() throws {
         try sessionQueue.sync { [self] in
+            try configureSessionGuarded()
+        }
+    }
+
+    @discardableResult
+    func configureSessionGuarded() throws -> Bool {
+        let shouldProceed = mutableState.withLock { state -> Bool in
+            switch state.sessionPhase {
+            case .idle, .running:
+                state.sessionPhase = .configuring
+                return true
+            case .configuring, .stopping:
+                return false
+            }
+        }
+
+        guard shouldProceed else {
+            logger.warning(message: "세션 구성 건너뜀: 이미 진행 중인 작업 있음")
+            return false
+        }
+
+        do {
             try configureSessionOnQueue()
+            mutableState.withLock { $0.sessionPhase = .running }
+            return true
+        } catch {
+            mutableState.withLock { $0.sessionPhase = .idle }
+            throw error
         }
     }
 
@@ -257,13 +293,17 @@ private extension CameraController {
 
     func stopAndReset() {
         sessionQueue.sync { [self] in
-            mutableState.withLock {
-                $0.currentPosition = .back
-                $0.flashMode = .off
+            let shouldStop = mutableState.withLock { state -> Bool in
+                guard state.sessionPhase == .running else { return false }
+                state.sessionPhase = .stopping
+                state.currentPosition = .back
+                state.flashMode = .off
+                return true
             }
 
-            guard session.isRunning else { return }
+            guard shouldStop else { return }
             teardownSession()
+            mutableState.withLock { $0.sessionPhase = .idle }
         }
 
         DispatchQueue.main.async { [self] in
@@ -277,8 +317,15 @@ private extension CameraController {
 
     func stopRunning() {
         sessionQueue.async { [self] in
-            guard session.isRunning else { return }
+            let shouldStop = mutableState.withLock { state -> Bool in
+                guard state.sessionPhase == .running else { return false }
+                state.sessionPhase = .stopping
+                return true
+            }
+
+            guard shouldStop else { return }
             teardownSession()
+            mutableState.withLock { $0.sessionPhase = .idle }
         }
     }
 
@@ -307,7 +354,9 @@ private extension CameraController {
             object: nil,
             queue: .main
         ) { [weak self] _ in
-            guard let self, self.session.isRunning else { return }
+            guard let self else { return }
+            let isRunning = self.mutableState.withLock { $0.sessionPhase == .running }
+            guard isRunning else { return }
             self.mutableState.withLock { $0.wasRunningBeforeBackground = true }
             self.stopRunning()
         }
@@ -325,9 +374,20 @@ private extension CameraController {
             }
             guard wasRunning else { return }
             self.sessionQueue.async { [self] in
-                guard (try? self.configureSessionOnQueue()) != nil else { return }
-                if !self.session.isRunning {
-                    self.session.startRunning()
+                do {
+                    try self.configureSessionGuarded()
+                    if !self.session.isRunning {
+                        self.session.startRunning()
+                    }
+                    DispatchQueue.main.async {
+                        self.isSessionRunning = true
+                    }
+                } catch {
+                    self.logger.error(message: "포그라운드 복귀 시 세션 복구 실패: \(error)")
+                    DispatchQueue.main.async {
+                        self.isSessionRunning = false
+                        self.errorMessage = "카메라를 다시 시작할 수 없습니다."
+                    }
                 }
             }
         }
@@ -340,7 +400,13 @@ private extension CameraController {
             mutableState.withLock {
                 $0.currentPosition = ($0.currentPosition == .back) ? .front : .back
             }
-            try configureSessionOnQueue()
+            let configured = try configureSessionGuarded()
+            if !configured {
+                mutableState.withLock {
+                    $0.currentPosition = ($0.currentPosition == .back) ? .front : .back
+                }
+                throw CameraError.sessionBusy
+            }
         }
     }
 
@@ -465,4 +531,5 @@ public enum CameraError: Error {
     case captureDataMissing
     case captureAlreadyInProgress
     case sessionStopped
+    case sessionBusy
 }
