@@ -57,17 +57,17 @@ struct SolarTermCardView: View {
     }
 }
 
-private func formattedDate(_ dateString: String) -> String {
-    let parts = dateString.split(separator: "-")
-    guard parts.count == 3 else { return dateString }
-    return "\(parts[1]).\(parts[2])"
-}
+extension SolarTermCardView {
+    func formattedDate(_ dateString: String) -> String {
+        let parts = dateString.split(separator: "-")
+        guard parts.count == 3 else { return dateString }
+        return "\(parts[1]).\(parts[2])"
+    }
 
-// TODO: - 멘트 형식 확정(\n포함 받기) 후 추후 삭제
-private func descriptionLines(_ description: String) -> [String] {
-    let parts = description.components(separatedBy: ", ")
-    guard parts.count == 2 else { return [description] }
-    return [parts[0] + ",", parts[1]]
+    func descriptionLines(_ description: String) -> [String] {
+        let replace = description.replacingOccurrences(of: ", ", with: ",\n")
+        return replace.split(separator: "\n").map { String($0) }
+    }
 }
 
 private struct MissionCardView: View {
