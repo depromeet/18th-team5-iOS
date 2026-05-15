@@ -13,6 +13,7 @@ import SwiftUI
 
 public struct HomeView: View {
     @Bindable private var store: StoreOf<HomeFeature>
+    @State private var scrollOffset: CGFloat = 0
 
     public init(store: StoreOf<HomeFeature>) {
         self.store = store
@@ -24,10 +25,22 @@ public struct HomeView: View {
                 .padding(.top, 76)
                 .padding(.horizontal, 20)
                 .padding(.bottom, 40)
+                .overlay(alignment: .top) {
+                    GeometryReader { geo in
+                        Color.clear.preference(
+                            key: ScrollOffsetKey.self,
+                            value: -geo.frame(in: .scrollView).origin.y
+                        )
+                    }
+                    .frame(height: 0)
+                }
+        }
+        .onPreferenceChange(ScrollOffsetKey.self) { newValue in
+            scrollOffset = newValue
         }
         .scrollIndicators(.hidden)
         .background(background)
-        .overlay(alignment: .top) { HomeHeaderView() }
+        .overlay(alignment: .top) { HomeHeaderView(scrollOffset: scrollOffset) }
         .onAppear { store.send(.onAppear) }
     }
 
@@ -86,12 +99,15 @@ public struct HomeView: View {
     }
 
     private var background: some View {
-        LinearGradient(
-            colors: [Color(hex: 0xECFBF3), .white],
-            startPoint: .topTrailing,
-            endPoint: .bottomLeading
-        )
-        .ignoresSafeArea()
+        LinearGradient.onboardingBackground
+            .ignoresSafeArea()
+    }
+}
+
+private struct ScrollOffsetKey: PreferenceKey {
+    static var defaultValue: CGFloat = 0
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
+        value = nextValue()
     }
 }
 
