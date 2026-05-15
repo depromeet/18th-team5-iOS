@@ -10,6 +10,12 @@ import DesignSystem
 import SwiftUI
 
 struct HomeHeaderView: View {
+    var scrollOffset: CGFloat = 0
+
+    private var showBlur: Bool {
+        scrollOffset > 1
+    }
+
     var body: some View {
         HStack {
             Image.peaktimeLogo
@@ -28,35 +34,23 @@ struct HomeHeaderView: View {
         .padding(.vertical, 16)
         .frame(maxWidth: .infinity)
         .background(alignment: .top) {
-            BackgroundBlurView()
-                .overlay(Color.white.opacity(0.1))
-                .mask(
-                    LinearGradient(
-                        stops: [
-                            .init(color: .black, location: 0),
-                            .init(color: .black, location: 0.93),
-                            .init(color: .clear, location: 1)
-                        ],
-                        startPoint: .top,
-                        endPoint: .bottom
-                    )
-                )
-                .ignoresSafeArea(edges: .top)
+            if showBlur {
+                BackgroundBlurView()
+                    .ignoresSafeArea(edges: .top)
+                    .transition(.opacity)
+            }
         }
+        .animation(.easeInOut(duration: 0.2), value: showBlur)
     }
 }
 
 #Preview {
     ZStack {
-        LinearGradient(
-            colors: [Color(hex: 0xECFBF3), .white],
-            startPoint: .topTrailing,
-            endPoint: .bottomLeading
-        )
-        .ignoresSafeArea()
+        LinearGradient.onboardingBackground
+            .ignoresSafeArea()
 
         ScrollView {
-            HomeHeaderView()
+            HomeHeaderView(scrollOffset: 0)
             Spacer()
         }
     }
