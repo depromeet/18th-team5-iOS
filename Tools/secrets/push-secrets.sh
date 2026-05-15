@@ -50,8 +50,6 @@ if ! gcloud secrets describe "$secrets_archive_name" >/dev/null 2>&1; then
         exit 0
     fi
 
-    ensure_gh_ready
-
     gcloud secrets create "$secrets_archive_name" \
         --replication-policy="automatic" \
         --data-file="$local_archive_path"
@@ -94,8 +92,6 @@ if ! confirm "로컬 Secrets/ 폴더를 Google Secret Manager의 새 버전으�
     echo "push를 취소했습니다."
     exit 0
 fi
-
-ensure_gh_ready
 
 gcloud secrets versions add "$secrets_archive_name" \
     --data-file="$local_archive_path"
