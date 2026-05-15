@@ -37,3 +37,9 @@ public extension Text {
         modifier(FontViewModifier(family: .pretendard, typography: typography))
     }
 }
+
+public extension View {
+    func font(_ typography: Typography) -> some View {
+        modifier(FontViewModifier(family: .pretendard, typography: typography))
+    }
+}

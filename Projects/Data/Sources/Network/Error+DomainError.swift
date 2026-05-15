@@ -41,6 +41,21 @@ extension NetworkError {
     }
 }
 
+// MARK: - ServerDomainError → DomainError
+
+extension ServerDomainError {
+    func toDomainError() -> DomainError {
+        switch self {
+        case .common400:
+            return .invalidRequest(message)
+        case .common401, .auth401, .auth401Expired, .auth401RT, .auth401Mismatch:
+            return .unauthorized
+        case let .unknown(code, message):
+            return .unknown("[\(code)] \(message)")
+        }
+    }
+}
+
 // MARK: - DTOMappingError → DomainError
 
 extension DTOMappingError {
@@ -58,6 +73,9 @@ extension DTOMappingError {
 func mapToDomainError(_ error: Error) -> DomainError {
     if let domainError = error as? DomainError {
         return domainError
+    }
+    if let serverError = error as? ServerDomainError {
+        return serverError.toDomainError()
     }
     if let networkError = error as? NetworkError {
         return networkError.toDomainError()

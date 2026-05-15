@@ -35,7 +35,7 @@ private extension MainView {
     func tabView(tab: MainFeature.Tab) -> some View {
         switch tab {
         case .home:
-            Text("홈")
+            HomeView(store: store.scope(state: \.home, action: \.home))
         case .archive:
             Text("아카이빙")
         case .myPage:
