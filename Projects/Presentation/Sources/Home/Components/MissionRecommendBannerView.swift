@@ -48,6 +48,7 @@ struct MissionRecommendBannerView: View {
             RoundedRectangle(cornerRadius: .radius16)
                 .fill(
                     RadialGradient(
+                        // TODO: 디자인시스템에 맞춰 추후 수정 - @minkyo
                         gradient: Gradient(stops: [
                             .init(color: Color(hex: 0xECFBF3), location: 0),
                             .init(color: Color(hex: 0xF3F4F5), location: 0.36)
