@@ -38,7 +38,7 @@ struct SeasonRecordSectionView: View {
 
             // 제철 기록 사진
             PhotoCollageView(photoURLs: seasonRecord.photoURL)
-                .frame(height: 192)
+                .aspectRatio(335.0 / 192.0, contentMode: .fit)
 
             // 기록 횟수 배지
             HStack(spacing: 4) {
@@ -66,21 +66,23 @@ private struct PhotoCollageView: View {
 
     var body: some View {
         GeometryReader { geo in
+            let w = geo.size.width
+
             ZStack {
                 // 왼쪽 큰 사진 (회전 -6°)
-                photoItem(index: 0, size: 160)
+                photoItem(index: 0, size: w * 0.4776)
                     .rotationEffect(.degrees(-6))
-                    .position(x: 87.92, y: 87.92)
+                    .position(x: w * 0.2625, y: w * 0.2625)
 
                 // 오른쪽 사진 (회전 4°, 오른쪽 정렬)
-                photoItem(index: 1, size: 140)
+                photoItem(index: 1, size: w * 0.4179)
                     .rotationEffect(.degrees(4))
-                    .position(x: geo.size.width - 75.05, y: 94.43)
+                    .position(x: w * 0.7761, y: w * 0.2828)
 
                 // 가운데 사진 (회전 2°)
-                photoItem(index: 2, size: 112)
+                photoItem(index: 2, size: w * 0.3343)
                     .rotationEffect(.degrees(2))
-                    .position(x: 183.92, y: 133.64)
+                    .position(x: w * 0.5490, y: w * 0.3989)
             }
         }
     }
