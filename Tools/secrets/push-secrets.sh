@@ -43,7 +43,9 @@ push_github_actions_secret() {
     echo "GitHub Actions Secret '${github_actions_secret_name}'를 갱신했습니다."
 }
 
-if ! gcloud secrets describe "$secrets_archive_name" >/dev/null 2>&1; then
+if ! gcloud secrets describe "$secrets_archive_name" \
+    --project="$project_id" \
+    >/dev/null 2>&1; then
     echo "Secret Manager에 '${secrets_archive_name}'가 없습니다."
     if ! confirm "로컬 Secrets/ 폴더로 '${secrets_archive_name}'를 생성하고 GitHub Actions Secret도 갱신할까요?"; then
         echo "push를 취소했습니다."
@@ -51,6 +53,7 @@ if ! gcloud secrets describe "$secrets_archive_name" >/dev/null 2>&1; then
     fi
 
     gcloud secrets create "$secrets_archive_name" \
+        --project="$project_id" \
         --replication-policy="automatic" \
         --data-file="$local_archive_path"
     echo "Secrets archive를 Google Secret Manager에 생성했습니다."
@@ -60,6 +63,7 @@ if ! gcloud secrets describe "$secrets_archive_name" >/dev/null 2>&1; then
 fi
 
 if ! gcloud secrets versions access latest \
+    --project="$project_id" \
     --secret="$secrets_archive_name" \
     --out-file="$latest_archive_path"; then
     echo "오류: Secret Manager에서 '${secrets_archive_name}' latest 버전을 읽지 못했습니다." >&2
@@ -94,6 +98,7 @@ if ! confirm "로컬 Secrets/ 폴더를 Google Secret Manager의 새 버전으�
 fi
 
 gcloud secrets versions add "$secrets_archive_name" \
+    --project="$project_id" \
     --data-file="$local_archive_path"
 echo "Secrets archive를 Google Secret Manager에 업로드했습니다."
 

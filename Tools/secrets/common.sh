@@ -167,16 +167,4 @@ ensure_gcloud_ready() {
         fi
     fi
 
-    local configured_project_id
-    configured_project_id="$(gcloud config get-value project 2>/dev/null || true)"
-    if [[ -z "$configured_project_id" || "$configured_project_id" == "(unset)" ]]; then
-        echo "gcloud project가 설정되어 있지 않아 ${project_id}로 설정합니다."
-        gcloud config set project "$project_id"
-        configured_project_id="$(gcloud config get-value project 2>/dev/null || true)"
-        if [[ "$configured_project_id" != "$project_id" ]]; then
-            echo "오류: gcloud project 설정에 실패했습니다." >&2
-            echo "실행 명령어: gcloud config set project ${project_id}" >&2
-            exit 1
-        fi
-    fi
 }

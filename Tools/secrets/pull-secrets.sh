@@ -15,6 +15,7 @@ trap 'rm -rf "$tmp_dir"' EXIT
 archive_path="${tmp_dir}/Secrets.tar.gz"
 
 gcloud secrets versions access latest \
+    --project="$project_id" \
     --secret="$secrets_archive_name" \
     --out-file="$archive_path"
 
