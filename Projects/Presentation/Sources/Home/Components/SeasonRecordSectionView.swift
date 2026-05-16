@@ -38,8 +38,7 @@ struct SeasonRecordSectionView: View {
 
             // 제철 기록 사진
             PhotoCollageView(photoURLs: seasonRecord.photoURL)
-                .frame(height: 192)
-                .padding()
+                .aspectRatio(335.0 / 192.0, contentMode: .fit)
 
             // 기록 횟수 배지
             HStack(spacing: 4) {
@@ -54,6 +53,7 @@ struct SeasonRecordSectionView: View {
                     .foregroundStyle(Color.gray600)
             }
             .frame(maxWidth: .infinity)
+            .padding(.horizontal, 20)
             .padding(.vertical, 14)
             .background(Color.gray100)
             .clipShape(RoundedRectangle(cornerRadius: .radius12))
@@ -65,23 +65,26 @@ private struct PhotoCollageView: View {
     let photoURLs: [URL]
 
     var body: some View {
-        ZStack(alignment: .leading) {
-            // 첫 번째 사진 (왼쪽, 살짝 아래)
-            photoItem(index: 0, size: 160)
-                .rotationEffect(.degrees(-6))
-                .offset(x: 0, y: 6)
+        GeometryReader { geo in
+            let w = geo.size.width
 
-            // 두 번째 사진 (가운데)
-            photoItem(index: 1, size: 140)
-                .rotationEffect(.degrees(4))
-                .offset(x: 200, y: 0)
+            ZStack {
+                // 왼쪽 큰 사진 (회전 -6°)
+                photoItem(index: 0, size: w * 0.4776)
+                    .rotationEffect(.degrees(-6))
+                    .position(x: w * 0.2625, y: w * 0.2625)
 
-            // 세 번째 사진 (오른쪽, 살짝 위)
-            photoItem(index: 2, size: 112)
-                .rotationEffect(.degrees(2))
-                .offset(x: 126, y: 56)
+                // 오른쪽 사진 (회전 4°, 오른쪽 정렬)
+                photoItem(index: 1, size: w * 0.4179)
+                    .rotationEffect(.degrees(4))
+                    .position(x: w * 0.7761, y: w * 0.2828)
+
+                // 가운데 사진 (회전 2°)
+                photoItem(index: 2, size: w * 0.3343)
+                    .rotationEffect(.degrees(2))
+                    .position(x: w * 0.5490, y: w * 0.3989)
+            }
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     private func photoItem(index: Int, size: CGFloat) -> some View {
