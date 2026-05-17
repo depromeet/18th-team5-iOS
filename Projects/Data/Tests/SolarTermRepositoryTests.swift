@@ -34,13 +34,8 @@ struct SolarTermRepositoryTests {
 
         // Then
         let sorted = result.sorted(by: { $0.startDate < $1.startDate })
-        for (index, info) in result.enumerated() {
-            if index < sorted.count - 1 {
-                let endDate = try #require(info.endDate)
-                #expect(info.startDate < endDate)
-            } else {
-                #expect(info.endDate == nil)
-            }
+        for info in sorted {
+            #expect(info.startDate < info.endDate)
         }
     }
 
