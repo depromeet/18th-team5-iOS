@@ -19,7 +19,7 @@ public enum SolarTermRepositoryImpl {
         SolarTermRepository(
             fetchSolarTerms: { year in
                 guard let url = Bundle.module.url(
-                    forResource: "solar_term_\(year)",
+                    forResource: "solar_term_\(year.rawValue)",
                     withExtension: "json"
                 )
                 else {

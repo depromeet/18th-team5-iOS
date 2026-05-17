@@ -12,7 +12,7 @@ import Foundation
 
 @DependencyClient
 public struct SolarTermRepository: Sendable {
-    public var fetchSolarTerms: @Sendable (_ year: Int) async throws -> [SolarTermInfo]
+    public var fetchSolarTerms: @Sendable (_ year: SolarTermYear) async throws -> [SolarTermInfo]
 }
 
 extension SolarTermRepository: TestDependencyKey {
