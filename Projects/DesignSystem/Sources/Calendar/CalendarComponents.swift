@@ -54,25 +54,6 @@ public struct CalendarHeaderView: View {
     }
 }
 
-// MARK: - WeekdayLabelRow
-
-public struct WeekdayLabelRow: View {
-    private let labels = ["월", "화", "수", "목", "금", "토", "일"]
-
-    public init() {}
-
-    public var body: some View {
-        HStack(spacing: 6) {
-            ForEach(labels, id: \.self) { label in
-                Text(label)
-                    .font(.caption2Medium)
-                    .foregroundStyle(Color.gray400)
-                    .frame(maxWidth: .infinity)
-            }
-        }
-    }
-}
-
 // MARK: - DayCell
 
 public struct DayCell: View {
