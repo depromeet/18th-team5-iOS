@@ -6,7 +6,7 @@
 //  Copyright © 2026 Orange. All rights reserved.
 //
 
-public enum SolarTerm: CaseIterable {
+public enum SolarTerm: String, CaseIterable {
     case ipchun
     case usu
     case gyeongchip

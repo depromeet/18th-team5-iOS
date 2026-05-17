@@ -33,8 +33,14 @@ struct SolarTermRepositoryTests {
         let result = try await sut.fetchSolarTerms(year)
 
         // Then
-        for info in result {
-            #expect(info.startDate < info.endDate)
+        let sorted = result.sorted(by: { $0.startDate < $1.startDate })
+        for (index, info) in result.enumerated() {
+            if index < sorted.count - 1 {
+                let endDate = try #require(info.endDate)
+                #expect(info.startDate < endDate)
+            } else {
+                #expect(info.endDate == nil)
+            }
         }
     }
 
@@ -47,8 +53,11 @@ struct SolarTermRepositoryTests {
         let result = try await sut.fetchSolarTerms(year)
 
         // Then
-        for i in 0 ..< (result.count - 1) {
-            #expect(result[i].endDate == result[i + 1].startDate)
+        let sorted = result.sorted(by: { $0.startDate < $1.startDate })
+        for i in 0 ..< sorted.count {
+            if i < sorted.count - 1 {
+                #expect(result[i].endDate == result[i + 1].startDate)
+            }
         }
     }
 }

@@ -3,7 +3,8 @@
 //  Data
 //
 //  Created by choijunios on 5/17/26.
-//  Copyright © 2026 Orange. All rights reserved.
+//
+// Copyright © 2026 Orange. All rights reserved.
 //
 
 import Dependencies
@@ -41,25 +42,25 @@ extension SolarTermFileDTO {
         let calendar = Calendar(identifier: .gregorian)
         guard let timezone = TimeZone(identifier: "Asia/Seoul") else { return [] }
 
+        let sortedTerms = terms.sorted { lhs, rhs in
+            if lhs.month != rhs.month { return lhs.month < rhs.month }
+            return lhs.day < rhs.day
+        }
         var infos: [SolarTermInfo] = []
 
-        for (index, entry) in terms.enumerated() {
-            guard let term = SolarTerm.fromID(entry.id),
+        for (index, entry) in sortedTerms.enumerated() {
+            guard let term = SolarTerm(rawValue: entry.id),
                   let startDate = Self.makeDate(year, entry.month, entry.day, calendar, timezone)
             else { continue }
 
-            let endDate: Date
-            if index + 1 < terms.count {
-                let next = terms[index + 1]
-                guard let nextDate = Self.makeDate(year, next.month, next.day, calendar, timezone)
+            var endDate: Date?
+            if index + 1 < sortedTerms.count {
+                let nextTerm = sortedTerms[index + 1]
+                guard let nextTermStartDate = Self.makeDate(year, nextTerm.month, nextTerm.day, calendar, timezone)
                 else { continue }
-                endDate = nextDate
-            } else {
-                guard let yearEnd = Self.makeEndOfYear(year, calendar, timezone)
-                else { continue }
-                endDate = yearEnd
-            }
 
+                endDate = nextTermStartDate
+            }
             infos.append(SolarTermInfo(term: term, startDate: startDate, endDate: endDate))
         }
 
@@ -99,13 +100,5 @@ extension SolarTermFileDTO {
             second: 59
         )
         return calendar.date(from: components)
-    }
-}
-
-// MARK: - SolarTerm ID Mapping
-
-private extension SolarTerm {
-    static func fromID(_ id: String) -> SolarTerm? {
-        allCases.first { String(describing: $0) == id }
     }
 }
