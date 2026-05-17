@@ -53,15 +53,35 @@ extension SolarTermFileDTO {
                   let startDate = Self.makeDate(year, entry.month, entry.day, calendar, timezone)
             else { continue }
 
-            var endDate: Date?
-            if index + 1 < sortedTerms.count {
+            let endDate: Date
+            if index == sortedTerms.endIndex - 1 {
+                // 올해의 마지막 절기의 경우 종료일을 다음년 첫날로 설정합니다.
+                guard let firstDayOfNextYear = Self.makeStartOfYear(
+                    year + 1,
+                    calendar,
+                    timezone
+                ) else { continue }
+                endDate = firstDayOfNextYear
+            } else {
                 let nextTerm = sortedTerms[index + 1]
-                guard let nextTermStartDate = Self.makeDate(year, nextTerm.month, nextTerm.day, calendar, timezone)
-                else { continue }
-
+                guard let nextTermStartDate = Self.makeDate(
+                    year,
+                    nextTerm.month,
+                    nextTerm.day,
+                    calendar,
+                    timezone
+                ) else { continue }
                 endDate = nextTermStartDate
             }
-            infos.append(SolarTermInfo(term: term, startDate: startDate, endDate: endDate))
+
+            infos.append(
+                SolarTermInfo(
+                    year: SolarTermYear(rawValue: year) ?? .y2026,
+                    term: term,
+                    startDate: startDate,
+                    endDate: endDate
+                )
+            )
         }
 
         return infos
@@ -84,7 +104,7 @@ extension SolarTermFileDTO {
         return calendar.date(from: components)
     }
 
-    private static func makeEndOfYear(
+    private static func makeStartOfYear(
         _ year: Int,
         _ calendar: Calendar,
         _ timezone: TimeZone
@@ -93,11 +113,11 @@ extension SolarTermFileDTO {
             calendar: calendar,
             timeZone: timezone,
             year: year,
-            month: 12,
-            day: 31,
-            hour: 23,
-            minute: 59,
-            second: 59
+            month: 1,
+            day: 1,
+            hour: 0,
+            minute: 0,
+            second: 0
         )
         return calendar.date(from: components)
     }
