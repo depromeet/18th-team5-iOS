@@ -8,7 +8,7 @@
 
 import Foundation
 
-public struct SolarTermInfo {
+public struct SolarTermInfo: Equatable {
     public let year: SolarTermYear
     public let term: SolarTerm
     public let startDate: Date
@@ -26,5 +26,7 @@ public struct SolarTermInfo {
         self.endDate = endDate
     }
 
-    public var dateRange: Range<Date> { startDate ..< endDate }
+    public var dateRange: Range<Date> {
+        startDate ..< endDate
+    }
 }
