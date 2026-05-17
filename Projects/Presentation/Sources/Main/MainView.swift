@@ -38,6 +38,8 @@ private extension MainView {
             HomeView(store: store.scope(state: \.home, action: \.home))
         case .archive:
             Text("아카이빙")
+        case .calendar:
+            CalendarView2(store: store.scope(state: \.calendar, action: \.calendar))
         case .myPage:
             Text("마이페이지")
         }
@@ -55,6 +57,7 @@ private extension MainFeature.Tab {
         switch self {
         case .home: Image(systemName: "house")
         case .archive: Image(systemName: "folder")
+        case .calendar: Image(systemName: "folder")
         case .myPage: Image(systemName: "person")
         }
     }
@@ -63,6 +66,7 @@ private extension MainFeature.Tab {
         switch self {
         case .home: "홈"
         case .archive: "아카이빙"
+        case .calendar: "캘린더"
         case .myPage: "마이페이지"
         }
     }

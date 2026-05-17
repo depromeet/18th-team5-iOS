@@ -14,6 +14,7 @@ public struct MainFeature {
     public struct State: Equatable {
         public var tab: Tab = .home
         var home: HomeFeature.State = .init()
+        var calendar: CalendarFeature2.State = .init()
 
         public init() {}
     }
@@ -22,6 +23,7 @@ public struct MainFeature {
         case onAppear
         case binding(BindingAction<State>)
         case home(HomeFeature.Action)
+        case calendar(CalendarFeature2.Action)
     }
 
     @Dependency(\.logger) var logger
@@ -33,6 +35,9 @@ public struct MainFeature {
 
         Scope(state: \.home, action: \.home) {
             HomeFeature()
+        }
+        Scope(state: \.calendar, action: \.calendar) {
+            CalendarFeature2()
         }
 
         Reduce { _, action in
@@ -52,6 +57,9 @@ public struct MainFeature {
 
             case .home, .binding:
                 return .none
+
+            default:
+                return .none
             }
         }
     }
@@ -61,6 +69,7 @@ public extension MainFeature {
     enum Tab: CaseIterable {
         case home
         case archive
+        case calendar
         case myPage
     }
 }
