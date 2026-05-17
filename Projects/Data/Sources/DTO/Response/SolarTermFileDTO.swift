@@ -1,5 +1,5 @@
 //
-//  SolarTermResponseDTO.swift
+//  SolarTermFileDTO.swift
 //  Data
 //
 //  Created by choijunios on 5/17/26.
