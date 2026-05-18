@@ -23,7 +23,7 @@ enum HomeEndpoint: APIEndpoint {
         case .card: .get
         }
     }
-    
+
     var requiresAuth: Bool {
         switch self {
         case .card: true
