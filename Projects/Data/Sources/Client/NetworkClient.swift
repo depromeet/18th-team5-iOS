@@ -7,6 +7,7 @@
 //
 
 import Alamofire
+import Core
 import Dependencies
 import DependenciesMacros
 import Foundation
@@ -80,13 +81,15 @@ extension NetworkClient: DependencyKey {
         endpoint: any APIEndpoint,
         emptyResponseCodes: Set<Int> = []
     ) async throws -> Data {
+        @Dependency(\.logger) var logger
         let urlRequest = try endpoint.asURLRequest()
         let interceptor: AuthInterceptor? = endpoint.requiresAuth ? .shared : nil
 
         do {
             return try await AF.request(urlRequest, interceptor: interceptor)
                 .validate { _, response, data in
-                    Self.validateResponse(response: response, data: data)
+                    logger.debug(message: logMessage(response, data))
+                    return Self.validateResponse(response: response, data: data)
                 }
                 .serializingData(emptyResponseCodes: emptyResponseCodes)
                 .value
@@ -122,6 +125,12 @@ extension NetworkClient: DependencyKey {
             }
             return .failure(NetworkError.requestFailed(statusCode: response.statusCode))
         }
+    }
+
+    private static func logMessage(_ response: URLResponse, _ data: Data?) -> String {
+        let urlString = response.url?.absoluteString ?? ""
+        let jsonString = data?.jsonString ?? ""
+        return "\n\n🟢[RESPONSE]\nURL: [\(urlString)]\n\(jsonString)\n"
     }
 }
 
