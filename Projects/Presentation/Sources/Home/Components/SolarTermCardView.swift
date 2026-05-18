@@ -22,13 +22,28 @@ struct SolarTermCardView: View {
 
             // 상단 텍스트 영역
             VStack(alignment: .leading, spacing: 12) {
-                Text("\(formattedDate(solarTerm.startDate)) - \(formattedDate(solarTerm.endDate))")
-                    .font(.caption1Semibold)
-                    .foregroundStyle(.white)
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 4)
-                    .background(Color.white.opacity(0.13))
-                    .clipShape(Capsule())
+                HStack {
+                    Text("\(formattedDate(solarTerm.startDate)) - \(formattedDate(solarTerm.endDate))")
+                        .font(.caption1Semibold)
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 4)
+                        .background(Color.white.opacity(0.13))
+                        .clipShape(Capsule())
+
+                    Spacer()
+
+                    Button(action: {}) {
+                        HStack {
+                            Text("더보기")
+                                .foregroundStyle(Color.white)
+                                .font(.body2Medium)
+                            Image.icArrowRightWhite
+                                .resizable()
+                                .frame(width: 24, height: 24)
+                        }
+                    }
+                }
 
                 VStack(alignment: .leading, spacing: 0) {
                     ForEach(descriptionLines(solarTerm.description), id: \.self) { line in

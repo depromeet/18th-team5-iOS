@@ -18,6 +18,7 @@ public struct HomeFeature {
         var seasonRecord: SeasonRecord = .mock
         var isLoading: Bool = false
         var hasError: Bool = false
+        @Presents var solarTermIntro: SolarTermIntroFeature.State?
 
         public init() {}
     }
@@ -29,6 +30,7 @@ public struct HomeFeature {
         case onMissionTap
         case onMissionRecommendTap
         case onRecordTap
+        case solarTermIntro(PresentationAction<SolarTermIntroFeature.Action>)
         case delegate(Delegate)
 
         public enum Delegate {
@@ -80,11 +82,19 @@ public struct HomeFeature {
                 return .send(.delegate(.navigateToMissionTab))
 
             case .onRecordTap:
+                // TODO: 팀원 절기 모델 merge 후 id 매칭 방식 변경 - @minkyo
+                state.solarTermIntro = SolarTermIntroFeature.State()
+                return .none
+
+            case .solarTermIntro:
                 return .none
 
             case .delegate:
                 return .none
             }
+        }
+        .ifLet(\.$solarTermIntro, action: \.solarTermIntro) {
+            SolarTermIntroFeature()
         }
     }
 }
