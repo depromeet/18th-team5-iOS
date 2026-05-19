@@ -12,8 +12,9 @@ import SwiftUI
 
 struct SolarTermCardView: View {
     let solarTerm: SolarTermCard
-    let mission: CurrentMissionCard
+    let mission: CurrentMissionCard?
     let onMissionTap: () -> Void
+    let onDetailTap: () -> Void
 
     var body: some View {
         ZStack(alignment: .bottom) {
@@ -33,7 +34,7 @@ struct SolarTermCardView: View {
 
                     Spacer()
 
-                    Button(action: {}) {
+                    Button(action: onDetailTap) {
                         HStack {
                             Text("더보기")
                                 .foregroundStyle(Color.white)
@@ -60,11 +61,13 @@ struct SolarTermCardView: View {
             .frame(maxWidth: .infinity, maxHeight: 400, alignment: .topLeading)
 
             // 하단 미션 카드
-            MissionCardView(
-                mission: mission,
-                onMissionTap: onMissionTap
-            )
-            .padding(.bottom, 16)
+            if let mission {
+                MissionCardView(
+                    mission: mission,
+                    onMissionTap: onMissionTap
+                )
+                .padding(.bottom, 16)
+            }
         }
         .frame(maxWidth: .infinity)
         .frame(height: 400)
@@ -133,6 +136,7 @@ private struct MissionCardView: View {
     SolarTermCardView(
         solarTerm: HomeCard.mock.solarTerm,
         mission: HomeCard.mock.currentMission,
-        onMissionTap: {}
+        onMissionTap: {},
+        onDetailTap: {}
     )
 }

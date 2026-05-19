@@ -11,7 +11,7 @@ import Foundation
 
 struct HomeCardDTO: Decodable {
     let solarTerm: SolarTermResponseDTO
-    let dailyMission: DailyMissionResponseDTO
+    let dailyMission: DailyMissionResponseDTO?
 }
 
 struct SolarTermResponseDTO: Decodable {
@@ -35,7 +35,7 @@ extension HomeCardDTO {
     func toDomain() -> HomeCard {
         HomeCard(
             solarTerm: solarTerm.toDomain(),
-            currentMission: dailyMission.toDomain()
+            currentMission: dailyMission?.toDomain()
         )
     }
 }

@@ -10,11 +10,11 @@ import Foundation
 
 public struct HomeCard: Equatable {
     public let solarTerm: SolarTermCard
-    public let currentMission: CurrentMissionCard
+    public let currentMission: CurrentMissionCard?
 
     public init(
         solarTerm: SolarTermCard,
-        currentMission: CurrentMissionCard
+        currentMission: CurrentMissionCard?
     ) {
         self.solarTerm = solarTerm
         self.currentMission = currentMission
