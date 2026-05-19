@@ -24,7 +24,7 @@ public struct HomeView: View {
             content
                 .padding(.top, 76)
                 .padding(.horizontal, 20)
-                .padding(.bottom, 40)
+                .padding(.bottom, 117)
                 .overlay(alignment: .top) {
                     GeometryReader { geo in
                         Color.clear.preference(
