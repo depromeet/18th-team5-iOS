@@ -85,6 +85,7 @@ public struct CalendarFeature2 {
                         for term in page.items {
                             if term.solarTermInfo.dateRange.contains(now) {
                                 await send(.centerTermChanged(term.id))
+                                break
                             }
                         }
                     }
