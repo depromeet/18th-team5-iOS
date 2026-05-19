@@ -26,6 +26,7 @@ struct SolarTermIntroView: View {
         }
         .navigationTitle("제철 소개")
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar(.hidden, for: .tabBar)
         .onAppear { store.send(.onAppear) }
     }
 }
@@ -67,12 +68,14 @@ private extension SolarTermIntroView {
 
     var cardCarousel: some View {
         Carousel(
-            items: store.solarTermIntroCard,
+            items: store.filteredCards,
             spacing: 16,
             aspectRatio: 266.0 / 400.0
         ) { solarTerm in
             SolarTermIntroCardView(
                 solarTermIntro: solarTerm,
+                season: store.season,
+                dateLabel: store.dateLabels[solarTerm.id],
                 onTap: { store.send(.onCardTap(solarTerm)) }
             )
         }
@@ -86,6 +89,7 @@ private extension SolarTermIntroView {
                 SolarTermIntroFeature()
             } withDependencies: {
                 $0.solarTermIntroRepository = .previewValue
+                $0.solarTermRepository = .previewValue
             }
         )
     }

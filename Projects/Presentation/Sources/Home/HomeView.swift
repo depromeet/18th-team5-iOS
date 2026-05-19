@@ -90,7 +90,8 @@ public struct HomeView: View {
                 SolarTermCardView(
                     solarTerm: homeCard.solarTerm,
                     mission: homeCard.currentMission,
-                    onMissionTap: { store.send(.onMissionTap) }
+                    onMissionTap: { store.send(.onMissionTap) },
+                    onDetailTap: { store.send(.onRecordTap) }
                 )
 
                 MissionRecommendBannerView(

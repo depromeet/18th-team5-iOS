@@ -82,8 +82,9 @@ public struct HomeFeature {
                 return .send(.delegate(.navigateToMissionTab))
 
             case .onRecordTap:
-                // TODO: 팀원 절기 모델 merge 후 id 매칭 방식 변경 - @minkyo
-                state.solarTermIntro = SolarTermIntroFeature.State()
+                let termName = state.homeCard?.solarTerm.name
+                let matchedId = SolarTerm.allCases.first { $0.koreanName == termName }?.rawValue
+                state.solarTermIntro = SolarTermIntroFeature.State(currentSolarTermId: matchedId)
                 return .none
 
             case .solarTermIntro:

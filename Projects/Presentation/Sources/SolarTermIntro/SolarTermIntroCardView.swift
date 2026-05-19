@@ -12,22 +12,34 @@ import SwiftUI
 
 struct SolarTermIntroCardView: View {
     let solarTermIntro: SolarTermIntro
+    let season: Season
+    let dateLabel: String?
     let onTap: () -> Void
+
+    // TODO: 계절별 이미지 추가되면 교체 - @minkyo
+    private var cardImage: Image {
+        switch season {
+        case .spring: .imgSummerSolarTermCard
+        case .summer: .imgSummerSolarTermCard
+        case .autumn: .imgSummerSolarTermCard
+        case .winter: .imgSummerSolarTermCard
+        }
+    }
 
     var body: some View {
         Button(action: onTap) {
             ZStack(alignment: .topLeading) {
-                Image.imgSummerSolarTermCard
+                cardImage
                     .resizable()
                     .scaledToFill()
 
                 VStack(alignment: .leading) {
                     // 상단 칩
                     HStack(spacing: 4) {
-                        // TODO: 절기 모델 merge 후 절기명 수정 - @minkyo
-                        chipView(text: solarTermIntro.id)
-                        // TODO: 절기 모델 merge 후 날짜 연동 - @minkyo
-                        chipView(text: "05.05 - 05.21")
+                        chipView(text: SolarTerm(rawValue: solarTermIntro.id)?.koreanName ?? solarTermIntro.id)
+                        if let dateLabel {
+                            chipView(text: dateLabel)
+                        }
                     }
                     .padding(.top, 18)
                     .padding(.leading, 20)
@@ -66,7 +78,7 @@ struct SolarTermIntroCardView: View {
 }
 
 #Preview {
-    SolarTermIntroCardView(solarTermIntro: .mock, onTap: {})
+    SolarTermIntroCardView(solarTermIntro: .mock, season: .summer, dateLabel: "05.05 - 05.20", onTap: {})
         .frame(width: 266, height: 400)
         .padding()
 }
