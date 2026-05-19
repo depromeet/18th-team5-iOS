@@ -6,87 +6,22 @@
 //  Copyright © 2026 Orange. All rights reserved.
 //
 
-import Combine
 import SwiftUI
 import UIKit
 
-// MARK: - Domain Model
-
-struct PagingCellModel: Identifiable {
-    let id: UUID = .init()
-    let value: Int
-    let height: CGFloat
-    let backgroundColor: Color
-}
-
-struct PagingGroup<Item>: Identifiable {
-    let id: Int
+public struct Page<Item: Equatable>: Identifiable, Equatable {
+    public let id: Int
     let items: [Item]
 }
 
-enum PagingDirection {
-    case prepend
-    case append
-}
-
-// MARK: - ViewModel
-
-@MainActor
-final class PagingTableViewModel: ObservableObject {
-    let maxBatchCount: Int = 2
-
-    private var groupId = 0
-
-    @Published var groups: [PagingGroup<PagingCellModel>] = []
-    @Published var centerItemId: PagingCellModel.ID?
-
-    init() {
-        groups = [makeGroup()]
-    }
-
-    func handlePagingRequest(_ direction: PagingDirection) {
-        switch direction {
-        case .prepend:
-            var updated = [makeGroup()] + groups
-            // 배치가 maxBatchCount를 초과하면 반대쪽 끝(마지막 배치)을 제거
-            if updated.count > maxBatchCount {
-                updated.removeLast()
-            }
-            groups = updated
-        case .append:
-            var updated = groups + [makeGroup()]
-            if updated.count > maxBatchCount {
-                updated.removeFirst()
-            }
-            groups = updated
-        }
-    }
-
-    private func makeGroup() -> PagingGroup<PagingCellModel> {
-        let backgroundColor = Color(
-            red: .random(in: 0.3 ... 0.9),
-            green: .random(in: 0.3 ... 0.9),
-            blue: .random(in: 0.3 ... 0.9)
-        )
-        let items = (1 ... 12).map { value in
-            PagingCellModel(
-                value: value,
-                height: CGFloat((60 ... 160).randomElement()!),
-                backgroundColor: backgroundColor
-            )
-        }
-        defer { groupId += 1 }
-        return PagingGroup(
-            id: groupId,
-            items: items
-        )
-    }
+public enum PagingDirection {
+    case prepend, append
 }
 
 // MARK: - SwiftUI Wrapper
 
-struct PagingTableView<Item: Identifiable, Content: View>: UIViewRepresentable {
-    @Binding var groups: [PagingGroup<Item>]
+struct PagingTableView<Item: Identifiable & Equatable, Content: View>: UIViewRepresentable {
+    var groups: [Page<Item>]
     @Binding var centerItemId: Item.ID?
 
     let onPagingRequest: (PagingDirection) -> Void
@@ -94,13 +29,13 @@ struct PagingTableView<Item: Identifiable, Content: View>: UIViewRepresentable {
     let cellContent: (Item) -> Content
 
     init(
-        groups: Binding<[PagingGroup<Item>]>,
+        groups: [Page<Item>],
         centerItemId: Binding<Item.ID?>,
         onPagingRequest: @escaping (PagingDirection) -> Void,
         cellHeight: @escaping (Item) -> CGFloat,
         @ViewBuilder cellContent: @escaping (Item) -> Content
     ) {
-        self._groups = groups
+        self.groups = groups
         self._centerItemId = centerItemId
         self.onPagingRequest = onPagingRequest
         self.cellHeight = cellHeight
@@ -165,7 +100,7 @@ protocol PagingTableUIViewDelegate<Item>: AnyObject {
 
 // MARK: - UIKit Paging Table View
 
-final class PagingTableUIView<Item: Identifiable, CellView: View>: UIView, UITableViewDataSource, UITableViewDelegate {
+final class PagingTableUIView<Item: Identifiable & Equatable, CellView: View>: UIView, UITableViewDataSource, UITableViewDelegate {
     // MARK: Public Configuration
 
     weak var delegate: (any PagingTableUIViewDelegate<Item>)?
@@ -181,7 +116,7 @@ final class PagingTableUIView<Item: Identifiable, CellView: View>: UIView, UITab
 
     // MARK: State
 
-    private var groups: [PagingGroup<Item>] = []
+    private var groups: [Page<Item>] = []
     private var lastReportedCenterId: Item.ID?
     private var isAdjustingContentOffset: Bool = false
     private var isPagingPending: Bool = false
@@ -215,7 +150,7 @@ final class PagingTableUIView<Item: Identifiable, CellView: View>: UIView, UITab
 
     // MARK: Public Updates
 
-    func update(groups newGroups: [PagingGroup<Item>], centerId: Item.ID? = nil) {
+    func update(groups newGroups: [Page<Item>], centerId: Item.ID? = nil) {
         let oldGroupIds = groups.map(\.id)
         let newGroupIds = newGroups.map(\.id)
         guard oldGroupIds != newGroupIds else { return }
@@ -367,7 +302,7 @@ private extension PagingTableUIView {
         return groups[indexPath.section].items[indexPath.row]
     }
 
-    func middleIndexPath(in groups: [PagingGroup<Item>]) -> IndexPath? {
+    func middleIndexPath(in groups: [Page<Item>]) -> IndexPath? {
         let totalCount = groups.reduce(0) { $0 + $1.items.count }
         guard totalCount > 0 else { return nil }
         let target = totalCount / 2
@@ -405,8 +340,8 @@ private extension PagingTableUIView {
     /// groups가 prepend 형태로 갱신되었는지 확인하고, 앞쪽에 추가된 그룹 개수를 반환합니다.
     /// prepend 형태가 아니면 0을 반환합니다.
     func countPrependedGroups(
-        oldGroups: [PagingGroup<Item>],
-        newGroups: [PagingGroup<Item>]
+        oldGroups: [Page<Item>],
+        newGroups: [Page<Item>]
     ) -> Int {
         guard !oldGroups.isEmpty, !newGroups.isEmpty else { return 0 }
         guard let oldFirstId = oldGroups.first?.id,
@@ -424,8 +359,8 @@ private extension PagingTableUIView {
     /// groups가 앞에서부터 drop 형태로 갱신되었는지 확인하고, 제거된 그룹 개수를 반환합니다.
     /// front drop 형태가 아니면 0을 반환합니다.
     func countDroppedGroupsFromFront(
-        oldGroups: [PagingGroup<Item>],
-        newGroups: [PagingGroup<Item>]
+        oldGroups: [Page<Item>],
+        newGroups: [Page<Item>]
     ) -> Int {
         guard !oldGroups.isEmpty, !newGroups.isEmpty else { return 0 }
         guard let newFirstId = newGroups.first?.id,
@@ -484,7 +419,70 @@ private extension HostingTableViewCell {
     }
 }
 
+
 // MARK: - Preview
+
+#if DEBUG
+import Combine
+
+public struct PagingCellModel: Identifiable, Equatable {
+    public let id: UUID = .init()
+    let value: Int
+    let height: CGFloat
+    let backgroundColor: Color
+}
+
+@MainActor
+final class PagingTableViewModel: ObservableObject {
+    let maxBatchCount: Int = 2
+
+    private var groupId = 0
+
+    @Published var groups: [Page<PagingCellModel>] = []
+    @Published var centerItemId: PagingCellModel.ID?
+
+    init() {
+        groups = [makeGroup()]
+    }
+
+    func handlePagingRequest(_ direction: PagingDirection) {
+        switch direction {
+        case .prepend:
+            var updated = [makeGroup()] + groups
+            // 배치가 maxBatchCount를 초과하면 반대쪽 끝(마지막 배치)을 제거
+            if updated.count > maxBatchCount {
+                updated.removeLast()
+            }
+            groups = updated
+        case .append:
+            var updated = groups + [makeGroup()]
+            if updated.count > maxBatchCount {
+                updated.removeFirst()
+            }
+            groups = updated
+        }
+    }
+
+    private func makeGroup() -> Page<PagingCellModel> {
+        let backgroundColor = Color(
+            red: .random(in: 0.3 ... 0.9),
+            green: .random(in: 0.3 ... 0.9),
+            blue: .random(in: 0.3 ... 0.9)
+        )
+        let items = (1 ... 12).map { value in
+            PagingCellModel(
+                value: value,
+                height: CGFloat((60 ... 160).randomElement()!),
+                backgroundColor: backgroundColor
+            )
+        }
+        defer { groupId += 1 }
+        return Page(
+            id: groupId,
+            items: items
+        )
+    }
+}
 
 private struct PagingTablePreviewWrapper: View {
     @StateObject private var viewModel = PagingTableViewModel()
@@ -506,7 +504,7 @@ private struct PagingTablePreviewWrapper: View {
             .padding()
 
             PagingTableView(
-                groups: $viewModel.groups,
+                groups: viewModel.groups,
                 centerItemId: $viewModel.centerItemId,
                 onPagingRequest: viewModel.handlePagingRequest,
                 cellHeight: { $0.height }
@@ -525,3 +523,4 @@ private struct PagingTablePreviewWrapper: View {
 #Preview {
     PagingTablePreviewWrapper()
 }
+#endif

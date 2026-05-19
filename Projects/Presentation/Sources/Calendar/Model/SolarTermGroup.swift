@@ -6,18 +6,20 @@
 //  Copyright © 2026 Orange. All rights reserved.
 //
 
+import Domain
 import Foundation
 
 public struct SolarTermGroup: Identifiable, Equatable {
     public let id: String
-    let cells: [SolarTermGroupCell]
+    public let solarTermInfo: SolarTermInfo
+    public let cells: [[SolarTermGroupCell]]
 }
 
-enum SolarTermGroupCell: Identifiable, Equatable {
+public enum SolarTermGroupCell: Identifiable, Equatable {
     case emptyCell(id: String)
     case dateCell(SolarTermDate)
 
-    var id: String {
+    public var id: String {
         switch self {
         case let .emptyCell(id): id
         case let .dateCell(info): info.id
@@ -27,6 +29,6 @@ enum SolarTermGroupCell: Identifiable, Equatable {
 
 public struct SolarTermDate: Identifiable, Equatable {
     public let id: String
-    let dayText: String
-    var isToday: Bool
+    public let dayText: String
+    public var isToday: Bool
 }

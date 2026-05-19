@@ -18,18 +18,18 @@ public struct CalendarFeature2 {
             termTitleText: "테스트", termRangeText: "11.11~11.11"
         )
 
-        public var solarTermGroups: [SolarTermGroup] = []
-        public var anchor: CalendarAnchor?
+        public var yearPages: [Page<SolarTermGroup>] = []
+        public var centerItemId: SolarTermGroup.ID?
 
         fileprivate var currentYear: SolarTermYear = .y2026
-        fileprivate var solarTerms: [SolarTermYear: [SolarTermInfo]] = [:]
     }
 
-    public enum Action {
+    public enum Action: BindableAction {
         case onAppear
-        case updateSolarTermGroups([SolarTermGroup])
-        case fetchSolarTerms(SolarTermYear)
-        case solarTermsFetched(SolarTermYear, [SolarTermInfo])
+        case centerTermChanged(SolarTermGroup.ID)
+        case calendarPagingRequest(PagingDirection)
+        case updateYearPages([Page<SolarTermGroup>])
+        case binding(BindingAction<State>)
     }
 
     @Dependency(\.logger) var logger
@@ -37,111 +37,128 @@ public struct CalendarFeature2 {
     @Dependency(\.solarTermRepository) var solarTermRepository
 
     public var body: some ReducerOf<Self> {
+        BindingReducer()
         Reduce { state, action in
             switch action {
             case .onAppear:
                 let now = date.now
 
                 guard let year = Calendar.current.dateComponents([.year], from: now).year,
-                      let solarYear = SolarTermYear(rawValue: year)
+                      let currentYear = SolarTermYear(rawValue: year)
                 else {
                     assertionFailure("해당하는 연도 정보를 획득할 수 없습니다.")
                     return .none
                 }
 
-                state.currentYear = solarYear
-                return fetchTerms(for: solarYear)
+                return .run { send in
+                    let years = [
+                        currentYear.prevYear,
+                        currentYear,
+                        currentYear.nextYear
+                    ].compactMap(\.self)
 
-            case let .fetchSolarTerms(year):
-                guard state.solarTerms[year] == nil else { return .none }
-                return fetchTerms(for: year)
+                    let pages = await withTaskGroup(
+                        of: (SolarTermYear, Page<SolarTermGroup>)?.self,
+                        returning: [Page<SolarTermGroup>].self
+                    ) { group in
 
-            case let .solarTermsFetched(year, terms):
-                state.solarTerms[year] = terms
+                        for year in years {
+                            group.addTask {
+                                guard let terms = try? await solarTermRepository.fetchSolarTerms(year: year)
+                                else { return nil }
+                                return (year, mapToYearGroup(year: year, terms: terms))
+                            }
+                        }
 
-                if year == state.currentYear {
-                    let now = date.now
-                    let term = terms.first { $0.dateRange.contains(now) }!.term
-                    let anchor = CalendarAnchor(year: year, term: term)
-                    return updateDisplays(base: anchor, state: state)
+                        var results: [(SolarTermYear, Page<SolarTermGroup>)] = []
+                        for await value in group {
+                            guard let value else { continue }
+                            results.append(value)
+                        }
+                        return results
+                            .sorted(by: { $0.0.rawValue < $1.0.rawValue })
+                            .map(\.1)
+                    }
+                    await send(.updateYearPages(pages))
+
+                    for page in pages {
+                        for term in page.items {
+                            if term.solarTermInfo.dateRange.contains(now) {
+                                await send(.centerTermChanged(term.id))
+                            }
+                        }
+                    }
                 }
 
+            case let .centerTermChanged(termId):
+                state.centerItemId = termId
                 return .none
 
-            case let .updateSolarTermGroups(groups):
-                state.solarTermGroups = groups
+            case let .updateYearPages(pages):
+                state.yearPages = pages
                 return .none
+
+            case let .calendarPagingRequest(direction):
+                guard let centerId = state.centerItemId,
+                      let termGroup = findTermGroup(pages: state.yearPages, termId: centerId)
+                else { return .none }
+
+                let termInfo = termGroup.solarTermInfo
+                let centerYear = termInfo.year
+                let fetchingYear = switch direction {
+                case .prepend: centerYear.prevYear
+                case .append: centerYear.nextYear
+                }
+
+                guard let fetchingYear else { return .none }
+
+                let currentPages = state.yearPages
+
+                return .run { send in
+                    let fetchedTerms = try await solarTermRepository.fetchSolarTerms(year: fetchingYear)
+                    let newYearGroup = mapToYearGroup(year: fetchingYear, terms: fetchedTerms)
+                    switch direction {
+                    case .prepend:
+                        var updated = [newYearGroup] + currentPages
+                        if updated.count > 3 {
+                            updated.removeLast()
+                        }
+                        await send(.updateYearPages(updated))
+                    case .append:
+                        var updated = currentPages + [newYearGroup]
+                        if updated.count > 3 {
+                            updated.removeFirst()
+                        }
+                        await send(.updateYearPages(updated))
+                    }
+                }
+
+            case .binding: return .none
             }
         }
     }
 }
 
 private extension CalendarFeature2 {
-    func fetchTerms(for year: SolarTermYear) -> Effect<Action> {
-        return .run { send in
-            let terms = try await solarTermRepository.fetchSolarTerms(year)
-            await send(.solarTermsFetched(year, terms))
+    func findTermGroup(pages: [Page<SolarTermGroup>], termId: SolarTermGroup.ID) -> SolarTermGroup? {
+        for yearPage in pages {
+            for termGroup in yearPage.items {
+                if termGroup.id == termId {
+                    return termGroup
+                }
+            }
         }
+        return nil
     }
 
-    func updateDisplays(base: CalendarAnchor, state: State) -> Effect<Action> {
-        guard let terms = state.solarTerms[base.year],
-              let currentTermIndex = terms.firstIndex(where: { $0.term == base.term })
-        else { return .none }
-
-        let windowSize = 3
-
-        var groups: [SolarTermGroup] = []
-
-        // MARK: #1. Prev year
-
-        if currentTermIndex - windowSize < 0 {
-            // 이전 연도 데이터가 필요한 경우
-            guard let prevYear = base.year.prevYear else {
-                logger.debug(message: "더 이전 연도가 존재하지 않습니다.")
-                return .none
-            }
-
-            guard let prevYearTerms = state.solarTerms[prevYear] else {
-                return fetchTerms(for: prevYear)
-            }
-
-            let prevCount = abs(currentTermIndex - windowSize)
-            for term in prevYearTerms.suffix(prevCount) {
-                groups.append(cteateGroup(term))
-            }
-        }
-
-        // MARK: #2. Current year
-
-        let displayRange = max(0, currentTermIndex - windowSize) ... min(terms.count - 1, currentTermIndex + windowSize)
-        for index in displayRange {
-            groups.append(cteateGroup(terms[index]))
-        }
-
-        // MARK: #3. Next year
-
-        if currentTermIndex + windowSize > terms.count {
-            // 다음 연도 데이터가 필요한 경우
-            guard let nextYear = base.year.nextYear else {
-                logger.debug(message: "다음 연도가 존재하지 않습니다.")
-                return .none
-            }
-
-            guard let nextYearTerms = state.solarTerms[nextYear] else {
-                return fetchTerms(for: nextYear)
-            }
-
-            let nextCount = currentTermIndex + windowSize - (terms.count - 1)
-            for term in nextYearTerms.prefix(nextCount) {
-                groups.append(cteateGroup(term))
-            }
-        }
-
-        return .send(.updateSolarTermGroups(groups))
+    func mapToYearGroup(year: SolarTermYear, terms: [SolarTermInfo]) -> Page<SolarTermGroup> {
+        Page(
+            id: year.rawValue,
+            items: terms.map { mapToTermGroup($0) }
+        )
     }
 
-    func cteateGroup(_ term: SolarTermInfo) -> SolarTermGroup {
+    func mapToTermGroup(_ term: SolarTermInfo) -> SolarTermGroup {
         var calendar = Calendar.current
         calendar.firstWeekday = 2
         let weekday = calendar.component(.weekday, from: term.startDate)
@@ -156,18 +173,20 @@ private extension CalendarFeature2 {
         }
 
         for date in term.termDates {
-            cells.append(.dateCell(
-                SolarTermDate(
-                    id: date.description,
-                    dayText: Self.dayFormatter.string(from: date),
-                    isToday: false
+            cells.append(
+                .dateCell(
+                    SolarTermDate(
+                        id: date.description,
+                        dayText: Self.dayFormatter.string(from: date),
+                        isToday: false
+                    )
                 )
-            )
             )
         }
         return SolarTermGroup(
-            id: "\(term.year.rawValue)_\(term.term.rawValue)",
-            cells: cells
+            id: term.identifier,
+            solarTermInfo: term,
+            cells: cells.chunked(size: 7)
         )
     }
 
@@ -190,5 +209,17 @@ private extension SolarTermInfo {
             next = Calendar.current.date(byAdding: .day, value: 1, to: next)!
         }
         return dates
+    }
+
+    var identifier: String {
+        "\(year.rawValue)-\(term.rawValue)"
+    }
+}
+
+private extension Array {
+    func chunked(size: Int) -> [[Element]] {
+        stride(from: 0, to: count, by: size).map {
+            Array(self[$0 ..< Swift.min($0 + size, count)])
+        }
     }
 }
