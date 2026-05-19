@@ -18,13 +18,15 @@ extension SolarTermRepository: @retroactive DependencyKey {
 
 public enum SolarTermRepositoryImpl {
     public static func live() -> SolarTermRepository {
-        SolarTermRepository(
+        let keyValueStore = KeyValueStore<Int, SolarTermFileDTO>()
+        return SolarTermRepository(
             fetchSolarTerms: { year in
-                let currentYearDTO = try fetch(year)
+
+                let currentYearDTO = try await fetch(year, with: keyValueStore)
 
                 var nextYearFirstTerm: SolarTermEntryDTO?
                 if let nextYear = year.nextYear,
-                   let nextYearDTO = try? fetch(nextYear) {
+                   let nextYearDTO = try? await fetch(nextYear, with: keyValueStore) {
                     nextYearFirstTerm = nextYearDTO.terms.first
                 }
 
@@ -33,7 +35,14 @@ public enum SolarTermRepositoryImpl {
         )
     }
 
-    private static func fetch(_ year: SolarTermYear) throws -> SolarTermFileDTO {
+    private static func fetch(
+        _ year: SolarTermYear,
+        with store: KeyValueStore<Int, SolarTermFileDTO>
+    ) async throws -> SolarTermFileDTO {
+        if let cached = await store.get(forKey: year.rawValue) {
+            return cached
+        }
+
         guard let url = Bundle.module.url(
             forResource: "solar_term_\(year.rawValue)",
             withExtension: "json"
@@ -43,7 +52,9 @@ public enum SolarTermRepositoryImpl {
         }
 
         let data = try Data(contentsOf: url)
-        return try JSONDecoder().decode(SolarTermFileDTO.self, from: data)
+        let decoded = try JSONDecoder().decode(SolarTermFileDTO.self, from: data)
+        await store.set(decoded, forKey: year.rawValue)
+        return decoded
     }
 }
 

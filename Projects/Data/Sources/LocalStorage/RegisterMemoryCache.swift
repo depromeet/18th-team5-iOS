@@ -10,11 +10,11 @@ import Dependencies
 import Domain
 
 private enum LaunchConfigCacheKey: DependencyKey {
-    static let liveValue = MemoryCache<LaunchConfig>()
+    static let liveValue = SingleValueStore<LaunchConfig>()
 }
 
 extension DependencyValues {
-    var launchConfigCache: MemoryCache<LaunchConfig> {
+    var launchConfigCache: SingleValueStore<LaunchConfig> {
         get { self[LaunchConfigCacheKey.self] }
         set { self[LaunchConfigCacheKey.self] = newValue }
     }
