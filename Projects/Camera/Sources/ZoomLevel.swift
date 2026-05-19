@@ -43,8 +43,9 @@ extension CameraController {
         for level in ZoomLevel.allCases {
             if activePreset == level {
                 if currentZoomFactor < 1.0 {
-                    let digit = Int(round(currentZoomFactor * 10)) % 10
-                    result[level] = ".\(digit)x"
+                    let formatted = String(format: "%.1f", currentZoomFactor)
+                    let trimmed = formatted.drop(while: { $0 == "0" })
+                    result[level] = "\(trimmed)x"
                 } else {
                     let intPart = Int(currentZoomFactor)
                     let fraction = currentZoomFactor - CGFloat(intPart)

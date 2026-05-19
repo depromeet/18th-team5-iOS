@@ -80,10 +80,9 @@ public struct MissionRecordFeature {
                 return .send(.delegate(.dismiss))
 
             case .cameraButtonTapped:
-                let dateString = Self.dateFormatter.string(from: date.now)
                 state.camera = CameraFeature.State(
-                    overlayDate: dateString,
-                    overlayLabel: state.missionTitle
+                    overlayLabel: state.missionTitle,
+                    date: date.now
                 )
                 return .none
 

@@ -51,6 +51,11 @@ public struct CameraView: View {
                 }
             }
         }
+        .onDisappear {
+            Task {
+                await cameraController.stopSession()
+            }
+        }
         .alert(
             "오류",
             isPresented: Binding(

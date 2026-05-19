@@ -326,6 +326,7 @@ private extension CameraController {
             guard shouldStop else { return }
             teardownSession()
             mutableState.withLock { $0.sessionPhase = .idle }
+            DispatchQueue.main.async { self.isSessionRunning = false }
         }
     }
 
@@ -400,12 +401,14 @@ private extension CameraController {
             mutableState.withLock {
                 $0.currentPosition = ($0.currentPosition == .back) ? .front : .back
             }
-            let configured = try configureSessionGuarded()
-            if !configured {
+            do {
+                let configured = try configureSessionGuarded()
+                guard configured else { throw CameraError.sessionBusy }
+            } catch {
                 mutableState.withLock {
                     $0.currentPosition = ($0.currentPosition == .back) ? .front : .back
                 }
-                throw CameraError.sessionBusy
+                throw error
             }
         }
     }

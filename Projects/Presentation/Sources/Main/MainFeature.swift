@@ -56,6 +56,10 @@ public struct MainFeature {
                 state.missionRecord = nil
                 return .none
 
+            case .missionRecord(.presented(.delegate(.submitted))):
+                state.missionRecord = nil
+                return .none
+
             case .missionRecord:
                 return .none
 
