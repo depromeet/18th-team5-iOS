@@ -36,6 +36,16 @@ enum OnboardingRepositoryImpl {
                 } catch {
                     throw mapToDomainError(error)
                 }
+            },
+            submitOnboardingInfo: { preference in
+                do {
+                    let body = OnboardingRequestDTO(preference: preference)
+                    let response: OnboardingResponseDTO? = try await networkClient.request(
+                        UserEndpoint.submitOnboardingInfo(body)
+                    )
+                } catch {
+                    throw mapToDomainError(error)
+                }
             }
         )
     }

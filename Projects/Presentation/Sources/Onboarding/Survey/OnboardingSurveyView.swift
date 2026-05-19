@@ -32,6 +32,7 @@ public struct OnboardingSurveyView: View {
             bottomButton
         }
         .background(background)
+        .loading(isLoading: store.isLoading)
     }
 }
 

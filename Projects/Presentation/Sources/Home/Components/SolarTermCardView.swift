@@ -57,17 +57,17 @@ struct SolarTermCardView: View {
     }
 }
 
-private func formattedDate(_ dateString: String) -> String {
-    let parts = dateString.split(separator: "-")
-    guard parts.count == 3 else { return dateString }
-    return "\(parts[1]).\(parts[2])"
-}
+extension SolarTermCardView {
+    func formattedDate(_ dateString: String) -> String {
+        let parts = dateString.split(separator: "-")
+        guard parts.count == 3 else { return dateString }
+        return "\(parts[1]).\(parts[2])"
+    }
 
-// TODO: - 멘트 형식 확정(\n포함 받기) 후 추후 삭제
-private func descriptionLines(_ description: String) -> [String] {
-    let parts = description.components(separatedBy: ", ")
-    guard parts.count == 2 else { return [description] }
-    return [parts[0] + ",", parts[1]]
+    func descriptionLines(_ description: String) -> [String] {
+        let replace = description.replacingOccurrences(of: ", ", with: ",\n")
+        return replace.split(separator: "\n").map { String($0) }
+    }
 }
 
 private struct MissionCardView: View {
@@ -75,10 +75,11 @@ private struct MissionCardView: View {
     let onMissionTap: () -> Void
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(spacing: 12) {
             Text(mission.title)
                 .font(.body1Semibold)
-                .foregroundStyle(Color(hex: 0x1D293D))
+                .foregroundStyle(Color(hex: 0x1A1C20))
+                .frame(maxWidth: .infinity, alignment: .leading)
 
             VStack(spacing: 8) {
                 Button(action: onMissionTap) {
@@ -100,7 +101,7 @@ private struct MissionCardView: View {
                 Text("해당 미션에 \(mission.participantCount)명이 참여했어요")
                     .font(.caption1Regular)
                     .foregroundStyle(Color(hex: 0x868B94))
-                    .frame(maxWidth: .infinity)
+                    .frame(maxWidth: .infinity, alignment: .center)
             }
         }
         .padding(.top, 20)
@@ -109,7 +110,7 @@ private struct MissionCardView: View {
         .frame(maxWidth: .infinity)
         .background(Color.white.opacity(0.9))
         .clipShape(RoundedRectangle(cornerRadius: .radius12))
-        .padding()
+        .padding(.horizontal, 16)
     }
 }
 

@@ -11,7 +11,7 @@ import Foundation
 public struct HomeCard: Equatable {
     public let solarTerm: SolarTermCard
     public let currentMission: CurrentMissionCard
-    
+
     public init(
         solarTerm: SolarTermCard,
         currentMission: CurrentMissionCard

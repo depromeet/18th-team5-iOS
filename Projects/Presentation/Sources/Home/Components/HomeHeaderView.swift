@@ -10,12 +10,17 @@ import DesignSystem
 import SwiftUI
 
 struct HomeHeaderView: View {
+    var scrollOffset: CGFloat = 0
+
+    private var showBlur: Bool {
+        scrollOffset > 1
+    }
+
     var body: some View {
         HStack {
-            // TODO: 로고 교체 - @minkyo
-            Text("peaktime")
-                .font(.title2Medium)
-                .foregroundStyle(Color.gray600)
+            Image.peaktimeLogo
+                .resizable()
+                .frame(width: 140, height: 28)
 
             Spacer()
 
@@ -27,9 +32,26 @@ struct HomeHeaderView: View {
         }
         .padding(.horizontal, 20)
         .padding(.vertical, 16)
+        .frame(maxWidth: .infinity)
+        .background(alignment: .top) {
+            if showBlur {
+                BackgroundBlurView()
+                    .ignoresSafeArea(edges: .top)
+                    .transition(.opacity)
+            }
+        }
+        .animation(.easeInOut(duration: 0.2), value: showBlur)
     }
 }
 
 #Preview {
-    HomeHeaderView()
+    ZStack {
+        LinearGradient.onboardingBackground
+            .ignoresSafeArea()
+
+        ScrollView {
+            HomeHeaderView(scrollOffset: 0)
+            Spacer()
+        }
+    }
 }

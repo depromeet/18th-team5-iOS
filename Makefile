@@ -1,4 +1,4 @@
-.PHONY: generate setup clean reset
+.PHONY: generate setup clean reset clean-secrets pull-secrets push-secrets
 
 generate:
 	@eval "$$(mise activate bash --shims)" && tuist install
@@ -43,6 +43,15 @@ clean:
 	@rm -rf Projects/**/*.xcodeproj
 	@rm -rf Projects/**/Derived
 	@rm -rf *.xcworkspace
+
+clean-secrets:
+	@rm -rf Secrets
+
+pull-secrets:
+	@Tools/secrets/pull-secrets.sh
+
+push-secrets:
+	@Tools/secrets/push-secrets.sh
 
 reset:
 	@tuist clean
