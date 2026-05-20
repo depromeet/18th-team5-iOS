@@ -12,6 +12,7 @@ import Foundation
 
 @DependencyClient
 public struct AuthRepository: Sendable {
+    public var isSignin: @Sendable () -> Bool?
     public var login: @Sendable () async throws -> Void
 }
 

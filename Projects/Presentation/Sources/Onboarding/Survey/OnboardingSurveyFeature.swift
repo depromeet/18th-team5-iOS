@@ -11,6 +11,8 @@ import Domain
 
 @Reducer
 public struct OnboardingSurveyFeature {
+    @Dependency(\.onboardingRepository) private var onboardingRepository
+
     enum Status: Equatable {
         case initial
         case inProgress
@@ -23,6 +25,7 @@ public struct OnboardingSurveyFeature {
         let stepCount: Int = 3
         var step: Int = 0
         var preference: UserPreference = .init()
+        var isLoading: Bool = false
 
         public init() {}
 
@@ -42,7 +45,7 @@ public struct OnboardingSurveyFeature {
     }
 
     public enum Delegate {
-        case onboardingCompleted
+        case completed
     }
 
     public init() {}
@@ -70,11 +73,26 @@ public struct OnboardingSurveyFeature {
                     }
                     return .none
                 case .result:
-                    return .send(.delegate(.onboardingCompleted))
+                    state.isLoading = true
+                    return .run { [state] send in
+                        await submitOnboardingInfo(state, send)
+                    }
                 }
             case .binding: return .none
             case .delegate: return .none
             }
+        }
+    }
+}
+
+private extension OnboardingSurveyFeature {
+    func submitOnboardingInfo(_ state: State, _ send: Send<Action>) async {
+        do {
+            try await onboardingRepository.submitOnboardingInfo(state.preference)
+            await send(.set(\.isLoading, false))
+            await send(.delegate(.completed))
+        } catch {
+            await send(.set(\.isLoading, false))
         }
     }
 }

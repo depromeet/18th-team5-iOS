@@ -31,6 +31,8 @@ public struct OnboardingSurveyView: View {
 
             bottomButton
         }
+        .background(background)
+        .loading(isLoading: store.isLoading)
     }
 }
 
@@ -50,9 +52,8 @@ private extension OnboardingSurveyView {
 
     var buttonTitle: String {
         switch store.status {
-        case .initial, .result: "시작하기"
-        case .inProgress:
-            store.step == 2 ? "완료" : "다음"
+        case .initial, .inProgress: "확인"
+        case .result: "시작하기"
         }
     }
 
@@ -116,8 +117,10 @@ private extension OnboardingSurveyView {
             store.send(.backButtonTapped)
         } label: {
             Image.icArrowLeft
+                .renderingMode(.template)
                 .resizable()
                 .frame(width: 24, height: 24)
+                .foregroundStyle(Color.gray800)
         }
     }
 
@@ -125,13 +128,13 @@ private extension OnboardingSurveyView {
         VStack(spacing: 6) {
             Text(title)
                 .font(.headline1Semibold)
-                .foregroundStyle(Color.gray800)
+                .foregroundStyle(Color.gray900)
                 .frame(maxWidth: .infinity, alignment: .leading)
 
             if store.step == 2 {
                 Text(subtitle)
                     .font(.body2Regular)
-                    .foregroundStyle(Color(hex: 0x9CA3AF))
+                    .foregroundStyle(Color.gray600)
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
         }
@@ -148,8 +151,7 @@ private extension OnboardingSurveyView {
     var activityStyleSelectionView: some View {
         OnboardingSelectionView(
             items: [.outdoor, .indoor],
-            title: { $0.title },
-            subtitle: { $0.subtitle },
+            viewState: { $0.viewState },
             selection: $store.preference.activityStyle
         )
     }
@@ -157,8 +159,7 @@ private extension OnboardingSurveyView {
     var engagementLevelSelectionView: some View {
         OnboardingSelectionView(
             items: [.active, .casual],
-            title: { $0.title },
-            subtitle: { $0.subtitle },
+            viewState: { $0.viewState },
             selection: $store.preference.engagementLevel
         )
     }
@@ -167,8 +168,7 @@ private extension OnboardingSurveyView {
         OnboardingRankingView(
             items: [.nature, .food, .culture],
             ranking: $store.preference.themeRanking,
-            title: { $0.title },
-            subtitle: { $0.subtitle }
+            viewState: { $0.viewState }
         )
     }
 
@@ -188,54 +188,77 @@ private extension OnboardingSurveyView {
         .padding(.top, 8)
         .padding(.bottom, 16)
     }
+
+    @ViewBuilder
+    var background: some View {
+        switch store.status {
+        case .initial, .result:
+            LinearGradient.onboardingBackground
+                .ignoresSafeArea()
+        case .inProgress: Color.white
+        }
+    }
 }
 
 private extension ActivityStyle {
-    var title: String {
+    var viewState: OnboardingViewState {
         switch self {
-        case .outdoor: "밖에 나가서\n뭔가 하고 싶어요"
-        case .indoor: "집이나 실내에서\n편하게 쉬고 싶어요"
-        }
-    }
-
-    var subtitle: String {
-        switch self {
-        case .outdoor: "야외, 나들이, 장소\n방문 선호"
-        case .indoor: "카페, 요리, 콘텐츠\n소비 선호"
+        case .outdoor:
+            .init(
+                title: "밖에 나가서\n뭔가 하고 싶어요",
+                subtitle: "야외, 나들이, 장소\n방문 선호",
+                image: .icHandballPlayer
+            )
+        case .indoor:
+            .init(
+                title: "집이나 실내에서\n편하게 쉬고 싶어요",
+                subtitle: "카페, 요리, 콘텐츠\n소비 선호",
+                image: .icSofaAndLamp
+            )
         }
     }
 }
 
 private extension EngagementLevel {
-    var title: String {
-        switch self {
-        case .active: "시간 내서\n적극적으로"
-        case .casual: "일상 안에서\n부담 없이"
-        }
-    }
-
-    var subtitle: String {
-        switch self {
-        case .active: "원거리 이동,\n새로운 장소 방문 OK"
-        case .casual: "동네 범위,\n이동 없이 5분이면 완료"
+    var viewState: OnboardingViewState {
+        return switch self {
+        case .active:
+            .init(
+                title: "시간 내서\n적극적으로",
+                subtitle: "원거리 이동,\n새로운 장소 방문 OK",
+                image: .icCar
+            )
+        case .casual:
+            .init(
+                title: "일상 안에서\n부담 없이",
+                subtitle: "동네 범위,\n이동 없이 5분 내에",
+                image: .icWalkingWoman
+            )
         }
     }
 }
 
 private extension ActivityTheme {
-    var title: String {
+    var viewState: OnboardingViewState {
         switch self {
-        case .nature: "자연이나 야외 활동"
-        case .food: "제철 음식이나 요리"
-        case .culture: "감성 콘텐츠나 문화"
-        }
-    }
-
-    var subtitle: String {
-        switch self {
-        case .nature: "봄나들이, 단풍 구경, 산책 등"
-        case .food: "봄나물, 제철 과일, 계절 음료 등"
-        case .culture: "전시, 독서, 영화, 음악 등"
+        case .nature:
+            .init(
+                title: "자연이나 야외 활동",
+                subtitle: "봄나들이, 단풍 구경, 산책 등",
+                image: .icPineTree
+            )
+        case .food:
+            .init(
+                title: "제철 음식이나 요리",
+                subtitle: "봄나물, 제철 과일, 계절 음료 등",
+                image: .icFryingPan
+            )
+        case .culture:
+            .init(
+                title: "감성 콘텐츠나 문화",
+                subtitle: "전시, 독서, 영화, 음악 등",
+                image: .icMovieProjector
+            )
         }
     }
 }

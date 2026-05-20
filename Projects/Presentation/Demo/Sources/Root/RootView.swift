@@ -14,9 +14,6 @@ struct RootView: View {
     let store: StoreOf<RootFeature>
 
     var body: some View {
-        ScrollView {
-            CalendarView(store: store.scope(state: \.calendar, action: \.calendar))
-        }
-        .background(Color(UIColor.systemBackground))
+        MainView(store: store)
     }
 }

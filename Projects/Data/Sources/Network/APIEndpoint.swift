@@ -74,7 +74,6 @@ extension APIEndpoint {
         if let body {
             do {
                 let encoder = JSONEncoder()
-                encoder.keyEncodingStrategy = .convertToSnakeCase
                 request.httpBody = try encoder.encode(AnyEncodable(body))
                 request.setValue("application/json", forHTTPHeaderField: "Content-Type")
             } catch {

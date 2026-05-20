@@ -35,6 +35,6 @@ struct OnboardingProgressView: View {
 
 private extension OnboardingProgressView {
     func color(_ step: Int) -> Color {
-        step > currentStep ? .gray300 : .gray800
+        step > currentStep ? .gray300 : .init(hex: 0x43DA87)
     }
 }

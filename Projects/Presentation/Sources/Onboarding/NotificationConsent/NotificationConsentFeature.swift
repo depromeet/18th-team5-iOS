@@ -18,8 +18,8 @@ public struct NotificationConsentFeature {
 
     public enum Action {
         case delegate(Delegate)
-        case agreeButtonTapped
-        case disagreeButtonTapped
+        case nextButtonTapped
+        case skipButtonTapped
     }
 
     public enum Delegate {
@@ -33,7 +33,7 @@ public struct NotificationConsentFeature {
     public var body: some ReducerOf<Self> {
         Reduce { _, action in
             switch action {
-            case .agreeButtonTapped:
+            case .nextButtonTapped:
                 return .run { send in
                     do {
                         _ = try await notificationClient.requestAuthorization()
@@ -44,7 +44,7 @@ public struct NotificationConsentFeature {
                     }
                 }
 
-            case .disagreeButtonTapped:
+            case .skipButtonTapped:
                 return .run { send in
                     do {
                         _ = try await notificationClient.requestProvisionalAuthorization()
