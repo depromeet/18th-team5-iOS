@@ -62,6 +62,9 @@ extension CalendarView2 {
             }
             WeekdayLabelRow()
         }
+        .padding(.horizontal, 19.5)
+        .padding(.top, 20)
+        .padding(.bottom, 8)
     }
 }
 
@@ -82,10 +85,13 @@ extension CalendarView2 {
 
     func termSectionHeaderView(_ termText: String) -> some View {
         VStack(alignment: .leading) {
-            Text(termText)
-                .font(.headline2Medium)
-                .foregroundStyle(Color.gray900)
-                .padding(.top, 12)
+            HStack {
+                Text(termText)
+                    .font(.headline2Medium)
+                    .foregroundStyle(Color.gray900)
+                    .padding(.top, 12)
+                Spacer()
+            }
             Spacer()
         }
         .frame(height: Constants.termSectionHeaderHeight)
