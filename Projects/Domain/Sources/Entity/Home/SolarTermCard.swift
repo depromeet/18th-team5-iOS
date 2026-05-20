@@ -10,13 +10,15 @@ import Foundation
 
 public struct SolarTermCard: Equatable {
     public let id: Int
+    public let term: SolarTerm?
     public let name: String
     public let description: String
     public let startDate: String
     public let endDate: String
 
-    public init(id: Int, name: String, description: String, startDate: String, endDate: String) {
+    public init(id: Int, term: SolarTerm?, name: String, description: String, startDate: String, endDate: String) {
         self.id = id
+        self.term = term
         self.name = name
         self.description = description
         self.startDate = startDate

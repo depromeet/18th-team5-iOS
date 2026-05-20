@@ -12,20 +12,20 @@ public struct SolarTermIntroContent: Equatable, Hashable {
     public let id: String
     public let title: String
     public let subtitle: String
-    public let imageUrl: String
+    public let imageURL: String
     public let body: String
 
     public init(
         id: String,
         title: String,
         subtitle: String,
-        imageUrl: String,
+        imageURL: String,
         body: String
     ) {
         self.id = id
         self.title = title
         self.subtitle = subtitle
-        self.imageUrl = imageUrl
+        self.imageURL = imageURL
         self.body = body
     }
 }

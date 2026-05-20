@@ -9,9 +9,9 @@
 import Foundation
 
 public struct SolarTermIntro: Equatable, Hashable {
-    public let id: String
+    public let term: SolarTerm
     public let introTitle: String
-    public let introSubTitle: String
+    public let introSubtitle: String
     public let title: String
     public let meaning: String
     public let characteristic: String
@@ -20,9 +20,9 @@ public struct SolarTermIntro: Equatable, Hashable {
     public let contents: [SolarTermIntroContent]
 
     public init(
-        id: String,
+        term: SolarTerm,
         introTitle: String,
-        introSubTitle: String,
+        introSubtitle: String,
         title: String,
         meaning: String,
         characteristic: String,
@@ -30,9 +30,9 @@ public struct SolarTermIntro: Equatable, Hashable {
         contentBody: String,
         contents: [SolarTermIntroContent]
     ) {
-        self.id = id
+        self.term = term
         self.introTitle = introTitle
-        self.introSubTitle = introSubTitle
+        self.introSubtitle = introSubtitle
         self.title = title
         self.meaning = meaning
         self.characteristic = characteristic
@@ -44,9 +44,9 @@ public struct SolarTermIntro: Equatable, Hashable {
 
 public extension SolarTermIntro {
     static let mock = SolarTermIntro(
-        id: "ibha",
+        term: .ibha,
         introTitle: "입하,\n여름이 일어서는 시간",
-        introSubTitle: "여름, 첫 번째 제철",
+        introSubtitle: "여름, 첫 번째 제철",
         title: "여름이 일어서는 시간,\n24절기 중 7번째 절기",
         meaning: "여름이 시작됨을 알리는 절기에요",
         characteristic: "신록이 우거지고 개구리 울음소리가 들리기 시작하며 농작물이 자라기 시작하는 시기예요",
@@ -58,9 +58,9 @@ public extension SolarTermIntro {
     static let mockList: [SolarTermIntro] = [
         .mock,
         SolarTermIntro(
-            id: "soman",
+            term: .soman,
             introTitle: "소만,\n만물이 자라나는 시간",
-            introSubTitle: "여름, 두 번째 제철",
+            introSubtitle: "여름, 두 번째 제철",
             title: "만물이 자라나는 시간,\n24절기 중 8번째 절기",
             meaning: "햇볕이 풍성해지고 만물이 점차 자라서 가득 찬다는 뜻의 절기예요",
             characteristic: "햇볕이 풍성해지고 만물이 점차 자라서 가득 찬다는 뜻의 절기예요",
@@ -69,9 +69,9 @@ public extension SolarTermIntro {
             contents: []
         ),
         SolarTermIntro(
-            id: "mangjong",
+            term: .mangjong,
             introTitle: "망종,\n씨 뿌리는 시간",
-            introSubTitle: "여름, 세 번째 제철",
+            introSubtitle: "여름, 세 번째 제철",
             title: "씨 뿌리는 시간,\n24절기 중 9번째 절기",
             meaning: "보리 베기와 모내기를 하는 절기예요",
             characteristic: "보리 베기와 모내기를 하는 절기예요",
@@ -80,9 +80,9 @@ public extension SolarTermIntro {
             contents: []
         ),
         SolarTermIntro(
-            id: "haji",
+            term: .haji,
             introTitle: "하지,\n해가 가장 긴 시간",
-            introSubTitle: "여름, 네 번째 제철",
+            introSubtitle: "여름, 네 번째 제철",
             title: "해가 가장 긴 시간,\n24절기 중 10번째 절기",
             meaning: "일 년 중 낮이 가장 긴 날이에요",
             characteristic: "일 년 중 낮이 가장 긴 날이에요",
