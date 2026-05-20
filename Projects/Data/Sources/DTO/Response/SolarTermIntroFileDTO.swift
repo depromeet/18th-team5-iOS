@@ -16,7 +16,7 @@ struct SolarTermIntroFileDTO: Decodable {
 struct SolarTermIntroEntryDTO: Decodable {
     let id: String
     let introTitle: String
-    let introSubTitle: String
+    let introSubtitle: String
     let title: String
     let meaning: String
     let characteristic: String
@@ -29,7 +29,7 @@ struct SolarTermIntroContentDTO: Decodable {
     let id: String
     let title: String
     let subtitle: String
-    let imageUrl: String
+    let imageURL: String
     let body: String
 }
 
@@ -44,9 +44,9 @@ extension SolarTermIntroFileDTO {
 extension SolarTermIntroEntryDTO {
     func toDomain() -> SolarTermIntro {
         SolarTermIntro(
-            id: id,
+            term: SolarTerm(rawValue: id) ?? .ipchun,
             introTitle: introTitle,
-            introSubTitle: introSubTitle,
+            introSubtitle: introSubtitle,
             title: title,
             meaning: meaning,
             characteristic: characteristic,
@@ -63,7 +63,7 @@ extension SolarTermIntroContentDTO {
             id: id,
             title: title,
             subtitle: subtitle,
-            imageUrl: imageUrl,
+            imageURL: imageURL,
             body: body
         )
     }
