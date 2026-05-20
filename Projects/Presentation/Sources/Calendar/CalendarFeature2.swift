@@ -64,7 +64,7 @@ public struct CalendarFeature2 {
 
                         for year in years {
                             group.addTask {
-                                guard let terms = try? await solarTermRepository.fetchSolarTerms(year: year)
+                                guard let terms = try? await solarTermRepository.fetchSolarTerms(year)
                                 else { return nil }
                                 return (year, mapToYearGroup(year: year, terms: terms))
                             }
@@ -116,7 +116,7 @@ public struct CalendarFeature2 {
                 let currentPages = state.yearPages
 
                 return .run { send in
-                    let fetchedTerms = try await solarTermRepository.fetchSolarTerms(year: fetchingYear)
+                    let fetchedTerms = try await solarTermRepository.fetchSolarTerms(fetchingYear)
                     let newYearGroup = mapToYearGroup(year: fetchingYear, terms: fetchedTerms)
                     switch direction {
                     case .prepend:
