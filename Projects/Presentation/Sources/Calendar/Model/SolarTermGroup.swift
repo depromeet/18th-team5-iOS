@@ -30,6 +30,8 @@ public enum SolarTermGroupCell: Identifiable, Equatable {
 
 public struct SolarTermDate: Identifiable, Equatable {
     public let id: String
+    public let monthText: String
     public let dayText: String
+    public let isFirstDayOfMonth: Bool
     public var isToday: Bool
 }

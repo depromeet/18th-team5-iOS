@@ -84,14 +84,15 @@ extension CalendarView2 {
     }
 
     func termSectionHeaderView(_ termText: String) -> some View {
-        VStack(alignment: .leading) {
+        VStack {
             HStack {
                 Text(termText)
                     .font(.headline2Medium)
                     .foregroundStyle(Color.gray900)
-                    .padding(.top, 12)
                 Spacer()
             }
+            .padding(.top, 12)
+
             Spacer()
         }
         .frame(height: Constants.termSectionHeaderHeight)
@@ -111,28 +112,39 @@ extension CalendarView2 {
 
     func dateCellView(_ date: SolarTermGroupCell, cellWidth: CGFloat) -> some View {
         VStack(spacing: 2) {
-            RoundedRectangle(cornerRadius: 5)
-                .foregroundStyle(.blue)
-                .frame(width: cellWidth, height: 20)
+            switch date {
+            case .emptyCell:
+                Color.clear
+                    .frame(
+                        width: cellWidth,
+                        height: Constants.dateCellHeight
+                    )
+                    .padding(.top, 20)
 
-            ZStack {
-                switch date {
-                case .emptyCell:
-                    Color.clear
-                        .frame(
-                            width: cellWidth,
-                            height: Constants.dateCellHeight
-                        )
+            case let .dateCell(info):
+                Color.clear
+                    .frame(width: cellWidth, height: 20)
+                    .overlay {
+                        if info.isFirstDayOfMonth {
+                            RoundedRectangle(cornerRadius: 8)
+                                .foregroundStyle(Color.gray50)
+                                .overlay {
+                                    Text(info.monthText)
+                                        .font(.caption2Medium)
+                                        .foregroundStyle(Color.gray900)
+                                }
+                        }
+                    }
 
-                case let .dateCell(info):
-                    RoundedRectangle(cornerRadius: 8)
-                        .foregroundStyle(.gray)
-                        .frame(
-                            width: cellWidth,
-                            height: Constants.dateCellHeight
-                        )
-                    Text(info.dayText)
-                }
+                RoundedRectangle(cornerRadius: 8)
+                    .foregroundStyle(.gray)
+                    .frame(
+                        width: cellWidth,
+                        height: Constants.dateCellHeight
+                    )
+                    .overlay {
+                        Text(info.dayText)
+                    }
             }
         }
     }

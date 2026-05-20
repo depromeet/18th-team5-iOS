@@ -174,11 +174,15 @@ private extension CalendarFeature2 {
         }
 
         for date in term.termDates {
+            let components = calendar.dateComponents([.day, .month], from: date)
+            guard let day = components.day, let month = components.month else { continue }
             cells.append(
                 .dateCell(
                     SolarTermDate(
                         id: date.description,
-                        dayText: Self.dayFormatter.string(from: date),
+                        monthText: "\(month)월",
+                        dayText: String(day),
+                        isFirstDayOfMonth: day == 1,
                         isToday: false
                     )
                 )
