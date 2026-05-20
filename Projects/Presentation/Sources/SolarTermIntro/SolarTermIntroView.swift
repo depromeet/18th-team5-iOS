@@ -70,12 +70,17 @@ private extension SolarTermIntroView {
         Carousel(
             items: store.filteredCards,
             spacing: 16,
-            aspectRatio: 266.0 / 400.0
+            aspectRatio: 266.0 / 400.0,
+            shrinkRatio: 280.0 / 400.0,
+            scrollPosition: Binding(
+                get: { store.filteredCards.first { $0.term == store.targetTerm } },
+                set: { _ in }
+            )
         ) { solarTerm in
             SolarTermIntroCardView(
                 solarTermIntro: solarTerm,
                 season: store.season,
-                dateLabel: store.dateLabels[solarTerm.id],
+                dateLabel: store.dateLabels[solarTerm.term],
                 onTap: { store.send(.onCardTap(solarTerm)) }
             )
         }

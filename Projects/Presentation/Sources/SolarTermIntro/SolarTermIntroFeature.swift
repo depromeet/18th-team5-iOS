@@ -16,36 +16,25 @@ public struct SolarTermIntroFeature {
     public struct State: Equatable {
         var allCards: [SolarTermIntro] = []
         var solarTermInfos: [SolarTermInfo] = []
-        var season: Season = .spring
+        var season: Season = .currentSeason
+        var targetTerm: SolarTerm?
 
-        public init(currentSolarTermId: String? = nil) {
-            if let id = currentSolarTermId,
-               let term = SolarTerm(rawValue: id) {
+        public init(currentSolarTerm: SolarTerm? = nil) {
+            if let term = currentSolarTerm {
                 season = term.season
+                targetTerm = term
             }
         }
 
         var filteredCards: [SolarTermIntro] {
-            allCards.filter {
-                guard let term = SolarTerm(rawValue: $0.id) else { return false }
-                return term.season == season
-            }
+            allCards.filter { $0.term.season == season }
         }
 
-        /// id(rawValue) → "MM.dd - MM.dd" 형식
-        var dateLabels: [String: String] {
+        var dateLabels: [SolarTerm: String] {
             solarTermInfos.reduce(into: [:]) { result, info in
-                let start = Self.dateFormatter.string(from: info.startDate)
-                let end = Self.dateFormatter.string(from: info.endDate)
-                result[info.term.rawValue] = "\(start) - \(end)"
+                result[info.term] = info.formattedDateRange
             }
         }
-
-        private static let dateFormatter: DateFormatter = {
-            let f = DateFormatter()
-            f.dateFormat = "MM.dd"
-            return f
-        }()
     }
 
     public enum Action {

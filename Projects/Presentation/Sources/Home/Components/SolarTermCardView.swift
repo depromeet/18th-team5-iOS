@@ -24,7 +24,7 @@ struct SolarTermCardView: View {
             // 상단 텍스트 영역
             VStack(alignment: .leading, spacing: 12) {
                 HStack {
-                    Text("\(formattedDate(solarTerm.startDate)) - \(formattedDate(solarTerm.endDate))")
+                    Text("\(solarTerm.startDate) - \(solarTerm.endDate)")
                         .font(.caption1Semibold)
                         .foregroundStyle(.white)
                         .padding(.horizontal, 12)
@@ -39,9 +39,11 @@ struct SolarTermCardView: View {
                             Text("더보기")
                                 .foregroundStyle(Color.white)
                                 .font(.body2Medium)
-                            Image.icArrowRightWhite
+                            Image.icArrowRight
+                                .renderingMode(.template)
                                 .resizable()
                                 .frame(width: 24, height: 24)
+                                .foregroundStyle(Color.white)
                         }
                     }
                 }
@@ -76,12 +78,6 @@ struct SolarTermCardView: View {
 }
 
 extension SolarTermCardView {
-    func formattedDate(_ dateString: String) -> String {
-        let parts = dateString.split(separator: "-")
-        guard parts.count == 3 else { return dateString }
-        return "\(parts[1]).\(parts[2])"
-    }
-
     func descriptionLines(_ description: String) -> [String] {
         let replace = description.replacingOccurrences(of: ", ", with: ",\n")
         return replace.split(separator: "\n").map { String($0) }

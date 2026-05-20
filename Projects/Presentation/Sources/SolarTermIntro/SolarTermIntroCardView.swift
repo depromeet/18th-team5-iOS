@@ -36,7 +36,7 @@ struct SolarTermIntroCardView: View {
                 VStack(alignment: .leading) {
                     // 상단 칩
                     HStack(spacing: 4) {
-                        chipView(text: SolarTerm(rawValue: solarTermIntro.id)?.koreanName ?? solarTermIntro.id)
+                        chipView(text: solarTermIntro.term.koreanName)
                         if let dateLabel {
                             chipView(text: dateLabel)
                         }
@@ -53,7 +53,7 @@ struct SolarTermIntroCardView: View {
                             .foregroundStyle(Color(hex: 0xFDFFD1))
                             .lineLimit(3)
 
-                        Text(solarTermIntro.introSubTitle)
+                        Text(solarTermIntro.introSubtitle)
                             .font(.headline2Medium)
                             .foregroundStyle(Color(hex: 0x25784A))
                     }
