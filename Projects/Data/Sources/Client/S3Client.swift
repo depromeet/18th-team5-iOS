@@ -60,10 +60,6 @@ extension S3Client: DependencyKey {
     )
 }
 
-extension S3Client: TestDependencyKey {
-    static let testValue = S3Client()
-}
-
 extension DependencyValues {
     var s3Client: S3Client {
         get { self[S3Client.self] }

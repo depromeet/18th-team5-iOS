@@ -21,6 +21,12 @@ public struct MissionRepository: Sendable {
     ) async throws -> MissionCompletion
 
     public var fetchCompletions: @Sendable (_ missionId: Int) async throws -> [MissionCompletion]
+
+    public var uploadImage: @Sendable (
+        _ imageData: Data,
+        _ fileName: String,
+        _ contentType: String
+    ) async throws -> String
 }
 
 extension MissionRepository: TestDependencyKey {

@@ -44,6 +44,20 @@ public enum MissionRepositoryImpl {
                     throw mapToDomainError(error)
                 }
             },
+            uploadImage: { imageData, fileName, contentType in
+                @Dependency(\.s3Client) var s3Client
+
+                do {
+                    let (presignedUrl, objectKey) = try await s3Client.fetchPresignedUrl(
+                        fileName,
+                        contentType
+                    )
+                    try await s3Client.uploadImage(presignedUrl, imageData, contentType)
+                    return objectKey
+                } catch {
+                    throw mapToDomainError(error)
+                }
+            },
             fetchCompletions: { missionId in
                 @Dependency(\.networkClient) var client
 
@@ -67,12 +81,15 @@ private extension MissionCompleteResultDTO {
         guard let missionType = MissionType(rawValue: missionType) else {
             throw DTOMappingError.invalidValue(missionType)
         }
-        let date = MissionRepositoryImpl.iso8601Formatter.date(from: completedAt) ?? Date()
+        guard let date = MissionRepositoryImpl.iso8601Formatter.date(from: completedAt) else {
+            throw DTOMappingError.invalidDateFormat(completedAt)
+        }
 
         return MissionCompletion(
             completionId: completionId,
             missionId: missionId,
             missionType: missionType,
+            // complete 응답에는 objectKey/presignedImageUrl/memo가 포함되지 않음
             objectKey: nil,
             presignedImageUrl: nil,
             memo: nil,
@@ -86,7 +103,9 @@ private extension MissionCompletionItemDTO {
         guard let missionType = MissionType(rawValue: missionType) else {
             throw DTOMappingError.invalidValue(missionType)
         }
-        let date = MissionRepositoryImpl.iso8601Formatter.date(from: completedAt) ?? Date()
+        guard let date = MissionRepositoryImpl.iso8601Formatter.date(from: completedAt) else {
+            throw DTOMappingError.invalidDateFormat(completedAt)
+        }
         let imageUrl = presignedImageUrl.flatMap { URL(string: $0) }
 
         return MissionCompletion(
