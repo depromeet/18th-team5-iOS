@@ -100,7 +100,8 @@ protocol PagingTableUIViewDelegate<Item>: AnyObject {
 
 // MARK: - UIKit Paging Table View
 
-final class PagingTableUIView<Item: Identifiable & Equatable, CellView: View>: UIView, UITableViewDataSource, UITableViewDelegate {
+final class PagingTableUIView<Item: Identifiable & Equatable, CellView: View>: UIView, UITableViewDataSource,
+    UITableViewDelegate {
     // MARK: Public Configuration
 
     weak var delegate: (any PagingTableUIViewDelegate<Item>)?
@@ -411,14 +412,11 @@ final class HostingTableViewCell<RootView: View>: UITableViewCell {
 
 private extension HostingTableViewCell {
     func setupAppearance() {
-        contentView.layer.borderColor = UIColor.label.cgColor
-        contentView.layer.borderWidth = 1
         selectionStyle = .none
         backgroundColor = .clear
         contentView.backgroundColor = .clear
     }
 }
-
 
 // MARK: - Preview
 

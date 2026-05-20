@@ -186,6 +186,7 @@ private extension CalendarFeature2 {
         }
         return SolarTermGroup(
             id: term.identifier,
+            termText: "테스트",
             solarTermInfo: term,
             cells: cells.chunked(size: 7)
         )

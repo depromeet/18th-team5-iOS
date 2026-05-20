@@ -8,6 +8,7 @@
 
 import ComposableArchitecture
 import DesignSystem
+import Domain
 import SwiftUI
 
 struct CalendarView2: View {
@@ -15,61 +16,37 @@ struct CalendarView2: View {
 
     var body: some View {
         GeometryReader { geo in
+            let containerWidth = geo.size.width - Constants.calendarHorizontalSpacing * 2
+            let dateCellWidth = (containerWidth - Constants.dateCellHorizontalSpacing * 6) / 7
             VStack(spacing: 0) {
                 headerView
 
                 PagingTableView(
                     groups: store.yearPages,
                     centerItemId: $store.centerItemId,
-                    onPagingRequest: {
-                        store.send(.calendarPagingRequest($0))
-                    },
-                    cellHeight: { _ in
-                        500
-                    },
-                    cellContent: {
-                        termView($0, containerWidth: geo.size.width)
-                            .frame(height: 500)
-                    }
+                    onPagingRequest: { store.send(.calendarPagingRequest($0)) },
+                    cellHeight: { termSectionViewHeight($0) },
+                    cellContent: { termSectionView($0, dateCellWidth: dateCellWidth) }
                 )
-            }
-            .onAppear {
-                store.send(.onAppear)
+                .padding(.horizontal, Constants.calendarHorizontalSpacing)
             }
         }
+        .onAppear {
+            store.send(.onAppear)
+        }
+    }
+
+    func termSectionViewHeight(_ term: SolarTermGroup) -> CGFloat {
+        let weekCount = term.cells.count
+        let weekSectionHeight = Constants.dateCellHeight + 22
+        let header = Constants.termSectionHeaderHeight
+        let calendar = weekSectionHeight * CGFloat(weekCount)
+        let bottom = Constants.termSectionBottomPadding
+        return header + calendar + bottom
     }
 }
 
 extension CalendarView2 {
-    func termView(_ termGroup: SolarTermGroup, containerWidth: CGFloat) -> some View {
-        let cellWidth = (containerWidth - 3 * 6) / 7
-        return VStack(alignment: .leading, spacing: 3) {
-            ForEach(termGroup.cells.indices, id: \.self) {
-                let week = termGroup.cells[$0]
-                HStack(spacing: 3) {
-                    ForEach(week) { day in
-                        switch day {
-                        case .emptyCell:
-                            Rectangle()
-                                .stroke(.black)
-                                .background(Color.white)
-                                .frame(width: cellWidth, height: 56)
-
-                        case let .dateCell(info):
-                            Rectangle()
-                                .stroke(.red)
-                                .background(Color.white)
-                                .frame(width: cellWidth, height: 56)
-                                .overlay {
-                                    Text(info.dayText)
-                                }
-                        }
-                    }
-                }
-            }
-        }
-    }
-
     var headerView: some View {
         VStack {
             HStack(alignment: .center, spacing: 8) {
@@ -85,5 +62,84 @@ extension CalendarView2 {
             }
             WeekdayLabelRow()
         }
+    }
+}
+
+extension CalendarView2 {
+    func termSectionView(_ termGroup: SolarTermGroup, dateCellWidth: CGFloat) -> some View {
+        VStack(spacing: 0) {
+            termSectionHeaderView(termGroup.termText)
+            termCalendarView(termGroup.cells, dateCellWidth: dateCellWidth)
+        }
+        .padding(.bottom, Constants.termSectionBottomPadding)
+        .overlay {
+            VStack {
+                Spacer()
+                Rectangle().frame(height: 1)
+            }
+        }
+    }
+
+    func termSectionHeaderView(_ termText: String) -> some View {
+        VStack(alignment: .leading) {
+            Text(termText)
+                .font(.headline2Medium)
+                .foregroundStyle(Color.gray900)
+                .padding(.top, 12)
+            Spacer()
+        }
+        .frame(height: Constants.termSectionHeaderHeight)
+    }
+
+    func termCalendarView(_ termDates: [[SolarTermGroupCell]], dateCellWidth: CGFloat) -> some View {
+        VStack(alignment: .leading, spacing: Constants.weakSectionVerticalSpacing) {
+            ForEach(termDates.indices, id: \.self) { weekIndex in
+                HStack(spacing: Constants.dateCellHorizontalSpacing) {
+                    ForEach(termDates[weekIndex]) {
+                        dateCellView($0, cellWidth: dateCellWidth)
+                    }
+                }
+            }
+        }
+    }
+
+    func dateCellView(_ date: SolarTermGroupCell, cellWidth: CGFloat) -> some View {
+        VStack(spacing: 2) {
+            RoundedRectangle(cornerRadius: 5)
+                .foregroundStyle(.blue)
+                .frame(width: cellWidth, height: 20)
+
+            ZStack {
+                switch date {
+                case .emptyCell:
+                    Color.clear
+                        .frame(
+                            width: cellWidth,
+                            height: Constants.dateCellHeight
+                        )
+
+                case let .dateCell(info):
+                    RoundedRectangle(cornerRadius: 8)
+                        .foregroundStyle(.gray)
+                        .frame(
+                            width: cellWidth,
+                            height: Constants.dateCellHeight
+                        )
+                    Text(info.dayText)
+                }
+            }
+        }
+    }
+}
+
+private extension CalendarView2 {
+    enum Constants {
+        static let calendarHorizontalSpacing: CGFloat = 19.5
+        static let termSectionHeaderHeight: CGFloat = 46
+        static let termSectionBottomPadding: CGFloat = 24
+        static let weakSectionVerticalSpacing: CGFloat = 6
+
+        static let dateCellHorizontalSpacing: CGFloat = 7
+        static let dateCellHeight: CGFloat = 70
     }
 }
