@@ -46,7 +46,6 @@ public struct SolarTermIntroFeature {
     }
 
     @Dependency(\.solarTermIntroRepository) var solarTermIntroRepository
-    @Dependency(\.solarTermRepository) var solarTermRepository
 
     public init() {}
 
@@ -60,7 +59,7 @@ public struct SolarTermIntroFeature {
                         await send(.solarTermsLoad(cards))
                     },
                     .run { send in
-                        let infos = try await solarTermRepository.fetchSolarTerms(year: .y2026)
+                        let infos = try await solarTermIntroRepository.fetchSolarTermInfos()
                         await send(.solarTermInfosLoad(infos))
                     }
                 )

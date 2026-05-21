@@ -13,6 +13,7 @@ import Foundation
 @DependencyClient
 public struct SolarTermIntroRepository: Sendable {
     public var fetchSolarTermCard: @Sendable () async throws -> [SolarTermIntro]
+    public var fetchSolarTermInfos: @Sendable () async throws -> [SolarTermInfo]
 }
 
 extension SolarTermIntroRepository: TestDependencyKey {
@@ -28,6 +29,7 @@ public extension DependencyValues {
 
 public extension SolarTermIntroRepository {
     static let previewValue = SolarTermIntroRepository(
-        fetchSolarTermCard: { SolarTermIntro.mockList }
+        fetchSolarTermCard: { SolarTermIntro.mockList },
+        fetchSolarTermInfos: { [] }
     )
 }
