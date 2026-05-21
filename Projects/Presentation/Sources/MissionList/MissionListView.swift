@@ -31,7 +31,7 @@ private extension MissionListView {
             HStack(spacing: 0) {
                 categoryListView
                 Spacer()
-                searchButton
+                selectMissionButton
             }
         }
         .padding(.horizontal, 20)
@@ -74,8 +74,11 @@ private extension MissionListView {
         )
     }
 
-    var searchButton: some View {
-        EmptyView()
+    var selectMissionButton: some View {
+        SelectMissionButton {
+            store.send(.selectMissionButtonTapped)
+        }
+        .disabled(!store.isSelectMissionButtonEnabled)
     }
 }
 

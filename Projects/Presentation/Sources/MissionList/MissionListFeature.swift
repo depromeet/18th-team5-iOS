@@ -18,9 +18,15 @@ public struct MissionListFeature {
         var category: Category = .all
 
         public init() {}
+
+        var isSelectMissionButtonEnabled: Bool {
+            // TODO: 추후 로직 구현
+            true
+        }
     }
 
     public enum Action: BindableAction {
+        case selectMissionButtonTapped
         case binding(BindingAction<State>)
     }
 
@@ -30,6 +36,8 @@ public struct MissionListFeature {
 
         Reduce { _, action in
             switch action {
+            case .selectMissionButtonTapped:
+                return .none
             case .binding: return .none
             }
         }
