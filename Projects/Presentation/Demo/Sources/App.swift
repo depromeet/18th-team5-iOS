@@ -22,6 +22,7 @@ struct PresentationDemoApp: App {
                     RootFeature()
                         .dependency(\.calendarRepository, .mock)
                         .dependency(\.homeRepository, .previewValue)
+                        .dependency(\.solarTermIntroRepository, .previewValue)
                 }
             )
         }

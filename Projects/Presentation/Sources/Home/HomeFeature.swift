@@ -14,10 +14,11 @@ public struct HomeFeature {
     @ObservableState
     public struct State: Equatable {
         var homeCard: HomeCard?
-        // TODO: 추후 API 연동시 대체
+        // TODO: 추후 API 연동시 대체 - @minkyo
         var seasonRecord: SeasonRecord = .mock
         var isLoading: Bool = false
         var hasError: Bool = false
+        @Presents var solarTermIntro: SolarTermIntroFeature.State?
 
         public init() {}
     }
@@ -29,6 +30,7 @@ public struct HomeFeature {
         case onMissionTap
         case onMissionRecommendTap
         case onRecordTap
+        case solarTermIntro(PresentationAction<SolarTermIntroFeature.Action>)
         case delegate(Delegate)
 
         public enum Delegate {
@@ -80,11 +82,18 @@ public struct HomeFeature {
                 return .send(.delegate(.navigateToMissionTab))
 
             case .onRecordTap:
+                state.solarTermIntro = SolarTermIntroFeature.State(currentSolarTerm: state.homeCard?.solarTerm.term)
+                return .none
+
+            case .solarTermIntro:
                 return .none
 
             case .delegate:
                 return .none
             }
+        }
+        .ifLet(\.$solarTermIntro, action: \.solarTermIntro) {
+            SolarTermIntroFeature()
         }
     }
 }

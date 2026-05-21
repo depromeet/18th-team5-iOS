@@ -6,9 +6,10 @@
 //  Copyright © 2026 Orange. All rights reserved.
 //
 
+import Core
 import Foundation
 
-public struct SolarTermInfo {
+public struct SolarTermInfo: Equatable {
     public let year: SolarTermYear
     public let term: SolarTerm
     public let startDate: Date
@@ -26,5 +27,13 @@ public struct SolarTermInfo {
         self.endDate = endDate
     }
 
-    public var dateRange: Range<Date> { startDate ..< endDate }
+    public var dateRange: Range<Date> {
+        startDate ..< endDate
+    }
+
+    public var formattedDateRange: String {
+        let start = DateFormatter.monthDay.string(from: startDate)
+        let end = DateFormatter.monthDay.string(from: endDate)
+        return "\(start) - \(end)"
+    }
 }

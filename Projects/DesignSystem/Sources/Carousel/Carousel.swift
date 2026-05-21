@@ -14,6 +14,7 @@ public struct Carousel<Item: Hashable, Content: View>: View {
     private let aspectRatio: CGFloat
     private let edgeRatio: CGFloat
     private let shrinkRatio: CGFloat
+    private let scrollPosition: Binding<Item?>?
     private let content: (Item) -> Content
 
     public init(
@@ -22,6 +23,7 @@ public struct Carousel<Item: Hashable, Content: View>: View {
         aspectRatio: CGFloat,
         edgeRatio: CGFloat = 0.2,
         shrinkRatio: CGFloat = 0.9,
+        scrollPosition: Binding<Item?>? = nil,
         content: @escaping (Item) -> Content
     ) {
         self.items = items
@@ -29,6 +31,7 @@ public struct Carousel<Item: Hashable, Content: View>: View {
         self.aspectRatio = aspectRatio
         self.edgeRatio = min(max(edgeRatio, 0.0), 1.0)
         self.shrinkRatio = min(max(shrinkRatio, 0.5), 1.0)
+        self.scrollPosition = scrollPosition
         self.content = content
     }
 
@@ -50,6 +53,7 @@ public struct Carousel<Item: Hashable, Content: View>: View {
         .frame(height: itemHeight)
         .scrollIndicators(.hidden)
         .scrollTargetBehavior(.viewAligned)
+        .scrollPosition(id: scrollPosition ?? .constant(nil))
     }
 }
 

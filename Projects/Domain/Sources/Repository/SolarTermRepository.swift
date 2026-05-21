@@ -25,3 +25,9 @@ public extension DependencyValues {
         set { self[SolarTermRepository.self] = newValue }
     }
 }
+
+public extension SolarTermRepository {
+    static let previewValue = SolarTermRepository(
+        fetchSolarTerms: { _ in [] }
+    )
+}

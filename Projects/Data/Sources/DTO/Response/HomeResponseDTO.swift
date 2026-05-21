@@ -11,7 +11,7 @@ import Foundation
 
 struct HomeCardDTO: Decodable {
     let solarTerm: SolarTermResponseDTO
-    let dailyMission: DailyMissionResponseDTO
+    let dailyMission: DailyMissionResponseDTO?
 }
 
 struct SolarTermResponseDTO: Decodable {
@@ -35,7 +35,7 @@ extension HomeCardDTO {
     func toDomain() -> HomeCard {
         HomeCard(
             solarTerm: solarTerm.toDomain(),
-            currentMission: dailyMission.toDomain()
+            currentMission: dailyMission?.toDomain()
         )
     }
 }
@@ -44,11 +44,19 @@ extension SolarTermResponseDTO {
     func toDomain() -> SolarTermCard {
         SolarTermCard(
             id: id,
+            term: SolarTerm.allCases.first { $0.koreanName == name },
             name: name,
             description: description,
-            startDate: startDate,
-            endDate: endDate
+            startDate: Self.formatDateString(startDate),
+            endDate: Self.formatDateString(endDate)
         )
+    }
+
+    /// "YYYY-MM-DD" → "MM.dd"
+    private static func formatDateString(_ dateString: String) -> String {
+        let parts = dateString.split(separator: "-")
+        guard parts.count == 3 else { return dateString }
+        return "\(parts[1]).\(parts[2])"
     }
 }
 
