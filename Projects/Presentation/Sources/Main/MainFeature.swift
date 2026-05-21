@@ -37,6 +37,10 @@ public struct MainFeature {
             HomeFeature()
         }
 
+        Scope(state: \.mission, action: \.mission) {
+            MissionListFeature()
+        }
+
         Reduce { _, action in
             switch action {
             case .onAppear:
