@@ -1,0 +1,29 @@
+{
+    "year": 2025,
+    "terms": [
+        { "id": "sohan", "month": 1, "day": 5 },
+        { "id": "daehan", "month": 1, "day": 20 },
+        { "id": "ipchun", "month": 2, "day": 3 },
+        { "id": "usu", "month": 2, "day": 18 },
+        { "id": "gyeongchip", "month": 3, "day": 5 },
+        { "id": "chunbun", "month": 3, "day": 20 },
+        { "id": "cheongmyeong", "month": 4, "day": 4 },
+        { "id": "gogu", "month": 4, "day": 20 },
+        { "id": "ibha", "month": 5, "day": 5 },
+        { "id": "soman", "month": 5, "day": 21 },
+        { "id": "mangjong", "month": 6, "day": 5 },
+        { "id": "haji", "month": 6, "day": 21 },
+        { "id": "soseo", "month": 7, "day": 7 },
+        { "id": "daeseo", "month": 7, "day": 22 },
+        { "id": "ibchu", "month": 8, "day": 7 },
+        { "id": "cheoseo", "month": 8, "day": 23 },
+        { "id": "baengno", "month": 9, "day": 7 },
+        { "id": "chubun", "month": 9, "day": 23 },
+        { "id": "hanro", "month": 10, "day": 8 },
+        { "id": "sanggang", "month": 10, "day": 23 },
+        { "id": "ibdong", "month": 11, "day": 7 },
+        { "id": "soseol", "month": 11, "day": 22 },
+        { "id": "daeseol", "month": 12, "day": 7 },
+        { "id": "dongji", "month": 12, "day": 22 }
+    ]
+}

@@ -12,8 +12,9 @@ import SwiftUI
 
 struct SolarTermCardView: View {
     let solarTerm: SolarTermCard
-    let mission: CurrentMissionCard
+    let mission: CurrentMissionCard?
     let onMissionTap: () -> Void
+    let onDetailTap: () -> Void
 
     var body: some View {
         ZStack(alignment: .bottom) {
@@ -22,13 +23,30 @@ struct SolarTermCardView: View {
 
             // 상단 텍스트 영역
             VStack(alignment: .leading, spacing: 12) {
-                Text("\(formattedDate(solarTerm.startDate)) - \(formattedDate(solarTerm.endDate))")
-                    .font(.caption1Semibold)
-                    .foregroundStyle(.white)
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 4)
-                    .background(Color.white.opacity(0.13))
-                    .clipShape(Capsule())
+                HStack {
+                    Text("\(solarTerm.startDate) - \(solarTerm.endDate)")
+                        .font(.caption1Semibold)
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 4)
+                        .background(Color.white.opacity(0.13))
+                        .clipShape(Capsule())
+
+                    Spacer()
+
+                    Button(action: onDetailTap) {
+                        HStack {
+                            Text("더보기")
+                                .foregroundStyle(Color.white)
+                                .font(.body2Medium)
+                            Image.icArrowRight
+                                .renderingMode(.template)
+                                .resizable()
+                                .frame(width: 24, height: 24)
+                                .foregroundStyle(Color.white)
+                        }
+                    }
+                }
 
                 VStack(alignment: .leading, spacing: 0) {
                     ForEach(descriptionLines(solarTerm.description), id: \.self) { line in
@@ -45,11 +63,13 @@ struct SolarTermCardView: View {
             .frame(maxWidth: .infinity, maxHeight: 400, alignment: .topLeading)
 
             // 하단 미션 카드
-            MissionCardView(
-                mission: mission,
-                onMissionTap: onMissionTap
-            )
-            .padding(.bottom, 16)
+            if let mission {
+                MissionCardView(
+                    mission: mission,
+                    onMissionTap: onMissionTap
+                )
+                .padding(.bottom, 16)
+            }
         }
         .frame(maxWidth: .infinity)
         .frame(height: 400)
@@ -58,12 +78,6 @@ struct SolarTermCardView: View {
 }
 
 extension SolarTermCardView {
-    func formattedDate(_ dateString: String) -> String {
-        let parts = dateString.split(separator: "-")
-        guard parts.count == 3 else { return dateString }
-        return "\(parts[1]).\(parts[2])"
-    }
-
     func descriptionLines(_ description: String) -> [String] {
         let replace = description.replacingOccurrences(of: ", ", with: ",\n")
         return replace.split(separator: "\n").map { String($0) }
@@ -118,6 +132,7 @@ private struct MissionCardView: View {
     SolarTermCardView(
         solarTerm: HomeCard.mock.solarTerm,
         mission: HomeCard.mock.currentMission,
-        onMissionTap: {}
+        onMissionTap: {},
+        onDetailTap: {}
     )
 }

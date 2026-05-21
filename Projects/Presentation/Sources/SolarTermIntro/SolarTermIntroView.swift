@@ -1,0 +1,101 @@
+//
+//  SolarTermIntroView.swift
+//  Presentation
+//
+//  Created by 송민교 on 5/18/26.
+//  Copyright © 2026 Orange. All rights reserved.
+//
+
+import ComposableArchitecture
+import DesignSystem
+import Domain
+import SwiftUI
+
+struct SolarTermIntroView: View {
+    @Bindable private var store: StoreOf<SolarTermIntroFeature>
+
+    init(store: StoreOf<SolarTermIntroFeature>) {
+        self.store = store
+    }
+
+    var body: some View {
+        VStack(spacing: 0) {
+            headerSection
+            cardCarousel
+            Spacer()
+        }
+        .navigationTitle("제철 소개")
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar(.hidden, for: .tabBar)
+        .onAppear { store.send(.onAppear) }
+    }
+}
+
+// MARK: - Subviews
+
+private extension SolarTermIntroView {
+    var headerSection: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Text("Peaktime이 소개하는\n24절기 제철 가이드")
+                .font(.headline1Semibold)
+                .foregroundStyle(Color(hex: 0x2A3038))
+
+            seasonChips
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, 20)
+        .padding(.top, 16)
+        .padding(.bottom, 36)
+    }
+
+    var seasonChips: some View {
+        HStack(spacing: 4) {
+            ForEach(Season.allCases, id: \.self) { season in
+                Button {
+                    store.send(.selectSeason(season))
+                } label: {
+                    Text(season.displayName)
+                        .font(.body2Regular)
+                        .foregroundStyle(store.season == season ? .white : Color(hex: 0x2A3038))
+                        .padding(.vertical, 8)
+                        .padding(.horizontal, 16)
+                        .background(store.season == season ? Color.gray700 : Color.gray100)
+                        .clipShape(Capsule())
+                }
+            }
+        }
+    }
+
+    var cardCarousel: some View {
+        Carousel(
+            items: store.filteredCards,
+            spacing: 16,
+            aspectRatio: 266.0 / 400.0,
+            shrinkRatio: 280.0 / 400.0,
+            scrollPosition: Binding(
+                get: { store.filteredCards.first { $0.term == store.targetTerm } },
+                set: { _ in }
+            )
+        ) { solarTerm in
+            SolarTermIntroCardView(
+                solarTermIntro: solarTerm,
+                season: store.season,
+                dateLabel: store.dateLabels[solarTerm.term],
+                onTap: { store.send(.onCardTap(solarTerm)) }
+            )
+        }
+    }
+}
+
+#Preview {
+    NavigationStack {
+        SolarTermIntroView(
+            store: Store(initialState: SolarTermIntroFeature.State()) {
+                SolarTermIntroFeature()
+            } withDependencies: {
+                $0.solarTermIntroRepository = .previewValue
+                $0.solarTermRepository = .previewValue
+            }
+        )
+    }
+}

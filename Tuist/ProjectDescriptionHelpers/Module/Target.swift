@@ -110,7 +110,7 @@ private extension Module {
 
     var buildableFolders: [BuildableFolder] {
         switch self {
-        case .app, .designSystem: ["Sources", "Resources"]
+        case .app, .designSystem, .data: ["Sources", "Resources"]
         default: ["Sources"]
         }
     }
