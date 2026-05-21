@@ -37,6 +37,11 @@ private extension MissionListView {
         .padding(.horizontal, 20)
         .padding(.top, 24)
         .padding(.bottom, 12)
+        .overlay(alignment: .bottomTrailing) {
+            tooltip
+                .padding(.trailing, 20)
+                .padding(.bottom, -38)
+        }
     }
 
     var titleView: some View {
@@ -79,6 +84,14 @@ private extension MissionListView {
             store.send(.selectMissionButtonTapped)
         }
         .disabled(!store.isSelectMissionButtonEnabled)
+    }
+
+    var tooltip: some View {
+        Tooltip(
+            text: "기록하고 싶은 미션이 없다면?",
+            position: .rightTop,
+            isPresented: $store.isTooltipPresented
+        )
     }
 }
 

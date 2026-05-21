@@ -16,6 +16,7 @@ public struct MissionListFeature {
         var nickname: String = "제철을 쫓는 탐험가"
         var solarTerm: SolarTerm = .ibha
         var category: Category = .all
+        var isTooltipPresented: Bool = true
 
         public init() {}
 
@@ -34,9 +35,10 @@ public struct MissionListFeature {
     public var body: some ReducerOf<Self> {
         BindingReducer()
 
-        Reduce { _, action in
+        Reduce { state, action in
             switch action {
             case .selectMissionButtonTapped:
+                state.isTooltipPresented = true
                 return .none
             case .binding: return .none
             }

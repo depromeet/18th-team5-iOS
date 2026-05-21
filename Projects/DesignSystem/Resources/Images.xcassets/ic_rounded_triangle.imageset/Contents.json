@@ -1,0 +1,12 @@
+{
+  "images" : [
+    {
+      "filename" : "ic_rounded_triangle.pdf",
+      "idiom" : "universal"
+    }
+  ],
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  }
+}
