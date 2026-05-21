@@ -15,15 +15,32 @@ public struct MissionListFeature {
     public struct State: Equatable {
         var nickname: String = "제철을 쫓는 탐험가"
         var solarTerm: SolarTerm = .ibha
+        var category: Category = .all
+
         public init() {}
     }
 
-    public enum Action {}
+    public enum Action: BindableAction {
+        case binding(BindingAction<State>)
+    }
 
     public init() {}
     public var body: some ReducerOf<Self> {
-        Reduce { _, _ in
-            return .none
+        BindingReducer()
+
+        Reduce { _, action in
+            switch action {
+            case .binding: return .none
+            }
         }
+    }
+}
+
+extension MissionListFeature {
+    enum Category: CaseIterable {
+        case all
+        case food
+        case contents
+        case activity
     }
 }

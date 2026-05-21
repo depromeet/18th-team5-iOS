@@ -11,19 +11,15 @@ import DesignSystem
 import SwiftUI
 
 public struct MissionListView: View {
-    private let store: StoreOf<MissionListFeature>
+    @Bindable private var store: StoreOf<MissionListFeature>
 
     public init(store: StoreOf<MissionListFeature>) {
         self.store = store
     }
 
     public var body: some View {
-        ScrollView {
-            Color.white
-                .frame(maxWidth: .infinity)
-                .frame(height: 600)
-        }
-        .overlay(alignment: .top) { headerView }
+        Color.white
+            .overlay(alignment: .top) { headerView }
     }
 }
 
@@ -58,10 +54,38 @@ private extension MissionListView {
     }
 
     var categoryListView: some View {
-        EmptyView()
+        HStack(spacing: 6) {
+            ForEach(
+                MissionListFeature.Category.allCases,
+                id: \.self
+            ) { category in
+                categoryView(category)
+            }
+        }
+    }
+
+    func categoryView(
+        _ category: MissionListFeature.Category
+    ) -> some View {
+        Chip(
+            title: category.title,
+            type: category == store.category ? .default : .secondary,
+            action: { store.send(.set(\.category, category)) }
+        )
     }
 
     var searchButton: some View {
         EmptyView()
+    }
+}
+
+private extension MissionListFeature.Category {
+    var title: String {
+        switch self {
+        case .all: "전체"
+        case .food: "음식"
+        case .contents: "콘텐츠"
+        case .activity: "활동"
+        }
     }
 }
