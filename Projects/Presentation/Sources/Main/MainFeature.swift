@@ -14,6 +14,7 @@ public struct MainFeature {
     public struct State: Equatable {
         public var tab: Tab = .home
         var home: HomeFeature.State = .init()
+        var mission: MissionListFeature.State = .init()
 
         public init() {}
     }
@@ -22,6 +23,7 @@ public struct MainFeature {
         case onAppear
         case binding(BindingAction<State>)
         case home(HomeFeature.Action)
+        case mission(MissionListFeature.Action)
     }
 
     @Dependency(\.logger) var logger
@@ -50,8 +52,11 @@ public struct MainFeature {
                 // TODO: 미션 추천 페이지 이동 - @minkyo
                 return .none
 
-            case .home, .binding:
-                return .none
+            case .home: return .none
+
+            case .mission: return .none
+
+            case .binding: return .none
             }
         }
     }
