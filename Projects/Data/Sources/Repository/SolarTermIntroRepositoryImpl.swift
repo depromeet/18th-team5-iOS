@@ -29,6 +29,7 @@ public enum SolarTermIntroRepositoryImpl {
                 let currentYear = SolarTermYear.current
                 let infos = try loadSolarTermInfos(year: currentYear)
 
+                // TODO: 절기 모델링 endDate 수정 작업 머지 후 확인 필요 - @minkyo
                 if let firstStartDate = infos.first?.startDate,
                    firstStartDate > Date(),
                    let previousYear = currentYear.previous {

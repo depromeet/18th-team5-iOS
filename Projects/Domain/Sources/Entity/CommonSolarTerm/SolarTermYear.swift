@@ -15,7 +15,7 @@ public enum SolarTermYear: Int, CaseIterable, Sendable {
 
     public static var current: SolarTermYear {
         let year = Calendar.current.component(.year, from: Date())
-        return SolarTermYear(rawValue: year) ?? .y2026
+        return SolarTermYear(rawValue: year) ?? SolarTermYear.allCases.max(by: { $0.rawValue < $1.rawValue })!
     }
 
     public var previous: SolarTermYear? {
