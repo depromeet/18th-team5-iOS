@@ -9,6 +9,7 @@
 import Alamofire
 import Dependencies
 import DependenciesMacros
+import Domain
 import Foundation
 
 @DependencyClient
@@ -29,10 +30,13 @@ extension S3Client: DependencyKey {
     static let liveValue = S3Client(
         fetchPresignedUrl: { fileName, contentType in
             @Dependency(\.networkClient) var client
-            let response: PresignedUrlResponseDTO = try await client.request(
+            let result: PresignedUrlResultDTO? = try await client.request(
                 S3Endpoint.presignedUrl(fileName: fileName, contentType: contentType)
             )
-            return (response.result.presignedUrl, response.result.objectKey)
+            guard let result else {
+                throw DomainError.unknown("데이터 획득 실패")
+            }
+            return (result.presignedUrl, result.objectKey)
         },
         uploadImage: { presignedUrl, imageData, contentType in
             guard let url = URL(string: presignedUrl) else {

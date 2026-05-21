@@ -36,10 +36,28 @@ public enum MissionRepositoryImpl {
                 )
 
                 do {
-                    let response: MissionCompleteResponseDTO = try await client.request(
+                    let result: MissionCompleteResultDTO? = try await client.request(
                         MissionEndpoint.complete(missionId: missionId, request: requestDTO)
                     )
-                    return try response.result.toDomain()
+                    guard let result else {
+                        throw DomainError.unknown("데이터 획득 실패")
+                    }
+                    return try result.toDomain()
+                } catch {
+                    throw mapToDomainError(error)
+                }
+            },
+            fetchCompletions: { missionId in
+                @Dependency(\.networkClient) var client
+
+                do {
+                    let result: [MissionCompletionItemDTO]? = try await client.request(
+                        MissionEndpoint.fetchCompletions(missionId: missionId)
+                    )
+                    guard let result else {
+                        throw DomainError.unknown("데이터 획득 실패")
+                    }
+                    return try result.map { try $0.toDomain() }
                 } catch {
                     throw mapToDomainError(error)
                 }
@@ -54,18 +72,6 @@ public enum MissionRepositoryImpl {
                     )
                     try await s3Client.uploadImage(presignedUrl, imageData, contentType)
                     return objectKey
-                } catch {
-                    throw mapToDomainError(error)
-                }
-            },
-            fetchCompletions: { missionId in
-                @Dependency(\.networkClient) var client
-
-                do {
-                    let response: MissionCompletionsResponseDTO = try await client.request(
-                        MissionEndpoint.fetchCompletions(missionId: missionId)
-                    )
-                    return try response.result.map { try $0.toDomain() }
                 } catch {
                     throw mapToDomainError(error)
                 }
