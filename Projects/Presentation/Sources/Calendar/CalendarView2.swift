@@ -35,15 +35,6 @@ struct CalendarView2: View {
             store.send(.onAppear)
         }
     }
-
-    func termSectionViewHeight(_ term: SolarTermGroup) -> CGFloat {
-        let weekCount = term.cells.count
-        let weekSectionHeight = Constants.dateCellHeight + 22
-        let header = Constants.termSectionHeaderHeight
-        let calendar = weekSectionHeight * CGFloat(weekCount)
-        let bottom = Constants.termSectionBottomPadding
-        return header + calendar + bottom
-    }
 }
 
 extension CalendarView2 {
@@ -78,7 +69,9 @@ extension CalendarView2 {
         .overlay {
             VStack {
                 Spacer()
-                Rectangle().frame(height: 1)
+                Rectangle()
+                    .foregroundStyle(Color.gray200)
+                    .frame(height: 1)
             }
         }
     }
@@ -121,32 +114,76 @@ extension CalendarView2 {
                     )
                     .padding(.top, 20)
 
-            case let .dateCell(info):
+            case let .dateCell(date):
                 Color.clear
                     .frame(width: cellWidth, height: 20)
                     .overlay {
-                        if info.isFirstDayOfMonth {
-                            RoundedRectangle(cornerRadius: 8)
-                                .foregroundStyle(Color.gray50)
-                                .overlay {
-                                    Text(info.monthText)
-                                        .font(.caption2Medium)
-                                        .foregroundStyle(Color.gray900)
-                                }
+                        if date.isFirstDayOfMonth {
+                            monthCell(date.monthText)
                         }
                     }
 
-                RoundedRectangle(cornerRadius: 8)
-                    .foregroundStyle(.gray)
-                    .frame(
-                        width: cellWidth,
-                        height: Constants.dateCellHeight
-                    )
-                    .overlay {
-                        Text(info.dayText)
-                    }
+                dateCell(date, cellWidth)
             }
         }
+    }
+
+    func monthCell(_ text: String) -> some View {
+        RoundedRectangle(cornerRadius: 8)
+            .foregroundStyle(Color.gray50)
+            .overlay {
+                Text(text)
+                    .font(.caption2Medium)
+                    .foregroundStyle(Color.gray900)
+            }
+    }
+
+    func dateCell(_ date: SolarTermDate, _ cellWidth: CGFloat) -> some View {
+        HStack(spacing: 0) {
+            Spacer(minLength: 5)
+            VStack(spacing: 0) {
+                // TODO: 이미지로 교체 -@준영
+                Rectangle()
+                    .foregroundStyle(.gray)
+                    .frame(width: 32, height: 32)
+                    .clipShape(
+                        CalendarCellImageShape(
+                            containerPadding: 2.56,
+                            containerRadius: 4,
+                            protrusionRadius: 1.78
+                        )
+                    )
+                Spacer(minLength: 0)
+                Text(date.dayText)
+                    .font(.body2Medium)
+                    .foregroundStyle(Color.gray900)
+            }
+            .padding(.vertical, 6)
+            Spacer(minLength: 5)
+        }
+        .frame(
+            width: cellWidth,
+            height: Constants.dateCellHeight
+        )
+        .background {
+            RoundedRectangle(cornerRadius: 8)
+                // TODO: 디자인 시스템 반영 필요 -@준영
+                .foregroundStyle(Color(hex: 0xF7F8F9))
+        }
+    }
+}
+
+extension CalendarView2 {
+    func termSectionViewHeight(_ term: SolarTermGroup) -> CGFloat {
+        let header = Constants.termSectionHeaderHeight
+
+        let weekCount = term.cells.count
+        let weekSectionHeight = Constants.dateCellHeight + 22
+        let weekSpacing = Constants.weakSectionVerticalSpacing * CGFloat(weekCount - 1)
+        let calendar = weekSectionHeight * CGFloat(weekCount) + weekSpacing
+
+        let bottom = Constants.termSectionBottomPadding
+        return header + calendar + bottom
     }
 }
 
