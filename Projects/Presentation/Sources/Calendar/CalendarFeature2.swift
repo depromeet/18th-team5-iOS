@@ -66,7 +66,11 @@ public struct CalendarFeature2 {
                             group.addTask {
                                 guard let terms = try? await solarTermRepository.fetchSolarTerms(year)
                                 else { return nil }
-                                return (year, mapToYearGroup(year: year, terms: terms))
+                                return (year, mapToYearGroup(
+                                    now: now,
+                                    year: year,
+                                    terms: terms
+                                ))
                             }
                         }
 
@@ -114,10 +118,15 @@ public struct CalendarFeature2 {
                 guard let fetchingYear else { return .none }
 
                 let currentPages = state.yearPages
+                let now = date.now
 
                 return .run { send in
                     let fetchedTerms = try await solarTermRepository.fetchSolarTerms(fetchingYear)
-                    let newYearGroup = mapToYearGroup(year: fetchingYear, terms: fetchedTerms)
+                    let newYearGroup = mapToYearGroup(
+                        now: now,
+                        year: fetchingYear,
+                        terms: fetchedTerms
+                    )
                     switch direction {
                     case .prepend:
                         var updated = [newYearGroup] + currentPages
@@ -152,14 +161,14 @@ private extension CalendarFeature2 {
         return nil
     }
 
-    func mapToYearGroup(year: SolarTermYear, terms: [SolarTermInfo]) -> Page<SolarTermGroup> {
+    func mapToYearGroup(now: Date, year: SolarTermYear, terms: [SolarTermInfo]) -> Page<SolarTermGroup> {
         Page(
             id: year.rawValue,
-            items: terms.map { mapToTermGroup($0) }
+            items: terms.map { mapToTermGroup(now, $0) }
         )
     }
 
-    func mapToTermGroup(_ termInfo: SolarTermInfo) -> SolarTermGroup {
+    func mapToTermGroup(_ now: Date, _ termInfo: SolarTermInfo) -> SolarTermGroup {
         var calendar = Calendar.current
         calendar.firstWeekday = 2
         let weekday = calendar.component(.weekday, from: termInfo.startDate)
@@ -176,16 +185,17 @@ private extension CalendarFeature2 {
         }
 
         for date in termInfo.termDates {
-            let components = calendar.dateComponents([.day, .month], from: date)
-            guard let day = components.day, let month = components.month else { continue }
+            guard let ymd = yearMonthDay(date),
+                  let todayYmd = yearMonthDay(now)
+            else { continue }
             cells.append(
                 .dateCell(
                     SolarTermDate(
                         id: date.description,
-                        monthText: "\(month)월",
-                        dayText: String(day),
-                        isFirstDayOfMonth: day == 1,
-                        isToday: false
+                        monthText: "\(ymd.month)월",
+                        dayText: String(ymd.day),
+                        isFirstDayOfMonth: ymd.day == 1,
+                        isToday: ymd == todayYmd
                     )
                 )
             )
@@ -196,6 +206,15 @@ private extension CalendarFeature2 {
             solarTermInfo: termInfo,
             cells: cells.chunked(size: 7)
         )
+    }
+
+    func yearMonthDay(_ date: Date) -> (year: Int, month: Int, day: Int)? {
+        let components = Calendar.current.dateComponents([.day, .month, .year], from: date)
+        guard let year = components.year,
+              let month = components.month,
+              let day = components.day
+        else { return nil }
+        return (year, month, day)
     }
 
     static let dayFormatter: DateFormatter = {

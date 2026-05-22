@@ -156,7 +156,9 @@ extension CalendarView2 {
                 Spacer(minLength: 0)
                 Text(date.dayText)
                     .font(.body2Medium)
-                    .foregroundStyle(Color.gray900)
+                    .foregroundStyle(
+                        date.isToday ? Color(hex: 0x43DA87) : Color.gray900
+                    )
             }
             .padding(.vertical, 6)
             Spacer(minLength: 5)
