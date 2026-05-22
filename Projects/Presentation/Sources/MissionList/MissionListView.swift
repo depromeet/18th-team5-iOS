@@ -18,8 +18,11 @@ public struct MissionListView: View {
     }
 
     public var body: some View {
-        Color.white
-            .overlay(alignment: .top) { headerView }
+        ZStack {
+            Color.white
+                .overlay { circleBackgroundView }
+        }
+        .overlay(alignment: .top) { headerView }
     }
 }
 
@@ -37,6 +40,7 @@ private extension MissionListView {
         .padding(.horizontal, 20)
         .padding(.top, 24)
         .padding(.bottom, 12)
+        .background { headerBackgroundView }
         .overlay(alignment: .bottomTrailing) {
             tooltip
                 .padding(.trailing, 20)
@@ -92,6 +96,28 @@ private extension MissionListView {
             position: .rightTop,
             isPresented: $store.isTooltipPresented
         )
+    }
+
+    var headerBackgroundView: some View {
+        LinearGradient(
+            stops: [
+                .init(color: .white, location: 0.5),
+                .init(color: .whiteAlpha100, location: 1.0)
+            ],
+            startPoint: .top,
+            endPoint: .bottom
+        )
+        .ignoresSafeArea(edges: .top)
+    }
+
+    var circleBackgroundView: some View {
+        let width = UIScreen.width
+        let diameter = width * 3 - 40
+
+        return Color.gray50
+            .frame(width: diameter, height: diameter)
+            .clipShape(Circle())
+            .offset(x: -width)
     }
 }
 
