@@ -73,8 +73,13 @@ private extension CameraDemoView {
                     }
             )
 
-            zoomControls
-                .padding(.top, 24)
+            if cameraState.isFrontCamera {
+                selfieZoomToggle
+                    .padding(.top, 24)
+            } else {
+                zoomControls
+                    .padding(.top, 24)
+            }
 
             Spacer()
 
@@ -121,6 +126,23 @@ private extension CameraDemoView {
             .padding(.vertical, 6)
             .background(.black.opacity(0.5))
             .clipShape(Capsule())
+    }
+
+    var selfieZoomToggle: some View {
+        let isWide = cameraState.currentZoomFactor <= 1.0
+        return Button {
+            proxy.send(.toggleSelfieZoom)
+        } label: {
+            Image(systemName: isWide
+                ? "arrow.down.right.and.arrow.up.left"
+                : "arrow.up.left.and.arrow.down.right")
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundStyle(.white)
+                .frame(width: 32, height: 32)
+                .background(Color.gray.opacity(0.5))
+                .clipShape(Circle())
+        }
+        .frame(height: 32)
     }
 
     var zoomControls: some View {

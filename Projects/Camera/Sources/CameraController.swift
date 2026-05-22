@@ -32,7 +32,7 @@ public final class CameraController: NSObject, @unchecked Sendable {
     }
 
     public var maxZoomFactor: CGFloat {
-        isFrontCamera ? 5.0 : 10.0
+        isFrontCamera ? Self.selfieCloseUpZoom : 10.0
     }
 
     // MARK: - Internal
@@ -162,16 +162,22 @@ public final class CameraController: NSObject, @unchecked Sendable {
     }
 
     public func setZoomFromPinch(_ magnification: CGFloat) throws {
-        guard !isFrontCamera else { return }
-        let newFactor = baseZoomFactor * magnification
-        let clamped = min(max(newFactor, minZoomFactor), maxZoomFactor)
-        guard clamped != currentZoomFactor else { return }
-        currentZoomFactor = clamped
-        try setZoomOnDevice(clamped, animated: false)
+        if isFrontCamera {
+            let target: CGFloat = magnification > 1.0 ? Self.selfieCloseUpZoom : 1.0
+            guard target != currentZoomFactor else { return }
+            currentZoomFactor = target
+            baseZoomFactor = target
+            try setZoomOnDevice(target, animated: true)
+        } else {
+            let newFactor = baseZoomFactor * magnification
+            let clamped = min(max(newFactor, minZoomFactor), maxZoomFactor)
+            guard clamped != currentZoomFactor else { return }
+            currentZoomFactor = clamped
+            try setZoomOnDevice(clamped, animated: false)
+        }
     }
 
     public func endPinchZoom() {
-        guard !isFrontCamera else { return }
         baseZoomFactor = currentZoomFactor
     }
 
