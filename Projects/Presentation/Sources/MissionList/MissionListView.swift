@@ -82,7 +82,7 @@ private extension MissionListView {
         Chip(
             title: category.name,
             type: category == store.category ? .default : .secondary,
-            action: { store.send(.set(\.category, category)) }
+            action: { store.send(.categoryTapped(category)) }
         )
     }
 

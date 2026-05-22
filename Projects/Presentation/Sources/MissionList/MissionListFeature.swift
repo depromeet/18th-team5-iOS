@@ -15,7 +15,6 @@ public struct MissionListFeature {
     public struct State: Equatable {
         var userType: UserType = .explorer
         var solarTerm: SolarTerm = .ibha
-        var category: MissionCategory = .food
         var isTooltipPresented: Bool = true
 
         var missions: [Mission]
@@ -31,9 +30,14 @@ public struct MissionListFeature {
             // TODO: 추후 로직 구현
             true
         }
+
+        var category: MissionCategory {
+            selectedMission.category
+        }
     }
 
     public enum Action: BindableAction {
+        case categoryTapped(MissionCategory)
         case selectMissionButtonTapped
         case binding(BindingAction<State>)
     }
@@ -44,6 +48,11 @@ public struct MissionListFeature {
 
         Reduce { state, action in
             switch action {
+            case let .categoryTapped(category):
+                let mission = state.missions.first { $0.category == category }
+                guard let mission else { return .none }
+                state.selectedMission = mission
+                return .none
             case .selectMissionButtonTapped:
                 state.isTooltipPresented = true
                 return .none
@@ -92,71 +101,71 @@ private extension [Mission] {
         ),
         .init(
             id: 5,
-            title: "활동 관련 미션 예시입니다 1",
-            category: .activity,
-            season: .summer,
-            isCompleted: false
-        ),
-        .init(
-            id: 6,
-            title: "활동 관련 미션 예시입니다 2",
-            category: .activity,
-            season: .summer,
-            isCompleted: false
-        ),
-        .init(
-            id: 7,
-            title: "활동 관련 미션 예시입니다 3",
-            category: .activity,
-            season: .summer,
-            isCompleted: true
-        ),
-        .init(
-            id: 8,
-            title: "활동 관련 미션 예시입니다 4",
-            category: .activity,
-            season: .summer,
-            isCompleted: false
-        ),
-        .init(
-            id: 9,
-            title: "활동 관련 미션 예시입니다 5",
-            category: .activity,
-            season: .summer,
-            isCompleted: false
-        ),
-        .init(
-            id: 10,
             title: "콘텐츠 관련 미션 예시입니다 1",
             category: .contents,
             season: .summer,
             isCompleted: false
         ),
         .init(
-            id: 11,
+            id: 6,
             title: "콘텐츠 관련 미션 예시입니다 2",
             category: .contents,
             season: .summer,
             isCompleted: false
         ),
         .init(
-            id: 12,
+            id: 7,
             title: "콘텐츠 관련 미션 예시입니다 3",
             category: .contents,
             season: .summer,
             isCompleted: true
         ),
         .init(
-            id: 13,
+            id: 8,
             title: "콘텐츠 관련 미션 예시입니다 4",
             category: .contents,
             season: .summer,
             isCompleted: false
         ),
         .init(
-            id: 14,
+            id: 9,
             title: "콘텐츠 관련 미션 예시입니다 5",
             category: .contents,
+            season: .summer,
+            isCompleted: false
+        ),
+        .init(
+            id: 10,
+            title: "활동 관련 미션 예시입니다 1",
+            category: .activity,
+            season: .summer,
+            isCompleted: false
+        ),
+        .init(
+            id: 11,
+            title: "활동 관련 미션 예시입니다 2",
+            category: .activity,
+            season: .summer,
+            isCompleted: false
+        ),
+        .init(
+            id: 12,
+            title: "활동 관련 미션 예시입니다 3",
+            category: .activity,
+            season: .summer,
+            isCompleted: true
+        ),
+        .init(
+            id: 13,
+            title: "활동 관련 미션 예시입니다 4",
+            category: .activity,
+            season: .summer,
+            isCompleted: false
+        ),
+        .init(
+            id: 14,
+            title: "활동 관련 미션 예시입니다 5",
+            category: .activity,
             season: .summer,
             isCompleted: false
         )
