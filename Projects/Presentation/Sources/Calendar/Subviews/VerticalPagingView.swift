@@ -6,6 +6,7 @@
 //  Copyright © 2026 Orange. All rights reserved.
 //
 
+import Combine
 import SwiftUI
 import UIKit
 
@@ -18,13 +19,20 @@ public enum PagingDirection {
     case prepend, append
 }
 
+public struct AnchorRequest<Item: Identifiable & Equatable>: Equatable {
+    public let requestId = UUID()
+    public let itemId: Item.ID
+    public let animated: Bool
+}
+
 // MARK: - SwiftUI Wrapper
 
 struct PagingTableView<Item: Identifiable & Equatable, Content: View>: UIViewRepresentable {
-    var groups: [Page<Item>]
+    let groups: [Page<Item>]
     @Binding var anchoredTermId: Item.ID?
 
     let anchorInset: CGFloat
+    let anchorRequest: AnchorRequest<Item>?
     let onPagingRequest: (PagingDirection) -> Void
     let cellHeight: (Item) -> CGFloat
     let cellContent: (Item) -> Content
@@ -33,6 +41,7 @@ struct PagingTableView<Item: Identifiable & Equatable, Content: View>: UIViewRep
         groups: [Page<Item>],
         anchoredTermId: Binding<Item.ID?>,
         anchorInset: CGFloat,
+        anchorRequest: AnchorRequest<Item>?,
         onPagingRequest: @escaping (PagingDirection) -> Void,
         cellHeight: @escaping (Item) -> CGFloat,
         @ViewBuilder cellContent: @escaping (Item) -> Content
@@ -40,6 +49,7 @@ struct PagingTableView<Item: Identifiable & Equatable, Content: View>: UIViewRep
         self.groups = groups
         self._anchoredTermId = anchoredTermId
         self.anchorInset = anchorInset
+        self.anchorRequest = anchorRequest
         self.onPagingRequest = onPagingRequest
         self.cellHeight = cellHeight
         self.cellContent = cellContent
@@ -74,7 +84,10 @@ struct PagingTableView<Item: Identifiable & Equatable, Content: View>: UIViewRep
 
         uiView.cellBuilder = cellContent
         uiView.cellHeightProvider = cellHeight
-        uiView.update(groups: groups, anchorId: anchoredTermId)
+        uiView.update(groups: groups)
+        if let anchorRequest {
+            uiView.update(anchorRequest: anchorRequest)
+        }
     }
 }
 
@@ -126,35 +139,36 @@ final class PagingTableUIView<Item: Identifiable & Equatable, CellView: View>: U
     private var isAdjustingContentOffset: Bool = false
     private var isPageUpdating: Bool = false
 
+    // MARK: Observe
+
+    private let anchorRequest = PassthroughSubject<AnchorRequest<Item>, Never>()
+    private var store: Set<AnyCancellable> = []
+
     // MARK: Init
 
     init(anchorInset: CGFloat) {
         self.anchorInset = anchorInset
         super.init(frame: .zero)
+        setupObservation()
         setupView()
         setupTableView()
     }
 
     required init?(coder: NSCoder) { nil }
 
-    func update(anchorId: Item.ID) {
-        if let initialIndexPath = indexPath(for: anchorId) ?? middleIndexPath(in: groups) {
-            tableView.scrollToRow(at: initialIndexPath, at: .middle, animated: false)
-            tableView.contentOffset.y += anchorInset
-        }
-    }
-
     // MARK: Public Updates
 
-    func update(groups newGroups: [Page<Item>], anchorId: Item.ID? = nil) {
+    func update(anchorRequest: AnchorRequest<Item>) {
+        self.anchorRequest.send(anchorRequest)
+    }
+
+    func update(groups newGroups: [Page<Item>]) {
         defer { isPageUpdating = false }
         isPageUpdating = true
 
         let oldGroupIds = groups.map(\.id)
         let newGroupIds = newGroups.map(\.id)
         guard oldGroupIds != newGroupIds else { return }
-
-        let wasEmpty = groups.isEmpty
 
         // 위쪽 변화량 계산: prepend는 (+), front drop은 (-)
         let prependedGroupCount = countPrependedGroups(oldGroups: groups, newGroups: newGroups)
@@ -183,13 +197,6 @@ final class PagingTableUIView<Item: Identifiable & Equatable, CellView: View>: U
             isAdjustingContentOffset = false
         } else {
             tableView.reloadData()
-        }
-
-        if wasEmpty, let anchorId {
-            if let indexPath = indexPath(for: anchorId) {
-                tableView.scrollToRow(at: indexPath, at: .top, animated: false)
-                tableView.contentOffset.y += anchorInset
-            }
         }
     }
 
@@ -243,6 +250,28 @@ final class PagingTableUIView<Item: Identifiable & Equatable, CellView: View>: U
 // MARK: - Setup
 
 private extension PagingTableUIView {
+    func setupObservation() {
+        anchorRequest
+            .removeDuplicates()
+            .sink { [weak self] request in
+                guard let self else { return }
+
+                updateAnchor(request: request)
+            }
+            .store(in: &store)
+    }
+
+    private func updateAnchor(request: AnchorRequest<Item>) {
+        defer { isPageUpdating = false }
+        isPageUpdating = true
+
+        if let initialIndexPath = indexPath(for: request.itemId) ?? middleIndexPath(in: groups) {
+            tableView.setContentOffset(tableView.contentOffset, animated: false)
+            tableView.scrollToRow(at: initialIndexPath, at: .top, animated: request.animated)
+            tableView.contentOffset.y += anchorInset
+        }
+    }
+
     func setupView() {
         backgroundColor = .clear
     }
@@ -493,6 +522,7 @@ private struct PagingTablePreviewWrapper: View {
                 groups: viewModel.groups,
                 anchoredTermId: $viewModel.anchoredTermId,
                 anchorInset: 10,
+                anchorRequest: nil,
                 onPagingRequest: viewModel.handlePagingRequest,
                 cellHeight: { $0.height }
             ) { item in

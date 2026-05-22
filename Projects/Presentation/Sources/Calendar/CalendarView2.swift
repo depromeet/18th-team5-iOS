@@ -25,6 +25,7 @@ struct CalendarView2: View {
                     groups: store.yearPages,
                     anchoredTermId: $store.anchoredTermId,
                     anchorInset: Constants.termSectionHeaderHeight + 22 - 14,
+                    anchorRequest: store.anchorRequest,
                     onPagingRequest: { store.send(.calendarPagingRequest($0)) },
                     cellHeight: { termSectionViewHeight($0) },
                     cellContent: { termSectionView($0, dateCellWidth: dateCellWidth) }

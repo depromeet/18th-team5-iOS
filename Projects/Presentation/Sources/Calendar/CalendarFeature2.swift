@@ -18,6 +18,7 @@ public struct CalendarFeature2 {
         public var yearPages: [Page<SolarTermGroup>] = []
         public var anchoredTermId: SolarTermGroup.ID?
         public var isPaging: Bool = false
+        public var anchorRequest: AnchorRequest<SolarTermGroup>?
 
         fileprivate var currentYear: SolarTermYear = .y2026
     }
@@ -25,7 +26,7 @@ public struct CalendarFeature2 {
     public enum Action: BindableAction {
         case onAppear
         case updateCalendarHeader(CalendarHeader)
-        case anchoredTermChanged(SolarTermGroup.ID)
+        case updateAnchorRequest(AnchorRequest<SolarTermGroup>)
         case calendarPagingRequest(PagingDirection)
         case updateYearPages([Page<SolarTermGroup>])
         case yearPagesLayoutCompleted
@@ -42,7 +43,6 @@ public struct CalendarFeature2 {
             switch action {
             case .onAppear:
                 let now = date.now
-
                 guard let year = Calendar.current.dateComponents([.year], from: now).year,
                       let currentYear = SolarTermYear(rawValue: year)
                 else {
@@ -84,24 +84,28 @@ public struct CalendarFeature2 {
                             .map(\.1)
                     }
 
+                    await send(.updateYearPages(pages))
+
                     for page in pages {
                         for term in page.items {
                             if term.solarTermInfo.dateRange.contains(now) {
-                                await send(.anchoredTermChanged(term.id))
+                                let request = AnchorRequest<SolarTermGroup>(
+                                    itemId: term.id,
+                                    animated: false
+                                )
+                                await send(.updateAnchorRequest(request))
                                 break
                             }
                         }
                     }
-
-                    await send(.updateYearPages(pages))
                 }
 
             case let .updateCalendarHeader(header):
                 state.header = header
                 return .none
 
-            case let .anchoredTermChanged(termId):
-                state.anchoredTermId = termId
+            case let .updateAnchorRequest(request):
+                state.anchorRequest = request
                 return .none
 
             case let .updateYearPages(pages):
