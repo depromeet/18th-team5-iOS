@@ -96,16 +96,17 @@ extension CalendarView2 {
     func termCalendarView(_ termDates: [[SolarTermGroupCell]], dateCellWidth: CGFloat) -> some View {
         VStack(alignment: .leading, spacing: Constants.weakSectionVerticalSpacing) {
             ForEach(termDates.indices, id: \.self) { weekIndex in
+                let inset = Constants.dateCellInsetY(weekIndex: weekIndex) - 11
                 HStack(spacing: Constants.dateCellHorizontalSpacing) {
                     ForEach(termDates[weekIndex]) {
-                        dateCellView($0, cellWidth: dateCellWidth)
+                        dateCellView($0, cellWidth: dateCellWidth, inset: inset)
                     }
                 }
             }
         }
     }
 
-    func dateCellView(_ date: SolarTermGroupCell, cellWidth: CGFloat) -> some View {
+    func dateCellView(_ date: SolarTermGroupCell, cellWidth: CGFloat, inset: CGFloat) -> some View {
         VStack(spacing: Constants.dateMonthCellSpacing) {
             switch date {
             case .emptyCell:
@@ -124,7 +125,7 @@ extension CalendarView2 {
                             )
                     }
 
-                    dateCell(date, cellWidth)
+                    dateCell(date, cellWidth, inset: inset)
                 }
             }
         }
@@ -141,7 +142,7 @@ extension CalendarView2 {
             .frame(width: cellWidth, height: Constants.monthCellHeight)
     }
 
-    func dateCell(_ date: SolarTermDate, _ cellWidth: CGFloat) -> some View {
+    func dateCell(_ date: SolarTermDate, _ cellWidth: CGFloat, inset: CGFloat) -> some View {
         let isSelected = store.selectedDateId == date.id
         return HStack(spacing: 0) {
             Spacer(minLength: 5)
@@ -161,6 +162,7 @@ extension CalendarView2 {
                 Text(date.dayText)
                     .font(.body2Medium)
                     .foregroundStyle(
+                        // TODO: 색상 수정예정 -@준영
                         date.isToday ? Color(hex: 0x43DA87) : Color.gray900
                     )
             }
@@ -181,7 +183,7 @@ extension CalendarView2 {
                 )
         }
         .onTapGesture {
-            store.send(.dateCellTapped(date.id))
+            store.send(.dateCellTapped(dateId: date.id, inset: inset))
         }
     }
 }
@@ -212,5 +214,11 @@ private extension CalendarView2 {
         static let dateMonthCellSpacing: CGFloat = 2
         static let dateCellHorizontalSpacing: CGFloat = 7
         static let dateCellHeight: CGFloat = 70
+
+        static func dateCellInsetY(weekIndex: Int) -> CGFloat {
+            let weekHeight = monthCellHeight + dateMonthCellSpacing + dateCellHeight
+            let weekStartY = CGFloat(weekIndex) * (weekHeight + weakSectionVerticalSpacing)
+            return termSectionHeaderHeight + weekStartY + monthCellHeight + dateMonthCellSpacing
+        }
     }
 }

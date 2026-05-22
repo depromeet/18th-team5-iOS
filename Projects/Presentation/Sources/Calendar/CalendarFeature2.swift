@@ -29,7 +29,7 @@ public struct CalendarFeature2 {
         case updateCalendarHeader(CalendarHeader)
         case updateAnchorRequest(AnchorRequest<SolarTermGroup>)
         case calendarPagingRequest(PagingDirection)
-        case dateCellTapped(SolarTermDate.ID)
+        case dateCellTapped(dateId: SolarTermDate.ID, inset: CGFloat)
         case updateYearPages([Page<SolarTermGroup>])
         case yearPagesLayoutCompleted
         case binding(BindingAction<State>)
@@ -65,8 +65,8 @@ public struct CalendarFeature2 {
             case let .calendarPagingRequest(direction):
                 return calendarPagingRequest(&state, direction: direction)
 
-            case let .dateCellTapped(dateId):
-                return dateCellTapped(&state, dateId: dateId)
+            case let .dateCellTapped(dateId, inset):
+                return dateCellTapped(&state, dateId: dateId, inset: inset)
 
             case .binding(\.anchoredTermId):
                 if let termId = state.anchoredTermId,
@@ -115,7 +115,11 @@ extension CalendarFeature2 {
 
             if let anchoredPage = pages.findAnchorTerm(containing: now) {
                 await send(.updateAnchorRequest(
-                    AnchorRequest(itemId: anchoredPage.id, animated: false)
+                    AnchorRequest(
+                        itemId: anchoredPage.id,
+                        inset: nil,
+                        animated: false
+                    )
                 ))
             }
         }
@@ -153,7 +157,8 @@ extension CalendarFeature2 {
 
     private func dateCellTapped(
         _ state: inout State,
-        dateId: SolarTermDate.ID
+        dateId: SolarTermDate.ID,
+        inset: CGFloat
     ) -> Effect<Action> {
         state.selectedDateId = dateId
         for pageIndex in state.yearPages.indices {
@@ -163,6 +168,7 @@ extension CalendarFeature2 {
                     if case let .dateCell(date) = cell, date.id == dateId {
                         let request = AnchorRequest<SolarTermGroup>(
                             itemId: term.id,
+                            inset: inset,
                             animated: true
                         )
                         state.anchoredTermId = term.id

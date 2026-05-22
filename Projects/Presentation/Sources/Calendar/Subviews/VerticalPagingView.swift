@@ -22,6 +22,7 @@ public enum PagingDirection {
 public struct AnchorRequest<Item: Identifiable & Equatable>: Equatable {
     public let requestId = UUID()
     public let itemId: Item.ID
+    public let inset: CGFloat?
     public let animated: Bool
 }
 
@@ -265,12 +266,12 @@ private extension PagingTableUIView {
         defer { isPageUpdating = false }
         isPageUpdating = true
 
-        if let initialIndexPath = indexPath(for: request.itemId) ?? middleIndexPath(in: groups) {
+        if let indexPath = indexPath(for: request.itemId) ?? middleIndexPath(in: groups),
+           let targetCellFrame = tableView.cellForRow(at: indexPath)?.frame {
             tableView.setContentOffset(tableView.contentOffset, animated: false)
-
+            let targetContentOffsetY = targetCellFrame.minY + (request.inset ?? anchorInset)
             UIView.animate(withDuration: request.animated ? 0.5 : 0.0) {
-                self.tableView.scrollToRow(at: initialIndexPath, at: .top, animated: false)
-                self.tableView.contentOffset.y += self.anchorInset
+                self.tableView.contentOffset.y = targetContentOffsetY
             }
         }
     }
