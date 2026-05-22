@@ -68,7 +68,7 @@ private extension SolarTermIntroContentView {
                     VStack(spacing: 4) {
                         solarTermLabel(label: store.solarTermIntro.term.koreanName)
 
-                        Text(store.state.dateLabel)
+                        Text(store.dateLabel)
                             .foregroundStyle(Color.white)
                             .font(.body1Semibold)
                     }
