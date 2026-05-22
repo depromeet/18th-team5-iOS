@@ -11,7 +11,7 @@ import Domain
 import SwiftUI
 
 struct PickerMissionCardView: View {
-    private enum CardType {
+    fileprivate enum CardType {
         case active
         case `default`
         case disabled
@@ -55,6 +55,7 @@ struct PickerMissionCardView: View {
             .frame(height: 80)
             .background { backgroundView }
             .clipShape(RoundedRectangle(cornerRadius: .radius16))
+            .shadow(cardType)
             .overlay(RoundedRectangle(cornerRadius: .radius16).stroke(borderColor))
         }
         .disabled(cardType == .disabled)
@@ -188,6 +189,17 @@ private extension Season {
         case .summer: .green300
         case .autumn: .orange300
         case .winter: .blue300
+        }
+    }
+}
+
+private extension View {
+    @ViewBuilder
+    func shadow(_ cardType: PickerMissionCardView.CardType) -> some View {
+        switch cardType {
+        case .active:
+            self.shadow(color: .blackAlpha200, radius: 10, x: 0, y: 8)
+        case .default, .disabled: self
         }
     }
 }
