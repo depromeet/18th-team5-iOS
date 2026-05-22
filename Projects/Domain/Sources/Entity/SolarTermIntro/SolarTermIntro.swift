@@ -51,8 +51,23 @@ public extension SolarTermIntro {
         meaning: "여름이 시작됨을 알리는 절기에요",
         characteristic: "신록이 우거지고 개구리 울음소리가 들리기 시작하며 농작물이 자라기 시작하는 시기예요",
         contentTitle: "입하,\n이제 진짜 외투를 넣을 시간이에요",
-        contentBody: "아침저녁으로 쌀쌀한데, 벌써 여름인가 싶으시죠?",
-        contents: []
+        contentBody: "아침저녁으로 쌀쌀한데, 벌써 여름인가 싶으시죠? 5월 5일부터 시작되는 입하는 여름이 문을 열고 들어오는 첫날입니다. Peaktime이 이번 입하를 맞아, 일상 속 해상도를 높여줄 '여름 시작 가이드'를 준비했습니다.",
+        contents: [
+            SolarTermIntroContent(
+                id: "content_01",
+                title: "피크타임이 추천하는 입하의 첫 활동",
+                subtitle: "투명함으로 바꾸는 기분, 유리잔 바꿔주기",
+                imageURL: "https://picsum.photos/seed/ibha_01/400/300",
+                body: "무거운 세라믹 머그컵 대신, 찬장에 넣어두었던 유리잔을 꺼내는 것부터 시작하세요. 얼음을 가득 채웠을 때 컵 겉면에 맺히는 물방울은 시원한 휴식을 줍니다."
+            ),
+            SolarTermIntroContent(
+                id: "content_02",
+                title: "제철을 잘 챙기는\n두번째 방법, 제철음식 챙겨먹기",
+                subtitle: "이번 주 식탁의 주인공, '취나물'을 소개해요",
+                imageURL: "https://picsum.photos/seed/ibha_02/400/300",
+                body: "입하 즈음의 시장에서 꼭 찾아야 할 건 취나물입니다. 지금이 일 년 중 가장 연하면서도 향이 강한 시기거든요. 잎이 너무 크고 억센 것보다는 연둣빛이 감도는 어린잎을 골라보세요!"
+            )
+        ]
     )
 
     static let mockList: [SolarTermIntro] = [
