@@ -6,10 +6,21 @@
 //  Copyright © 2026 Orange. All rights reserved.
 //
 
-public enum SolarTermYear: Int, CaseIterable, Sendable, Equatable {
+import Foundation
+
+public enum SolarTermYear: Int, CaseIterable, Sendable {
     case y2024 = 2024
     case y2025 = 2025
     case y2026 = 2026
+
+    public static var current: SolarTermYear {
+        let year = Calendar.current.component(.year, from: Date())
+        return SolarTermYear(rawValue: year) ?? SolarTermYear.allCases.max(by: { $0.rawValue < $1.rawValue })!
+    }
+
+    public var previous: SolarTermYear? {
+        SolarTermYear(rawValue: rawValue - 1)
+    }
 }
 
 public extension SolarTermYear {

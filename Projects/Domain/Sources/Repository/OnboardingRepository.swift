@@ -12,6 +12,7 @@ import DependenciesMacros
 @DependencyClient
 public struct OnboardingRepository: Sendable {
     public var isOnboarded: @Sendable () async throws -> Bool
+    public var submitOnboardingInfo: @Sendable (UserPreference) async throws -> Void
 }
 
 // MARK: - TestDependencyKey

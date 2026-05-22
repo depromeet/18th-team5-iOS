@@ -61,11 +61,10 @@ enum ServerDomainError: Error, Equatable {
         }
     }
 
-    /// AUTH_401_* 계열 에러인지 여부.
-    /// refresh token이 만료되었거나 유효하지 않아 재시도가 불가능한 상태입니다.
+    /// refresh token 자체가 만료·무효하여 재시도가 불가능한 에러인지 여부.
     var isAuthRefreshError: Bool {
         switch self {
-        case .auth401, .auth401Expired, .auth401RT, .auth401Mismatch:
+        case .auth401RT, .auth401Mismatch:
             return true
         default:
             return false

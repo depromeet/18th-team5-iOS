@@ -110,7 +110,7 @@ struct RootFeatureTests {
 
         // When
         await sut.send(.onAppear)
-        await sut.receive(\.onboardingStatusChecked) {
+        await sut.receive(\.onboardingStateLoaded) {
             // Then
             $0.path = .onboarding(.init())
         }
@@ -140,7 +140,7 @@ struct RootFeatureTests {
 
         // When
         await sut.send(.onAppear)
-        await sut.receive(\.onboardingStatusChecked) {
+        await sut.receive(\.onboardingStateLoaded) {
             // Then
             $0.path = .main(.init())
         }

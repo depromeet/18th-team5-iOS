@@ -12,8 +12,9 @@ import SwiftUI
 
 struct SolarTermCardView: View {
     let solarTerm: SolarTermCard
-    let mission: CurrentMissionCard
+    let mission: CurrentMissionCard?
     let onMissionTap: () -> Void
+    let onDetailTap: () -> Void
 
     var body: some View {
         ZStack(alignment: .bottom) {
@@ -22,13 +23,30 @@ struct SolarTermCardView: View {
 
             // 상단 텍스트 영역
             VStack(alignment: .leading, spacing: 12) {
-                Text("\(formattedDate(solarTerm.startDate)) - \(formattedDate(solarTerm.endDate))")
-                    .font(.caption1Semibold)
-                    .foregroundStyle(.white)
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 4)
-                    .background(Color.white.opacity(0.13))
-                    .clipShape(Capsule())
+                HStack {
+                    Text("\(solarTerm.startDate) - \(solarTerm.endDate)")
+                        .font(.caption1Semibold)
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 4)
+                        .background(Color.white.opacity(0.13))
+                        .clipShape(Capsule())
+
+                    Spacer()
+
+                    Button(action: onDetailTap) {
+                        HStack {
+                            Text("더보기")
+                                .foregroundStyle(Color.white)
+                                .font(.body2Medium)
+                            Image.icArrowRight
+                                .renderingMode(.template)
+                                .resizable()
+                                .frame(width: 24, height: 24)
+                                .foregroundStyle(Color.white)
+                        }
+                    }
+                }
 
                 VStack(alignment: .leading, spacing: 0) {
                     ForEach(descriptionLines(solarTerm.description), id: \.self) { line in
@@ -45,11 +63,13 @@ struct SolarTermCardView: View {
             .frame(maxWidth: .infinity, maxHeight: 400, alignment: .topLeading)
 
             // 하단 미션 카드
-            MissionCardView(
-                mission: mission,
-                onMissionTap: onMissionTap
-            )
-            .padding(.bottom, 16)
+            if let mission {
+                MissionCardView(
+                    mission: mission,
+                    onMissionTap: onMissionTap
+                )
+                .padding(.bottom, 16)
+            }
         }
         .frame(maxWidth: .infinity)
         .frame(height: 400)
@@ -57,17 +77,11 @@ struct SolarTermCardView: View {
     }
 }
 
-private func formattedDate(_ dateString: String) -> String {
-    let parts = dateString.split(separator: "-")
-    guard parts.count == 3 else { return dateString }
-    return "\(parts[1]).\(parts[2])"
-}
-
-// TODO: - 멘트 형식 확정(\n포함 받기) 후 추후 삭제
-private func descriptionLines(_ description: String) -> [String] {
-    let parts = description.components(separatedBy: ", ")
-    guard parts.count == 2 else { return [description] }
-    return [parts[0] + ",", parts[1]]
+extension SolarTermCardView {
+    func descriptionLines(_ description: String) -> [String] {
+        let replace = description.replacingOccurrences(of: ", ", with: ",\n")
+        return replace.split(separator: "\n").map { String($0) }
+    }
 }
 
 private struct MissionCardView: View {
@@ -75,10 +89,11 @@ private struct MissionCardView: View {
     let onMissionTap: () -> Void
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(spacing: 12) {
             Text(mission.title)
                 .font(.body1Semibold)
-                .foregroundStyle(Color(hex: 0x1D293D))
+                .foregroundStyle(Color(hex: 0x1A1C20))
+                .frame(maxWidth: .infinity, alignment: .leading)
 
             VStack(spacing: 8) {
                 Button(action: onMissionTap) {
@@ -100,7 +115,7 @@ private struct MissionCardView: View {
                 Text("해당 미션에 \(mission.participantCount)명이 참여했어요")
                     .font(.caption1Regular)
                     .foregroundStyle(Color(hex: 0x868B94))
-                    .frame(maxWidth: .infinity)
+                    .frame(maxWidth: .infinity, alignment: .center)
             }
         }
         .padding(.top, 20)
@@ -109,7 +124,7 @@ private struct MissionCardView: View {
         .frame(maxWidth: .infinity)
         .background(Color.white.opacity(0.9))
         .clipShape(RoundedRectangle(cornerRadius: .radius12))
-        .padding()
+        .padding(.horizontal, 16)
     }
 }
 
@@ -117,6 +132,7 @@ private struct MissionCardView: View {
     SolarTermCardView(
         solarTerm: HomeCard.mock.solarTerm,
         mission: HomeCard.mock.currentMission,
-        onMissionTap: {}
+        onMissionTap: {},
+        onDetailTap: {}
     )
 }
