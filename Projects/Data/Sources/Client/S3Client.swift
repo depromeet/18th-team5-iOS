@@ -9,7 +9,6 @@
 import Alamofire
 import Dependencies
 import DependenciesMacros
-import Domain
 import Foundation
 
 @DependencyClient
@@ -34,7 +33,7 @@ extension S3Client: DependencyKey {
                 S3Endpoint.presignedUrl(fileName: fileName, contentType: contentType)
             )
             guard let result else {
-                throw DomainError.unknown("데이터 획득 실패")
+                throw NetworkError.decodingFailed
             }
             return (result.presignedUrl, result.objectKey)
         },

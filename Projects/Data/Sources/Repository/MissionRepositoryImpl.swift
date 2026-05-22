@@ -16,10 +16,10 @@ extension MissionRepository: @retroactive DependencyKey {
 
 public enum MissionRepositoryImpl {
     fileprivate static let iso8601Formatter: ISO8601DateFormatter = {
-        let f = ISO8601DateFormatter()
-        f.formatOptions = [.withInternetDateTime]
-        f.timeZone = TimeZone(identifier: "Asia/Seoul")
-        return f
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        formatter.timeZone = TimeZone(identifier: "Asia/Seoul")
+        return formatter
     }()
 
     public static func live() -> MissionRepository {
