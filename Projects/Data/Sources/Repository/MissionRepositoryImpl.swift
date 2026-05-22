@@ -22,6 +22,17 @@ public enum MissionRepositoryImpl {
         return formatter
     }()
 
+    fileprivate static let iso8601FallbackFormatter: ISO8601DateFormatter = {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime]
+        formatter.timeZone = TimeZone(identifier: "Asia/Seoul")
+        return formatter
+    }()
+
+    fileprivate static func parseDate(from string: String) -> Date? {
+        iso8601Formatter.date(from: string) ?? iso8601FallbackFormatter.date(from: string)
+    }
+
     public static func live() -> MissionRepository {
         MissionRepository(
             completeMission: { missionId, missionType, objectKey, memo, completedAt in
@@ -87,7 +98,7 @@ private extension MissionCompleteResultDTO {
         guard let missionType = MissionType(rawValue: missionType) else {
             throw DTOMappingError.invalidValue(missionType)
         }
-        guard let date = MissionRepositoryImpl.iso8601Formatter.date(from: completedAt) else {
+        guard let date = MissionRepositoryImpl.parseDate(from: completedAt) else {
             throw DTOMappingError.invalidDateFormat(completedAt)
         }
 
@@ -109,7 +120,7 @@ private extension MissionCompletionItemDTO {
         guard let missionType = MissionType(rawValue: missionType) else {
             throw DTOMappingError.invalidValue(missionType)
         }
-        guard let date = MissionRepositoryImpl.iso8601Formatter.date(from: completedAt) else {
+        guard let date = MissionRepositoryImpl.parseDate(from: completedAt) else {
             throw DTOMappingError.invalidDateFormat(completedAt)
         }
         let imageUrl = presignedImageUrl.flatMap { URL(string: $0) }

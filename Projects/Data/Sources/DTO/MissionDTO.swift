@@ -10,12 +10,6 @@ import Foundation
 
 // MARK: - Presigned URL 응답
 
-struct PresignedUrlResponseDTO: Decodable {
-    let code: String
-    let message: String
-    let result: PresignedUrlResultDTO
-}
-
 struct PresignedUrlResultDTO: Decodable {
     let presignedUrl: String
     let objectKey: String
@@ -32,12 +26,6 @@ struct MissionCompleteRequestDTO: Encodable {
 
 // MARK: - 미션 완료 응답
 
-struct MissionCompleteResponseDTO: Decodable {
-    let code: String
-    let message: String
-    let result: MissionCompleteResultDTO
-}
-
 struct MissionCompleteResultDTO: Decodable {
     let completionId: Int
     let missionId: Int
@@ -46,12 +34,6 @@ struct MissionCompleteResultDTO: Decodable {
 }
 
 // MARK: - 미션 완료 기록 조회 응답
-
-struct MissionCompletionsResponseDTO: Decodable {
-    let code: String
-    let message: String
-    let result: [MissionCompletionItemDTO]
-}
 
 struct MissionCompletionItemDTO: Decodable {
     let completionId: Int
