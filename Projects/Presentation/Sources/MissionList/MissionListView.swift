@@ -8,6 +8,7 @@
 
 import ComposableArchitecture
 import DesignSystem
+import Domain
 import SwiftUI
 
 public struct MissionListView: View {
@@ -64,20 +65,15 @@ private extension MissionListView {
 
     var categoryListView: some View {
         HStack(spacing: 6) {
-            ForEach(
-                MissionListFeature.Category.allCases,
-                id: \.self
-            ) { category in
+            ForEach(MissionCategory.allCases, id: \.self) { category in
                 categoryView(category)
             }
         }
     }
 
-    func categoryView(
-        _ category: MissionListFeature.Category
-    ) -> some View {
+    func categoryView(_ category: MissionCategory) -> some View {
         Chip(
-            title: category.title,
+            title: category.name,
             type: category == store.category ? .default : .secondary,
             action: { store.send(.set(\.category, category)) }
         )
@@ -118,16 +114,5 @@ private extension MissionListView {
             .frame(width: diameter, height: diameter)
             .clipShape(Circle())
             .offset(x: -width)
-    }
-}
-
-private extension MissionListFeature.Category {
-    var title: String {
-        switch self {
-        case .all: "전체"
-        case .food: "음식"
-        case .contents: "콘텐츠"
-        case .activity: "활동"
-        }
     }
 }

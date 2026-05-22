@@ -15,7 +15,7 @@ public struct MissionListFeature {
     public struct State: Equatable {
         var nickname: String = "제철을 쫓는 탐험가"
         var solarTerm: SolarTerm = .ibha
-        var category: Category = .all
+        var category: MissionCategory = .food
         var isTooltipPresented: Bool = true
 
         public init() {}
@@ -43,14 +43,5 @@ public struct MissionListFeature {
             case .binding: return .none
             }
         }
-    }
-}
-
-extension MissionListFeature {
-    enum Category: CaseIterable {
-        case all
-        case food
-        case contents
-        case activity
     }
 }
