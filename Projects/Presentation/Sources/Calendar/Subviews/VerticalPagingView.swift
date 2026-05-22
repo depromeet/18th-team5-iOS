@@ -124,7 +124,7 @@ final class PagingTableUIView<Item: Identifiable & Equatable, CellView: View>: U
     private var groups: [Page<Item>] = []
     private var prevAnchoredId: Item.ID?
     private var isAdjustingContentOffset: Bool = false
-    private var isPagingPending: Bool = false
+    private var isPageUpdating: Bool = false
 
     // MARK: Init
 
@@ -147,6 +147,9 @@ final class PagingTableUIView<Item: Identifiable & Equatable, CellView: View>: U
     // MARK: Public Updates
 
     func update(groups newGroups: [Page<Item>], anchorId: Item.ID? = nil) {
+        defer { isPageUpdating = false }
+        isPageUpdating = true
+
         let oldGroupIds = groups.map(\.id)
         let newGroupIds = newGroups.map(\.id)
         guard oldGroupIds != newGroupIds else { return }
@@ -188,8 +191,6 @@ final class PagingTableUIView<Item: Identifiable & Equatable, CellView: View>: U
                 tableView.contentOffset.y += anchorInset
             }
         }
-
-        isPagingPending = false
     }
 
     // MARK: - UITableViewDataSource
@@ -233,8 +234,7 @@ final class PagingTableUIView<Item: Identifiable & Equatable, CellView: View>: U
         }
 
         // 페이징 필요성 감지: 순수 함수 → 결과가 있고 진행 중이 아닐 때만 delegate 호출
-        if !isPagingPending, let direction = pagingDirectionNeeded() {
-            isPagingPending = true
+        if !isPageUpdating, let direction = pagingDirectionNeeded() {
             delegate?.pagingTableViewDidRequestPaging(direction: direction)
         }
     }

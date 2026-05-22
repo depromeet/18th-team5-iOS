@@ -42,11 +42,11 @@ extension CalendarView2 {
     var headerView: some View {
         VStack {
             HStack(alignment: .center, spacing: 8) {
-                Text(store.header.termTitleText)
+                Text(store.header?.termTitleText ?? "-")
                     .font(.title2Semibold)
                     .foregroundStyle(Color.gray900)
 
-                Text(store.header.termRangeText)
+                Text(store.header?.termRangeText ?? "-")
                     .font(.caption1Medium)
                     .foregroundStyle(Color.gray400)
 

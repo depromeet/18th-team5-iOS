@@ -14,21 +14,21 @@ import Foundation
 public struct CalendarFeature2 {
     @ObservableState
     public struct State: Equatable {
-        public var header: CalendarHeaderModel = .init(
-            termTitleText: "테스트", termRangeText: "11.11~11.11"
-        )
-
+        public var header: CalendarHeader?
         public var yearPages: [Page<SolarTermGroup>] = []
         public var anchoredTermId: SolarTermGroup.ID?
+        public var isPaging: Bool = false
 
         fileprivate var currentYear: SolarTermYear = .y2026
     }
 
     public enum Action: BindableAction {
         case onAppear
+        case updateCalendarHeader(CalendarHeader)
         case anchoredTermChanged(SolarTermGroup.ID)
         case calendarPagingRequest(PagingDirection)
         case updateYearPages([Page<SolarTermGroup>])
+        case yearPagesLayoutCompleted
         case binding(BindingAction<State>)
     }
 
@@ -96,6 +96,10 @@ public struct CalendarFeature2 {
                     await send(.updateYearPages(pages))
                 }
 
+            case let .updateCalendarHeader(header):
+                state.header = header
+                return .none
+
             case let .anchoredTermChanged(termId):
                 state.anchoredTermId = termId
                 return .none
@@ -104,8 +108,13 @@ public struct CalendarFeature2 {
                 state.yearPages = pages
                 return .none
 
+            case .yearPagesLayoutCompleted:
+                state.isPaging = false
+                return .none
+
             case let .calendarPagingRequest(direction):
-                guard let anchoredTermId = state.anchoredTermId,
+                guard !state.isPaging,
+                      let anchoredTermId = state.anchoredTermId,
                       let termGroup = findTermGroup(
                           pages: state.yearPages,
                           termId: anchoredTermId
@@ -121,33 +130,50 @@ public struct CalendarFeature2 {
 
                 guard let fetchingYear else { return .none }
 
+                state.isPaging = true
                 let currentPages = state.yearPages
                 let now = date.now
 
                 return .run { send in
-                    let fetchedTerms = try await solarTermRepository.fetchSolarTerms(fetchingYear)
-                    let newYearGroup = mapToYearGroup(
-                        now: now,
-                        year: fetchingYear,
-                        terms: fetchedTerms
-                    )
-                    switch direction {
-                    case .prepend:
-                        var updated = [newYearGroup] + currentPages
-                        if updated.count > 3 {
-                            updated.removeLast()
+                    do {
+                        let fetchedTerms = try await solarTermRepository.fetchSolarTerms(fetchingYear)
+                        let newYearGroup = mapToYearGroup(
+                            now: now,
+                            year: fetchingYear,
+                            terms: fetchedTerms
+                        )
+                        switch direction {
+                        case .prepend:
+                            var updated = [newYearGroup] + currentPages
+                            if updated.count > 3 {
+                                updated.removeLast()
+                            }
+                            await send(.updateYearPages(updated))
+                        case .append:
+                            var updated = currentPages + [newYearGroup]
+                            if updated.count > 3 {
+                                updated.removeFirst()
+                            }
+                            await send(.updateYearPages(updated))
                         }
-                        await send(.updateYearPages(updated))
-                    case .append:
-                        var updated = currentPages + [newYearGroup]
-                        if updated.count > 3 {
-                            updated.removeFirst()
-                        }
-                        await send(.updateYearPages(updated))
+                        await send(.yearPagesLayoutCompleted)
+                    } catch {
+                        try? await Task.sleep(for: .seconds(1))
+                        await send(.yearPagesLayoutCompleted)
                     }
                 }
 
-            case .binding: return .none
+            case .binding(\.anchoredTermId):
+                if let termId = state.anchoredTermId,
+                   let currentTerm = findTermGroup(
+                       pages: state.yearPages, termId: termId
+                   ) {
+                    return .send(.updateCalendarHeader(mapToHeader(currentTerm)))
+                }
+                return .none
+
+            default:
+                return .none
             }
         }
     }
@@ -157,12 +183,20 @@ private extension CalendarFeature2 {
     func findTermGroup(pages: [Page<SolarTermGroup>], termId: SolarTermGroup.ID) -> SolarTermGroup? {
         for yearPage in pages {
             for termGroup in yearPage.items {
-                if termGroup.id == termId {
-                    return termGroup
-                }
+                if termGroup.id == termId { return termGroup }
             }
         }
         return nil
+    }
+
+    func mapToHeader(_ term: SolarTermGroup) -> CalendarHeader {
+        let info = term.solarTermInfo
+        let startText = Self.termDateFormatter.string(from: info.startDate)
+        let endText = Self.termDateFormatter.string(from: info.endDate)
+        return CalendarHeader(
+            termTitleText: term.termText,
+            termRangeText: "\(startText)~\(endText)"
+        )
     }
 
     func mapToYearGroup(now: Date, year: SolarTermYear, terms: [SolarTermInfo]) -> Page<SolarTermGroup> {
@@ -220,6 +254,12 @@ private extension CalendarFeature2 {
         else { return nil }
         return (year, month, day)
     }
+
+    static let termDateFormatter: DateFormatter = {
+        let df = DateFormatter()
+        df.dateFormat = "MM.dd"
+        return df
+    }()
 
     static let dayFormatter: DateFormatter = {
         let df = DateFormatter()

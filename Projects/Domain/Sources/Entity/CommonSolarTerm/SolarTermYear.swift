@@ -9,6 +9,7 @@
 import Foundation
 
 public enum SolarTermYear: Int, CaseIterable, Sendable {
+    case y2023 = 2023
     case y2024 = 2024
     case y2025 = 2025
     case y2026 = 2026
