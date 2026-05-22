@@ -159,21 +159,23 @@ private extension CalendarFeature2 {
         )
     }
 
-    func mapToTermGroup(_ term: SolarTermInfo) -> SolarTermGroup {
+    func mapToTermGroup(_ termInfo: SolarTermInfo) -> SolarTermGroup {
         var calendar = Calendar.current
         calendar.firstWeekday = 2
-        let weekday = calendar.component(.weekday, from: term.startDate)
+        let weekday = calendar.component(.weekday, from: termInfo.startDate)
         let offset = (weekday - 2 + 7) % 7
 
         var cells: [SolarTermGroupCell] = []
 
         for index in 0 ..< offset {
+            let year = termInfo.year.rawValue
+            let term = termInfo.term.rawValue
             cells.append(.emptyCell(
-                id: "\(term.year.rawValue)_\(term.term.rawValue)_emptycell\(index)"
+                id: "\(year)_\(term)_emptycell_\(index)"
             ))
         }
 
-        for date in term.termDates {
+        for date in termInfo.termDates {
             let components = calendar.dateComponents([.day, .month], from: date)
             guard let day = components.day, let month = components.month else { continue }
             cells.append(
@@ -189,9 +191,9 @@ private extension CalendarFeature2 {
             )
         }
         return SolarTermGroup(
-            id: term.identifier,
-            termText: "테스트",
-            solarTermInfo: term,
+            id: termInfo.identifier,
+            termText: termInfo.term.koreanName,
+            solarTermInfo: termInfo,
             cells: cells.chunked(size: 7)
         )
     }
