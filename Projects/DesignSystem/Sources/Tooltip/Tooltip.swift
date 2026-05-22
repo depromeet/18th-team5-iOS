@@ -79,7 +79,7 @@ private extension Tooltip {
             .padding(.horizontal, 12)
             .background(Color.white)
             .clipShape(RoundedRectangle(cornerRadius: .radius12))
-            .shadow(color: Color(hex: 0x001D3A, alpha: 0.18), radius: 30, x: 0, y: 16)
+            .shadow(color: Color.blackAlpha300, radius: 20, x: 0, y: 8)
     }
 }
 
