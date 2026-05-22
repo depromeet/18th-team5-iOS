@@ -19,14 +19,14 @@ public struct CalendarFeature2 {
         )
 
         public var yearPages: [Page<SolarTermGroup>] = []
-        public var centerItemId: SolarTermGroup.ID?
+        public var anchoredTermId: SolarTermGroup.ID?
 
         fileprivate var currentYear: SolarTermYear = .y2026
     }
 
     public enum Action: BindableAction {
         case onAppear
-        case centerTermChanged(SolarTermGroup.ID)
+        case anchoredTermChanged(SolarTermGroup.ID)
         case calendarPagingRequest(PagingDirection)
         case updateYearPages([Page<SolarTermGroup>])
         case binding(BindingAction<State>)
@@ -83,20 +83,21 @@ public struct CalendarFeature2 {
                             .sorted(by: { $0.0.rawValue < $1.0.rawValue })
                             .map(\.1)
                     }
-                    await send(.updateYearPages(pages))
 
                     for page in pages {
                         for term in page.items {
                             if term.solarTermInfo.dateRange.contains(now) {
-                                await send(.centerTermChanged(term.id))
+                                await send(.anchoredTermChanged(term.id))
                                 break
                             }
                         }
                     }
+
+                    await send(.updateYearPages(pages))
                 }
 
-            case let .centerTermChanged(termId):
-                state.centerItemId = termId
+            case let .anchoredTermChanged(termId):
+                state.anchoredTermId = termId
                 return .none
 
             case let .updateYearPages(pages):
@@ -104,8 +105,11 @@ public struct CalendarFeature2 {
                 return .none
 
             case let .calendarPagingRequest(direction):
-                guard let centerId = state.centerItemId,
-                      let termGroup = findTermGroup(pages: state.yearPages, termId: centerId)
+                guard let anchoredTermId = state.anchoredTermId,
+                      let termGroup = findTermGroup(
+                          pages: state.yearPages,
+                          termId: anchoredTermId
+                      )
                 else { return .none }
 
                 let termInfo = termGroup.solarTermInfo

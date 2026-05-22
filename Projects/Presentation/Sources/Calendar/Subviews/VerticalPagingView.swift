@@ -22,21 +22,24 @@ public enum PagingDirection {
 
 struct PagingTableView<Item: Identifiable & Equatable, Content: View>: UIViewRepresentable {
     var groups: [Page<Item>]
-    @Binding var centerItemId: Item.ID?
+    @Binding var anchoredTermId: Item.ID?
 
+    let anchorInset: CGFloat
     let onPagingRequest: (PagingDirection) -> Void
     let cellHeight: (Item) -> CGFloat
     let cellContent: (Item) -> Content
 
     init(
         groups: [Page<Item>],
-        centerItemId: Binding<Item.ID?>,
+        anchoredTermId: Binding<Item.ID?>,
+        anchorInset: CGFloat,
         onPagingRequest: @escaping (PagingDirection) -> Void,
         cellHeight: @escaping (Item) -> CGFloat,
         @ViewBuilder cellContent: @escaping (Item) -> Content
     ) {
         self.groups = groups
-        self._centerItemId = centerItemId
+        self._anchoredTermId = anchoredTermId
+        self.anchorInset = anchorInset
         self.onPagingRequest = onPagingRequest
         self.cellHeight = cellHeight
         self.cellContent = cellContent
@@ -48,7 +51,7 @@ struct PagingTableView<Item: Identifiable & Equatable, Content: View>: UIViewRep
     func makeCoordinator() -> Coordinator { .init() }
 
     func makeUIView(context: Context) -> UIKitView {
-        let view = UIKitView()
+        let view = UIKitView(anchorInset: anchorInset)
         view.delegate = context.coordinator
         configure(view, coordinator: context.coordinator)
         return view
@@ -59,7 +62,7 @@ struct PagingTableView<Item: Identifiable & Equatable, Content: View>: UIViewRep
     }
 
     private func configure(_ uiView: UIKitView, coordinator: PagingTableCoordinator<Item>) {
-        let centerBinding = $centerItemId
+        let centerBinding = $anchoredTermId
         let pagingHandler = onPagingRequest
 
         coordinator.onCenterItemChanged = { newCenterId in
@@ -71,7 +74,7 @@ struct PagingTableView<Item: Identifiable & Equatable, Content: View>: UIViewRep
 
         uiView.cellBuilder = cellContent
         uiView.cellHeightProvider = cellHeight
-        uiView.update(groups: groups)
+        uiView.update(groups: groups, anchorId: anchoredTermId)
     }
 }
 
@@ -81,8 +84,8 @@ final class PagingTableCoordinator<Item: Identifiable>: PagingTableUIViewDelegat
     var onCenterItemChanged: ((Item.ID?) -> Void)?
     var onPagingRequest: ((PagingDirection) -> Void)?
 
-    func pagingTableViewDidChangeCenter(itemId: Item.ID?) {
-        onCenterItemChanged?(itemId)
+    func pagingTableViewDidChangeAnchoredItem(id: Item.ID?) {
+        onCenterItemChanged?(id)
     }
 
     func pagingTableViewDidRequestPaging(direction: PagingDirection) {
@@ -94,7 +97,7 @@ final class PagingTableCoordinator<Item: Identifiable>: PagingTableUIViewDelegat
 
 protocol PagingTableUIViewDelegate<Item>: AnyObject {
     associatedtype Item: Identifiable
-    func pagingTableViewDidChangeCenter(itemId: Item.ID?)
+    func pagingTableViewDidChangeAnchoredItem(id: Item.ID?)
     func pagingTableViewDidRequestPaging(direction: PagingDirection)
 }
 
@@ -117,41 +120,33 @@ final class PagingTableUIView<Item: Identifiable & Equatable, CellView: View>: U
 
     // MARK: State
 
+    private let anchorInset: CGFloat
     private var groups: [Page<Item>] = []
-    private var lastReportedCenterId: Item.ID?
+    private var prevAnchoredId: Item.ID?
     private var isAdjustingContentOffset: Bool = false
     private var isPagingPending: Bool = false
-    private var pendingInitialCenterIndexPath: IndexPath?
 
     // MARK: Init
 
-    override init(frame: CGRect) {
-        super.init(frame: frame)
+    init(anchorInset: CGFloat) {
+        self.anchorInset = anchorInset
+        super.init(frame: .zero)
         setupView()
         setupTableView()
     }
 
     required init?(coder: NSCoder) { nil }
 
-    override func layoutSubviews() {
-        super.layoutSubviews()
-        if let indexPath = pendingInitialCenterIndexPath,
-           tableView.bounds.height > 0,
-           !groups.isEmpty {
-            pendingInitialCenterIndexPath = nil
-            tableView.scrollToRow(at: indexPath, at: .middle, animated: false)
-        }
-    }
-
-    func update(centerId: Item.ID) {
-        if let initialIndexPath = indexPath(for: centerId) ?? middleIndexPath(in: groups) {
+    func update(anchorId: Item.ID) {
+        if let initialIndexPath = indexPath(for: anchorId) ?? middleIndexPath(in: groups) {
             tableView.scrollToRow(at: initialIndexPath, at: .middle, animated: false)
+            tableView.contentOffset.y += anchorInset
         }
     }
 
     // MARK: Public Updates
 
-    func update(groups newGroups: [Page<Item>], centerId: Item.ID? = nil) {
+    func update(groups newGroups: [Page<Item>], anchorId: Item.ID? = nil) {
         let oldGroupIds = groups.map(\.id)
         let newGroupIds = newGroups.map(\.id)
         guard oldGroupIds != newGroupIds else { return }
@@ -187,16 +182,10 @@ final class PagingTableUIView<Item: Identifiable & Equatable, CellView: View>: U
             tableView.reloadData()
         }
 
-        if wasEmpty {
-            let initialIndexPath: IndexPath? = if let centerId {
-                indexPath(for: centerId) ?? middleIndexPath(in: newGroups)
-            } else {
-                middleIndexPath(in: newGroups)
-            }
-
-            if let initialIndexPath {
-                pendingInitialCenterIndexPath = initialIndexPath
-                setNeedsLayout()
+        if wasEmpty, let anchorId {
+            if let indexPath = indexPath(for: anchorId) {
+                tableView.scrollToRow(at: indexPath, at: .top, animated: false)
+                tableView.contentOffset.y += anchorInset
             }
         }
 
@@ -237,15 +226,14 @@ final class PagingTableUIView<Item: Identifiable & Equatable, CellView: View>: U
         else { return }
 
         // 중앙 셀 변경 감지: 순수 함수 → 변화가 있을 때만 delegate 호출
-        if let newCenterId = currentCenterItemId(),
-           newCenterId != lastReportedCenterId {
-            lastReportedCenterId = newCenterId
-            delegate?.pagingTableViewDidChangeCenter(itemId: newCenterId)
+        if let newAnchoredId = currentAnchoredItemId(),
+           newAnchoredId != prevAnchoredId {
+            prevAnchoredId = newAnchoredId
+            delegate?.pagingTableViewDidChangeAnchoredItem(id: newAnchoredId)
         }
 
         // 페이징 필요성 감지: 순수 함수 → 결과가 있고 진행 중이 아닐 때만 delegate 호출
-        if !isPagingPending,
-           let direction = pagingDirectionNeeded() {
+        if !isPagingPending, let direction = pagingDirectionNeeded() {
             isPagingPending = true
             delegate?.pagingTableViewDidRequestPaging(direction: direction)
         }
@@ -286,7 +274,7 @@ private extension PagingTableUIView {
     func indexPath(for itemId: Item.ID) -> IndexPath? {
         for (groupIndex, group) in groups.enumerated() {
             if let itemIndex = group.items.firstIndex(where: { $0.id == itemId }) {
-                return IndexPath(row: groupIndex, section: itemIndex)
+                return IndexPath(row: itemIndex, section: groupIndex)
             }
         }
         return nil
@@ -318,11 +306,11 @@ private extension PagingTableUIView {
         return nil
     }
 
-    /// 현재 뷰포트 중앙에 위치한 셀의 ID를 반환합니다. 부수효과 없음.
-    func currentCenterItemId() -> Item.ID? {
-        let centerY = tableView.contentOffset.y + tableView.bounds.height / 2
-        let centerPoint = CGPoint(x: tableView.bounds.midX, y: centerY)
-        guard let indexPath = tableView.indexPathForRow(at: centerPoint),
+    /// 현재 뷰포트 앵커에 위치한 셀의 ID를 반환합니다. 부수효과 없음.
+    func currentAnchoredItemId() -> Item.ID? {
+        let anchorY = tableView.contentOffset.y - anchorInset
+        let anchorPoint = CGPoint(x: tableView.bounds.midX, y: anchorY)
+        guard let indexPath = tableView.indexPathForRow(at: anchorPoint),
               let item = itemAt(indexPath: indexPath)
         else { return nil }
         return item.id
@@ -437,7 +425,7 @@ final class PagingTableViewModel: ObservableObject {
     private var groupId = 0
 
     @Published var groups: [Page<PagingCellModel>] = []
-    @Published var centerItemId: PagingCellModel.ID?
+    @Published var anchoredTermId: PagingCellModel.ID?
 
     init() {
         groups = [makeGroup()]
@@ -488,8 +476,8 @@ private struct PagingTablePreviewWrapper: View {
     var body: some View {
         VStack(spacing: 0) {
             HStack {
-                Text("Center: ")
-                if let centerId = viewModel.centerItemId,
+                Text("Anchor: ")
+                if let centerId = viewModel.anchoredTermId,
                    let item = viewModel.groups.flatMap(\.items).first(where: { $0.id == centerId }) {
                     Text("\(item.value)")
                         .fontWeight(.bold)
@@ -503,7 +491,8 @@ private struct PagingTablePreviewWrapper: View {
 
             PagingTableView(
                 groups: viewModel.groups,
-                centerItemId: $viewModel.centerItemId,
+                anchoredTermId: $viewModel.anchoredTermId,
+                anchorInset: 10,
                 onPagingRequest: viewModel.handlePagingRequest,
                 cellHeight: { $0.height }
             ) { item in
@@ -513,6 +502,7 @@ private struct PagingTablePreviewWrapper: View {
                         .font(.title)
                         .foregroundStyle(.black)
                 }
+                .border(.black)
             }
         }
     }

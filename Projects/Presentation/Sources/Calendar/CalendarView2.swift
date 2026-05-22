@@ -23,7 +23,8 @@ struct CalendarView2: View {
 
                 PagingTableView(
                     groups: store.yearPages,
-                    centerItemId: $store.centerItemId,
+                    anchoredTermId: $store.anchoredTermId,
+                    anchorInset: Constants.termSectionHeaderHeight + 22 - 14,
                     onPagingRequest: { store.send(.calendarPagingRequest($0)) },
                     cellHeight: { termSectionViewHeight($0) },
                     cellContent: { termSectionView($0, dateCellWidth: dateCellWidth) }
@@ -104,31 +105,31 @@ extension CalendarView2 {
     }
 
     func dateCellView(_ date: SolarTermGroupCell, cellWidth: CGFloat) -> some View {
-        VStack(spacing: 2) {
+        VStack(spacing: Constants.dateMonthCellSpacing) {
             switch date {
             case .emptyCell:
                 Color.clear
-                    .frame(
-                        width: cellWidth,
-                        height: Constants.dateCellHeight
-                    )
-                    .padding(.top, 20)
+                    .frame(width: cellWidth, height: 1)
 
             case let .dateCell(date):
-                Color.clear
-                    .frame(width: cellWidth, height: 20)
-                    .overlay {
-                        if date.isFirstDayOfMonth {
-                            monthCell(date.monthText)
-                        }
+                VStack(spacing: Constants.dateMonthCellSpacing) {
+                    if date.isFirstDayOfMonth {
+                        monthCell(date.monthText, cellWidth)
+                    } else {
+                        Color.clear
+                            .frame(
+                                width: cellWidth,
+                                height: Constants.monthCellHeight
+                            )
                     }
 
-                dateCell(date, cellWidth)
+                    dateCell(date, cellWidth)
+                }
             }
         }
     }
 
-    func monthCell(_ text: String) -> some View {
+    func monthCell(_ text: String, _ cellWidth: CGFloat) -> some View {
         RoundedRectangle(cornerRadius: 8)
             .foregroundStyle(Color.gray50)
             .overlay {
@@ -136,6 +137,7 @@ extension CalendarView2 {
                     .font(.caption2Medium)
                     .foregroundStyle(Color.gray900)
             }
+            .frame(width: cellWidth, height: Constants.monthCellHeight)
     }
 
     func dateCell(_ date: SolarTermDate, _ cellWidth: CGFloat) -> some View {
@@ -180,7 +182,8 @@ extension CalendarView2 {
         let header = Constants.termSectionHeaderHeight
 
         let weekCount = term.cells.count
-        let weekSectionHeight = Constants.dateCellHeight + 22
+        let monthCellHeight = Constants.monthCellHeight + Constants.dateMonthCellSpacing
+        let weekSectionHeight = Constants.dateCellHeight + monthCellHeight
         let weekSpacing = Constants.weakSectionVerticalSpacing * CGFloat(weekCount - 1)
         let calendar = weekSectionHeight * CGFloat(weekCount) + weekSpacing
 
@@ -196,6 +199,8 @@ private extension CalendarView2 {
         static let termSectionBottomPadding: CGFloat = 24
         static let weakSectionVerticalSpacing: CGFloat = 6
 
+        static let monthCellHeight: CGFloat = 20
+        static let dateMonthCellSpacing: CGFloat = 2
         static let dateCellHorizontalSpacing: CGFloat = 7
         static let dateCellHeight: CGFloat = 70
     }
