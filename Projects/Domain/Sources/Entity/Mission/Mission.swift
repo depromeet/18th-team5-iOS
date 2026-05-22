@@ -7,9 +7,25 @@
 //
 
 public struct Mission: Equatable {
+    public let id: Int
     public let title: String
     public let category: MissionCategory
+    public let season: Season
     public let isCompleted: Bool
+
+    public init(
+        id: Int,
+        title: String,
+        category: MissionCategory,
+        season: Season,
+        isCompleted: Bool
+    ) {
+        self.id = id
+        self.title = title
+        self.category = category
+        self.season = season
+        self.isCompleted = isCompleted
+    }
 }
 
 public enum MissionCategory: CaseIterable {
