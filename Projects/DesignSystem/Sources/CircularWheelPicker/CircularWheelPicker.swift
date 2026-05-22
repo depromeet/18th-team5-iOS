@@ -10,10 +10,13 @@ import SwiftUI
 
 public struct CircularWheelPicker<Item: Hashable, Content: View>: View {
     @State private var scrollID: Item?
+    @State private var hasScrolledAwayFromTop = false
     @Binding private var selection: Item
+
     private let items: [Item]
     private let content: (Item) -> Content
     private let scrollIntensity: CGFloat = 0.5 // (0<..<1)
+    private let topOffsetThreshold: CGFloat = 5.0
 
     public init(
         items: [Item],
@@ -31,26 +34,32 @@ public struct CircularWheelPicker<Item: Hashable, Content: View>: View {
             let height = proxy.size.height
 
             ScrollView(.vertical, showsIndicators: false) {
-                VStack(spacing: 0) {
-                    ForEach(items, id: \.self) { item in
-                        content(item)
-                            .frame(width: width, height: height * scrollIntensity)
-                            .visualEffect { content, itemProxy in
-                                let transform = WheelTransform(
-                                    itemFrame: itemProxy.frame(in: .global),
-                                    containerFrame: proxy.frame(in: .global),
-                                    scrollIntensity: scrollIntensity
-                                )
+                ZStack(alignment: .top) {
+                    scrollOffsetMarker
+                        .readScrollOffset { handleScrollOffset($0) }
 
-                                return content
-                                    .rotationEffect(.radians(-transform.angle))
-                                    .offset(x: transform.offset.width, y: transform.offset.height)
-                                    .opacity(transform.isVisible ? 1.0 : 0.0)
-                            }
+                    VStack(spacing: 0) {
+                        ForEach(items, id: \.self) { item in
+                            content(item)
+                                .frame(width: width, height: height * scrollIntensity)
+                                .visualEffect { content, itemProxy in
+                                    let transform = WheelTransform(
+                                        itemFrame: itemProxy.frame(in: .global),
+                                        containerFrame: proxy.frame(in: .global),
+                                        scrollIntensity: scrollIntensity
+                                    )
+
+                                    return content
+                                        .rotationEffect(.radians(-transform.angle))
+                                        .offset(x: transform.offset.width, y: transform.offset.height)
+                                        .opacity(transform.isVisible ? 1.0 : 0.0)
+                                }
+                        }
                     }
+                    .scrollTargetLayout()
                 }
-                .scrollTargetLayout()
             }
+            .scrollOffsetCoordinateSpace()
             .safeAreaPadding(.vertical, height * (1 - scrollIntensity) / 2)
             .scrollTargetBehavior(.viewAligned(limitBehavior: .always))
             .scrollPosition(id: $scrollID, anchor: .center)
@@ -67,6 +76,32 @@ public struct CircularWheelPicker<Item: Hashable, Content: View>: View {
             .onChange(of: selection) { _, newValue in
                 scrollID = newValue
             }
+        }
+    }
+}
+
+private extension CircularWheelPicker {
+    var scrollOffsetMarker: some View {
+        Color.clear
+            .frame(height: 1)
+            .allowsHitTesting(false)
+            .accessibilityHidden(true)
+    }
+
+    func handleScrollOffset(_ offset: CGPoint) {
+        guard offset.y < topOffsetThreshold else {
+            hasScrolledAwayFromTop = true
+            return
+        }
+
+        guard hasScrolledAwayFromTop,
+              let firstItem = items.first,
+              selection != firstItem else {
+            return
+        }
+
+        withAnimation(.easeInOut(duration: 0.25)) {
+            selection = firstItem
         }
     }
 }
