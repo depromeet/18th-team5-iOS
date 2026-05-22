@@ -84,7 +84,7 @@ private extension SolarTermIntroContentView {
         .padding(.horizontal, 16)
         .padding(.vertical, 20)
         .background(
-            RoundedRectangle(cornerRadius: 16)
+            RoundedRectangle(cornerRadius: .radius16)
                 .fill(Color.white)
         )
     }
@@ -135,7 +135,7 @@ private extension SolarTermIntroContentView {
                 .padding(.vertical, 20)
                 .padding(.horizontal, 16)
                 .background(
-                    RoundedRectangle(cornerRadius: 16)
+                    RoundedRectangle(cornerRadius: .radius16)
                         .fill(Color.white)
                 )
         }
@@ -154,7 +154,7 @@ private extension SolarTermIntroContentView {
             .padding(.vertical, 20)
             .padding(.horizontal, 16)
             .background(
-                RoundedRectangle(cornerRadius: 16)
+                RoundedRectangle(cornerRadius: .radius16)
                     .fill(Color.white)
             )
         }
@@ -178,7 +178,7 @@ private extension SolarTermIntroContentView {
                 Color.gray100
             }
             .frame(height: 200)
-            .clipShape(RoundedRectangle(cornerRadius: 12))
+            .clipShape(RoundedRectangle(cornerRadius: .radius12))
 
             Text(content.body)
                 .font(.body2Regular)
