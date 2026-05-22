@@ -142,7 +142,8 @@ extension CalendarView2 {
     }
 
     func dateCell(_ date: SolarTermDate, _ cellWidth: CGFloat) -> some View {
-        HStack(spacing: 0) {
+        let isSelected = store.selectedDateId == date.id
+        return HStack(spacing: 0) {
             Spacer(minLength: 5)
             VStack(spacing: 0) {
                 // TODO: 이미지로 교체 -@준영
@@ -173,7 +174,14 @@ extension CalendarView2 {
         .background {
             RoundedRectangle(cornerRadius: 8)
                 // TODO: 디자인 시스템 반영 필요 -@준영
-                .foregroundStyle(Color(hex: 0xF7F8F9))
+                .foregroundStyle(
+                    isSelected
+                        ? Color(hex: 0x43DA87)
+                        : Color(hex: 0xF7F8F9)
+                )
+        }
+        .onTapGesture {
+            store.send(.dateCellTapped(date.id))
         }
     }
 }

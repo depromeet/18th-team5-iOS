@@ -19,6 +19,7 @@ public struct CalendarFeature2 {
         public var anchoredTermId: SolarTermGroup.ID?
         public var isPaging: Bool = false
         public var anchorRequest: AnchorRequest<SolarTermGroup>?
+        public var selectedDateId: SolarTermDate.ID?
 
         fileprivate var currentYear: SolarTermYear = .y2026
     }
@@ -28,6 +29,7 @@ public struct CalendarFeature2 {
         case updateCalendarHeader(CalendarHeader)
         case updateAnchorRequest(AnchorRequest<SolarTermGroup>)
         case calendarPagingRequest(PagingDirection)
+        case dateCellTapped(SolarTermDate.ID)
         case updateYearPages([Page<SolarTermGroup>])
         case yearPagesLayoutCompleted
         case binding(BindingAction<State>)
@@ -62,6 +64,9 @@ public struct CalendarFeature2 {
 
             case let .calendarPagingRequest(direction):
                 return calendarPagingRequest(&state, direction: direction)
+
+            case let .dateCellTapped(dateId):
+                return dateCellTapped(&state, dateId: dateId)
 
             case .binding(\.anchoredTermId):
                 if let termId = state.anchoredTermId,
@@ -144,6 +149,29 @@ extension CalendarFeature2 {
             currentPages: currentPages,
             now: now
         )
+    }
+
+    private func dateCellTapped(
+        _ state: inout State,
+        dateId: SolarTermDate.ID
+    ) -> Effect<Action> {
+        state.selectedDateId = dateId
+        for pageIndex in state.yearPages.indices {
+            for termIndex in state.yearPages[pageIndex].items.indices {
+                let term = state.yearPages[pageIndex].items[termIndex]
+                for cell in term.cells.flatMap(\.self) {
+                    if case let .dateCell(date) = cell, date.id == dateId {
+                        let request = AnchorRequest<SolarTermGroup>(
+                            itemId: term.id,
+                            animated: true
+                        )
+                        state.anchoredTermId = term.id
+                        return .send(.updateAnchorRequest(request))
+                    }
+                }
+            }
+        }
+        return .none
     }
 
     private func fetchPagingYear(

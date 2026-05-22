@@ -12,7 +12,7 @@ import UIKit
 
 public struct Page<Item: Equatable>: Identifiable, Equatable {
     public let id: Int
-    let items: [Item]
+    public var items: [Item]
 }
 
 public enum PagingDirection {
@@ -267,8 +267,11 @@ private extension PagingTableUIView {
 
         if let initialIndexPath = indexPath(for: request.itemId) ?? middleIndexPath(in: groups) {
             tableView.setContentOffset(tableView.contentOffset, animated: false)
-            tableView.scrollToRow(at: initialIndexPath, at: .top, animated: request.animated)
-            tableView.contentOffset.y += anchorInset
+
+            UIView.animate(withDuration: request.animated ? 0.5 : 0.0) {
+                self.tableView.scrollToRow(at: initialIndexPath, at: .top, animated: false)
+                self.tableView.contentOffset.y += self.anchorInset
+            }
         }
     }
 
