@@ -22,6 +22,13 @@ public struct MissionListView: View {
         ZStack {
             Color.white
                 .overlay { circleBackgroundView }
+
+            CircularWheelPicker(
+                items: store.missions,
+                selection: $store.selectedMission,
+                content: missionCardView
+            )
+            .animation(.easeInOut(duration: 0.25), value: store.selectedMission)
         }
         .overlay(alignment: .top) { headerView }
     }
@@ -51,7 +58,7 @@ private extension MissionListView {
 
     var titleView: some View {
         VStack(spacing: 2) {
-            Text("\(store.nickname)님을 위한")
+            Text("\(store.userType.name)님을 위한")
                 .font(.body1Regular)
                 .foregroundStyle(Color.gray900)
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -114,5 +121,15 @@ private extension MissionListView {
             .frame(width: diameter, height: diameter)
             .clipShape(Circle())
             .offset(x: -width)
+    }
+
+    func missionCardView(_ mission: Mission) -> some View {
+        PickerMissionCardView(
+            mission: mission,
+            isActive: store.selectedMission == mission,
+            action: {}
+        )
+        .padding(.leading, 20)
+        .padding(.trailing, 58)
     }
 }

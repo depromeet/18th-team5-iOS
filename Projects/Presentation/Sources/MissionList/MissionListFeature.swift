@@ -13,12 +13,19 @@ import Domain
 public struct MissionListFeature {
     @ObservableState
     public struct State: Equatable {
-        var nickname: String = "제철을 쫓는 탐험가"
+        var userType: UserType = .explorer
         var solarTerm: SolarTerm = .ibha
         var category: MissionCategory = .food
         var isTooltipPresented: Bool = true
 
-        public init() {}
+        var missions: [Mission]
+        var selectedMission: Mission
+
+        public init() {
+            let missions: [Mission] = .mock
+            self.missions = missions
+            self.selectedMission = missions[1]
+        }
 
         var isSelectMissionButtonEnabled: Bool {
             // TODO: 추후 로직 구현
@@ -44,4 +51,114 @@ public struct MissionListFeature {
             }
         }
     }
+}
+
+private extension [Mission] {
+    static let mock: [Mission] = [
+        .init(
+            id: 0,
+            title: "음식 관련 미션 예시입니다 1",
+            category: .food,
+            season: .summer,
+            isCompleted: false
+        ),
+        .init(
+            id: 1,
+            title: "음식 관련 미션 예시입니다 2",
+            category: .food,
+            season: .summer,
+            isCompleted: false
+        ),
+        .init(
+            id: 2,
+            title: "음식 관련 미션 예시입니다 3",
+            category: .food,
+            season: .summer,
+            isCompleted: true
+        ),
+        .init(
+            id: 3,
+            title: "음식 관련 미션 예시입니다 4",
+            category: .food,
+            season: .summer,
+            isCompleted: false
+        ),
+        .init(
+            id: 4,
+            title: "음식 관련 미션 예시입니다 5",
+            category: .food,
+            season: .summer,
+            isCompleted: false
+        ),
+        .init(
+            id: 5,
+            title: "활동 관련 미션 예시입니다 1",
+            category: .activity,
+            season: .summer,
+            isCompleted: false
+        ),
+        .init(
+            id: 6,
+            title: "활동 관련 미션 예시입니다 2",
+            category: .activity,
+            season: .summer,
+            isCompleted: false
+        ),
+        .init(
+            id: 7,
+            title: "활동 관련 미션 예시입니다 3",
+            category: .activity,
+            season: .summer,
+            isCompleted: true
+        ),
+        .init(
+            id: 8,
+            title: "활동 관련 미션 예시입니다 4",
+            category: .activity,
+            season: .summer,
+            isCompleted: false
+        ),
+        .init(
+            id: 9,
+            title: "활동 관련 미션 예시입니다 5",
+            category: .activity,
+            season: .summer,
+            isCompleted: false
+        ),
+        .init(
+            id: 10,
+            title: "콘텐츠 관련 미션 예시입니다 1",
+            category: .contents,
+            season: .summer,
+            isCompleted: false
+        ),
+        .init(
+            id: 11,
+            title: "콘텐츠 관련 미션 예시입니다 2",
+            category: .contents,
+            season: .summer,
+            isCompleted: false
+        ),
+        .init(
+            id: 12,
+            title: "콘텐츠 관련 미션 예시입니다 3",
+            category: .contents,
+            season: .summer,
+            isCompleted: true
+        ),
+        .init(
+            id: 13,
+            title: "콘텐츠 관련 미션 예시입니다 4",
+            category: .contents,
+            season: .summer,
+            isCompleted: false
+        ),
+        .init(
+            id: 14,
+            title: "콘텐츠 관련 미션 예시입니다 5",
+            category: .contents,
+            season: .summer,
+            isCompleted: false
+        )
+    ]
 }

@@ -6,7 +6,7 @@
 //  Copyright © 2026 Orange. All rights reserved.
 //
 
-public struct Mission: Equatable {
+public struct Mission: Equatable, Hashable {
     public let id: Int
     public let title: String
     public let category: MissionCategory
