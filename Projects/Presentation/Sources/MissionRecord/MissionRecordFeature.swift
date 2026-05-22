@@ -6,6 +6,7 @@
 //  Copyright © 2026 Orange. All rights reserved.
 //
 
+import Camera
 import ComposableArchitecture
 import Domain
 import Foundation
@@ -70,7 +71,7 @@ public struct MissionRecordFeature {
     public var body: some ReducerOf<Self> {
         BindingReducer()
 
-        Reduce { state, action in
+        Reduce<State, Action> { state, action in
             switch action {
             case .binding:
                 return .none
@@ -79,10 +80,9 @@ public struct MissionRecordFeature {
                 return .send(.delegate(.dismiss))
 
             case .cameraButtonTapped:
-                let dateString = Self.dateFormatter.string(from: date.now)
                 state.camera = CameraFeature.State(
-                    overlayDate: dateString,
-                    overlayLabel: state.missionTitle
+                    overlayLabel: state.missionTitle,
+                    date: date.now
                 )
                 return .none
 
@@ -108,8 +108,8 @@ public struct MissionRecordFeature {
             case .completionModal:
                 return .none
 
-            case let .camera(.presented(.delegate(.didCapture(photo)))):
-                state.selectedImageData = photo.imageData
+            case let .camera(.presented(.delegate(.didCapture(result)))):
+                state.selectedImageData = result.imageData
                 state.camera = nil
                 return .none
 

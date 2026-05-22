@@ -1,14 +1,14 @@
 //
-//  CapturedPhoto.swift
-//  Domain
+//  CapturedResult.swift
+//  Camera
 //
-//  Created by 진준호 on 5/4/26.
+//  Created by 진준호 on 5/12/26.
 //  Copyright © 2026 Orange. All rights reserved.
 //
 
 import Foundation
 
-public struct CapturedPhoto: Equatable, Sendable {
+public struct CapturedResult: Sendable, Equatable {
     public let imageData: Data
     public let capturedAt: Date
     public let cameraPosition: CameraPosition

@@ -14,7 +14,8 @@ public enum Module {
     case data
     case designSystem
     case core
-    
+    case camera
+
     var name: String {
         switch self {
         case .app: "App"
@@ -23,6 +24,7 @@ public enum Module {
         case .data: "Data"
         case .designSystem: "DesignSystem"
         case .core: "Core"
+        case .camera: "Camera"
         }
     }
     
