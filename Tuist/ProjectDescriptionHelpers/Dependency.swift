@@ -11,6 +11,10 @@ extension Module {
     var dependencies: [TargetDependency] {
         dependentModules.map(\.dependency) + dependentExternalModules.map(\.dependency)
     }
+
+    var demoDependencies: [TargetDependency] {
+        demoDependentExternalModules.map(\.dependency)
+    }
 }
 
 private extension Module {
@@ -43,7 +47,14 @@ private extension Module {
         default: []
         }
     }
-    
+
+    var demoDependentExternalModules: [ExternalModule] {
+        switch self {
+        case .camera: [.composableArchitecture]
+        default: []
+        }
+    }
+
     var dependency: TargetDependency {
         TargetDependency.project(
             target: name,

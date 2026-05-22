@@ -23,6 +23,7 @@ public final class CameraController: NSObject, @unchecked Sendable {
     public internal(set) var isSessionRunning: Bool = false
     public internal(set) var errorMessage: String?
     public internal(set) var baseZoomFactor: CGFloat = 1.0
+    public private(set) var isSwitchingCamera: Bool = false
 
     // MARK: - 줌 범위
 
@@ -53,7 +54,6 @@ public final class CameraController: NSObject, @unchecked Sendable {
         var currentPosition: AVCaptureDevice.Position = .back
         var flashMode: AVCaptureDevice.FlashMode = .off
         var photoContinuation: CheckedContinuation<CapturedResult, Error>?
-        var wasRunningBeforeBackground = false
     }
 
     let mutableState = OSAllocatedUnfairLock(initialState: MutableState())
@@ -62,8 +62,6 @@ public final class CameraController: NSObject, @unchecked Sendable {
     /// @unchecked Sendable 컨테이너로 분리하여 cross-isolation 접근 허용
     final class ObserverState: @unchecked Sendable {
         var lensSwitchObservation: NSKeyValueObservation?
-        var backgroundObserver: NSObjectProtocol?
-        var foregroundObserver: NSObjectProtocol?
     }
 
     let observerState = ObserverState()
@@ -74,16 +72,9 @@ public final class CameraController: NSObject, @unchecked Sendable {
 
     override public init() {
         super.init()
-        setupAppLifecycleObservers()
     }
 
     deinit {
-        if let bg = observerState.backgroundObserver {
-            NotificationCenter.default.removeObserver(bg)
-        }
-        if let fg = observerState.foregroundObserver {
-            NotificationCenter.default.removeObserver(fg)
-        }
         observerState.lensSwitchObservation?.invalidate()
     }
 
@@ -145,6 +136,10 @@ public final class CameraController: NSObject, @unchecked Sendable {
     }
 
     public func switchCamera() async throws {
+        guard !isSwitchingCamera else { return }
+        isSwitchingCamera = true
+        defer { isSwitchingCamera = false }
+
         do {
             try await switchCameraOnQueue()
             isFrontCamera.toggle()

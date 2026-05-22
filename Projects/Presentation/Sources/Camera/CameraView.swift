@@ -14,8 +14,9 @@ import SwiftUI
 
 public struct CameraView: View {
     private let store: StoreOf<CameraFeature>
-    @State private var cameraController = CameraController()
-    private let logger = Logger(handlers: [DebugLogHandler()])
+    @State private var proxy = CameraProxy()
+    @State private var cameraState = CameraStateSnapshot.initial
+    @State private var cameraError: CameraError?
 
     public init(store: StoreOf<CameraFeature>) {
         self.store = store
@@ -30,7 +31,7 @@ public struct CameraView: View {
                 closeButton
                 previewSection
 
-                if cameraController.isFrontCamera {
+                if cameraState.isFrontCamera {
                     selfieZoomToggle
                 } else {
                     zoomSelector
@@ -42,30 +43,18 @@ public struct CameraView: View {
                     .padding(.bottom, 98)
             }
         }
-        .onAppear {
-            Task {
-                do {
-                    try await cameraController.startSession()
-                } catch {
-                    logger.error(message: "카메라 세션 시작 실패: \(error)")
-                }
-            }
-        }
-        .onDisappear {
-            Task {
-                await cameraController.stopSession()
-            }
-        }
+        .onAppear { proxy.send(.startSession) }
+        .onDisappear { proxy.send(.stopSession) }
         .alert(
             "오류",
             isPresented: Binding(
-                get: { cameraController.errorMessage != nil },
-                set: { if !$0 { cameraController.clearError() } }
+                get: { cameraError != nil },
+                set: { if !$0 { cameraError = nil } }
             )
         ) {
-            Button("확인") { cameraController.clearError() }
+            Button("확인") { cameraError = nil }
         } message: {
-            Text(cameraController.errorMessage ?? "")
+            Text(cameraError?.userMessage ?? "")
         }
     }
 }
@@ -75,10 +64,8 @@ public struct CameraView: View {
 private extension CameraView {
     var closeButton: some View {
         Button {
-            Task {
-                await cameraController.stopSession()
-                store.send(.cameraCancelled)
-            }
+            proxy.send(.stopSession)
+            store.send(.cameraCancelled)
         } label: {
             Image(systemName: "xmark")
                 .font(.system(size: 20))
@@ -97,9 +84,14 @@ private extension CameraView {
             let size = geometry.size.width
 
             ZStack {
-                CameraPreview(controller: cameraController)
-                    .frame(width: size, height: size)
-                    .clipShape(RoundedRectangle(cornerRadius: 34))
+                CameraRepresentableView(
+                    proxy: proxy,
+                    onStateChanged: { cameraState = $0 },
+                    onCapture: { store.send(.photoCaptured($0)) },
+                    onError: { cameraError = $0 }
+                )
+                .frame(width: size, height: size)
+                .clipShape(RoundedRectangle(cornerRadius: 34))
 
                 VStack {
                     HStack {
@@ -119,14 +111,10 @@ private extension CameraView {
             .gesture(
                 MagnifyGesture()
                     .onChanged { value in
-                        do {
-                            try cameraController.setZoomFromPinch(value.magnification)
-                        } catch {
-                            logger.warning(message: "핀치 줌 실패: \(error)")
-                        }
+                        proxy.send(.setZoomFromPinch(magnification: value.magnification))
                     }
                     .onEnded { _ in
-                        cameraController.endPinchZoom()
+                        proxy.send(.endPinchZoom)
                     }
             )
         }
@@ -159,9 +147,9 @@ private extension CameraView {
 
 private extension CameraView {
     var selfieZoomToggle: some View {
-        let isWide = cameraController.currentZoomFactor <= 1.0
+        let isWide = cameraState.currentZoomFactor <= 1.0
         return Button {
-            cameraController.toggleSelfieZoom()
+            proxy.send(.toggleSelfieZoom)
         } label: {
             Image(systemName: isWide
                 ? "arrow.down.right.and.arrow.up.left"
@@ -180,7 +168,7 @@ private extension CameraView {
         GeometryReader { geometry in
             let sidePadding = geometry.size.width / 2 - 16
 
-            ScrollViewReader { proxy in
+            ScrollViewReader { scrollProxy in
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 16) {
                         ForEach(ZoomLevel.allCases, id: \.self) { level in
@@ -191,11 +179,11 @@ private extension CameraView {
                     .padding(.horizontal, sidePadding)
                 }
                 .onAppear {
-                    proxy.scrollTo(cameraController.activePreset, anchor: .center)
+                    scrollProxy.scrollTo(cameraState.activePreset, anchor: .center)
                 }
-                .onChange(of: cameraController.activePreset) { _, newValue in
+                .onChange(of: cameraState.activePreset) { _, newValue in
                     withAnimation(.easeInOut(duration: 0.3)) {
-                        proxy.scrollTo(newValue, anchor: .center)
+                        scrollProxy.scrollTo(newValue, anchor: .center)
                     }
                 }
             }
@@ -205,14 +193,10 @@ private extension CameraView {
     }
 
     func zoomButton(for level: ZoomLevel) -> some View {
-        let isActive = cameraController.activePreset == level
-        let text = cameraController.zoomButtonTexts[level] ?? level.displayText
+        let isActive = cameraState.activePreset == level
+        let text = cameraState.zoomButtonTexts[level] ?? level.displayText
         return Button {
-            do {
-                try cameraController.setZoom(level.rawValue, animated: true)
-            } catch {
-                logger.warning(message: "줌 레벨 변경 실패: \(error)")
-            }
+            proxy.send(.setZoom(factor: level.rawValue, animated: true))
         } label: {
             Text(text)
                 .font(.system(size: 14, weight: .semibold))
@@ -241,9 +225,9 @@ private extension CameraView {
 
     var flashButton: some View {
         Button {
-            cameraController.toggleFlash()
+            proxy.send(.toggleFlash)
         } label: {
-            Image(systemName: cameraController.isFlashOn ? "bolt.fill" : "bolt.slash.fill")
+            Image(systemName: cameraState.isFlashOn ? "bolt.fill" : "bolt.slash.fill")
                 .font(.system(size: 20))
                 .foregroundStyle(.black)
                 .frame(width: 44, height: 44)
@@ -254,15 +238,7 @@ private extension CameraView {
 
     var captureButton: some View {
         Button {
-            Task {
-                do {
-                    let result = try await cameraController.capturePhoto()
-                    await cameraController.stopSession()
-                    store.send(.photoCaptured(result))
-                } catch {
-                    logger.error(message: "사진 촬영 실패: \(error)")
-                }
-            }
+            proxy.send(.capturePhoto)
         } label: {
             Circle()
                 .fill(.white)
@@ -277,13 +253,7 @@ private extension CameraView {
 
     var switchCameraButton: some View {
         Button {
-            Task {
-                do {
-                    try await cameraController.switchCamera()
-                } catch {
-                    logger.error(message: "카메라 전환 실패: \(error)")
-                }
-            }
+            proxy.send(.switchCamera)
         } label: {
             Image(systemName: "arrow.triangle.2.circlepath")
                 .font(.system(size: 20))
@@ -292,5 +262,6 @@ private extension CameraView {
                 .background(Color.gray300)
                 .clipShape(Circle())
         }
+        .disabled(cameraState.isSwitchingCamera)
     }
 }

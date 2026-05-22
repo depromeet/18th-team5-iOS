@@ -127,24 +127,6 @@ extension CameraController {
         isSessionRunning = false
     }
 
-    nonisolated func performSessionStop() {
-        sessionQueue.async { [weak self] in
-            guard let self else { return }
-            let shouldStop = mutableState.withLock { state -> Bool in
-                guard state.sessionPhase == .running else { return false }
-                state.sessionPhase = .stopping
-                return true
-            }
-
-            guard shouldStop else { return }
-            teardownSession()
-            mutableState.withLock { $0.sessionPhase = .idle }
-            Task { @MainActor [weak self] in
-                self?.isSessionRunning = false
-            }
-        }
-    }
-
     nonisolated func teardownSession() {
         let pendingContinuation = mutableState.withLock { state -> CheckedContinuation<CapturedResult, Error>? in
             let result = state.photoContinuation

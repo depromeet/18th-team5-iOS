@@ -105,13 +105,6 @@ extension Module {
         default: .demo
         }
     }
-
-    private var demoDependencies: [TargetDependency] {
-        switch self {
-        case .camera: [ExternalModule.composableArchitecture.dependency]
-        default: []
-        }
-    }
 }
 
 private extension Module {

@@ -13,7 +13,9 @@ import SwiftUI
 
 struct CameraDemoView: View {
     let store: StoreOf<CameraDemoFeature>
-    @State private var cameraController = CameraController()
+    @State private var proxy = CameraProxy()
+    @State private var cameraState = CameraStateSnapshot.initial
+    @State private var cameraError: CameraError?
     private let logger = Logger(handlers: [DebugLogHandler()])
 
     var body: some View {
@@ -40,8 +42,13 @@ private extension CameraDemoView {
             closeButton
 
             ZStack {
-                CameraPreview(controller: cameraController)
-                    .clipShape(RoundedRectangle(cornerRadius: 34))
+                CameraRepresentableView(
+                    proxy: proxy,
+                    onStateChanged: { cameraState = $0 },
+                    onCapture: { store.send(.photoCaptured($0)) },
+                    onError: { cameraError = $0 }
+                )
+                .clipShape(RoundedRectangle(cornerRadius: 34))
 
                 VStack {
                     HStack(spacing: 6) {
@@ -59,14 +66,10 @@ private extension CameraDemoView {
             .gesture(
                 MagnifyGesture()
                     .onChanged { value in
-                        do {
-                            try cameraController.setZoomFromPinch(value.magnification)
-                        } catch {
-                            logger.warning(message: "핀치 줌 실패: \(error)")
-                        }
+                        proxy.send(.setZoomFromPinch(magnification: value.magnification))
                     }
                     .onEnded { _ in
-                        cameraController.endPinchZoom()
+                        proxy.send(.endPinchZoom)
                     }
             )
 
@@ -78,39 +81,25 @@ private extension CameraDemoView {
             bottomControls
                 .padding(.bottom, 98)
         }
-        .onAppear {
-            Task {
-                do {
-                    try await cameraController.startSession()
-                } catch {
-                    logger.error(message: "카메라 세션 시작 실패: \(error)")
-                }
-            }
-        }
-        .onDisappear {
-            Task {
-                await cameraController.stopSession()
-            }
-        }
+        .onAppear { proxy.send(.startSession) }
+        .onDisappear { proxy.send(.stopSession) }
         .alert(
             "오류",
             isPresented: Binding(
-                get: { cameraController.errorMessage != nil },
-                set: { if !$0 { cameraController.clearError() } }
+                get: { cameraError != nil },
+                set: { if !$0 { cameraError = nil } }
             )
         ) {
-            Button("확인") { cameraController.clearError() }
+            Button("확인") { cameraError = nil }
         } message: {
-            Text(cameraController.errorMessage ?? "")
+            Text(cameraError?.userMessage ?? "")
         }
     }
 
     var closeButton: some View {
         Button {
-            Task {
-                await cameraController.stopSession()
-                store.send(.cameraCancelled)
-            }
+            proxy.send(.stopSession)
+            store.send(.cameraCancelled)
         } label: {
             Image(systemName: "xmark")
                 .font(.system(size: 20))
@@ -137,15 +126,11 @@ private extension CameraDemoView {
     var zoomControls: some View {
         HStack(spacing: 16) {
             ForEach(ZoomLevel.allCases, id: \.self) { level in
-                let isActive = cameraController.activePreset == level
+                let isActive = cameraState.activePreset == level
                 Button {
-                    do {
-                        try cameraController.setZoom(level.rawValue, animated: true)
-                    } catch {
-                        logger.warning(message: "줌 레벨 변경 실패: \(error)")
-                    }
+                    proxy.send(.setZoom(factor: level.rawValue, animated: true))
                 } label: {
-                    Text(cameraController.zoomButtonTexts[level] ?? level.displayText)
+                    Text(cameraState.zoomButtonTexts[level] ?? level.displayText)
                         .font(.system(size: 14, weight: .semibold))
                         .foregroundStyle(isActive ? .black : .gray)
                         .frame(width: 32, height: 32)
@@ -160,9 +145,9 @@ private extension CameraDemoView {
     var bottomControls: some View {
         HStack {
             Button {
-                cameraController.toggleFlash()
+                proxy.send(.toggleFlash)
             } label: {
-                Image(systemName: cameraController.isFlashOn ? "bolt.fill" : "bolt.slash.fill")
+                Image(systemName: cameraState.isFlashOn ? "bolt.fill" : "bolt.slash.fill")
                     .font(.system(size: 20))
                     .foregroundStyle(.black)
                     .frame(width: 44, height: 44)
@@ -173,15 +158,7 @@ private extension CameraDemoView {
             Spacer()
 
             Button {
-                Task {
-                    do {
-                        let result = try await cameraController.capturePhoto()
-                        await cameraController.stopSession()
-                        store.send(.photoCaptured(result))
-                    } catch {
-                        logger.error(message: "사진 촬영 실패: \(error)")
-                    }
-                }
+                proxy.send(.capturePhoto)
             } label: {
                 Circle()
                     .fill(.white)
@@ -196,13 +173,7 @@ private extension CameraDemoView {
             Spacer()
 
             Button {
-                Task {
-                    do {
-                        try await cameraController.switchCamera()
-                    } catch {
-                        logger.error(message: "카메라 전환 실패: \(error)")
-                    }
-                }
+                proxy.send(.switchCamera)
             } label: {
                 Image(systemName: "arrow.triangle.2.circlepath")
                     .font(.system(size: 20))
@@ -211,6 +182,7 @@ private extension CameraDemoView {
                     .background(Color.white)
                     .clipShape(Circle())
             }
+            .disabled(cameraState.isSwitchingCamera)
         }
         .padding(.horizontal, 53)
     }
