@@ -29,15 +29,17 @@ private extension Module {
         case .presentation: [implements, tests, demo]
         case .designSystem: [implements, demo]
         case .data, .domain, .core: [implements, tests]
+        case .camera: [implements, demo]
         }
     }
-    
+
     var schemes: [Scheme] {
         switch self {
         case .app: [.app(.dev), .app(.prod)]
         case .presentation: [testScheme, demoScheme]
         case .designSystem: [demoScheme]
         case .data, .domain, .core: [testScheme]
+        case .camera: [demoScheme]
         }
     }
     

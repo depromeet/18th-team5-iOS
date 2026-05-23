@@ -18,11 +18,19 @@ public struct MainView: View {
     }
 
     public var body: some View {
-        TabView(selection: $store.tab) {
-            ForEach(MainFeature.Tab.allCases, id: \.self) { tab in
-                tabView(tab: tab)
-                    .tag(tab)
-                    .toolbar(.hidden, for: .tabBar)
+        NavigationStack {
+            TabView(selection: $store.tab) {
+                ForEach(MainFeature.Tab.allCases, id: \.self) { tab in
+                    tabView(tab: tab)
+                        .tag(tab)
+                        .toolbar(.hidden, for: .tabBar)
+                }
+            }
+            .navigationBarHidden(true)
+            .navigationDestination(
+                item: $store.scope(state: \.missionRecord, action: \.missionRecord)
+            ) { missionRecordStore in
+                MissionRecordView(store: missionRecordStore)
             }
         }
         .overlay(alignment: .bottom) { tabBar }
