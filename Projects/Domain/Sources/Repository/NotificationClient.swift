@@ -19,6 +19,7 @@ public struct NotificationClient: Sendable {
     public var getAuthorizationStatus: @Sendable () async throws -> NotificationAuthorizationStatus
     public var requestAuthorization: @Sendable () async throws -> Bool
     public var requestProvisionalAuthorization: @Sendable () async throws -> Void
+    public var registerForRemoteNotifications: @Sendable () async -> Void
 }
 
 // MARK: - TestDependencyKey

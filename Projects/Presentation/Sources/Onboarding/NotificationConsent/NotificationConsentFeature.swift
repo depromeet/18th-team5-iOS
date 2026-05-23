@@ -36,7 +36,10 @@ public struct NotificationConsentFeature {
             case .nextButtonTapped:
                 return .run { send in
                     do {
-                        _ = try await notificationClient.requestAuthorization()
+                        let isAuthorized = try await notificationClient.requestAuthorization()
+                        if isAuthorized {
+                            await notificationClient.registerForRemoteNotifications()
+                        }
                         await send(.delegate(.completed))
                     } catch {
                         assertionFailure("최초 알림 동의 요청 오류")
@@ -47,7 +50,8 @@ public struct NotificationConsentFeature {
             case .skipButtonTapped:
                 return .run { send in
                     do {
-                        _ = try await notificationClient.requestProvisionalAuthorization()
+                        try await notificationClient.requestProvisionalAuthorization()
+                        await notificationClient.registerForRemoteNotifications()
                         await send(.delegate(.completed))
                     } catch {
                         assertionFailure("provisional 알림 동의 요청 오류")
