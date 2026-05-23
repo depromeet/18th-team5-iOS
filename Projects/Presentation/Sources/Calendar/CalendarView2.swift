@@ -18,6 +18,7 @@ struct CalendarView2: View {
         GeometryReader { geo in
             let containerWidth = geo.size.width - Constants.calendarHorizontalSpacing * 2
             let dateCellWidth = (containerWidth - Constants.dateCellHorizontalSpacing * 6) / 7
+
             VStack(spacing: 0) {
                 headerView
 
@@ -31,6 +32,17 @@ struct CalendarView2: View {
                     cellContent: { termSectionView($0, dateCellWidth: dateCellWidth) }
                 )
                 .padding(.horizontal, Constants.calendarHorizontalSpacing)
+                .overlay {
+                    if let detail = store.calendarDetail {
+                        calendarDetailView(detail)
+                            .padding(.top, Constants.detailViewTopPadding)
+                            .transition(.move(edge: .bottom))
+                    }
+                }
+                .animation(
+                    .easeInOut(duration: 0.35),
+                    value: store.calendarDetail
+                )
             }
         }
         .onAppear {
@@ -98,15 +110,19 @@ extension CalendarView2 {
             ForEach(termDates.indices, id: \.self) { weekIndex in
                 let inset = Constants.dateCellInsetY(weekIndex: weekIndex) - 11
                 HStack(spacing: Constants.dateCellHorizontalSpacing) {
-                    ForEach(termDates[weekIndex]) {
-                        dateCellView($0, cellWidth: dateCellWidth, inset: inset)
+                    ForEach(termDates[weekIndex]) { date in
+                        dateCellView(
+                            date: date,
+                            cellWidth: dateCellWidth,
+                            inset: inset
+                        )
                     }
                 }
             }
         }
     }
 
-    func dateCellView(_ date: SolarTermGroupCell, cellWidth: CGFloat, inset: CGFloat) -> some View {
+    func dateCellView(date: SolarTermGroupCell, cellWidth: CGFloat, inset: CGFloat) -> some View {
         VStack(spacing: Constants.dateMonthCellSpacing) {
             switch date {
             case .emptyCell:
@@ -203,6 +219,85 @@ extension CalendarView2 {
     }
 }
 
+// MARK: DetailView
+
+extension CalendarView2 {
+    func calendarDetailView(_ detail: CalendarDetail) -> some View {
+        GeometryReader { _ in
+            ZStack {
+                Color.white
+                    .overlay {
+                        VStack {
+                            LinearGradient(
+                                colors: [
+                                    .black.opacity(0.05),
+                                    .clear
+                                ],
+                                startPoint: .top,
+                                endPoint: .bottom
+                            )
+                            .frame(height: 30)
+                            Spacer()
+                        }
+                    }
+
+                VStack {
+                    CardStackView(
+                        topCardIndex: $store.selectedDetailCardIndex,
+                        items: detail.cards
+                    ) { index, card in
+                        RoundedRectangle(cornerRadius: 20)
+                            .foregroundStyle(index == store.selectedDetailCardIndex ? Color.gray100 : Color.gray300)
+                            .frame(width: 311, height: 400)
+                            .overlay {
+                                Text(card.name)
+                            }
+                    }
+                    .padding(.top, 20)
+                    Spacer()
+                }
+
+                VStack {
+                    Spacer()
+                    HStack(spacing: 8) {
+                        Button {
+                            store.send(.detailOkButtonTapped)
+                        } label: {
+                            HStack {
+                                Spacer()
+                                Text("확인")
+                                    .foregroundStyle(.white)
+                                Spacer()
+                            }
+                            .frame(height: 56)
+                            .background {
+                                RoundedRectangle(cornerRadius: 15)
+                            }
+                        }
+
+                        Button {
+                            store.send(.detailOkButtonTapped)
+                        } label: {
+                            HStack {
+                                Spacer()
+                                Text("확인")
+                                    .foregroundStyle(.white)
+                                Spacer()
+                            }
+                            .frame(height: 56)
+                            .background {
+                                RoundedRectangle(cornerRadius: 15)
+                            }
+                        }
+                    }
+                    .padding(.horizontal, 20)
+                }
+                .padding(.vertical, 16)
+            }
+        }
+    }
+}
+
 private extension CalendarView2 {
     enum Constants {
         static let calendarHorizontalSpacing: CGFloat = 19.5
@@ -214,6 +309,8 @@ private extension CalendarView2 {
         static let dateMonthCellSpacing: CGFloat = 2
         static let dateCellHorizontalSpacing: CGFloat = 7
         static let dateCellHeight: CGFloat = 70
+
+        static let detailViewTopPadding: CGFloat = 86
 
         static func dateCellInsetY(weekIndex: Int) -> CGFloat {
             let weekHeight = monthCellHeight + dateMonthCellSpacing + dateCellHeight

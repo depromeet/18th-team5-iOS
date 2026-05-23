@@ -20,6 +20,8 @@ public struct CalendarFeature2 {
         public var isPaging: Bool = false
         public var anchorRequest: AnchorRequest<SolarTermGroup>?
         public var selectedDateId: SolarTermDate.ID?
+        public var calendarDetail: CalendarDetail?
+        public var selectedDetailCardIndex: Int = 0
 
         fileprivate var currentYear: SolarTermYear = .y2026
     }
@@ -32,6 +34,7 @@ public struct CalendarFeature2 {
         case dateCellTapped(dateId: SolarTermDate.ID, inset: CGFloat)
         case updateYearPages([Page<SolarTermGroup>])
         case yearPagesLayoutCompleted
+        case detailOkButtonTapped
         case binding(BindingAction<State>)
     }
 
@@ -68,6 +71,10 @@ public struct CalendarFeature2 {
             case let .dateCellTapped(dateId, inset):
                 return dateCellTapped(&state, dateId: dateId, inset: inset)
 
+            case .detailOkButtonTapped:
+                state.calendarDetail = nil
+                return .none
+
             case .binding(\.anchoredTermId):
                 if let termId = state.anchoredTermId,
                    let currentTerm = findTermGroup(
@@ -75,6 +82,10 @@ public struct CalendarFeature2 {
                    ) {
                     return .send(.updateCalendarHeader(mapToHeader(currentTerm)))
                 }
+                return .none
+
+            case .binding(\.selectedDetailCardIndex):
+                print(state.selectedDetailCardIndex)
                 return .none
 
             default:
@@ -113,10 +124,11 @@ extension CalendarFeature2 {
             let pages = await fetchYearPages(years: years, now: now)
             await send(.updateYearPages(pages))
 
-            if let anchoredPage = pages.findAnchorTerm(containing: now) {
+            if let currentTterm = pages.findAnchorTerm(containing: now) {
+                await send(.updateCalendarHeader(mapToHeader(currentTterm)))
                 await send(.updateAnchorRequest(
                     AnchorRequest(
-                        itemId: anchoredPage.id,
+                        itemId: currentTterm.id,
                         inset: nil,
                         animated: false
                     )
@@ -160,6 +172,16 @@ extension CalendarFeature2 {
         dateId: SolarTermDate.ID,
         inset: CGFloat
     ) -> Effect<Action> {
+        // TODO: 임시데이터 -@준영
+        state.selectedDetailCardIndex = 0
+        state.calendarDetail = .init(cards: [
+            .init(name: "card1"),
+            .init(name: "card2"),
+            .init(name: "card3"),
+            .init(name: "card4"),
+            .init(name: "card5")
+        ])
+
         state.selectedDateId = dateId
         for pageIndex in state.yearPages.indices {
             for termIndex in state.yearPages[pageIndex].items.indices {
