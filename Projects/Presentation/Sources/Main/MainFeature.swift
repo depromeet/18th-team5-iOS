@@ -76,7 +76,8 @@ public struct MainFeature {
 public extension MainFeature {
     enum Tab: CaseIterable {
         case home
-        case archive
-        case myPage
+        case mission
+        case calendar
+        case solarTerm
     }
 }
