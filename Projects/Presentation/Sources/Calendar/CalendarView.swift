@@ -179,7 +179,7 @@ extension CalendarView {
                     .font(.body2Medium)
                     .foregroundStyle(
                         // TODO: 색상 수정예정 -@준영
-                        date.isToday ? Color(hex: 0x43DA87) : Color.gray900
+                        isSelected ? Color.white : (date.isToday ? Color(hex: 0x43DA87) : Color.gray900)
                     )
             }
             .padding(.vertical, 6)
@@ -257,6 +257,7 @@ extension CalendarView {
                     Spacer()
                 }
 
+                // TODO: 디자인 시스템 반영 -@준영
                 VStack {
                     Spacer()
                     HStack(spacing: 8) {

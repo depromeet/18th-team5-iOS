@@ -123,11 +123,11 @@ extension CalendarFeature {
             let pages = await fetchYearPages(years: years, now: now)
             await send(.updateYearPages(pages))
 
-            if let currentTterm = pages.findAnchorTerm(containing: now) {
-                await send(.updateCalendarHeader(mapToHeader(currentTterm)))
+            if let currentTerm = pages.findAnchorTerm(containing: now) {
+                await send(.updateCalendarHeader(mapToHeader(currentTerm)))
                 await send(.updateAnchorRequest(
                     AnchorRequest(
-                        itemId: currentTterm.id,
+                        itemId: currentTerm.id,
                         inset: nil,
                         animated: false
                     )

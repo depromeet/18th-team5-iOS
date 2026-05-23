@@ -262,16 +262,20 @@ private extension PagingTableUIView {
             .store(in: &store)
     }
 
-    private func updateAnchor(request: AnchorRequest<Item>) {
+    func updateAnchor(request: AnchorRequest<Item>) {
         defer { isPageUpdating = false }
         isPageUpdating = true
 
-        if let indexPath = indexPath(for: request.itemId) ?? middleIndexPath(in: groups),
-           let targetCellFrame = tableView.cellForRow(at: indexPath)?.frame {
-            tableView.setContentOffset(tableView.contentOffset, animated: false)
-            let targetContentOffsetY = targetCellFrame.minY + (request.inset ?? anchorInset)
-            UIView.animate(withDuration: request.animated ? 0.5 : 0.0) {
-                self.tableView.contentOffset.y = targetContentOffsetY
+        if let indexPath = indexPath(for: request.itemId) ?? middleIndexPath(in: groups) {
+            if let targetCellFrame = tableView.cellForRow(at: indexPath)?.frame {
+                tableView.setContentOffset(tableView.contentOffset, animated: false)
+                let targetContentOffsetY = targetCellFrame.minY + (request.inset ?? anchorInset)
+                UIView.animate(withDuration: request.animated ? 0.5 : 0.0) {
+                    self.tableView.contentOffset.y = targetContentOffsetY
+                }
+            } else {
+                tableView.scrollToRow(at: indexPath, at: .top, animated: false)
+                self.tableView.contentOffset.y += (request.inset ?? anchorInset)
             }
         }
     }
