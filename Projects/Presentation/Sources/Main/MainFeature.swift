@@ -14,7 +14,7 @@ public struct MainFeature {
     public struct State: Equatable {
         public var tab: Tab = .home
         var home: HomeFeature.State = .init()
-        var calendar: CalendarFeature2.State = .init()
+        var calendar: CalendarFeature.State = .init()
 
         public init() {}
     }
@@ -23,7 +23,7 @@ public struct MainFeature {
         case onAppear
         case binding(BindingAction<State>)
         case home(HomeFeature.Action)
-        case calendar(CalendarFeature2.Action)
+        case calendar(CalendarFeature.Action)
     }
 
     @Dependency(\.logger) var logger
@@ -37,7 +37,7 @@ public struct MainFeature {
             HomeFeature()
         }
         Scope(state: \.calendar, action: \.calendar) {
-            CalendarFeature2()
+            CalendarFeature()
         }
 
         Reduce { _, action in

@@ -39,7 +39,7 @@ private extension MainView {
         case .archive:
             Text("아카이빙")
         case .calendar:
-            CalendarView2(store: store.scope(state: \.calendar, action: \.calendar))
+            CalendarView(store: store.scope(state: \.calendar, action: \.calendar))
         case .myPage:
             Text("마이페이지")
         }
