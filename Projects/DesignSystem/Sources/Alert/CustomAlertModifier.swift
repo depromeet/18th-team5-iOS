@@ -15,24 +15,27 @@ struct CustomAlertModifier: ViewModifier {
     let buttons: [CustomAlertButton]
 
     func body(content: Content) -> some View {
+        let shouldPresent = isPresented && !buttons.isEmpty
+
         ZStack {
             content
-                .allowsHitTesting(!isPresented)
-                .accessibilityHidden(isPresented)
+                .allowsHitTesting(!shouldPresent)
+                .accessibilityHidden(shouldPresent)
 
-            if isPresented {
-                Color.black.opacity(0.6)
-                    .ignoresSafeArea()
-                    .onTapGesture {}
+            if shouldPresent {
+                ZStack {
+                    Color.black.opacity(0.6)
+                        .ignoresSafeArea()
 
-                CustomAlertView(
-                    icon: icon,
-                    message: message,
-                    buttons: buttons
-                )
+                    CustomAlertView(
+                        icon: icon,
+                        message: message,
+                        buttons: buttons
+                    )
+                }
+                .transition(.opacity.animation(.easeInOut(duration: 0.2)))
             }
         }
-        .animation(.easeInOut(duration: 0.2), value: isPresented)
     }
 }
 
