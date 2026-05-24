@@ -20,6 +20,7 @@ public struct MissionListFeature {
 
         var missions: [Mission]
         var selectedMission: Mission
+        @Presents var search: MissionSearchFeature.State?
 
         public init() {
             let missions: [Mission] = .mock
@@ -27,7 +28,7 @@ public struct MissionListFeature {
             self.selectedMission = missions[1]
         }
 
-        var isSelectMissionButtonEnabled: Bool {
+        var isSearchMissionButtonEnabled: Bool {
             // TODO: 추후 로직 구현
             true
         }
@@ -44,8 +45,9 @@ public struct MissionListFeature {
     public enum Action: BindableAction {
         case categoryTapped(MissionCategory)
         case indicatorIndexChanged(Int)
-        case selectMissionButtonTapped
+        case searchMissionButtonTapped
         case binding(BindingAction<State>)
+        case search(PresentationAction<MissionSearchFeature.Action>)
     }
 
     public init() {}
@@ -63,11 +65,15 @@ public struct MissionListFeature {
                 guard state.missions.indices.contains(index) else { return .none }
                 state.selectedMission = state.missions[index]
                 return .none
-            case .selectMissionButtonTapped:
-                state.isTooltipPresented = true
+            case .searchMissionButtonTapped:
+                state.search = .init()
                 return .none
             case .binding: return .none
+            case .search: return .none
             }
+        }
+        .ifLet(\.$search, action: \.search) {
+            MissionSearchFeature()
         }
     }
 }
