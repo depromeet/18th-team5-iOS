@@ -7,6 +7,7 @@
 //
 
 import ComposableArchitecture
+import Domain
 
 @Reducer
 public struct MainFeature {
@@ -44,8 +45,16 @@ public struct MainFeature {
                 logger.debug(message: "MainView did appear")
                 return .none
 
-            case let .home(.delegate(.navigateToMissionCamera(_, title, _))):
-                state.missionRecord = MissionRecordFeature.State(missionTitle: title)
+            case let .home(.delegate(.navigateToMissionCamera(missionId, title, missionTypeRaw))):
+                let missionType = MissionType(rawValue: missionTypeRaw) ?? {
+                    assertionFailure("Unknown missionType: \(missionTypeRaw)")
+                    return .daily
+                }()
+                state.missionRecord = MissionRecordFeature.State(
+                    missionId: missionId,
+                    missionTitle: title,
+                    missionType: missionType
+                )
                 return .none
 
             case .home(.delegate(.navigateToMissionTab)):

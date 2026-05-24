@@ -27,17 +27,28 @@ public struct MissionRecordFeature {
         }
     }
 
+    public enum RecordAlert: Equatable {
+        case permissionDenied(PicturePermissionKind)
+        case submitFailed
+    }
+
     @ObservableState
     public struct State: Equatable {
+        let missionId: Int
+        let missionType: MissionType
         var missionTitle: String
         var selectedImageData: Data?
         var memo: String = ""
         var isSubmitting: Bool = false
+        var isPhotoPickerPresented: Bool = false
+        var alert: RecordAlert?
         @Presents var completionModal: CompletionModal.State?
         @Presents var camera: CameraFeature.State?
 
-        public init(missionTitle: String) {
+        public init(missionId: Int, missionTitle: String, missionType: MissionType) {
+            self.missionId = missionId
             self.missionTitle = missionTitle
+            self.missionType = missionType
         }
     }
 
@@ -46,9 +57,16 @@ public struct MissionRecordFeature {
         case delegate(Delegate)
         case backButtonTapped
         case cameraButtonTapped
+        case galleryButtonTapped
+        case openCamera
+        case openPhotoPicker
+        case permissionResolved(PicturePermissionKind, granted: Bool)
         case imageSelected(Data?)
         case imageDeleteButtonTapped
         case submitButtonTapped
+        case submitResponse(Result<MissionCompletion, any Error>)
+        case alertCancelTapped
+        case alertOpenSettingsTapped
         case completionModal(PresentationAction<CompletionModal.Action>)
         case camera(PresentationAction<CameraFeature.Action>)
     }
@@ -59,12 +77,8 @@ public struct MissionRecordFeature {
     }
 
     @Dependency(\.date) var date
-
-    private static let dateFormatter: DateFormatter = {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy. M. d"
-        return formatter
-    }()
+    @Dependency(\.missionRepository) var missionRepository
+    @Dependency(\.picturePermissionClient) var picturePermissionClient
 
     public init() {}
 
@@ -80,11 +94,28 @@ public struct MissionRecordFeature {
                 return .send(.delegate(.dismiss))
 
             case .cameraButtonTapped:
+                return resolvePermission(.camera)
+
+            case .galleryButtonTapped:
+                return resolvePermission(.photoLibrary)
+
+            case .openCamera:
                 state.camera = CameraFeature.State(
                     overlayLabel: state.missionTitle,
                     date: date.now
                 )
                 return .none
+
+            case .openPhotoPicker:
+                state.isPhotoPickerPresented = true
+                return .none
+
+            case let .permissionResolved(kind, granted):
+                guard granted else {
+                    state.alert = .permissionDenied(kind)
+                    return .none
+                }
+                return .send(kind == .camera ? .openCamera : .openPhotoPicker)
 
             case let .imageSelected(data):
                 state.selectedImageData = data
@@ -95,8 +126,55 @@ public struct MissionRecordFeature {
                 return .none
 
             case .submitButtonTapped:
+                guard !state.isSubmitting else { return .none }
+                state.isSubmitting = true
+                let missionId = state.missionId
+                let missionType = state.missionType
+                let imageData = state.selectedImageData
+                let memo = state.memo.trimmingCharacters(in: .whitespacesAndNewlines)
+                let completedAt = date.now
+                return .run { send in
+                    do {
+                        var objectKey: String?
+                        if let imageData {
+                            objectKey = try await missionRepository.uploadImage(
+                                imageData,
+                                "\(UUID().uuidString).jpg",
+                                "image/jpeg"
+                            )
+                        }
+                        let completion = try await missionRepository.completeMission(
+                            missionId,
+                            missionType,
+                            objectKey,
+                            memo.isEmpty ? nil : memo,
+                            completedAt
+                        )
+                        await send(.submitResponse(.success(completion)))
+                    } catch {
+                        await send(.submitResponse(.failure(error)))
+                    }
+                }
+
+            case .submitResponse(.success):
+                state.isSubmitting = false
                 state.completionModal = CompletionModal.State()
                 return .none
+
+            case .submitResponse(.failure):
+                state.isSubmitting = false
+                state.alert = .submitFailed
+                return .none
+
+            case .alertCancelTapped:
+                state.alert = nil
+                return .none
+
+            case .alertOpenSettingsTapped:
+                state.alert = nil
+                return .run { _ in
+                    await picturePermissionClient.openSettings()
+                }
 
             case .completionModal(.presented(.confirmTapped)):
                 state.completionModal = nil
@@ -129,6 +207,21 @@ public struct MissionRecordFeature {
         }
         .ifLet(\.$camera, action: \.camera) {
             CameraFeature()
+        }
+    }
+
+    private func resolvePermission(_ kind: PicturePermissionKind) -> Effect<Action> {
+        .run { send in
+            let status = await picturePermissionClient.status(kind)
+            switch status {
+            case .authorized, .limited:
+                await send(kind == .camera ? .openCamera : .openPhotoPicker)
+            case .notDetermined:
+                let granted = await picturePermissionClient.request(kind)
+                await send(.permissionResolved(kind, granted: granted))
+            case .denied, .restricted:
+                await send(.permissionResolved(kind, granted: false))
+            }
         }
     }
 }
