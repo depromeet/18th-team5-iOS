@@ -222,6 +222,12 @@ private extension RootFeature {
             let status = try await notificationClient.getAuthorizationStatus()
 
             switch status {
+            case .authorized, .provisional:
+                await notificationClient.registerForRemoteNotifications()
+            default: break
+            }
+
+            switch status {
             case .notDetermined:
                 await send(.navigation(.notificationConsent(.init())))
             case .authorized, .denied, .provisional:
