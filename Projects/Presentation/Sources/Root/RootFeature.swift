@@ -20,6 +20,7 @@ public struct RootFeature {
         var path: Path.State = .splash(.init())
         var launchConfig: LaunchConfig?
         var hasFetchedConfig: Bool = false
+        var isOnboarded: Bool?
 
         public init(currentAppVersion: AppVersion = .current, isDebug: Bool = false) {
             self.currentAppVersion = currentAppVersion
@@ -33,9 +34,10 @@ public struct RootFeature {
         case launchConfigLoaded(Result<LaunchConfig, Error>)
         case launchFlowFinished
         case loginFlowFinished(with: Result<Void, Error>)
-        case onboardingStateLoaded(with: Result<Bool, Error>)
+        case onboardingStateLoaded(Bool)
         case onboardingFinished
         case setDebugTokenFinished
+        case navigation(Path.State)
     }
 
     @Dependency(\.launchConfigRepository) var launchConfigRepository
@@ -43,6 +45,7 @@ public struct RootFeature {
     @Dependency(\.authRepository) var authRepository
     @Dependency(\.openURL) var openURL
     @Dependency(\.logger) var logger
+    @Dependency(\.notificationClient) private var notificationClient
 
     public init() {}
 
@@ -77,27 +80,20 @@ public struct RootFeature {
             case let .loginFlowFinished(result):
                 switch result {
                 case .success:
-                    return loadOnboardingState(&state)
+                    return .run { send in await loadOnboardingState(send) }
                 case let .failure(error):
                     // TODO: 로그인 실패 에러처리 - @준영
                     logger.error(message: "로그인 실패 \(error.localizedDescription)")
                     return .none
                 }
 
+            case let .onboardingStateLoaded(isOnboarded):
+                state.isOnboarded = isOnboarded
+                return .none
+
             case .onboardingFinished:
                 state.path = .main(.init())
                 return .none
-
-            case let .onboardingStateLoaded(result):
-                switch result {
-                case let .success(isOnboarded):
-                    state.path = isOnboarded ? .main(.init()) : .onboarding(.init())
-                    return .none
-                case let .failure(error):
-                    // TODO: 온보딩 조회 실패 에러처리 - @준영
-                    logger.error(message: "온보딩 진행여부 확인 실패 \(error.localizedDescription)")
-                    return .none
-                }
 
             case .setDebugTokenFinished:
                 state.path = .splash(.init())
@@ -113,14 +109,22 @@ public struct RootFeature {
                     }
                 }
 
-            case .path(.onboarding(.delegate(.completed))):
-                return .send(.onboardingFinished)
+            case .path(.notificationConsent(.delegate(.completed))):
+                guard let isOnboarded = state.isOnboarded else { return .none }
+                let destination: Path.State = isOnboarded ? .main(.init()) : .survey(.init())
+                return .send(.navigation(destination))
+
+            case .path(.survey(.delegate(.completed))):
+                return .send(.navigation(.main(.init())))
 
             case .path(.debugToken(.delegate(.completed))):
                 return .send(.setDebugTokenFinished)
 
-            default:
+            case let .navigation(destination):
+                state.path = destination
                 return .none
+
+            case .path: return .none
             }
         }
     }
@@ -131,7 +135,8 @@ public enum Path {
     case splash(SplashFeature)
     case forceUpdate(ForceUpdateFeature)
     case maintenance(MaintenanceFeature)
-    case onboarding(OnboardingFeature)
+    case notificationConsent(NotificationConsentFeature)
+    case survey(OnboardingSurveyFeature)
     case main(MainFeature)
     case debugToken(DebugTokenSettingFeature)
 }
@@ -198,11 +203,34 @@ private extension RootFeature {
 // MARK: Onboarding
 
 private extension RootFeature {
-    func loadOnboardingState(_ state: inout State) -> Effect<Action> {
-        .run { send in
-            await send(.onboardingStateLoaded(
-                with: Result { try await onboardingRepository.isOnboarded() }
-            ))
+    func loadOnboardingState(_ send: Send<Action>) async {
+        do {
+            let isOnboarded = try await onboardingRepository.isOnboarded()
+            await send(.onboardingStateLoaded(isOnboarded))
+            await loadNotificationAuthorizationStatus(isOnboarded, send)
+        } catch {
+            // TODO: 온보딩 조회 실패 에러처리 - @준영
+            logger.error(message: "온보딩 진행여부 확인 실패 \(error.localizedDescription)")
+        }
+    }
+
+    func loadNotificationAuthorizationStatus(
+        _ isOnboarded: Bool,
+        _ send: Send<Action>
+    ) async {
+        do {
+            let status = try await notificationClient.getAuthorizationStatus()
+
+            switch status {
+            case .notDetermined:
+                await send(.navigation(.notificationConsent(.init())))
+            case .authorized, .denied, .provisional:
+                let destination: Path.State = isOnboarded ? .main(.init()) : .survey(.init())
+                await send(.navigation(destination))
+            }
+        } catch {
+            // TODO: 알림 권한 조회 실패 에러처리 - @정원
+            logger.error(message: "알림 권한 조회 실패 \(error.localizedDescription)")
         }
     }
 }
