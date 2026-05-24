@@ -26,6 +26,8 @@ extension NetworkError {
                 return .forbidden
             case 404:
                 return .notFound
+            case 409:
+                return .conflict
             case 500 ... 599:
                 return .serverError
             default:
