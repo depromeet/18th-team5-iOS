@@ -15,6 +15,7 @@ public struct Tooltip: View {
     }
 
     @Binding private var isPresented: Bool
+    @State private var dismissTask: Task<Void, Never>?
     private let text: String
     private let position: Position
 
@@ -43,6 +44,7 @@ public struct Tooltip: View {
             guard newValue else { return }
             dismiss()
         }
+        .onDisappear { dismissTask?.cancel() }
     }
 }
 
@@ -55,9 +57,14 @@ private extension Tooltip {
     }
 
     func dismiss() {
-        Task {
-            try await Task.sleep(for: .seconds(3))
-            isPresented = false
+        dismissTask?.cancel()
+        dismissTask = Task {
+            try? await Task.sleep(for: .seconds(3))
+            guard !Task.isCancelled else { return }
+
+            await MainActor.run {
+                isPresented = false
+            }
         }
     }
 }
