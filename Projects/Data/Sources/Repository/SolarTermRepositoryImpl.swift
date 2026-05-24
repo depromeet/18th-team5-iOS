@@ -25,9 +25,8 @@ public enum SolarTermRepositoryImpl {
                 let currentYearDTO = try await fetch(year, with: keyValueStore)
 
                 var nextYearFirstTerm: SolarTermEntryDTO?
-                if let nextYear = year.nextYear,
-                   let nextYearDTO = try? await fetch(nextYear, with: keyValueStore) {
-                    nextYearFirstTerm = nextYearDTO.terms.first
+                if let nextYear = year.nextYear {
+                    nextYearFirstTerm = try await fetch(nextYear, with: keyValueStore).terms.first
                 }
 
                 return currentYearDTO.toDomain(nextYearFirstTerm)

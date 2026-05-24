@@ -267,15 +267,13 @@ private extension PagingTableUIView {
         isPageUpdating = true
 
         if let indexPath = indexPath(for: request.itemId) ?? middleIndexPath(in: groups) {
-            if let targetCellFrame = tableView.cellForRow(at: indexPath)?.frame {
-                tableView.setContentOffset(tableView.contentOffset, animated: false)
-                let targetContentOffsetY = targetCellFrame.minY + (request.inset ?? anchorInset)
-                UIView.animate(withDuration: request.animated ? 0.5 : 0.0) {
-                    self.tableView.contentOffset.y = targetContentOffsetY
-                }
-            } else {
-                tableView.scrollToRow(at: indexPath, at: .top, animated: false)
-                self.tableView.contentOffset.y += (request.inset ?? anchorInset)
+            tableView.layoutIfNeeded()
+            let targetCellFrame = tableView.rectForRow(at: indexPath)
+            tableView.setContentOffset(tableView.contentOffset, animated: false)
+            let targetContentOffsetY = targetCellFrame.minY + (request.inset ?? anchorInset)
+
+            UIView.animate(withDuration: request.animated ? 0.5 : 0.0) {
+                self.tableView.contentOffset.y = targetContentOffsetY
             }
         }
     }

@@ -130,7 +130,7 @@ extension CardStackView {
 
 extension CardStackView {
     private var dragThreshold: CGFloat {
-        (cardSize?.height ?? 300) * Constants.dragToDismissThresholdPercent
+        max(cardSize?.height ?? 300, 1) * Constants.dragToDismissThresholdPercent
     }
 
     private var dragGesture: some Gesture {

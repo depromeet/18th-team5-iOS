@@ -316,7 +316,7 @@ extension CalendarFeature {
             cells.append(
                 .dateCell(
                     SolarTermDate(
-                        id: date.description,
+                        id: Self.dateIdFormatter.string(from: date),
                         monthText: "\(ymd.month)월",
                         dayText: String(ymd.day),
                         isFirstDayOfMonth: ymd.day == 1,
@@ -351,6 +351,12 @@ extension CalendarFeature {
     static let dayFormatter: DateFormatter = {
         let df = DateFormatter()
         df.dateFormat = "d"
+        return df
+    }()
+
+    static let dateIdFormatter: DateFormatter = {
+        let df = DateFormatter()
+        df.dateFormat = "yyyy-MM-dd"
         return df
     }()
 }
