@@ -55,7 +55,7 @@ public struct MainFeature {
                 return .none
 
             case .home(.delegate(.navigateToMissionTab)):
-                // TODO: 미션 추천 페이지 이동 - @minkyo
+                state.tab = .mission
                 return .none
 
             case .missionRecord(.presented(.delegate(.dismiss))):
