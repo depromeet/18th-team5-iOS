@@ -38,8 +38,8 @@ final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCent
 
 extension AppDelegate: MessagingDelegate {
     func messaging(_ messaging: Messaging, didReceiveRegistrationToken fcmToken: String?) {
-        print(fcmToken)
         // TODO: Send the refreshed FCM token to the server when the API is ready.
+        // print(fcmToken)
     }
 
     func userNotificationCenter(
