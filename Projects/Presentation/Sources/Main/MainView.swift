@@ -7,6 +7,7 @@
 //
 
 import ComposableArchitecture
+import DesignSystem
 import SwiftUI
 
 public struct MainView: View {
@@ -17,16 +18,23 @@ public struct MainView: View {
     }
 
     public var body: some View {
-        TabView(selection: $store.tab) {
-            ForEach(MainFeature.Tab.allCases, id: \.self) { tab in
-                tabView(tab: tab)
-                    .tabItem { tabItem(tab: tab) }
-                    .tag(tab)
+        NavigationStack {
+            TabView(selection: $store.tab) {
+                ForEach(MainFeature.Tab.allCases, id: \.self) { tab in
+                    tabView(tab: tab)
+                        .tag(tab)
+                        .toolbar(.hidden, for: .tabBar)
+                }
+            }
+            .navigationBarHidden(true)
+            .navigationDestination(
+                item: $store.scope(state: \.missionRecord, action: \.missionRecord)
+            ) { missionRecordStore in
+                MissionRecordView(store: missionRecordStore)
             }
         }
-        .onAppear {
-            store.send(.onAppear)
-        }
+        .overlay(alignment: .bottom) { tabBar }
+        .onAppear { store.send(.onAppear) }
     }
 }
 
@@ -36,38 +44,67 @@ private extension MainView {
         switch tab {
         case .home:
             HomeView(store: store.scope(state: \.home, action: \.home))
-        case .archive:
-            Text("아카이빙")
         case .calendar:
             CalendarView(store: store.scope(state: \.calendar, action: \.calendar))
-        case .myPage:
-            Text("마이페이지")
+        default:
+            Text(tab.title)
         }
     }
 
-    @ViewBuilder
-    func tabItem(tab: MainFeature.Tab) -> some View {
-        tab.image
-        Text(tab.title)
+    var tabBar: some View {
+        HStack(spacing: 6) {
+            ForEach(MainFeature.Tab.allCases, id: \.self) { tab in
+                Button {
+                    store.send(.set(\.tab, tab))
+                } label: {
+                    tabItemView(tab)
+                }
+            }
+        }
+        .padding(.horizontal, 16)
+        .background(Color.white)
+        .clipShape(Capsule())
+        .shadow(color: Color.blackAlpha300, radius: 15, x: 0, y: 2)
+        .overlay(Capsule().stroke(Color.blackAlpha200))
+        .padding(.horizontal, 20)
+    }
+
+    func tabItemView(_ tab: MainFeature.Tab) -> some View {
+        VStack(spacing: 4) {
+            let color: Color = tab == store.tab ? .gray900 : .gray500
+
+            tab.image
+                .renderingMode(.template)
+                .resizable()
+                .frame(width: 24, height: 24)
+                .foregroundStyle(color)
+
+            Text(tab.title)
+                .font(.caption2Medium)
+                .foregroundStyle(color)
+        }
+        .padding(.vertical, 10)
+        .frame(maxWidth: .infinity)
+        .frame(height: 64)
     }
 }
 
 private extension MainFeature.Tab {
     var image: Image {
         switch self {
-        case .home: Image(systemName: "house")
-        case .archive: Image(systemName: "folder")
-        case .calendar: Image(systemName: "folder")
-        case .myPage: Image(systemName: "person")
+        case .home: .icHomeTab
+        case .solarTerm: .icFileTab
+        case .mission: .icMailTab
+        case .calendar: .icCalendarTab
         }
     }
 
     var title: String {
         switch self {
         case .home: "홈"
-        case .archive: "아카이빙"
+        case .solarTerm: "절기소개"
+        case .mission: "미션"
         case .calendar: "캘린더"
-        case .myPage: "마이페이지"
         }
     }
 }

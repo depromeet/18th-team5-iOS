@@ -35,6 +35,8 @@ final class AuthInterceptor: RequestInterceptor, @unchecked Sendable {
         if let token = tokenClient.getAccessToken() {
             request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         }
+
+        logger.debug(message: "\n\n🟢[REQUEST]\n\(request.curlString)\n")
         completion(.success(request))
     }
 
