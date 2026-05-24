@@ -7,20 +7,48 @@
 //
 
 import ComposableArchitecture
+import Domain
 
 @Reducer
 public struct MissionSearchFeature {
+    @Dependency(\.dismiss) private var dismiss
+
     @ObservableState
     public struct State: Equatable {
-        public init() {}
+        let season: Season
+        var locationType: LocationType?
+        var participationType: ParticipationType?
+        var category: MissionSearchCategory?
+
+        public init(season: Season) {
+            self.season = season
+        }
+
+        var isBottomButtonEnabled: Bool {
+            locationType != nil
+                && participationType != nil
+                && category != nil
+        }
     }
 
-    public enum Action {}
+    public enum Action: BindableAction {
+        case closeButtonTapped
+        case bottomButtonTapped
+        case binding(BindingAction<State>)
+    }
 
     public init() {}
     public var body: some ReducerOf<Self> {
-        Reduce { _, _ in
-            return .none
+        BindingReducer()
+
+        Reduce { _, action in
+            switch action {
+            case .closeButtonTapped:
+                return .run { _ in await dismiss() }
+            case .bottomButtonTapped:
+                return .run { _ in await dismiss() }
+            case .binding: return .none
+            }
         }
     }
 }

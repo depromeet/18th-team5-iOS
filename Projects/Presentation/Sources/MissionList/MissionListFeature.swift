@@ -66,7 +66,7 @@ public struct MissionListFeature {
                 state.selectedMission = state.missions[index]
                 return .none
             case .searchMissionButtonTapped:
-                state.search = .init()
+                state.search = .init(season: state.solarTerm.season)
                 return .none
             case .binding: return .none
             case .search: return .none
