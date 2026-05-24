@@ -11,7 +11,7 @@ import FirebaseMessaging
 import UIKit
 import UserNotifications
 
-final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDelegate {
+final class AppDelegate: NSObject, UIApplicationDelegate {
     func application(
         _ application: UIApplication,
         didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
@@ -20,7 +20,16 @@ final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCent
         configureNotification()
         return true
     }
+}
 
+private extension AppDelegate {
+    func configureNotification() {
+        UNUserNotificationCenter.current().delegate = self
+        Messaging.messaging().delegate = self
+    }
+}
+
+extension AppDelegate: UNUserNotificationCenterDelegate {
     func application(
         _ application: UIApplication,
         didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data
@@ -32,14 +41,7 @@ final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCent
         _ application: UIApplication,
         didFailToRegisterForRemoteNotificationsWithError error: Error
     ) {
-        print("Failed to register for remote notifications:", error)
-    }
-}
-
-extension AppDelegate: MessagingDelegate {
-    func messaging(_ messaging: Messaging, didReceiveRegistrationToken fcmToken: String?) {
-        // TODO: Send the refreshed FCM token to the server when the API is ready.
-        // print(fcmToken)
+        // MARK: Failed to register for remote notifications
     }
 
     func userNotificationCenter(
@@ -51,9 +53,9 @@ extension AppDelegate: MessagingDelegate {
     }
 }
 
-private extension AppDelegate {
-    func configureNotification() {
-        UNUserNotificationCenter.current().delegate = self
-        Messaging.messaging().delegate = self
+extension AppDelegate: MessagingDelegate {
+    func messaging(_ messaging: Messaging, didReceiveRegistrationToken fcmToken: String?) {
+        // TODO: Send the refreshed FCM token to the server when the API is ready.
+        // print(fcmToken)
     }
 }
