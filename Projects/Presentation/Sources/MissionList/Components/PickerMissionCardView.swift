@@ -160,7 +160,7 @@ private extension PickerMissionCardView {
 
     var activeBackgroundView: some View {
         ZStack(alignment: .trailing) {
-            Color(hex: 0xF7F8F9)
+            Color.gray50
                 .frame(maxWidth: .infinity)
                 .frame(height: 80)
 

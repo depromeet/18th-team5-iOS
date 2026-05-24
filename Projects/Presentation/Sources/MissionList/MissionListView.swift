@@ -29,6 +29,8 @@ public struct MissionListView: View {
                 content: missionCardView
             )
             .animation(.easeInOut(duration: 0.25), value: store.selectedMission)
+            .allowsHitTesting(!store.isIndicatorEnabled)
+            .overlay(alignment: .trailing) { indicatorView }
         }
         .overlay(alignment: .top) { headerView }
     }
@@ -131,5 +133,37 @@ private extension MissionListView {
         )
         .padding(.leading, 20)
         .padding(.trailing, 58)
+    }
+
+    @ViewBuilder
+    var indicatorView: some View {
+        if let selectedIndex = store.selectedIndex {
+            GeometryReader { proxy in
+                let width = proxy.size.width
+                let height = proxy.size.height
+
+                Indicator(
+                    totalCount: store.missions.count,
+                    selectedIndex: selectedIndex,
+                    mainColor: store.selectedMission.season.indicatorMainColor,
+                    isEnabled: $store.isIndicatorEnabled,
+                    indexChanged: { store.send(.indicatorIndexChanged($0)) }
+                )
+                .padding(.trailing, 20)
+                .frame(width: width, height: height, alignment: .topTrailing)
+                .padding(.top, height / 2 + 52)
+            }
+        }
+    }
+}
+
+private extension Season {
+    var indicatorMainColor: Color {
+        switch self {
+        case .spring: .pink500
+        case .summer: .green500
+        case .autumn: .orange500
+        case .winter: .blue500
+        }
     }
 }

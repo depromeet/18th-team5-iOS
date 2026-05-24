@@ -16,6 +16,7 @@ public struct MissionListFeature {
         var userType: UserType = .explorer
         var solarTerm: SolarTerm = .ibha
         var isTooltipPresented: Bool = true
+        var isIndicatorEnabled: Bool = false
 
         var missions: [Mission]
         var selectedMission: Mission
@@ -34,10 +35,15 @@ public struct MissionListFeature {
         var category: MissionCategory {
             selectedMission.category
         }
+
+        var selectedIndex: Int? {
+            missions.firstIndex(of: selectedMission)
+        }
     }
 
     public enum Action: BindableAction {
         case categoryTapped(MissionCategory)
+        case indicatorIndexChanged(Int)
         case selectMissionButtonTapped
         case binding(BindingAction<State>)
     }
@@ -52,6 +58,10 @@ public struct MissionListFeature {
                 let mission = state.missions.first { $0.category == category }
                 guard let mission else { return .none }
                 state.selectedMission = mission
+                return .none
+            case let .indicatorIndexChanged(index):
+                guard state.missions.indices.contains(index) else { return .none }
+                state.selectedMission = state.missions[index]
                 return .none
             case .selectMissionButtonTapped:
                 state.isTooltipPresented = true
