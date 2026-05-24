@@ -16,13 +16,13 @@ public struct NotificationConsentFeature {
         public init() {}
     }
 
-    public enum Action {
+    public enum Action: Equatable {
         case delegate(Delegate)
         case nextButtonTapped
         case skipButtonTapped
     }
 
-    public enum Delegate {
+    public enum Delegate: Equatable {
         case completed
     }
 

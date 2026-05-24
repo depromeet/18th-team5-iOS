@@ -87,7 +87,7 @@ struct RootFeatureTests {
     }
 
     @Test
-    func 로그인후_온보딩_미완료시_온보딩화면이동() async {
+    func 로그인후_온보딩_미완료_알림권한결정됨_설문화면이동() async {
         // Given
         let sut = TestStore(initialState: .init()) {
             RootFeature()
@@ -105,6 +105,7 @@ struct RootFeatureTests {
                 login: {}
             )
             $0.onboardingRepository.isOnboarded = { false }
+            $0.notificationClient.getAuthorizationStatus = { .denied }
         }
         sut.exhaustivity = .off
 
@@ -112,12 +113,15 @@ struct RootFeatureTests {
         await sut.send(.onAppear)
         await sut.receive(\.onboardingStateLoaded) {
             // Then
-            $0.path = .onboarding(.init())
+            $0.isOnboarded = false
+        }
+        await sut.receive(\.navigation) {
+            $0.path = .survey(.init())
         }
     }
 
     @Test
-    func 런치플로우_온보딩_완료시_메인화면이동() async {
+    func 런치플로우_온보딩완료_알림권한허용됨_원격알림등록후_메인화면이동() async {
         // Given
         let sut = TestStore(initialState: .init()) {
             RootFeature()
@@ -135,6 +139,8 @@ struct RootFeatureTests {
                 login: {}
             )
             $0.onboardingRepository.isOnboarded = { true }
+            $0.notificationClient.getAuthorizationStatus = { .authorized }
+            $0.notificationClient.registerForRemoteNotifications = {}
         }
         sut.exhaustivity = .off
 
@@ -142,7 +148,44 @@ struct RootFeatureTests {
         await sut.send(.onAppear)
         await sut.receive(\.onboardingStateLoaded) {
             // Then
+            $0.isOnboarded = true
+        }
+        await sut.receive(\.navigation) {
             $0.path = .main(.init())
+        }
+    }
+
+    @Test
+    func 로그인후_알림권한_미결정시_알림동의화면이동() async {
+        // Given
+        let sut = TestStore(initialState: .init()) {
+            RootFeature()
+        } withDependencies: {
+            $0.launchConfigRepository = .init(fetch: {
+                .init(
+                    maintenance: false,
+                    isForceUpdateEnabled: false,
+                    minimumAppVersion: .init(major: 0, minor: 0, patch: 0),
+                    appStoreLink: ""
+                )
+            })
+            $0.authRepository = AuthRepository(
+                isSignin: { true },
+                login: {}
+            )
+            $0.onboardingRepository.isOnboarded = { false }
+            $0.notificationClient.getAuthorizationStatus = { .notDetermined }
+        }
+        sut.exhaustivity = .off
+
+        // When
+        await sut.send(.onAppear)
+        await sut.receive(\.onboardingStateLoaded) {
+            // Then
+            $0.isOnboarded = false
+        }
+        await sut.receive(\.navigation) {
+            $0.path = .notificationConsent(.init())
         }
     }
 
