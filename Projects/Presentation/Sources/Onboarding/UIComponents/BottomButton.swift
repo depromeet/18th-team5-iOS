@@ -27,7 +27,7 @@ struct BottomButton: View {
                 .frame(height: 56)
                 .foregroundStyle(Color.white)
                 .background(background)
-                .clipShape(RoundedRectangle(cornerRadius: .radius16))
+                .clipShape(RoundedRectangle(cornerRadius: .radius12))
         }
     }
 }
