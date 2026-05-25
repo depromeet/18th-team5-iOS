@@ -1,25 +1,24 @@
 //
 //  BottomButton.swift
-//  Presentation
+//  DesignSystem
 //
-//  Created by 이정원 on 5/5/26.
+//  Created by 이정원 on 5/24/26.
 //  Copyright © 2026 Orange. All rights reserved.
 //
 
-import DesignSystem
 import SwiftUI
 
-struct BottomButton: View {
+public struct BottomButton: View {
     @Environment(\.isEnabled) private var isEnabled
     private let title: String
     private let action: () -> Void
 
-    init(title: String, action: @escaping () -> Void) {
+    public init(title: String, action: @escaping () -> Void) {
         self.title = title
         self.action = action
     }
 
-    var body: some View {
+    public var body: some View {
         Button(action: action) {
             Text(title)
                 .font(.body1Medium)

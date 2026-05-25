@@ -15,6 +15,13 @@ struct Indicator: View {
     @State private var lastChangedIndex: Int?
     @State private var latestLocation: CGPoint?
 
+    private let selectedWidth: CGFloat = 20
+    private let selectedHeight: CGFloat = 4
+    private let unselectedWidth: CGFloat = 10
+    private let unselectedHeight: CGFloat = 2
+    private let itemSpacing: CGFloat = 8
+    private let contentPadding: CGFloat = 6
+
     private let totalCount: Int
     private let selectedIndex: Int
     private let mainColor: Color
@@ -38,9 +45,10 @@ struct Indicator: View {
         VStack(spacing: itemSpacing) {
             ForEach(0 ..< totalCount, id: \.self) { index in
                 Group {
-                    switch index == selectedIndex {
-                    case true: selectedCapsuleView
-                    case false: unselectedCapsuleView
+                    if index == selectedIndex {
+                        selectedCapsuleView
+                    } else {
+                        unselectedCapsuleView
                     }
                 }
                 .frame(width: selectedWidth, height: selectedHeight)
@@ -58,32 +66,6 @@ struct Indicator: View {
             activationTask?.cancel()
             isEnabled = false
         }
-    }
-}
-
-private extension Indicator {
-    var selectedWidth: CGFloat {
-        20
-    }
-
-    var selectedHeight: CGFloat {
-        4
-    }
-
-    var unselectedWidth: CGFloat {
-        10
-    }
-
-    var unselectedHeight: CGFloat {
-        2
-    }
-
-    var itemSpacing: CGFloat {
-        8
-    }
-
-    var contentPadding: CGFloat {
-        6
     }
 }
 
