@@ -32,6 +32,11 @@ public struct MainView: View {
             ) { missionRecordStore in
                 MissionRecordView(store: missionRecordStore)
             }
+            .fullScreenCover(
+                item: $store.scope(state: \.solarTermIntroContent, action: \.solarTermIntroContent)
+            ) { contentStore in
+                SolarTermIntroContentView(store: contentStore)
+            }
         }
         .overlay(alignment: .bottom) { tabBar }
         .onAppear { store.send(.onAppear) }
@@ -44,6 +49,8 @@ private extension MainView {
         switch tab {
         case .home:
             HomeView(store: store.scope(state: \.home, action: \.home))
+        case .solarTerm:
+            SolarTermIntroView(store: store.scope(state: \.solarTermIntro, action: \.solarTermIntro))
         case .mission:
             MissionListView(store: store.scope(state: \.mission, action: \.mission))
         default:

@@ -84,7 +84,6 @@ public struct SolarTermIntroFeature {
                 state.season = season
                 return .none
 
-            // TODO: 네비게이션 구조 확정 후 SolarTermIntroView → SolarTermContentView push 연결 및 홈 → SolarTermContentView 진입 구현 - @minkyo
             // TODO: 절기소개 별도 탭뷰 구조 추가 - @minkyo
             case let .onCardTap(solarTermIntro):
                 let dateLabel = state.fullDateLabels[solarTermIntro.term]
