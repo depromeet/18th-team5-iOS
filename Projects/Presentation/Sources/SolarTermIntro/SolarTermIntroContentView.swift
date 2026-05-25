@@ -28,8 +28,8 @@ struct SolarTermIntroContentView: View {
                 }
                 .padding(.horizontal, 16)
                 .padding(.top, 11)
+                .padding(.bottom, 16)
             }
-            .scrollIndicators(.hidden)
             .toolbar(.hidden, for: .tabBar)
         }
         .background(Color.gray50)

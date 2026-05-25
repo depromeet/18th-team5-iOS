@@ -65,12 +65,16 @@ public struct MainFeature {
 
             case let .home(.delegate(.navigateToSolarTermContent(term))):
                 return .run { send in
-                    let cards = try await solarTermIntroRepository.fetchSolarTermCard()
-                    let infos = try await solarTermIntroRepository.fetchSolarTermInfos()
-                    let card = cards.first { $0.term == term }
-                    let dateLabel = infos.first { $0.term == term }?.formattedFullDateRange
-                    if let card {
-                        await send(.solarTermIntroContentLoad(card, dateLabel ?? ""))
+                    do {
+                        let cards = try await solarTermIntroRepository.fetchSolarTermCard()
+                        let infos = try await solarTermIntroRepository.fetchSolarTermInfos()
+                        let card = cards.first { $0.term == term }
+                        let dateLabel = infos.first { $0.term == term }?.formattedFullDateRange
+                        if let card {
+                            await send(.solarTermIntroContentLoad(card, dateLabel ?? ""))
+                        }
+                    } catch {
+                        // TODO: Firebase 전환 후 에러핸들링 추가 - @minkyo
                     }
                 }
 
