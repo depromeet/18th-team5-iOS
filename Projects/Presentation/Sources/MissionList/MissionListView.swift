@@ -36,6 +36,11 @@ public struct MissionListView: View {
         .sheet(item: $store.scope(state: \.search, action: \.search)) { store in
             MissionSearchView(store: store)
         }
+        .navigationDestination(
+            item: $store.scope(state: \.searchResult, action: \.searchResult)
+        ) { store in
+            MissionSearchResultView(store: store)
+        }
     }
 }
 
