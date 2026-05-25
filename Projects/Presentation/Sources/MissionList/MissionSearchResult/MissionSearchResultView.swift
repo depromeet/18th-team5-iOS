@@ -86,7 +86,7 @@ private extension MissionSearchResultView {
                     .font(.body2Regular)
                     .foregroundStyle(Color.gray600)
 
-                Text("\(store.solarTerm.koreanName) 레시피북 제작")
+                Text(store.missionTitle)
                     .font(.title2Semibold)
                     .foregroundStyle(Color.gray900)
             }
