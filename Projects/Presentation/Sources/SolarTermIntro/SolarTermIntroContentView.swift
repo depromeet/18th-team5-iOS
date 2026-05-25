@@ -15,27 +15,55 @@ struct SolarTermIntroContentView: View {
     let store: StoreOf<SolarTermIntroContentFeature>
 
     var body: some View {
-        ScrollView {
-            VStack(spacing: 24) {
-                headerSection
-                contentIntroSection
-                contentListSection
-                BottomButton(title: "확인") {
-                    store.send(.onTapBack)
+        VStack(spacing: 0) {
+            navigationBar
+            ScrollView {
+                VStack(spacing: 24) {
+                    introHeaderSection
+                    contentIntroSection
+                    contentListSection
+                    BottomButton(title: "확인") {
+                        store.send(.onTapBack)
+                    }
                 }
+                .padding(.horizontal, 16)
+                .padding(.top, 11)
             }
-            .padding(.horizontal, 16)
-            .padding(.top, 11)
-            .padding(.bottom, 40)
+            .scrollIndicators(.hidden)
+            .toolbar(.hidden, for: .tabBar)
         }
-        .scrollIndicators(.hidden)
-        .navigationTitle("\(store.solarTermIntro.term.koreanName) 소개보기")
-        .navigationBarTitleDisplayMode(.inline)
         .background(Color.gray50)
     }
 }
 
 // MARK: - Header
+
+private extension SolarTermIntroContentView {
+    var navigationBar: some View {
+        ZStack {
+            Text("\(store.solarTermIntro.term.koreanName) 소개보기")
+                .font(.body1Medium)
+                .foregroundStyle(Color.gray900)
+
+            HStack {
+                backButton
+                Spacer()
+            }
+            .padding(.leading, 20)
+        }
+        .frame(height: 56)
+    }
+
+    var backButton: some View {
+        Button {
+            store.send(.onTapBack)
+        } label: {
+            Image.icArrowLeft
+                .resizable()
+                .frame(width: 24, height: 24)
+        }
+    }
+}
 
 private extension SolarTermIntroContentView {
     // TODO: 계절별 이미지 추가되면 교체 - @minkyo
@@ -48,7 +76,7 @@ private extension SolarTermIntroContentView {
         }
     }
 
-    var headerSection: some View {
+    var introHeaderSection: some View {
         VStack(alignment: .leading, spacing: 16) {
             Text(store.solarTermIntro.title)
                 .font(.headline1Semibold)
@@ -66,7 +94,7 @@ private extension SolarTermIntroContentView {
                             .foregroundStyle(Color.white)
                             .font(.body1Semibold)
                     }
-                    .padding(.vertical, 12)
+                    .padding(.vertical, 11)
                 }
 
             // 의미 & 특징
