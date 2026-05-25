@@ -16,9 +16,14 @@ struct WeekdayLabelRow: View {
             ForEach(labels, id: \.self) { label in
                 Text(label)
                     .font(.caption2Medium)
-                    .foregroundStyle(Color.gray400)
+                    .foregroundStyle(Color.gray500)
                     .frame(maxWidth: .infinity)
             }
         }
+        .frame(height: 16)
     }
+}
+
+#Preview {
+    WeekdayLabelRow()
 }

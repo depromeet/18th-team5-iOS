@@ -53,7 +53,7 @@ struct CalendarView: View {
 
 extension CalendarView {
     var headerView: some View {
-        VStack {
+        VStack(spacing: 12) {
             HStack(alignment: .center, spacing: 8) {
                 Text(store.header?.termTitleText ?? "-")
                     .font(.title2Semibold)
@@ -67,9 +67,14 @@ extension CalendarView {
             }
             WeekdayLabelRow()
         }
-        .padding(.horizontal, 19.5)
+        .padding(.horizontal, 20)
         .padding(.top, 20)
         .padding(.bottom, 8)
+        .overlay(alignment: .bottom) {
+            Rectangle()
+                .foregroundStyle(Color.blackAlpha200)
+                .frame(height: 1)
+        }
     }
 }
 
