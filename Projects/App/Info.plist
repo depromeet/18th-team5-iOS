@@ -30,17 +30,6 @@
 	<string>$(ENV)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
-	<key>NSCameraUsageDescription</key>
-	<string>절기 미션 사진을 찍기 위해 카메라를 사용합니다.</string>
-	<key>NSPhotoLibraryUsageDescription</key>
-	<string>절기 미션 기록을 사진으로 남기기 위해 사용합니다.</string>
-	<key>UIApplicationSceneManifest</key>
-	<dict>
-		<key>UIApplicationSupportsMultipleScenes</key>
-		<true/>
-		<key>UISceneConfigurations</key>
-		<dict/>
-	</dict>
 	<key>NSAppTransportSecurity</key>
 	<dict>
 		<key>NSExceptionDomains</key>
@@ -51,6 +40,17 @@
 				<true/>
 			</dict>
 		</dict>
+	</dict>
+	<key>NSCameraUsageDescription</key>
+	<string>절기 미션 사진을 찍기 위해 카메라를 사용합니다.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>절기 미션 기록을 사진으로 남기기 위해 사용합니다.</string>
+	<key>UIApplicationSceneManifest</key>
+	<dict>
+		<key>UIApplicationSupportsMultipleScenes</key>
+		<true/>
+		<key>UISceneConfigurations</key>
+		<dict/>
 	</dict>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>

@@ -8,6 +8,7 @@
 
 import ComposableArchitecture
 import DesignSystem
+import Domain
 import PhotosUI
 import SwiftUI
 
@@ -42,6 +43,8 @@ public struct MissionRecordView: View {
                 submitButton
             }
             .background(Color.gray50)
+            .contentShape(.rect)
+            .onTapGesture { isMemoFocused = false }
             .allowsHitTesting(store.completionModal == nil)
             .accessibilityHidden(store.completionModal != nil)
 
@@ -49,12 +52,32 @@ public struct MissionRecordView: View {
                 completionModal
             }
         }
+        .loading(isLoading: store.isSubmitting)
         .navigationBarBackButtonHidden(true)
         .fullScreenCover(
             item: $store.scope(state: \.camera, action: \.camera)
         ) { cameraStore in
             CameraView(store: cameraStore)
         }
+        .photosPicker(
+            isPresented: $store.isPhotoPickerPresented,
+            selection: $photosPickerItem,
+            matching: .images
+        )
+        .onChange(of: photosPickerItem) { _, newItem in
+            guard let newItem else { return }
+            Task {
+                let data = try? await newItem.loadTransferable(type: Data.self)
+                let jpegData = data.flatMap { UIImage(data: $0)?.jpegData(compressionQuality: 0.9) }
+                store.send(.imageSelected(jpegData))
+            }
+        }
+        .customAlert(
+            isPresented: store.alert != nil,
+            icon: alertIcon,
+            message: alertMessage,
+            buttons: alertButtons
+        )
     }
 }
 
@@ -170,10 +193,9 @@ private extension MissionRecordView {
     }
 
     var galleryButton: some View {
-        PhotosPicker(
-            selection: $photosPickerItem,
-            matching: .images
-        ) {
+        Button {
+            store.send(.galleryButtonTapped)
+        } label: {
             ZStack {
                 Circle()
                     .fill(Color.whiteAlpha600)
@@ -182,13 +204,6 @@ private extension MissionRecordView {
                 Image(systemName: "photo")
                     .font(.system(size: 20))
                     .foregroundStyle(Color.gray800)
-            }
-        }
-        .onChange(of: photosPickerItem) { _, newItem in
-            guard let newItem else { return }
-            Task {
-                let data = try? await newItem.loadTransferable(type: Data.self)
-                store.send(.imageSelected(data))
             }
         }
     }
@@ -277,10 +292,62 @@ private extension MissionRecordView {
     }
 }
 
+// MARK: - Custom Alert Mapping
+
+private extension MissionRecordView {
+    var alertIcon: Image? {
+        switch store.alert {
+        case .permissionDenied(.camera): .icCamera
+        case .permissionDenied(.photoLibrary): .icPhoto
+        case .submitFailed, .none: nil
+        }
+    }
+
+    var alertMessage: String {
+        switch store.alert {
+        case .permissionDenied(.camera):
+            "미션 기록 사진을 찍기 위해서\n카메라 접근 권한이 필요해요."
+        case .permissionDenied(.photoLibrary):
+            "미션 기록 사진을 남기기 위해서\n사진 접근 권한이 필요해요."
+        case .submitFailed:
+            "기록 저장에 실패했어요.\n잠시 후 다시 시도해주세요."
+        case .none:
+            ""
+        }
+    }
+
+    var alertButtons: [CustomAlertButton] {
+        switch store.alert {
+        case .permissionDenied:
+            return [
+                CustomAlertButton(title: "취소", style: .secondary) {
+                    store.send(.alertCancelTapped)
+                },
+                CustomAlertButton(title: "확인", style: .primary) {
+                    store.send(.alertOpenSettingsTapped)
+                }
+            ]
+        case .submitFailed:
+            return [
+                CustomAlertButton(title: "확인", style: .primary) {
+                    store.send(.alertCancelTapped)
+                }
+            ]
+        case .none:
+            return []
+        }
+    }
+}
+
 #Preview {
     MissionRecordView(
         store: .init(
-            initialState: .init(missionTitle: "나만의 여름 음료 개발")
+            initialState: .init(
+                missionId: 0,
+                missionTitle: "나만의 여름 음료 개발",
+                missionType: .daily,
+                solarTermId: 0
+            )
         ) {
             MissionRecordFeature()
         }
