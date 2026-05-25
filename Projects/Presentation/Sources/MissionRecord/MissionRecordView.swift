@@ -342,7 +342,8 @@ private extension MissionRecordView {
             initialState: .init(
                 missionId: 0,
                 missionTitle: "나만의 여름 음료 개발",
-                missionType: .daily
+                missionType: .daily,
+                solarTermId: 0
             )
         ) {
             MissionRecordFeature()

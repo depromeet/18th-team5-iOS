@@ -36,6 +36,7 @@ public struct MissionRecordFeature {
     public struct State: Equatable {
         let missionId: Int
         let missionType: MissionType
+        let solarTermId: Int
         var missionTitle: String
         var selectedImageData: Data?
         var memo: String = ""
@@ -45,10 +46,11 @@ public struct MissionRecordFeature {
         @Presents var completionModal: CompletionModal.State?
         @Presents var camera: CameraFeature.State?
 
-        public init(missionId: Int, missionTitle: String, missionType: MissionType) {
+        public init(missionId: Int, missionTitle: String, missionType: MissionType, solarTermId: Int) {
             self.missionId = missionId
             self.missionTitle = missionTitle
             self.missionType = missionType
+            self.solarTermId = solarTermId
         }
     }
 
@@ -64,7 +66,7 @@ public struct MissionRecordFeature {
         case imageSelected(Data?)
         case imageDeleteButtonTapped
         case submitButtonTapped
-        case submitResponse(Result<MissionCompletion, any Error>)
+        case submitResponse(Result<Int, any Error>)
         case alertCancelTapped
         case alertOpenSettingsTapped
         case completionModal(PresentationAction<CompletionModal.Action>)
@@ -130,9 +132,10 @@ public struct MissionRecordFeature {
                 state.isSubmitting = true
                 let missionId = state.missionId
                 let missionType = state.missionType
+                let solarTermId = state.solarTermId
                 let imageData = state.selectedImageData
                 let memo = state.memo.trimmingCharacters(in: .whitespacesAndNewlines)
-                
+
                 return .run { send in
                     do {
                         guard let imageData else {
@@ -143,13 +146,14 @@ public struct MissionRecordFeature {
                             "\(UUID().uuidString).jpg",
                             "image/jpeg"
                         )
-                        let completion = try await missionRepository.completeMission(
+                        let completionId = try await missionRepository.completeMission(
                             missionId,
                             missionType,
+                            solarTermId,
                             objectKey,
                             memo.isEmpty ? nil : memo
                         )
-                        await send(.submitResponse(.success(completion)))
+                        await send(.submitResponse(.success(completionId)))
                     } catch {
                         await send(.submitResponse(.failure(error)))
                     }

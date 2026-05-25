@@ -19,6 +19,7 @@ struct PresignedUrlResultDTO: Decodable {
 
 struct MissionCompleteRequestDTO: Encodable {
     let missionType: String
+    let solarTermId: Int
     let objectKey: String
     let memo: String?
 }
@@ -27,9 +28,6 @@ struct MissionCompleteRequestDTO: Encodable {
 
 struct MissionCompleteResultDTO: Decodable {
     let completionId: Int
-    let missionId: Int
-    let missionType: String
-    let completedAt: String
 }
 
 // MARK: - 미션 완료 기록 조회 응답

@@ -34,7 +34,7 @@ public struct HomeFeature {
         case delegate(Delegate)
 
         public enum Delegate {
-            case navigateToMissionCamera(missionId: Int, title: String, missionType: String)
+            case navigateToMissionCamera(missionId: Int, title: String, missionType: String, solarTermId: Int)
             case navigateToMissionTab
         }
     }
@@ -71,11 +71,13 @@ public struct HomeFeature {
                 return .none
 
             case .onMissionTap:
-                guard let mission = state.homeCard?.currentMission else { return .none }
+                guard let homeCard = state.homeCard,
+                      let mission = homeCard.currentMission else { return .none }
                 return .send(.delegate(.navigateToMissionCamera(
                     missionId: mission.id,
                     title: mission.title,
-                    missionType: mission.missionType
+                    missionType: mission.missionType,
+                    solarTermId: homeCard.solarTerm.id
                 )))
 
             case .onMissionRecommendTap:

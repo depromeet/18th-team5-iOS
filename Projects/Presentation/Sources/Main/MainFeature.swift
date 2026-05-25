@@ -45,7 +45,7 @@ public struct MainFeature {
                 logger.debug(message: "MainView did appear")
                 return .none
 
-            case let .home(.delegate(.navigateToMissionCamera(missionId, title, missionTypeRaw))):
+            case let .home(.delegate(.navigateToMissionCamera(missionId, title, missionTypeRaw, solarTermId))):
                 let missionType = MissionType(rawValue: missionTypeRaw) ?? {
                     assertionFailure("Unknown missionType: \(missionTypeRaw)")
                     return .daily
@@ -53,7 +53,8 @@ public struct MainFeature {
                 state.missionRecord = MissionRecordFeature.State(
                     missionId: missionId,
                     missionTitle: title,
-                    missionType: missionType
+                    missionType: missionType,
+                    solarTermId: solarTermId
                 )
                 return .none
 
