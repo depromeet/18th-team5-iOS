@@ -215,12 +215,12 @@ public struct MissionRecordFeature {
 
     private func resolvePermission(_ kind: PicturePermissionKind) -> Effect<Action> {
         .run { send in
-            let status = await picturePermissionClient.status(kind)
+            let status = (try? await picturePermissionClient.status(kind)) ?? .denied
             switch status {
             case .authorized, .limited:
                 await send(kind == .camera ? .openCamera : .openPhotoPicker)
             case .notDetermined:
-                let granted = await picturePermissionClient.request(kind)
+                let granted = (try? await picturePermissionClient.request(kind)) ?? false
                 await send(.permissionResolved(kind, granted: granted))
             case .denied, .restricted:
                 await send(.permissionResolved(kind, granted: false))

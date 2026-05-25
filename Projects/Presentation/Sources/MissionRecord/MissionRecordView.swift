@@ -296,7 +296,7 @@ private extension MissionRecordView {
 private extension MissionRecordView {
     var alertIcon: Image? {
         switch store.alert {
-        case .permissionDenied(.camera): .icCar
+        case .permissionDenied(.camera): .icCamera
         case .permissionDenied(.photoLibrary): .icPhoto
         case .submitFailed, .none: nil
         }

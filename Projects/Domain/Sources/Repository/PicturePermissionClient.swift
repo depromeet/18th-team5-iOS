@@ -25,8 +25,8 @@ public enum PicturePermissionStatus: Sendable, Equatable {
 
 @DependencyClient
 public struct PicturePermissionClient: Sendable {
-    public var status: @Sendable (_ kind: PicturePermissionKind) async -> PicturePermissionStatus = { _ in .notDetermined }
-    public var request: @Sendable (_ kind: PicturePermissionKind) async -> Bool = { _ in false }
+    public var status: @Sendable (_ kind: PicturePermissionKind) async throws -> PicturePermissionStatus
+    public var request: @Sendable (_ kind: PicturePermissionKind) async throws -> Bool
     public var openSettings: @Sendable () async -> Void
 }
 
