@@ -18,6 +18,7 @@ public struct SolarTermIntroFeature {
         var solarTermInfos: [SolarTermInfo] = []
         var season: Season = .currentSeason
         var targetTerm: SolarTerm?
+        @Presents var content: SolarTermIntroContentFeature.State?
 
         public init(currentSolarTerm: SolarTerm? = nil) {
             if let term = currentSolarTerm {
@@ -35,12 +36,19 @@ public struct SolarTermIntroFeature {
                 result[info.term] = info.formattedDateRange
             }
         }
+
+        var fullDateLabels: [SolarTerm: String] {
+            solarTermInfos.reduce(into: [:]) { result, info in
+                result[info.term] = info.formattedFullDateRange
+            }
+        }
     }
 
     public enum Action {
         case onAppear
         case selectSeason(Season)
         case onCardTap(SolarTermIntro)
+        case content(PresentationAction<SolarTermIntroContentFeature.Action>)
         case solarTermsLoad([SolarTermIntro])
         case solarTermInfosLoad([SolarTermInfo])
     }
@@ -77,10 +85,27 @@ public struct SolarTermIntroFeature {
                 state.season = season
                 return .none
 
-            case .onCardTap:
-                // TODO: SolarTermDetailFeature 생성 후 @Presents var detail 추가 - @minkyo
+            // TODO: 네비게이션 구조 확정 후 SolarTermIntroView → SolarTermContentView push 연결 및 홈 → SolarTermContentView 진입 구현 - @minkyo
+            // TODO: 절기소개 별도 탭뷰 구조 추가 - @minkyo
+            case let .onCardTap(solarTermIntro):
+                let dateLabel = state.fullDateLabels[solarTermIntro.term]
+                state.content = SolarTermIntroContentFeature.State(
+                    solarTermIntro: solarTermIntro,
+                    season: state.season,
+                    dateLabel: dateLabel ?? ""
+                )
+                return .none
+
+            case .content(.presented(.delegate(.dismiss))):
+                state.content = nil
+                return .none
+
+            case .content:
                 return .none
             }
+        }
+        .ifLet(\.$content, action: \.content) {
+            SolarTermIntroContentFeature()
         }
     }
 }
