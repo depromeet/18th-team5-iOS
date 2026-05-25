@@ -18,7 +18,6 @@ public struct HomeFeature {
         var seasonRecord: SeasonRecord = .mock
         var isLoading: Bool = false
         var hasError: Bool = false
-        @Presents var solarTermIntro: SolarTermIntroFeature.State?
 
         public init() {}
     }
@@ -29,13 +28,13 @@ public struct HomeFeature {
         case homeLoad(Result<HomeCard, Error>)
         case onMissionTap
         case onMissionRecommendTap
-        case onRecordTap
-        case solarTermIntro(PresentationAction<SolarTermIntroFeature.Action>)
+        case onEntireTap
         case delegate(Delegate)
 
         public enum Delegate {
             case navigateToMissionCamera(missionId: Int, title: String, missionType: String)
             case navigateToMissionTab
+            case navigateToSolarTermContent(SolarTerm)
         }
     }
 
@@ -81,19 +80,13 @@ public struct HomeFeature {
             case .onMissionRecommendTap:
                 return .send(.delegate(.navigateToMissionTab))
 
-            case .onRecordTap:
-                state.solarTermIntro = SolarTermIntroFeature.State(currentSolarTerm: state.homeCard?.solarTerm.term)
-                return .none
-
-            case .solarTermIntro:
-                return .none
+            case .onEntireTap:
+                guard let term = state.homeCard?.solarTerm.term else { return .none }
+                return .send(.delegate(.navigateToSolarTermContent(term)))
 
             case .delegate:
                 return .none
             }
-        }
-        .ifLet(\.$solarTermIntro, action: \.solarTermIntro) {
-            SolarTermIntroFeature()
         }
     }
 }

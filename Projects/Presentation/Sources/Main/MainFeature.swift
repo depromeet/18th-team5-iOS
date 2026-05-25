@@ -7,6 +7,7 @@
 //
 
 import ComposableArchitecture
+import Domain
 
 @Reducer
 public struct MainFeature {
@@ -14,7 +15,9 @@ public struct MainFeature {
     public struct State: Equatable {
         public var tab: Tab = .home
         var home: HomeFeature.State = .init()
+        var solarTermIntro: SolarTermIntroFeature.State = .init()
         @Presents var missionRecord: MissionRecordFeature.State?
+        @Presents var solarTermIntroContent: SolarTermIntroContentFeature.State?
 
         public init() {}
     }
@@ -24,9 +27,13 @@ public struct MainFeature {
         case binding(BindingAction<State>)
         case home(HomeFeature.Action)
         case missionRecord(PresentationAction<MissionRecordFeature.Action>)
+        case solarTermIntro(SolarTermIntroFeature.Action)
+        case solarTermIntroContent(PresentationAction<SolarTermIntroContentFeature.Action>)
+        case solarTermIntroContentLoad(SolarTermIntro, String)
     }
 
     @Dependency(\.logger) var logger
+    @Dependency(\.solarTermIntroRepository) var solarTermIntroRepository
 
     public init() {}
 
@@ -35,6 +42,10 @@ public struct MainFeature {
 
         Scope(state: \.home, action: \.home) {
             HomeFeature()
+        }
+
+        Scope(state: \.solarTermIntro, action: \.solarTermIntro) {
+            SolarTermIntroFeature()
         }
 
         Reduce { state, action in
@@ -52,6 +63,32 @@ public struct MainFeature {
                 // TODO: 미션 추천 페이지 이동 - @minkyo
                 return .none
 
+            case let .home(.delegate(.navigateToSolarTermContent(term))):
+                return .run { send in
+                    let cards = try await solarTermIntroRepository.fetchSolarTermCard()
+                    let infos = try await solarTermIntroRepository.fetchSolarTermInfos()
+                    let card = cards.first { $0.term == term }
+                    let dateLabel = infos.first { $0.term == term }?.formattedFullDateRange
+                    if let card {
+                        await send(.solarTermIntroContentLoad(card, dateLabel ?? ""))
+                    }
+                }
+
+            case let .solarTermIntroContentLoad(intro, dateLabel):
+                state.solarTermIntroContent = SolarTermIntroContentFeature.State(
+                    solarTermIntro: intro,
+                    season: intro.term.season,
+                    dateLabel: dateLabel
+                )
+                return .none
+
+            case .solarTermIntroContent(.presented(.delegate(.dismiss))):
+                state.solarTermIntroContent = nil
+                return .none
+
+            case .solarTermIntroContent:
+                return .none
+
             case .missionRecord(.presented(.delegate(.dismiss))):
                 state.missionRecord = nil
                 return .none
@@ -65,10 +102,16 @@ public struct MainFeature {
 
             case .home, .binding:
                 return .none
+
+            case .solarTermIntro:
+                return .none
             }
         }
         .ifLet(\.$missionRecord, action: \.missionRecord) {
             MissionRecordFeature()
+        }
+        .ifLet(\.$solarTermIntroContent, action: \.solarTermIntroContent) {
+            SolarTermIntroContentFeature()
         }
     }
 }

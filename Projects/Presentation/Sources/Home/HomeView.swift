@@ -20,35 +20,28 @@ public struct HomeView: View {
     }
 
     public var body: some View {
-        NavigationStack {
-            ScrollView {
-                content
-                    .padding(.top, 76)
-                    .padding(.horizontal, 20)
-                    .padding(.bottom, 117)
-                    .overlay(alignment: .top) {
-                        GeometryReader { geo in
-                            Color.clear.preference(
-                                key: ScrollOffsetKey.self,
-                                value: -geo.frame(in: .scrollView).origin.y
-                            )
-                        }
-                        .frame(height: 0)
+        ScrollView {
+            content
+                .padding(.top, 76)
+                .padding(.horizontal, 20)
+                .padding(.bottom, 117)
+                .overlay(alignment: .top) {
+                    GeometryReader { geo in
+                        Color.clear.preference(
+                            key: ScrollOffsetKey.self,
+                            value: -geo.frame(in: .scrollView).origin.y
+                        )
                     }
-            }
-            .onPreferenceChange(ScrollOffsetKey.self) { newValue in
-                scrollOffset = newValue
-            }
-            .scrollIndicators(.hidden)
-            .background(background)
-            .overlay(alignment: .top) { HomeHeaderView(scrollOffset: scrollOffset) }
-            .onAppear { store.send(.onAppear) }
-            .navigationDestination(
-                item: $store.scope(state: \.solarTermIntro, action: \.solarTermIntro)
-            ) { solarTermIntroStore in
-                SolarTermIntroView(store: solarTermIntroStore)
-            }
+                    .frame(height: 0)
+                }
         }
+        .onPreferenceChange(ScrollOffsetKey.self) { newValue in
+            scrollOffset = newValue
+        }
+        .scrollIndicators(.hidden)
+        .background(background)
+        .overlay(alignment: .top) { HomeHeaderView(scrollOffset: scrollOffset) }
+        .onAppear { store.send(.onAppear) }
     }
 
     @ViewBuilder
@@ -91,7 +84,7 @@ public struct HomeView: View {
                     solarTerm: homeCard.solarTerm,
                     mission: homeCard.currentMission,
                     onMissionTap: { store.send(.onMissionTap) },
-                    onDetailTap: { store.send(.onRecordTap) }
+                    onDetailTap: { store.send(.onEntireTap) }
                 )
 
                 MissionRecommendBannerView(
@@ -101,7 +94,7 @@ public struct HomeView: View {
 
             SeasonRecordSectionView(
                 seasonRecord: store.seasonRecord,
-                onDetailTap: { store.send(.onRecordTap) }
+                onDetailTap: { store.send(.onEntireTap) }
             )
         }
     }
