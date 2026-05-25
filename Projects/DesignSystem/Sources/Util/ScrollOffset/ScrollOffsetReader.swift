@@ -20,14 +20,19 @@ private struct ScrollOffsetReader: ViewModifier {
         content
             .overlay {
                 GeometryReader { proxy in
-                    Color.clear.preference(
-                        key: ScrollOffsetPreferenceKey.self,
-                        value: CGPoint(
-                            x: -proxy.frame(in: .named(coordinateSpace)).minX,
-                            y: -proxy.frame(in: .named(coordinateSpace)).minY
+                    Color.clear
+                        .preference(
+                            key: ScrollOffsetPreferenceKey.self,
+                            value: CGPoint(
+                                x: -proxy.frame(in: .named(coordinateSpace)).minX,
+                                y: -proxy.frame(in: .named(coordinateSpace)).minY
+                            )
                         )
-                    )
+                        .allowsHitTesting(false)
+                        .accessibilityHidden(true)
                 }
+                .allowsHitTesting(false)
+                .accessibilityHidden(true)
             }
             .onPreferenceChange(
                 ScrollOffsetPreferenceKey.self,
