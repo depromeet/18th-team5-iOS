@@ -35,7 +35,7 @@ struct Indicator: View {
     }
 
     var body: some View {
-        VStack(spacing: 8) {
+        VStack(spacing: itemSpacing) {
             ForEach(0 ..< totalCount, id: \.self) { index in
                 Group {
                     switch index == selectedIndex {
@@ -43,10 +43,10 @@ struct Indicator: View {
                     case false: unselectedCapsuleView
                     }
                 }
-                .frame(width: 20, height: 4)
+                .frame(width: selectedWidth, height: selectedHeight)
             }
         }
-        .padding(6)
+        .padding(contentPadding)
         .contentShape(Rectangle())
         .gesture(dragGesture)
         .sensoryFeedback(
@@ -58,6 +58,32 @@ struct Indicator: View {
             activationTask?.cancel()
             isEnabled = false
         }
+    }
+}
+
+private extension Indicator {
+    var selectedWidth: CGFloat {
+        20
+    }
+
+    var selectedHeight: CGFloat {
+        4
+    }
+
+    var unselectedWidth: CGFloat {
+        10
+    }
+
+    var unselectedHeight: CGFloat {
+        2
+    }
+
+    var itemSpacing: CGFloat {
+        8
+    }
+
+    var contentPadding: CGFloat {
+        6
     }
 }
 
@@ -86,13 +112,13 @@ private extension Indicator {
 
     var unselectedCapsuleView: some View {
         Capsule()
-            .frame(width: 10, height: 2)
+            .frame(width: unselectedWidth, height: unselectedHeight)
             .foregroundStyle(Color.gray500)
     }
 
     var selectedCapsuleView: some View {
         Capsule()
-            .frame(width: 20, height: 4)
+            .frame(width: selectedWidth, height: selectedHeight)
             .foregroundStyle(mainColor)
     }
 
@@ -115,8 +141,8 @@ private extension Indicator {
     func updateIndex(at location: CGPoint) {
         guard totalCount > 0 else { return }
 
-        let rowStride: CGFloat = 12
-        let firstCenterY: CGFloat = 8
+        let rowStride = selectedHeight + itemSpacing
+        let firstCenterY = contentPadding + selectedHeight / 2
         let rawIndex = ((location.y - firstCenterY) / rowStride).rounded()
         let index = min(max(Int(rawIndex), 0), totalCount - 1)
 
