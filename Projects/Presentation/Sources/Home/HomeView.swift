@@ -84,7 +84,7 @@ public struct HomeView: View {
                     solarTerm: homeCard.solarTerm,
                     mission: homeCard.currentMission,
                     onMissionTap: { store.send(.onMissionTap) },
-                    onDetailTap: { store.send(.onEntireTap) }
+                    onDetailTap: { store.send(.onSolarTermDetailTap) }
                 )
 
                 MissionRecommendBannerView(
@@ -94,7 +94,8 @@ public struct HomeView: View {
 
             SeasonRecordSectionView(
                 seasonRecord: store.seasonRecord,
-                onDetailTap: { store.send(.onEntireTap) }
+                // TODO: 계절 기록 자세히보기 이동 페이지 확정 후 연결 - @minkyo
+                onDetailTap: {}
             )
         }
     }

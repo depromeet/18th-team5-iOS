@@ -28,7 +28,7 @@ public struct HomeFeature {
         case homeLoad(Result<HomeCard, Error>)
         case onMissionTap
         case onMissionRecommendTap
-        case onEntireTap
+        case onSolarTermDetailTap
         case delegate(Delegate)
 
         public enum Delegate {
@@ -80,7 +80,7 @@ public struct HomeFeature {
             case .onMissionRecommendTap:
                 return .send(.delegate(.navigateToMissionTab))
 
-            case .onEntireTap:
+            case .onSolarTermDetailTap:
                 guard let term = state.homeCard?.solarTerm.term else { return .none }
                 return .send(.delegate(.navigateToSolarTermContent(term)))
 
