@@ -20,21 +20,15 @@ struct SolarTermIntroContentView: View {
                 headerSection
                 contentIntroSection
                 contentListSection
+                BottomButton(title: "확인") {
+                    store.send(.onTapBack)
+                }
             }
             .padding(.horizontal, 16)
             .padding(.top, 11)
             .padding(.bottom, 40)
         }
         .scrollIndicators(.hidden)
-        // TODO: - button 디자인 확정 후 수정 - @minkyo
-        .safeAreaInset(edge: .bottom) {
-            BottomButton(title: "확인") {
-                store.send(.onTapBack)
-            }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 8)
-            .background(Color.white)
-        }
         .navigationTitle("\(store.solarTermIntro.term.koreanName) 소개보기")
         .navigationBarTitleDisplayMode(.inline)
         .background(Color.gray50)
