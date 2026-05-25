@@ -26,19 +26,19 @@ public struct MainView: View {
                         .toolbar(.hidden, for: .tabBar)
                 }
             }
+            .overlay(alignment: .bottom) { tabBar }
             .navigationBarHidden(true)
             .navigationDestination(
                 item: $store.scope(state: \.missionRecord, action: \.missionRecord)
             ) { missionRecordStore in
                 MissionRecordView(store: missionRecordStore)
             }
-            .fullScreenCover(
+            .navigationDestination(
                 item: $store.scope(state: \.solarTermIntroContent, action: \.solarTermIntroContent)
             ) { contentStore in
                 SolarTermIntroContentView(store: contentStore)
             }
         }
-        .overlay(alignment: .bottom) { tabBar }
         .onAppear { store.send(.onAppear) }
     }
 }

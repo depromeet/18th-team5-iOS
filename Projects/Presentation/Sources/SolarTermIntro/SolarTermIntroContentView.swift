@@ -33,6 +33,7 @@ struct SolarTermIntroContentView: View {
             .toolbar(.hidden, for: .tabBar)
         }
         .background(Color.gray50)
+        .navigationBarBackButtonHidden()
     }
 }
 
