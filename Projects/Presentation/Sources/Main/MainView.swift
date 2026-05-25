@@ -51,6 +51,8 @@ private extension MainView {
             HomeView(store: store.scope(state: \.home, action: \.home))
         case .solarTerm:
             SolarTermIntroView(store: store.scope(state: \.solarTermIntro, action: \.solarTermIntro))
+        case .mission:
+            MissionListView(store: store.scope(state: \.mission, action: \.mission))
         default:
             Text(tab.title)
         }

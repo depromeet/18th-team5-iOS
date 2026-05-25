@@ -16,6 +16,7 @@ public struct MainFeature {
         public var tab: Tab = .home
         var home: HomeFeature.State = .init()
         var solarTermIntro: SolarTermIntroFeature.State = .init()
+        var mission: MissionListFeature.State = .init()
         @Presents var missionRecord: MissionRecordFeature.State?
         @Presents var solarTermIntroContent: SolarTermIntroContentFeature.State?
 
@@ -26,6 +27,7 @@ public struct MainFeature {
         case onAppear
         case binding(BindingAction<State>)
         case home(HomeFeature.Action)
+        case mission(MissionListFeature.Action)
         case missionRecord(PresentationAction<MissionRecordFeature.Action>)
         case solarTermIntro(SolarTermIntroFeature.Action)
         case solarTermIntroContent(PresentationAction<SolarTermIntroContentFeature.Action>)
@@ -47,6 +49,9 @@ public struct MainFeature {
         Scope(state: \.solarTermIntro, action: \.solarTermIntro) {
             SolarTermIntroFeature()
         }
+        Scope(state: \.mission, action: \.mission) {
+            MissionListFeature()
+        }
 
         Reduce { state, action in
             switch action {
@@ -60,7 +65,7 @@ public struct MainFeature {
                 return .none
 
             case .home(.delegate(.navigateToMissionTab)):
-                // TODO: 미션 추천 페이지 이동 - @minkyo
+                state.tab = .mission
                 return .none
 
             case let .home(.delegate(.navigateToSolarTermContent(term))):
@@ -109,6 +114,8 @@ public struct MainFeature {
 
             case .solarTermIntro:
                 return .none
+              
+            case .mission: return .none
             }
         }
         .ifLet(\.$missionRecord, action: \.missionRecord) {
