@@ -52,6 +52,7 @@ public struct MissionRecordView: View {
                 completionModal
             }
         }
+        .loading(isLoading: store.isSubmitting)
         .navigationBarBackButtonHidden(true)
         .fullScreenCover(
             item: $store.scope(state: \.camera, action: \.camera)
