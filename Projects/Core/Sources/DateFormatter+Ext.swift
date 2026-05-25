@@ -14,4 +14,10 @@ public extension DateFormatter {
         formatter.dateFormat = "MM.dd"
         return formatter
     }()
+
+    static let monthDayKorean: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "M월 d일"
+        return formatter
+    }()
 }
