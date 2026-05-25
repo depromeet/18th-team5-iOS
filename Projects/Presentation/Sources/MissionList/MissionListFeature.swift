@@ -20,7 +20,9 @@ public struct MissionListFeature {
 
         var missions: [Mission]
         var selectedMission: Mission
+
         @Presents var search: MissionSearchFeature.State?
+        @Presents var searchResult: MissionSearchResultFeature.State?
 
         public init() {
             let missions: [Mission] = .mock
@@ -48,6 +50,7 @@ public struct MissionListFeature {
         case searchMissionButtonTapped
         case binding(BindingAction<State>)
         case search(PresentationAction<MissionSearchFeature.Action>)
+        case searchResult(PresentationAction<MissionSearchResultFeature.Action>)
     }
 
     public init() {}
@@ -68,12 +71,20 @@ public struct MissionListFeature {
             case .searchMissionButtonTapped:
                 state.search = .init(season: state.solarTerm.season)
                 return .none
+            case .search(.presented(.bottomButtonTapped)):
+                state.search = nil
+                state.searchResult = .init()
+                return .none
             case .binding: return .none
             case .search: return .none
+            case .searchResult: return .none
             }
         }
         .ifLet(\.$search, action: \.search) {
             MissionSearchFeature()
+        }
+        .ifLet(\.$searchResult, action: \.searchResult) {
+            MissionSearchResultFeature()
         }
     }
 }

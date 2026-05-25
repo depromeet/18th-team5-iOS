@@ -47,71 +47,15 @@ struct SearchCategoryGridView<Item: Hashable>: View {
                 spacing: 6
             ) {
                 ForEach(items, id: \.self) { item in
-                    chipView(
+                    SearchCategoryChipView(
                         title: itemTitle(item),
                         image: itemImage(item),
-                        isSelected: item == selection
-                    ) {
-                        selection = item
-                    }
+                        season: season,
+                        isSelected: item == selection,
+                        action: { selection = item }
+                    )
                 }
             }
-        }
-    }
-}
-
-private extension SearchCategoryGridView {
-    func backgroundColor(_ isSelected: Bool) -> Color {
-        isSelected ? season.backgroundColor : .white
-    }
-
-    func borderColor(_ isSelected: Bool) -> Color {
-        isSelected ? season.borderColor : .gray300
-    }
-}
-
-private extension SearchCategoryGridView {
-    func chipView(
-        title: String,
-        image: Image,
-        isSelected: Bool,
-        action: @escaping () -> Void
-    ) -> some View {
-        Button(action: action) {
-            HStack(spacing: 4) {
-                image
-                    .resizable()
-                    .frame(width: 20, height: 20)
-
-                Text(title)
-                    .font(.body2Regular)
-                    .foregroundStyle(Color.gray900)
-            }
-            .frame(width: 73, height: 36)
-            .background(backgroundColor(isSelected))
-            .clipShape(Capsule())
-            .overlay(Capsule().stroke(borderColor(isSelected)))
-        }
-    }
-}
-
-private extension Season {
-    var backgroundColor: Color {
-        let color: Color = switch self {
-        case .spring: .pink500
-        case .summer: .green500
-        case .autumn: .orange500
-        case .winter: .blue500
-        }
-        return color.opacity(0.05)
-    }
-
-    var borderColor: Color {
-        switch self {
-        case .spring: .pink300
-        case .summer: .green300
-        case .autumn: .orange300
-        case .winter: .blue300
         }
     }
 }
