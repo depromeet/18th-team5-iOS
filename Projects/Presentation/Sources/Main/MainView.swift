@@ -53,6 +53,8 @@ private extension MainView {
             SolarTermIntroView(store: store.scope(state: \.solarTermIntro, action: \.solarTermIntro))
         case .mission:
             MissionListView(store: store.scope(state: \.mission, action: \.mission))
+        case .calendar:
+            CalendarView(store: store.scope(state: \.calendar, action: \.calendar))
         default:
             Text(tab.title)
         }

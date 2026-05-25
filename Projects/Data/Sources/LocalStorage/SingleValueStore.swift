@@ -1,5 +1,5 @@
 //
-//  MemoryCache.swift
+//  SingleValueStore.swift
 //  Data
 //
 //  Created by choijunios on 4/12/26.
@@ -8,7 +8,7 @@
 
 import Foundation
 
-actor MemoryCache<T> {
+actor SingleValueStore<T> {
     private var data: T?
 
     init() {}

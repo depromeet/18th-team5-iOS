@@ -17,6 +17,8 @@ public struct MainFeature {
         var home: HomeFeature.State = .init()
         var solarTermIntro: SolarTermIntroFeature.State = .init()
         var mission: MissionListFeature.State = .init()
+        var calendar: CalendarFeature.State = .init()
+
         @Presents var missionRecord: MissionRecordFeature.State?
         @Presents var solarTermIntroContent: SolarTermIntroContentFeature.State?
 
@@ -28,6 +30,7 @@ public struct MainFeature {
         case binding(BindingAction<State>)
         case home(HomeFeature.Action)
         case mission(MissionListFeature.Action)
+        case calendar(CalendarFeature.Action)
         case missionRecord(PresentationAction<MissionRecordFeature.Action>)
         case solarTermIntro(SolarTermIntroFeature.Action)
         case solarTermIntroContent(PresentationAction<SolarTermIntroContentFeature.Action>)
@@ -36,6 +39,7 @@ public struct MainFeature {
 
     @Dependency(\.logger) var logger
     @Dependency(\.solarTermIntroRepository) var solarTermIntroRepository
+    @Dependency(\.solarTermRepository) var solarTermRepository
 
     public init() {}
 
@@ -44,6 +48,9 @@ public struct MainFeature {
 
         Scope(state: \.home, action: \.home) {
             HomeFeature()
+        }
+        Scope(state: \.calendar, action: \.calendar) {
+            CalendarFeature()
         }
 
         Scope(state: \.solarTermIntro, action: \.solarTermIntro) {
@@ -81,7 +88,7 @@ public struct MainFeature {
                 return .run { send in
                     do {
                         let cards = try await solarTermIntroRepository.fetchSolarTermCard()
-                        let infos = try await solarTermIntroRepository.fetchSolarTermInfos()
+                        let infos = try await solarTermRepository.fetchSolarTerms(.current)
                         let card = cards.first { $0.term == term }
                         let dateLabel = infos.first { $0.term == term }?.formattedFullDateRange
                         if let card {
@@ -118,13 +125,20 @@ public struct MainFeature {
             case .missionRecord:
                 return .none
 
-            case .home, .binding:
+            case .home:
+                return .none
+
+            case .mission:
+                return .none
+
+            case .calendar:
                 return .none
 
             case .solarTermIntro:
                 return .none
-              
-            case .mission: return .none
+
+            case .binding:
+                return .none
             }
         }
         .ifLet(\.$missionRecord, action: \.missionRecord) {

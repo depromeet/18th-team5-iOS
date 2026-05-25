@@ -7,6 +7,7 @@
 // Copyright © 2026 Orange. All rights reserved.
 //
 
+import Core
 import Dependencies
 import Domain
 import Foundation
@@ -17,28 +18,49 @@ extension SolarTermRepository: @retroactive DependencyKey {
 
 public enum SolarTermRepositoryImpl {
     public static func live() -> SolarTermRepository {
-        SolarTermRepository(
+        let keyValueStore = KeyValueStore<Int, SolarTermFileDTO>()
+        return SolarTermRepository(
             fetchSolarTerms: { year in
-                guard let url = Bundle.module.url(
-                    forResource: "solar_term_\(year.rawValue)",
-                    withExtension: "json"
-                )
-                else {
-                    throw DomainError.notFound
+
+                let currentYearDTO = try await fetch(year, with: keyValueStore)
+
+                var nextYearFirstTerm: SolarTermEntryDTO?
+                if let nextYear = year.nextYear {
+                    nextYearFirstTerm = try await fetch(nextYear, with: keyValueStore).terms.first
                 }
 
-                let data = try Data(contentsOf: url)
-                let dto = try JSONDecoder().decode(SolarTermFileDTO.self, from: data)
-                return dto.toDomain()
+                return currentYearDTO.toDomain(nextYearFirstTerm)
             }
         )
+    }
+
+    private static func fetch(
+        _ year: SolarTermYear,
+        with store: KeyValueStore<Int, SolarTermFileDTO>
+    ) async throws -> SolarTermFileDTO {
+        if let cached = await store.get(forKey: year.rawValue) {
+            return cached
+        }
+
+        guard let url = Bundle.module.url(
+            forResource: "solar_term_\(year.rawValue)",
+            withExtension: "json"
+        )
+        else {
+            throw DomainError.notFound
+        }
+
+        let data = try Data(contentsOf: url)
+        let decoded = try JSONDecoder().decode(SolarTermFileDTO.self, from: data)
+        await store.set(decoded, forKey: year.rawValue)
+        return decoded
     }
 }
 
 // MARK: - Domain Mapping
 
 extension SolarTermFileDTO {
-    func toDomain() -> [SolarTermInfo] {
+    func toDomain(_ nextYearFirstTerm: SolarTermEntryDTO?) -> [SolarTermInfo] {
         let calendar = Calendar(identifier: .gregorian)
         guard let timezone = TimeZone(identifier: "Asia/Seoul") else { return [] }
 
@@ -55,13 +77,23 @@ extension SolarTermFileDTO {
 
             let endDate: Date
             if index == sortedTerms.endIndex - 1 {
-                // 올해의 마지막 절기의 경우 종료일을 다음년 첫날로 설정합니다.
-                guard let firstDayOfNextYear = Self.makeStartOfYear(
-                    year + 1,
-                    calendar,
-                    timezone
-                ) else { continue }
-                endDate = firstDayOfNextYear
+                if let nextYearFirstTerm {
+                    guard let nextTermStartDate = Self.makeDate(
+                        year + 1,
+                        nextYearFirstTerm.month,
+                        nextYearFirstTerm.day,
+                        calendar,
+                        timezone
+                    ) else { continue }
+                    endDate = nextTermStartDate
+                } else {
+                    guard let firstDayOfNextYear = Self.makeStartOfYear(
+                        year + 1,
+                        calendar,
+                        timezone
+                    ) else { continue }
+                    endDate = firstDayOfNextYear
+                }
             } else {
                 let nextTerm = sortedTerms[index + 1]
                 guard let nextTermStartDate = Self.makeDate(

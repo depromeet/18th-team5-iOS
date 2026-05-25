@@ -10,15 +10,10 @@ import Core
 import SwiftUI
 
 private enum Constants {
-    // MARK: 카드 크기 수정예정 - @준영
-
-    static let cardWidth: CGFloat = 200
-    static let cardHeight: CGFloat = 300
-
     static let maxDisplayCardCount: Int = 5
     static let dragToDismissThresholdPercent: CGFloat = 0.5
     static let dismissTargetY: CGFloat = 700
-    static let stackOffsetSpan: CGFloat = 100
+    static let cardOffsetYGap: CGFloat = 23
     static let stackMinScale: CGFloat = 0.75
 }
 
@@ -30,13 +25,14 @@ public struct CardStackView<Item, CardView: View>: View {
     @State private var dragPercent: CGFloat = 0
     @State private var cardOffsets: [Int: CGFloat] = [:]
     @State private var dismissingIndices: [Int] = []
+    @State private var cardSize: CGSize?
 
-    private var cardView: (Item) -> CardView
+    private var cardView: (Int, Item) -> CardView
 
     public init(
         topCardIndex: Binding<Int>,
         items: [Item],
-        cardView: @escaping (Item) -> CardView
+        cardView: @escaping (Int, Item) -> CardView
     ) {
         self._topCardIndex = topCardIndex
         self.items = items
@@ -46,13 +42,14 @@ public struct CardStackView<Item, CardView: View>: View {
     public var body: some View {
         ZStack {
             ForEach(renderedEntries, id: \.realIndex) { entry in
-                cardView(entry.item)
-                    .frame(width: Constants.cardWidth, height: Constants.cardHeight)
+                cardView(entry.realIndex, entry.item)
+                    .size { cardSize = $0 }
                     .offset(x: 0, y: offsetY(for: entry))
                     .scaleEffect(scale(for: entry))
             }
         }
         .gesture(dragGesture)
+        .padding(.top, stackTopPadding)
     }
 }
 
@@ -101,7 +98,7 @@ extension CardStackView {
     private func offsetY(for entry: RenderEntry) -> CGFloat {
         if entry.isDismissing { return cardOffsets[entry.realIndex] ?? 0 }
         if entry.realIndex == topCardIndex { return currentDragableCardOffsetY }
-        let chunk = Constants.stackOffsetSpan / CGFloat(Constants.maxDisplayCardCount)
+        let chunk = Constants.cardOffsetYGap
         return chunk * (dragPercent - CGFloat(entry.relativePosition))
     }
 
@@ -111,13 +108,29 @@ extension CardStackView {
         let chunk = scaleRange / CGFloat(Constants.maxDisplayCardCount)
         return 1.0 - chunk * (CGFloat(entry.relativePosition) - dragPercent)
     }
+
+    /// 마지막 카드의 idle 상태 visual top Y값을 기준으로 필요한 top padding을 계산합니다.
+    /// scaleEffect는 카드 중심을 기준으로 축소되므로, 위쪽 엣지가 중심 방향으로 당겨집니다.
+    private var stackTopPadding: CGFloat {
+        let rearPos = Constants.maxDisplayCardCount - 1
+        let rearOffsetY = -Constants.cardOffsetYGap * CGFloat(rearPos)
+
+        let scaleRange = 1.0 - Constants.stackMinScale
+        let scaleChunk = scaleRange / CGFloat(Constants.maxDisplayCardCount)
+        let rearScale = 1.0 - scaleChunk * CGFloat(rearPos)
+
+        let cardHeight = cardSize?.height ?? 0
+        let scaleCompensation = cardHeight / 2 * (1 - rearScale)
+
+        return max(0, abs(rearOffsetY) - scaleCompensation)
+    }
 }
 
 // MARK: - Drag Gesture
 
 extension CardStackView {
     private var dragThreshold: CGFloat {
-        Constants.cardHeight * Constants.dragToDismissThresholdPercent
+        max(cardSize?.height ?? 300, 1) * Constants.dragToDismissThresholdPercent
     }
 
     private var dragGesture: some Gesture {
@@ -208,16 +221,42 @@ extension Color {
     }
 }
 
+private struct SizePreferenceKey: PreferenceKey {
+    static var defaultValue: CGSize = .zero
+    static func reduce(value: inout CGSize, nextValue: () -> CGSize) {
+        value = nextValue()
+    }
+}
+
+private extension View {
+    func size(onChange: @escaping (CGSize) -> Void) -> some View {
+        background(
+            GeometryReader { geometry in
+                Color.clear
+                    .preference(
+                        key: SizePreferenceKey.self,
+                        value: geometry.size
+                    )
+            }
+        )
+        .onPreferenceChange(SizePreferenceKey.self) { size in
+            onChange(size)
+        }
+    }
+}
+
 #Preview {
     @Previewable @State var topCardIndex = 0
 
     CardStackView(
         topCardIndex: $topCardIndex,
         items: (0 ..< 10).map { _ in CardModel() }
-    ) { item in
+    ) { _, item in
         ZStack {
             RoundedRectangle(cornerRadius: 15)
                 .foregroundStyle(item.color)
         }
+        .frame(width: 200, height: 300)
     }
+    .border(.red)
 }
