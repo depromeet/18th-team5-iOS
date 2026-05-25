@@ -132,23 +132,22 @@ public struct MissionRecordFeature {
                 let missionType = state.missionType
                 let imageData = state.selectedImageData
                 let memo = state.memo.trimmingCharacters(in: .whitespacesAndNewlines)
-                let completedAt = date.now
+                
                 return .run { send in
                     do {
-                        var objectKey: String?
-                        if let imageData {
-                            objectKey = try await missionRepository.uploadImage(
-                                imageData,
-                                "\(UUID().uuidString).jpg",
-                                "image/jpeg"
-                            )
+                        guard let imageData else {
+                            throw DomainError.unknown("이미지가 필요합니다")
                         }
+                        let objectKey = try await missionRepository.uploadImage(
+                            imageData,
+                            "\(UUID().uuidString).jpg",
+                            "image/jpeg"
+                        )
                         let completion = try await missionRepository.completeMission(
                             missionId,
                             missionType,
                             objectKey,
-                            memo.isEmpty ? nil : memo,
-                            completedAt
+                            memo.isEmpty ? nil : memo
                         )
                         await send(.submitResponse(.success(completion)))
                     } catch {

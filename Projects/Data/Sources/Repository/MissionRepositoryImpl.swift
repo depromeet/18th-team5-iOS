@@ -35,15 +35,13 @@ public enum MissionRepositoryImpl {
 
     public static func live() -> MissionRepository {
         MissionRepository(
-            completeMission: { missionId, missionType, objectKey, memo, completedAt in
+            completeMission: { missionId, missionType, objectKey, memo in
                 @Dependency(\.networkClient) var client
 
-                let completedAtString = completedAt.map { iso8601Formatter.string(from: $0) }
                 let requestDTO = MissionCompleteRequestDTO(
                     missionType: missionType.rawValue,
                     objectKey: objectKey,
                     memo: memo,
-                    completedAt: completedAtString
                 )
 
                 do {

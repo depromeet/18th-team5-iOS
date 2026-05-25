@@ -15,9 +15,8 @@ public struct MissionRepository: Sendable {
     public var completeMission: @Sendable (
         _ missionId: Int,
         _ missionType: MissionType,
-        _ objectKey: String?,
-        _ memo: String?,
-        _ completedAt: Date?
+        _ objectKey: String,
+        _ memo: String?
     ) async throws -> MissionCompletion
 
     public var fetchCompletions: @Sendable (_ missionId: Int) async throws -> [MissionCompletion]

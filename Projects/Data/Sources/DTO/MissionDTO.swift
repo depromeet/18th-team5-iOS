@@ -19,9 +19,8 @@ struct PresignedUrlResultDTO: Decodable {
 
 struct MissionCompleteRequestDTO: Encodable {
     let missionType: String
-    let objectKey: String?
+    let objectKey: String
     let memo: String?
-    let completedAt: String?
 }
 
 // MARK: - 미션 완료 응답

@@ -65,7 +65,8 @@ public struct MissionRecordView: View {
             guard let newItem else { return }
             Task {
                 let data = try? await newItem.loadTransferable(type: Data.self)
-                store.send(.imageSelected(data))
+                let jpegData = data.flatMap { UIImage(data: $0)?.jpegData(compressionQuality: 0.9) }
+                store.send(.imageSelected(jpegData))
             }
         }
         .customAlert(
