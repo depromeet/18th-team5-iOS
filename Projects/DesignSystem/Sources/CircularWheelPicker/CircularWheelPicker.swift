@@ -13,6 +13,7 @@ public struct CircularWheelPicker<Item: Hashable, Content: View>: View {
     @State private var hasScrolledAwayFromTop = false
     @State private var isUserInteractionDisabled = false
     @State private var interactionLockID = 0
+    @State private var interactionTask: Task<Void, Never>?
     @Binding private var selection: Item
 
     private let items: [Item]
@@ -63,6 +64,11 @@ private extension CircularWheelPicker {
         }
         .onChange(of: selection) { _, newValue in
             scrollToSelectionIfNeeded(newValue)
+        }
+        .onDisappear {
+            interactionTask?.cancel()
+            interactionTask = nil
+            isUserInteractionDisabled = false
         }
     }
 
@@ -131,13 +137,17 @@ private extension CircularWheelPicker {
     }
 
     func handleScrollOffset(_ offset: CGPoint) {
+        guard !isUserInteractionDisabled else { return }
+
         guard offset.y < topOffsetThreshold else {
             hasScrolledAwayFromTop = true
             return
         }
 
-        guard hasScrolledAwayFromTop,
-              let firstItem = items.first,
+        guard hasScrolledAwayFromTop else { return }
+        hasScrolledAwayFromTop = false
+
+        guard let firstItem = items.first,
               selection != firstItem else {
             return
         }
@@ -154,12 +164,15 @@ private extension CircularWheelPicker {
             scrollID = item
         }
 
-        Task {
+        interactionTask?.cancel()
+        interactionTask = Task {
             try? await Task.sleep(for: interactionLockDuration)
+            guard !Task.isCancelled else { return }
 
             await MainActor.run {
                 guard interactionLockID == lockID else { return }
                 isUserInteractionDisabled = false
+                interactionTask = nil
             }
         }
     }
