@@ -45,9 +45,10 @@ struct Indicator: View {
         VStack(spacing: itemSpacing) {
             ForEach(0 ..< totalCount, id: \.self) { index in
                 Group {
-                    switch index == selectedIndex {
-                    case true: selectedCapsuleView
-                    case false: unselectedCapsuleView
+                    if index == selectedIndex {
+                        selectedCapsuleView
+                    } else {
+                        unselectedCapsuleView
                     }
                 }
                 .frame(width: selectedWidth, height: selectedHeight)
