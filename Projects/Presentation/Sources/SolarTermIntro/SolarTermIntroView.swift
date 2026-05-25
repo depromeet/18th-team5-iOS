@@ -26,8 +26,12 @@ struct SolarTermIntroView: View {
         }
         .navigationTitle("제철 소개")
         .navigationBarTitleDisplayMode(.inline)
-        .toolbar(.hidden, for: .tabBar)
         .onAppear { store.send(.onAppear) }
+        .fullScreenCover(
+            item: $store.scope(state: \.content, action: \.content)
+        ) { contentStore in
+            SolarTermIntroContentView(store: contentStore)
+        }
     }
 }
 

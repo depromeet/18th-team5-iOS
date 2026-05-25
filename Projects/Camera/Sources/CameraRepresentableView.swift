@@ -150,6 +150,7 @@ public struct CameraRepresentableView: UIViewRepresentable {
                     do {
                         let result = try await cameraController.capturePhoto()
                         await cameraController.stopSession()
+                        notifyStateChanged()
                         onCapture?(result)
                     } catch let error as CameraError {
                         logger.error(message: "사진 촬영 실패: \(error)")

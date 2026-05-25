@@ -33,6 +33,9 @@ public struct MissionListView: View {
             .overlay(alignment: .trailing) { indicatorView }
         }
         .overlay(alignment: .top) { headerView }
+        .sheet(item: $store.scope(state: \.search, action: \.search)) { store in
+            MissionSearchView(store: store)
+        }
     }
 }
 
@@ -44,7 +47,7 @@ private extension MissionListView {
             HStack(spacing: 0) {
                 categoryListView
                 Spacer()
-                selectMissionButton
+                searchMissionButton
             }
         }
         .padding(.horizontal, 20)
@@ -88,11 +91,11 @@ private extension MissionListView {
         )
     }
 
-    var selectMissionButton: some View {
-        SelectMissionButton {
-            store.send(.selectMissionButtonTapped)
+    var searchMissionButton: some View {
+        SearchMissionButton {
+            store.send(.searchMissionButtonTapped)
         }
-        .disabled(!store.isSelectMissionButtonEnabled)
+        .disabled(!store.isSearchMissionButtonEnabled)
     }
 
     var tooltip: some View {

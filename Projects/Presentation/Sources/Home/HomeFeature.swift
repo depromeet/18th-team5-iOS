@@ -18,7 +18,6 @@ public struct HomeFeature {
         var seasonRecord: SeasonRecord = .mock
         var isLoading: Bool = false
         var hasError: Bool = false
-        @Presents var solarTermIntro: SolarTermIntroFeature.State?
 
         public init() {}
     }
@@ -29,13 +28,13 @@ public struct HomeFeature {
         case homeLoad(Result<HomeCard, Error>)
         case onMissionTap
         case onMissionRecommendTap
-        case onRecordTap
-        case solarTermIntro(PresentationAction<SolarTermIntroFeature.Action>)
+        case onSolarTermDetailTap
         case delegate(Delegate)
 
         public enum Delegate {
-            case navigateToMissionCamera(missionId: Int, title: String, missionType: String)
+            case navigateToMissionCamera(missionId: Int, title: String, missionType: String, solarTermId: Int)
             case navigateToMissionTab
+            case navigateToSolarTermContent(SolarTerm)
         }
     }
 
@@ -71,29 +70,25 @@ public struct HomeFeature {
                 return .none
 
             case .onMissionTap:
-                guard let mission = state.homeCard?.currentMission else { return .none }
+                guard let homeCard = state.homeCard,
+                      let mission = homeCard.currentMission else { return .none }
                 return .send(.delegate(.navigateToMissionCamera(
                     missionId: mission.id,
                     title: mission.title,
-                    missionType: mission.missionType
+                    missionType: mission.missionType,
+                    solarTermId: homeCard.solarTerm.id
                 )))
 
             case .onMissionRecommendTap:
                 return .send(.delegate(.navigateToMissionTab))
 
-            case .onRecordTap:
-                state.solarTermIntro = SolarTermIntroFeature.State(currentSolarTerm: state.homeCard?.solarTerm.term)
-                return .none
-
-            case .solarTermIntro:
-                return .none
+            case .onSolarTermDetailTap:
+                guard let term = state.homeCard?.solarTerm.term else { return .none }
+                return .send(.delegate(.navigateToSolarTermContent(term)))
 
             case .delegate:
                 return .none
             }
-        }
-        .ifLet(\.$solarTermIntro, action: \.solarTermIntro) {
-            SolarTermIntroFeature()
         }
     }
 }

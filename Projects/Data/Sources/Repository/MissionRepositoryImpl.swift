@@ -35,15 +35,14 @@ public enum MissionRepositoryImpl {
 
     public static func live() -> MissionRepository {
         MissionRepository(
-            completeMission: { missionId, missionType, objectKey, memo, completedAt in
+            completeMission: { missionId, missionType, solarTermId, objectKey, memo in
                 @Dependency(\.networkClient) var client
 
-                let completedAtString = completedAt.map { iso8601Formatter.string(from: $0) }
                 let requestDTO = MissionCompleteRequestDTO(
                     missionType: missionType.rawValue,
+                    solarTermId: solarTermId,
                     objectKey: objectKey,
                     memo: memo,
-                    completedAt: completedAtString
                 )
 
                 do {
@@ -53,7 +52,7 @@ public enum MissionRepositoryImpl {
                     guard let result else {
                         throw DomainError.unknown("데이터 획득 실패")
                     }
-                    return try result.toDomain()
+                    return result.completionId
                 } catch {
                     throw mapToDomainError(error)
                 }
@@ -92,28 +91,6 @@ public enum MissionRepositoryImpl {
 }
 
 // MARK: - Domain Mapping
-
-private extension MissionCompleteResultDTO {
-    func toDomain() throws -> MissionCompletion {
-        guard let missionType = MissionType(rawValue: missionType) else {
-            throw DTOMappingError.invalidValue(missionType)
-        }
-        guard let date = MissionRepositoryImpl.parseDate(from: completedAt) else {
-            throw DTOMappingError.invalidDateFormat(completedAt)
-        }
-
-        return MissionCompletion(
-            completionId: completionId,
-            missionId: missionId,
-            missionType: missionType,
-            // complete 응답에는 objectKey/presignedImageUrl/memo가 포함되지 않음
-            objectKey: nil,
-            presignedImageUrl: nil,
-            memo: nil,
-            completedAt: date
-        )
-    }
-}
 
 private extension MissionCompletionItemDTO {
     func toDomain() throws -> MissionCompletion {

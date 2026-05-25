@@ -16,7 +16,7 @@ enum MissionEndpoint: APIEndpoint {
     var path: String {
         switch self {
         case let .complete(missionId, _):
-            "/api/v1/missions/\(missionId)/complete"
+            "/api/v1/missions/\(missionId)/complete/daily"
         case let .fetchCompletions(missionId):
             "/api/v1/missions/\(missionId)/completions"
         }

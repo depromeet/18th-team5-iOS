@@ -1,5 +1,5 @@
 //
-//  SelectMissionButton.swift
+//  SearchMissionButton.swift
 //  Presentation
 //
 //  Created by 이정원 on 5/21/26.
@@ -9,7 +9,7 @@
 import DesignSystem
 import SwiftUI
 
-struct SelectMissionButton: View {
+struct SearchMissionButton: View {
     @Environment(\.isEnabled) private var isEnabled
     private let action: () -> Void
 
@@ -36,7 +36,7 @@ struct SelectMissionButton: View {
     }
 }
 
-private extension SelectMissionButton {
+private extension SearchMissionButton {
     var iconColor: Color {
         isEnabled ? .gray800 : .white
     }
