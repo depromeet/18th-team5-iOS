@@ -145,7 +145,7 @@ private extension MissionSearchView {
     }
 }
 
-private extension LocationType {
+extension LocationType {
     var image: Image {
         switch self {
         case .indoor: .icHome
@@ -154,7 +154,7 @@ private extension LocationType {
     }
 }
 
-private extension ParticipationType {
+extension ParticipationType {
     var image: Image {
         switch self {
         case .alone: .icUser
@@ -163,7 +163,7 @@ private extension ParticipationType {
     }
 }
 
-private extension MissionSearchCategory {
+extension MissionSearchCategory {
     var image: Image {
         switch self {
         case .food: .icFood
