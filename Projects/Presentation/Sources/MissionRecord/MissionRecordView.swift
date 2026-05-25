@@ -43,6 +43,8 @@ public struct MissionRecordView: View {
                 submitButton
             }
             .background(Color.gray50)
+            .contentShape(.rect)
+            .onTapGesture { isMemoFocused = false }
             .allowsHitTesting(store.completionModal == nil)
             .accessibilityHidden(store.completionModal != nil)
 
