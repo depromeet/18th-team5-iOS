@@ -48,6 +48,7 @@ extension Target {
             deploymentTargets: ProjectInfo.deploymentTargets,
             infoPlist: .file(path: "Info.plist"),
             buildableFolders: module.buildableFolders,
+            entitlements: "App.entitlements",
             scripts: [
                 .lint,
                 .googleServiceInfo,
