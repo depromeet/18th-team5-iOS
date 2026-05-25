@@ -22,7 +22,8 @@ public struct RootView: View {
             case let .splash(store): SplashView(store: store)
             case let .forceUpdate(store): ForceUpdateView(store: store)
             case let .maintenance(store): MaintenanceView(store: store)
-            case let .onboarding(store): OnboardingView(store: store)
+            case let .notificationConsent(store): NotificationConsentView(store: store)
+            case let .survey(store): OnboardingSurveyView(store: store)
             case let .main(store): MainView(store: store)
             case let .debugToken(store): DebugTokenSettingView(store: store)
             }

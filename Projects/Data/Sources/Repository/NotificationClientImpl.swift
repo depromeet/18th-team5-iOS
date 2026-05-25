@@ -8,6 +8,7 @@
 
 import Dependencies
 import Domain
+import UIKit
 import UserNotifications
 
 extension NotificationClient: @retroactive DependencyKey {
@@ -28,6 +29,11 @@ public enum NotificationClientImpl {
             requestProvisionalAuthorization: {
                 try await UNUserNotificationCenter.current()
                     .requestAuthorization(options: [.provisional])
+            },
+            registerForRemoteNotifications: {
+                await MainActor.run {
+                    UIApplication.shared.registerForRemoteNotifications()
+                }
             }
         )
     }
