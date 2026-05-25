@@ -14,6 +14,7 @@ public struct MainFeature {
     public struct State: Equatable {
         public var tab: Tab = .home
         var home: HomeFeature.State = .init()
+        var mission: MissionListFeature.State = .init()
         @Presents var missionRecord: MissionRecordFeature.State?
 
         public init() {}
@@ -23,6 +24,7 @@ public struct MainFeature {
         case onAppear
         case binding(BindingAction<State>)
         case home(HomeFeature.Action)
+        case mission(MissionListFeature.Action)
         case missionRecord(PresentationAction<MissionRecordFeature.Action>)
     }
 
@@ -37,6 +39,10 @@ public struct MainFeature {
             HomeFeature()
         }
 
+        Scope(state: \.mission, action: \.mission) {
+            MissionListFeature()
+        }
+
         Reduce { state, action in
             switch action {
             case .onAppear:
@@ -49,7 +55,7 @@ public struct MainFeature {
                 return .none
 
             case .home(.delegate(.navigateToMissionTab)):
-                // TODO: 미션 추천 페이지 이동 - @minkyo
+                state.tab = .mission
                 return .none
 
             case .missionRecord(.presented(.delegate(.dismiss))):
@@ -63,8 +69,11 @@ public struct MainFeature {
             case .missionRecord:
                 return .none
 
-            case .home, .binding:
-                return .none
+            case .home: return .none
+
+            case .mission: return .none
+
+            case .binding: return .none
             }
         }
         .ifLet(\.$missionRecord, action: \.missionRecord) {

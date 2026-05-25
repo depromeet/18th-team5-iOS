@@ -44,6 +44,8 @@ private extension MainView {
         switch tab {
         case .home:
             HomeView(store: store.scope(state: \.home, action: \.home))
+        case .mission:
+            MissionListView(store: store.scope(state: \.mission, action: \.mission))
         default:
             Text(tab.title)
         }
