@@ -15,26 +15,31 @@ public struct CalendarFeature {
     @ObservableState
     public struct State: Equatable {
         public var header: CalendarHeader?
-        public var yearPages: [Page<SolarTermGroup>] = []
-        public var anchoredTermId: SolarTermGroup.ID?
-        public var isPaging: Bool = false
-        public var anchorRequest: AnchorRequest<SolarTermGroup>?
+        public var calendarState: PagingTableViewState<SolarTermGroup> = .init(
+            anchorRequest: nil,
+            pages: []
+        )
         public var selectedDateId: SolarTermDate.ID?
         public var calendarDetail: CalendarDetail?
-        public var selectedDetailCardIndex: Int = 0
+        public var topMostDetailCardIndex: Int = 0
 
+        fileprivate var anchoredTermId: SolarTermGroup.ID?
+        fileprivate var isPaging: Bool = false
         fileprivate var currentYear: SolarTermYear = .y2026
     }
 
     public enum Action: BindableAction {
         case onAppear
+        case detailOkButtonTapped
+        case dateCellTapped(dateId: SolarTermDate.ID, inset: CGFloat)
+        case anchoredItemChanged(id: SolarTermDate.ID)
+        case calendarReachToEnd(PageEndDirection)
+
+        // Internal actions
+        case yearPagesLayoutCompleted
+        case updateCalendarPages([Page<SolarTermGroup>])
         case updateCalendarHeader(CalendarHeader)
         case updateAnchorRequest(AnchorRequest<SolarTermGroup>)
-        case calendarPagingRequest(PagingDirection)
-        case dateCellTapped(dateId: SolarTermDate.ID, inset: CGFloat)
-        case updateYearPages([Page<SolarTermGroup>])
-        case yearPagesLayoutCompleted
-        case detailOkButtonTapped
         case binding(BindingAction<State>)
     }
 
@@ -49,42 +54,46 @@ public struct CalendarFeature {
             case .onAppear:
                 return onAppear(&state)
 
+            case let .calendarReachToEnd(direction):
+                return calendarPagingRequest(&state, direction: direction)
+
+            case let .anchoredItemChanged(termId):
+                if let currentTerm = findTermGroup(
+                    pages: state.calendarState.pages,
+                    termId: termId
+                ) {
+                    return .send(.updateCalendarHeader(mapToHeader(currentTerm)))
+                }
+                return .none
+
+            case .detailOkButtonTapped:
+                // TODO: 동작 및 액션 수정 -@준영
+                state.calendarDetail = nil
+                return .none
+
+            case .binding(\.topMostDetailCardIndex):
+                // TODO: 최상단 카드 처리 -@준영
+                return .none
+
+            // MARK: Internal actions
+
+            case let .dateCellTapped(dateId, inset):
+                return dateCellTapped(&state, dateId: dateId, inset: inset)
+
             case let .updateCalendarHeader(header):
                 state.header = header
                 return .none
 
             case let .updateAnchorRequest(request):
-                state.anchorRequest = request
+                state.calendarState.anchorRequest = request
                 return .none
 
-            case let .updateYearPages(pages):
-                state.yearPages = pages
+            case let .updateCalendarPages(pages):
+                state.calendarState.pages = pages
                 return .none
 
             case .yearPagesLayoutCompleted:
                 state.isPaging = false
-                return .none
-
-            case let .calendarPagingRequest(direction):
-                return calendarPagingRequest(&state, direction: direction)
-
-            case let .dateCellTapped(dateId, inset):
-                return dateCellTapped(&state, dateId: dateId, inset: inset)
-
-            case .detailOkButtonTapped:
-                state.calendarDetail = nil
-                return .none
-
-            case .binding(\.anchoredTermId):
-                if let termId = state.anchoredTermId,
-                   let currentTerm = findTermGroup(
-                       pages: state.yearPages, termId: termId
-                   ) {
-                    return .send(.updateCalendarHeader(mapToHeader(currentTerm)))
-                }
-                return .none
-
-            case .binding(\.selectedDetailCardIndex):
                 return .none
 
             default:
@@ -121,7 +130,7 @@ extension CalendarFeature {
             ].compactMap(\.self)
 
             let pages = await fetchYearPages(years: years, now: now)
-            await send(.updateYearPages(pages))
+            await send(.updateCalendarPages(pages))
 
             if let currentTerm = pages.findAnchorTerm(containing: now) {
                 await send(.updateCalendarHeader(mapToHeader(currentTerm)))
@@ -138,24 +147,24 @@ extension CalendarFeature {
 
     private func calendarPagingRequest(
         _ state: inout State,
-        direction: PagingDirection
+        direction: PageEndDirection
     ) -> Effect<Action> {
         guard !state.isPaging,
               let anchoredTermId = state.anchoredTermId,
               let termGroup = findTermGroup(
-                  pages: state.yearPages,
+                  pages: state.calendarState.pages,
                   termId: anchoredTermId
               )
         else { return .none }
 
         let centerYear = termGroup.solarTermInfo.year
-        guard let fetchingYear = direction == .prepend
+        guard let fetchingYear = direction == .top
             ? centerYear.prevYear
             : centerYear.nextYear
         else { return .none }
 
         state.isPaging = true
-        let currentPages = state.yearPages
+        let currentPages = state.calendarState.pages
         let now = date.now
 
         return fetchPagingYear(
@@ -172,7 +181,7 @@ extension CalendarFeature {
         inset: CGFloat
     ) -> Effect<Action> {
         // TODO: 임시데이터 -@준영
-        state.selectedDetailCardIndex = 0
+        state.topMostDetailCardIndex = 0
         state.calendarDetail = .init(cards: [
             .init(name: "card1"),
             .init(name: "card2"),
@@ -182,9 +191,9 @@ extension CalendarFeature {
         ])
 
         state.selectedDateId = dateId
-        for pageIndex in state.yearPages.indices {
-            for termIndex in state.yearPages[pageIndex].items.indices {
-                let term = state.yearPages[pageIndex].items[termIndex]
+        for pageIndex in state.calendarState.pages.indices {
+            for termIndex in state.calendarState.pages[pageIndex].items.indices {
+                let term = state.calendarState.pages[pageIndex].items[termIndex]
                 for cell in term.cells.flatMap(\.self) {
                     if case let .dateCell(date) = cell, date.id == dateId {
                         let request = AnchorRequest<SolarTermGroup>(
@@ -202,7 +211,7 @@ extension CalendarFeature {
     }
 
     private func fetchPagingYear(
-        direction: PagingDirection,
+        direction: PageEndDirection,
         fetchingYear: SolarTermYear,
         currentPages: [Page<SolarTermGroup>],
         now: Date
@@ -212,7 +221,7 @@ extension CalendarFeature {
                 let fetchedTerms = try await solarTermRepository.fetchSolarTerms(fetchingYear)
                 let newPage = mapToYearGroup(now: now, year: fetchingYear, terms: fetchedTerms)
                 let updated = applyPaging(direction: direction, newPage: newPage, to: currentPages)
-                await send(.updateYearPages(updated))
+                await send(.updateCalendarPages(updated))
             } catch {
                 try? await Task.sleep(for: .seconds(1))
             }
@@ -234,16 +243,16 @@ extension CalendarFeature {
     }
 
     func applyPaging(
-        direction: PagingDirection,
+        direction: PageEndDirection,
         newPage: Page<SolarTermGroup>,
         to pages: [Page<SolarTermGroup>]
     ) -> [Page<SolarTermGroup>] {
         var updated: [Page<SolarTermGroup>]
         switch direction {
-        case .prepend:
+        case .top:
             updated = [newPage] + pages
             if updated.count > 3 { updated.removeLast() }
-        case .append:
+        case .bottom:
             updated = pages + [newPage]
             if updated.count > 3 { updated.removeFirst() }
         }
@@ -320,7 +329,8 @@ extension CalendarFeature {
                         monthText: "\(ymd.month)월",
                         dayText: String(ymd.day),
                         isFirstDayOfMonth: ymd.day == 1,
-                        isToday: ymd == todayYmd
+                        isToday: ymd == todayYmd,
+                        isSelected: false
                     )
                 )
             )

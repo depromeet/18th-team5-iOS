@@ -34,4 +34,5 @@ public struct SolarTermDate: Identifiable, Equatable {
     public let dayText: String
     public let isFirstDayOfMonth: Bool
     public var isToday: Bool
+    public var isSelected: Bool
 }
