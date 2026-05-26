@@ -33,6 +33,7 @@ public struct MissionListView: View {
             .overlay(alignment: .trailing) { indicatorView }
         }
         .overlay(alignment: .top) { headerView }
+        .onAppear { store.send(.onAppear) }
         .sheet(item: $store.scope(state: \.search, action: \.search)) { store in
             MissionSearchView(store: store)
         }

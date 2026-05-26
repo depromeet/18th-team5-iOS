@@ -11,6 +11,8 @@ import Domain
 
 @Reducer
 public struct MissionListFeature {
+    @Dependency(\.missionRepository) private var missionRepository
+
     @ObservableState
     public struct State: Equatable {
         var userType: UserType = .explorer
@@ -20,6 +22,7 @@ public struct MissionListFeature {
 
         var missions: [Mission]
         var selectedMission: Mission
+        var searchedMission: Mission?
 
         @Presents var search: MissionSearchFeature.State?
         @Presents var searchResult: MissionSearchResultFeature.State?
@@ -49,6 +52,7 @@ public struct MissionListFeature {
     }
 
     public enum Action: BindableAction {
+        case onAppear
         case themeTapped(MissionTheme)
         case indicatorIndexChanged(Int)
         case searchMissionButtonTapped
@@ -63,6 +67,10 @@ public struct MissionListFeature {
 
         Reduce { state, action in
             switch action {
+            case .onAppear:
+                return .run { send in
+                    await fetchSearchedMission(send)
+                }
             case let .themeTapped(theme):
                 let mission = state.missions.first { $0.theme == theme }
                 guard let mission else { return .none }
@@ -90,6 +98,15 @@ public struct MissionListFeature {
         .ifLet(\.$searchResult, action: \.searchResult) {
             MissionSearchResultFeature()
         }
+    }
+}
+
+private extension MissionListFeature {
+    func fetchSearchedMission(_ send: Send<Action>) async {
+        do {
+            let mission = try await missionRepository.fetchSearchedMission()
+            print(mission)
+        } catch {}
     }
 }
 

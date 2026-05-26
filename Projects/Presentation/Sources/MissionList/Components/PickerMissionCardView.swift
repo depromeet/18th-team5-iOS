@@ -32,7 +32,7 @@ struct PickerMissionCardView: View {
         self.season = season
         self.action = action
 
-        if mission.isCompleted {
+        if mission.isCompleted == true {
             self.cardType = .disabled
         } else {
             self.cardType = isActive ? .active : .default
@@ -49,7 +49,7 @@ struct PickerMissionCardView: View {
                     missionNameView
                 }
 
-                if mission.isCompleted {
+                if mission.isCompleted == true {
                     checkMarkView
                 }
             }

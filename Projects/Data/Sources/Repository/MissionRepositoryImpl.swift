@@ -42,7 +42,7 @@ public enum MissionRepositoryImpl {
                     missionType: missionType.rawValue,
                     solarTermId: solarTermId,
                     objectKey: objectKey,
-                    memo: memo,
+                    memo: memo
                 )
 
                 do {
@@ -82,6 +82,18 @@ public enum MissionRepositoryImpl {
                     )
                     try await s3Client.uploadImage(presignedUrl, imageData, contentType)
                     return objectKey
+                } catch {
+                    throw mapToDomainError(error)
+                }
+            },
+            fetchSearchedMission: {
+                @Dependency(\.networkClient) var client
+
+                do {
+                    let endpoint = MissionEndpoint.fetchSearchedMission
+                    let response: SearchedMissionResponseDTO? = try await client.request(endpoint)
+                    guard response?.hasSelected == true else { return nil }
+                    return response?.mission?.searchedMission
                 } catch {
                     throw mapToDomainError(error)
                 }

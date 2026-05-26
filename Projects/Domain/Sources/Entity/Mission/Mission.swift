@@ -11,19 +11,22 @@ public struct Mission: Equatable, Hashable {
     public let title: String
     public let description: String?
     public let theme: MissionTheme?
-    public let isCompleted: Bool
+    public let attribute: MissionAttribute?
+    public let isCompleted: Bool?
 
     public init(
         id: Int,
         title: String,
         description: String? = nil,
         theme: MissionTheme? = nil,
-        isCompleted: Bool
+        attribute: MissionAttribute? = nil,
+        isCompleted: Bool? = nil
     ) {
         self.id = id
         self.title = title
         self.description = description
         self.theme = theme
+        self.attribute = attribute
         self.isCompleted = isCompleted
     }
 }
