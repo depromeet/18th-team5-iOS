@@ -18,7 +18,7 @@ public struct MissionSearchFeature {
         let season: Season
         var locationType: LocationType?
         var participationType: ParticipationType?
-        var category: MissionSearchCategory?
+        var category: MissonCategory?
 
         public init(season: Season) {
             self.season = season

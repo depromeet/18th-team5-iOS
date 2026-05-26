@@ -19,7 +19,7 @@ public struct MissionSearchResultFeature {
         let solarTerm: SolarTerm = .ibha
         let locationType: LocationType = .indoor
         let participationType: ParticipationType = .together
-        let category: MissionSearchCategory = .food
+        let category: MissonCategory = .food
         let missionTitle: String = "입하 레시피북 제작"
 
         public init() {}
