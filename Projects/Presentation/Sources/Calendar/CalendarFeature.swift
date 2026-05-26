@@ -105,8 +105,8 @@ public struct CalendarFeature {
 
 // MARK: - Effect 분리
 
-extension CalendarFeature {
-    private func onAppear(_ state: inout State) -> Effect<Action> {
+private extension CalendarFeature {
+    func onAppear(_ state: inout State) -> Effect<Action> {
         let now = date.now
         guard let year = Calendar.current.dateComponents([.year], from: now).year,
               let currentYear = SolarTermYear(rawValue: year)
@@ -118,7 +118,7 @@ extension CalendarFeature {
         return fetchInitialPages(currentYear: currentYear, now: now)
     }
 
-    private func fetchInitialPages(
+    func fetchInitialPages(
         currentYear: SolarTermYear,
         now: Date
     ) -> Effect<Action> {
@@ -145,7 +145,7 @@ extension CalendarFeature {
         }
     }
 
-    private func calendarPagingRequest(
+    func calendarPagingRequest(
         _ state: inout State,
         direction: PageEndDirection
     ) -> Effect<Action> {
@@ -175,11 +175,12 @@ extension CalendarFeature {
         )
     }
 
-    private func dateCellTapped(
+    func dateCellTapped(
         _ state: inout State,
         dateId: SolarTermDate.ID,
         inset: CGFloat
     ) -> Effect<Action> {
+        // #1. 디테일 화면 데이터
         // TODO: 임시데이터 -@준영
         state.topMostDetailCardIndex = 0
         state.calendarDetail = .init(cards: [
@@ -190,27 +191,42 @@ extension CalendarFeature {
             .init(name: "card5")
         ])
 
+        // #2. 이전 선택 셀 초기화
+        let prevSelectedId = state.selectedDateId
         state.selectedDateId = dateId
-        for pageIndex in state.calendarState.pages.indices {
-            for termIndex in state.calendarState.pages[pageIndex].items.indices {
-                let term = state.calendarState.pages[pageIndex].items[termIndex]
-                for cell in term.cells.flatMap(\.self) {
-                    if case let .dateCell(date) = cell, date.id == dateId {
-                        let request = AnchorRequest<SolarTermGroup>(
-                            itemId: term.id,
-                            inset: inset,
-                            animated: true
-                        )
-                        state.anchoredTermId = term.id
-                        return .send(.updateAnchorRequest(request))
-                    }
-                }
+
+        if let prevSelectedId {
+            editDateCell(&state, id: prevSelectedId) { dateState in
+                var newDateState = dateState
+                newDateState.isSelected = false
+                return newDateState
             }
+        }
+
+        // #3. 선택한 셀 선택됨으로 표시
+        editDateCell(&state, id: dateId) { dateState in
+            var newDateState = dateState
+            newDateState.isSelected = true
+            return newDateState
+        }
+
+        // #4. 해당 셀 위치로 스크롤
+        if let term = findTermGroup(
+            pages: state.calendarState.pages,
+            dateId: dateId
+        ) {
+            let request = AnchorRequest<SolarTermGroup>(
+                itemId: term.id,
+                inset: inset,
+                animated: true
+            )
+            state.anchoredTermId = term.id
+            return .send(.updateAnchorRequest(request))
         }
         return .none
     }
 
-    private func fetchPagingYear(
+    func fetchPagingYear(
         direction: PageEndDirection,
         fetchingYear: SolarTermYear,
         currentPages: [Page<SolarTermGroup>],
@@ -230,9 +246,20 @@ extension CalendarFeature {
     }
 }
 
-// MARK: - 페이지 유틸리티
+private extension CalendarFeature {
+    func findTermGroup(pages: [Page<SolarTermGroup>], dateId: SolarTermDate.ID) -> SolarTermGroup? {
+        for yearPage in pages {
+            for termGroup in yearPage.items {
+                for cell in termGroup.cells.flatMap(\.self) {
+                    if case let .dateCell(date) = cell, date.id == dateId {
+                        return termGroup
+                    }
+                }
+            }
+        }
+        return nil
+    }
 
-extension CalendarFeature {
     func findTermGroup(pages: [Page<SolarTermGroup>], termId: SolarTermGroup.ID) -> SolarTermGroup? {
         for yearPage in pages {
             for termGroup in yearPage.items {
@@ -242,6 +269,35 @@ extension CalendarFeature {
         return nil
     }
 
+    func editDateCell(
+        _ state: inout State,
+        id: SolarTermDate.ID,
+        newState: (SolarTermDate) -> SolarTermDate
+    ) {
+        for pageIndex in state.calendarState.pages.indices {
+            for termIndex in state.calendarState.pages[pageIndex].items.indices {
+                let term = state.calendarState.pages[pageIndex].items[termIndex]
+                for weakIndex in term.cells.indices {
+                    for dateIndex in term.cells[weakIndex].indices {
+                        let cell = term.cells[weakIndex][dateIndex]
+                        if case let .dateCell(date) = cell, date.id == id {
+                            state.calendarState
+                                .pages[pageIndex]
+                                .items[termIndex]
+                                .cells[weakIndex][dateIndex] = .dateCell(newState(date))
+                        }
+                    }
+                }
+
+                for cellIndex in term.cells.flatMap(\.self).indices {}
+            }
+        }
+    }
+}
+
+// MARK: - 페이지 유틸리티
+
+private extension CalendarFeature {
     func applyPaging(
         direction: PageEndDirection,
         newPage: Page<SolarTermGroup>,
@@ -288,7 +344,7 @@ extension CalendarFeature {
 
 // MARK: - 매핑 유틸리티
 
-extension CalendarFeature {
+private extension CalendarFeature {
     func mapToHeader(_ term: SolarTermGroup) -> CalendarHeader {
         let info = term.solarTermInfo
         let startText = Self.termDateFormatter.string(from: info.startDate)

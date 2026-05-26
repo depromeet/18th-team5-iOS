@@ -13,7 +13,7 @@ public struct SolarTermGroup: Identifiable, Equatable {
     public let id: String
     public let termText: String
     public let solarTermInfo: SolarTermInfo
-    public let cells: [[SolarTermGroupCell]]
+    public var cells: [[SolarTermGroupCell]]
 }
 
 public enum SolarTermGroupCell: Identifiable, Equatable {
