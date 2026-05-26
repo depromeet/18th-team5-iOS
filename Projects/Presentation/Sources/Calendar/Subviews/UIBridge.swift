@@ -9,32 +9,6 @@
 import Combine
 import SwiftUI
 
-final class _UIKitView: UIView {
-    let _action: PassthroughSubject<Action, Never> = .init()
-    let arguments: Arguments
-    var store: Set<AnyCancellable> = []
-
-    init(arguments: Arguments) {
-        self.arguments = arguments
-        super.init(frame: .zero)
-    }
-
-    required init?(coder: NSCoder) { nil }
-}
-
-extension _UIKitView: BridgingUIView {
-    enum Action {}
-    struct State: Equatable {}
-    struct Arguments {}
-
-    var action: AnyPublisher<Action, Never> { _action.eraseToAnyPublisher() }
-
-    /// SwiftUI 상태 스트림 구독 지점.
-    /// 핵심 원칙: 동일 `state` 입력에 대해 항상 동일한 UI 결과가 도출되도록 구현할 것.
-    /// (SwiftUI diffing이 idempotent를 가정하므로 부수효과/누적 상태는 피한다.)
-    func bind(_ context: AnyPublisher<UpdateContext<State>, Never>) {}
-}
-
 protocol BridgingUIView: UIView {
     associatedtype Action
     associatedtype State: Equatable
