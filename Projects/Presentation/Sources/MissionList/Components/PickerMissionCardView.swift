@@ -63,8 +63,9 @@ struct PickerMissionCardView: View {
 }
 
 private extension PickerMissionCardView {
-    var categoryIcon: Image {
-        switch mission.category {
+    var categoryIcon: Image? {
+        guard let theme = mission.theme else { return nil }
+        return switch theme {
         case .activity: .icTree
         case .food: .icFood
         case .contents: .icSlate
@@ -112,14 +113,17 @@ private extension PickerMissionCardView {
 }
 
 private extension PickerMissionCardView {
+    @ViewBuilder
     var categoryIconView: some View {
-        categoryIcon
-            .resizable()
-            .frame(width: 24, height: 24)
+        if let categoryIcon {
+            categoryIcon
+                .resizable()
+                .frame(width: 24, height: 24)
+        }
     }
 
     var categoryNameView: some View {
-        Text(mission.category.name)
+        Text(mission.theme?.name ?? "")
             .font(.caption1Medium)
             .foregroundStyle(categoryTextColor)
             .frame(maxWidth: .infinity, alignment: .leading)

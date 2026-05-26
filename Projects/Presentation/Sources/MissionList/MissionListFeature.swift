@@ -35,8 +35,8 @@ public struct MissionListFeature {
             true
         }
 
-        var category: MissionCategory {
-            selectedMission.category
+        var theme: MissionTheme? {
+            selectedMission.theme
         }
 
         var selectedIndex: Int? {
@@ -45,7 +45,7 @@ public struct MissionListFeature {
     }
 
     public enum Action: BindableAction {
-        case categoryTapped(MissionCategory)
+        case themeTapped(MissionTheme)
         case indicatorIndexChanged(Int)
         case searchMissionButtonTapped
         case binding(BindingAction<State>)
@@ -59,8 +59,8 @@ public struct MissionListFeature {
 
         Reduce { state, action in
             switch action {
-            case let .categoryTapped(category):
-                let mission = state.missions.first { $0.category == category }
+            case let .themeTapped(theme):
+                let mission = state.missions.first { $0.theme == theme }
                 guard let mission else { return .none }
                 state.selectedMission = mission
                 return .none
@@ -94,105 +94,105 @@ private extension [Mission] {
         .init(
             id: 0,
             title: "음식 관련 미션 예시입니다 1",
-            category: .food,
+            theme: .food,
             season: .summer,
             isCompleted: false
         ),
         .init(
             id: 1,
             title: "음식 관련 미션 예시입니다 2",
-            category: .food,
+            theme: .food,
             season: .summer,
             isCompleted: false
         ),
         .init(
             id: 2,
             title: "음식 관련 미션 예시입니다 3",
-            category: .food,
+            theme: .food,
             season: .summer,
             isCompleted: true
         ),
         .init(
             id: 3,
             title: "음식 관련 미션 예시입니다 4",
-            category: .food,
+            theme: .food,
             season: .summer,
             isCompleted: false
         ),
         .init(
             id: 4,
             title: "음식 관련 미션 예시입니다 5",
-            category: .food,
+            theme: .food,
             season: .summer,
             isCompleted: false
         ),
         .init(
             id: 5,
             title: "콘텐츠 관련 미션 예시입니다 1",
-            category: .contents,
+            theme: .contents,
             season: .summer,
             isCompleted: false
         ),
         .init(
             id: 6,
             title: "콘텐츠 관련 미션 예시입니다 2",
-            category: .contents,
+            theme: .contents,
             season: .summer,
             isCompleted: false
         ),
         .init(
             id: 7,
             title: "콘텐츠 관련 미션 예시입니다 3",
-            category: .contents,
+            theme: .contents,
             season: .summer,
             isCompleted: true
         ),
         .init(
             id: 8,
             title: "콘텐츠 관련 미션 예시입니다 4",
-            category: .contents,
+            theme: .contents,
             season: .summer,
             isCompleted: false
         ),
         .init(
             id: 9,
             title: "콘텐츠 관련 미션 예시입니다 5",
-            category: .contents,
+            theme: .contents,
             season: .summer,
             isCompleted: false
         ),
         .init(
             id: 10,
             title: "활동 관련 미션 예시입니다 1",
-            category: .activity,
+            theme: .activity,
             season: .summer,
             isCompleted: false
         ),
         .init(
             id: 11,
             title: "활동 관련 미션 예시입니다 2",
-            category: .activity,
+            theme: .activity,
             season: .summer,
             isCompleted: false
         ),
         .init(
             id: 12,
             title: "활동 관련 미션 예시입니다 3",
-            category: .activity,
+            theme: .activity,
             season: .summer,
             isCompleted: true
         ),
         .init(
             id: 13,
             title: "활동 관련 미션 예시입니다 4",
-            category: .activity,
+            theme: .activity,
             season: .summer,
             isCompleted: false
         ),
         .init(
             id: 14,
             title: "활동 관련 미션 예시입니다 5",
-            category: .activity,
+            theme: .activity,
             season: .summer,
             isCompleted: false
         )

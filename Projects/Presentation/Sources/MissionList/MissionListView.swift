@@ -50,7 +50,7 @@ private extension MissionListView {
             titleView
 
             HStack(spacing: 0) {
-                categoryListView
+                themeListView
                 Spacer()
                 searchMissionButton
             }
@@ -80,19 +80,19 @@ private extension MissionListView {
         }
     }
 
-    var categoryListView: some View {
+    var themeListView: some View {
         HStack(spacing: 6) {
-            ForEach(MissionCategory.allCases, id: \.self) { category in
-                categoryView(category)
+            ForEach(MissionTheme.allCases, id: \.self) { theme in
+                themeView(theme)
             }
         }
     }
 
-    func categoryView(_ category: MissionCategory) -> some View {
+    func themeView(_ theme: MissionTheme) -> some View {
         Chip(
-            title: category.name,
-            type: category == store.category ? .default : .secondary,
-            action: { store.send(.categoryTapped(category)) }
+            title: theme.name,
+            type: theme == store.theme ? .default : .secondary,
+            action: { store.send(.themeTapped(theme)) }
         )
     }
 
