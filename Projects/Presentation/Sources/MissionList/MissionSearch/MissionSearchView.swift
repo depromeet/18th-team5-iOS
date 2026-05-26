@@ -128,7 +128,7 @@ private extension MissionSearchView {
         SearchCategoryGridView(
             title: "카테고리",
             season: store.season,
-            items: MissonCategory.allCases,
+            items: MissionCategory.allCases,
             selection: $store.category,
             itemTitle: { $0.name },
             itemImage: { $0.image }
@@ -163,7 +163,7 @@ extension ParticipationType {
     }
 }
 
-extension MissonCategory {
+extension MissionCategory {
     var image: Image {
         switch self {
         case .food: .icFood
