@@ -32,7 +32,7 @@ public struct CalendarFeature {
         case onAppear
         case detailOkButtonTapped
         case dateCellTapped(dateId: SolarTermDate.ID, inset: CGFloat)
-        case anchoredItemChanged(id: SolarTermDate.ID)
+        case anchoredTermChanged(id: SolarTermGroup.ID)
         case calendarReachToEnd(PageEndDirection)
 
         // Internal actions
@@ -57,7 +57,7 @@ public struct CalendarFeature {
             case let .calendarReachToEnd(direction):
                 return calendarPagingRequest(&state, direction: direction)
 
-            case let .anchoredItemChanged(termId):
+            case let .anchoredTermChanged(termId):
                 if let currentTerm = findTermGroup(
                     pages: state.calendarState.pages,
                     termId: termId
@@ -285,6 +285,7 @@ private extension CalendarFeature {
                                 .pages[pageIndex]
                                 .items[termIndex]
                                 .cells[weekIndex][dateIndex] = .dateCell(newState(date))
+                            return
                         }
                     }
                 }

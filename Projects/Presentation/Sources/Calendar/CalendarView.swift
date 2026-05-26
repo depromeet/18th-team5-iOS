@@ -27,7 +27,7 @@ struct CalendarView: View {
                     actionHandler: { action in
                         switch action {
                         case let .anchoredItemChanged(id):
-                            store.send(.anchoredItemChanged(id: id))
+                            store.send(.anchoredTermChanged(id: id))
                         case let .reachedToEnd(direction):
                             store.send(.calendarReachToEnd(direction))
                         }

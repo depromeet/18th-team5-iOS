@@ -56,9 +56,7 @@ final class PagingTableView<Item: Identifiable & Equatable, CellView: View>: UIV
     // MARK: Subviews
 
     private let tableView = UITableView(frame: .zero, style: .plain)
-    private let centerIndicator = UIView()
     private typealias Cell = HostingTableViewCell<CellView>
-    private let cellReuseIdentifier = String(describing: Cell.self)
 
     // MARK: Internal state
 
@@ -110,8 +108,11 @@ final class PagingTableView<Item: Identifiable & Equatable, CellView: View>: UIV
     }
 
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        guard let cell = tableView.dequeueReusableCell(withIdentifier: cellReuseIdentifier, for: indexPath) as? Cell,
-              let item = itemAt(indexPath: indexPath)
+        guard let cell = tableView.dequeueReusableCell(
+            withIdentifier: String(describing: Cell.self),
+            for: indexPath
+        ) as? Cell,
+            let item = itemAt(indexPath: indexPath)
         else { return UITableViewCell() }
         return cell.configure(arguments.cellBuilder(item))
     }
@@ -154,7 +155,7 @@ private extension PagingTableView {
     func setupTableView() {
         tableView.dataSource = self
         tableView.delegate = self
-        tableView.register(Cell.self, forCellReuseIdentifier: cellReuseIdentifier)
+        tableView.register(Cell.self, forCellReuseIdentifier: String(describing: Cell.self))
         tableView.estimatedRowHeight = 0
         tableView.separatorStyle = .none
         tableView.backgroundColor = .clear
