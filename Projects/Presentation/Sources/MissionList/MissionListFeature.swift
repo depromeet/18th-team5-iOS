@@ -35,6 +35,10 @@ public struct MissionListFeature {
             true
         }
 
+        var season: Season {
+            solarTerm.season
+        }
+
         var theme: MissionTheme? {
             selectedMission.theme
         }
@@ -95,105 +99,90 @@ private extension [Mission] {
             id: 0,
             title: "음식 관련 미션 예시입니다 1",
             theme: .food,
-            season: .summer,
             isCompleted: false
         ),
         .init(
             id: 1,
             title: "음식 관련 미션 예시입니다 2",
             theme: .food,
-            season: .summer,
             isCompleted: false
         ),
         .init(
             id: 2,
             title: "음식 관련 미션 예시입니다 3",
             theme: .food,
-            season: .summer,
             isCompleted: true
         ),
         .init(
             id: 3,
             title: "음식 관련 미션 예시입니다 4",
             theme: .food,
-            season: .summer,
             isCompleted: false
         ),
         .init(
             id: 4,
             title: "음식 관련 미션 예시입니다 5",
             theme: .food,
-            season: .summer,
             isCompleted: false
         ),
         .init(
             id: 5,
             title: "콘텐츠 관련 미션 예시입니다 1",
             theme: .contents,
-            season: .summer,
             isCompleted: false
         ),
         .init(
             id: 6,
             title: "콘텐츠 관련 미션 예시입니다 2",
             theme: .contents,
-            season: .summer,
             isCompleted: false
         ),
         .init(
             id: 7,
             title: "콘텐츠 관련 미션 예시입니다 3",
             theme: .contents,
-            season: .summer,
             isCompleted: true
         ),
         .init(
             id: 8,
             title: "콘텐츠 관련 미션 예시입니다 4",
             theme: .contents,
-            season: .summer,
             isCompleted: false
         ),
         .init(
             id: 9,
             title: "콘텐츠 관련 미션 예시입니다 5",
             theme: .contents,
-            season: .summer,
             isCompleted: false
         ),
         .init(
             id: 10,
             title: "활동 관련 미션 예시입니다 1",
             theme: .activity,
-            season: .summer,
             isCompleted: false
         ),
         .init(
             id: 11,
             title: "활동 관련 미션 예시입니다 2",
             theme: .activity,
-            season: .summer,
             isCompleted: false
         ),
         .init(
             id: 12,
             title: "활동 관련 미션 예시입니다 3",
             theme: .activity,
-            season: .summer,
             isCompleted: true
         ),
         .init(
             id: 13,
             title: "활동 관련 미션 예시입니다 4",
             theme: .activity,
-            season: .summer,
             isCompleted: false
         ),
         .init(
             id: 14,
             title: "활동 관련 미션 예시입니다 5",
             theme: .activity,
-            season: .summer,
             isCompleted: false
         )
     ]

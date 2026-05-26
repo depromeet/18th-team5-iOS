@@ -18,15 +18,18 @@ struct PickerMissionCardView: View {
     }
 
     private let mission: Mission
+    private let season: Season
     private let cardType: CardType
     private let action: () -> Void
 
     init(
         mission: Mission,
+        season: Season,
         isActive: Bool,
         action: @escaping () -> Void
     ) {
         self.mission = mission
+        self.season = season
         self.action = action
 
         if mission.isCompleted {
@@ -73,7 +76,7 @@ private extension PickerMissionCardView {
     }
 
     var activeBackgroundImage: Image {
-        switch mission.season {
+        switch season {
         case .spring: .imgGraphicSpring
         case .summer: .imgGraphicSummer
         case .autumn: .imgGraphicAutumn
@@ -97,17 +100,8 @@ private extension PickerMissionCardView {
 
     var borderColor: Color {
         switch cardType {
-        case .active: activeBorderColor
+        case .active: season.color(.scale400)
         case .default, .disabled: .gray200
-        }
-    }
-
-    var activeBorderColor: Color {
-        switch mission.season {
-        case .spring: .pink400
-        case .summer: .green400
-        case .autumn: .orange400
-        case .winter: .blue400
         }
     }
 }
@@ -144,13 +138,13 @@ private extension PickerMissionCardView {
                 .renderingMode(.template)
                 .resizable()
                 .frame(width: 12, height: 12)
-                .foregroundStyle(mission.season.checkIconColor)
+                .foregroundStyle(season.color(.scale500))
         }
         .frame(width: 28, height: 28)
         .clipShape(RoundedRectangle(cornerRadius: .radius8))
         .overlay(
             RoundedRectangle(cornerRadius: .radius8)
-                .stroke(mission.season.borderColor)
+                .stroke(season.color(.scale300))
         )
     }
 
@@ -173,26 +167,6 @@ private extension PickerMissionCardView {
                 .scaledToFit()
                 .frame(height: 80)
                 .padding(.trailing, 20)
-        }
-    }
-}
-
-private extension Season {
-    var checkIconColor: Color {
-        switch self {
-        case .spring: .pink500
-        case .summer: .green500
-        case .autumn: .orange500
-        case .winter: .blue500
-        }
-    }
-
-    var borderColor: Color {
-        switch self {
-        case .spring: .pink300
-        case .summer: .green300
-        case .autumn: .orange300
-        case .winter: .blue300
         }
     }
 }

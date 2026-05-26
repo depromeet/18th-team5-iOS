@@ -11,7 +11,6 @@ public struct Mission: Equatable, Hashable {
     public let title: String
     public let description: String?
     public let theme: MissionTheme?
-    public let season: Season
     public let isCompleted: Bool
 
     public init(
@@ -19,14 +18,12 @@ public struct Mission: Equatable, Hashable {
         title: String,
         description: String? = nil,
         theme: MissionTheme? = nil,
-        season: Season,
         isCompleted: Bool
     ) {
         self.id = id
         self.title = title
         self.description = description
         self.theme = theme
-        self.season = season
         self.isCompleted = isCompleted
     }
 }

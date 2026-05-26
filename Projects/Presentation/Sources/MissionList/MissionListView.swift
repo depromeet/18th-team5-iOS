@@ -136,6 +136,7 @@ private extension MissionListView {
     func missionCardView(_ mission: Mission) -> some View {
         PickerMissionCardView(
             mission: mission,
+            season: store.season,
             isActive: store.selectedMission == mission,
             action: {}
         )
@@ -153,7 +154,7 @@ private extension MissionListView {
                 Indicator(
                     totalCount: store.missions.count,
                     selectedIndex: selectedIndex,
-                    mainColor: store.selectedMission.season.indicatorMainColor,
+                    mainColor: store.season.color(.scale500),
                     isEnabled: $store.isIndicatorEnabled,
                     indexChanged: { store.send(.indicatorIndexChanged($0)) }
                 )
@@ -161,17 +162,6 @@ private extension MissionListView {
                 .frame(width: width, height: height, alignment: .topTrailing)
                 .padding(.top, height / 2 + 52)
             }
-        }
-    }
-}
-
-private extension Season {
-    var indicatorMainColor: Color {
-        switch self {
-        case .spring: .pink500
-        case .summer: .green500
-        case .autumn: .orange500
-        case .winter: .blue500
         }
     }
 }
