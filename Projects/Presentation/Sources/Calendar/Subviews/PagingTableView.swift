@@ -130,14 +130,14 @@ final class PagingTableView<Item: Identifiable & Equatable, CellView: View>: UIV
               tableView.bounds.height > 0
         else { return }
 
-        // 중앙 셀 변경 감지: 순수 함수 → 변화가 있을 때만 delegate 호출
+        // 중앙 셀 변경 감지: 순수 함수 → 변화가 있을 때만 action 방출
         if let newAnchoredId = currentAnchoredItemId(),
            newAnchoredId != prevAnchoredId {
             prevAnchoredId = newAnchoredId
             _action.send(.anchoredItemChanged(id: newAnchoredId))
         }
 
-        // 페이징 필요성 감지: 순수 함수 → 결과가 있고 진행 중이 아닐 때만 delegate 호출
+        // 페이징 필요성 감지: 순수 함수 → 결과가 있고 진행 중이 아닐 때만 action 방출
         if !isPageUpdating, let direction = pagingDirectionNeeded() {
             _action.send(.reachedToEnd(direction: direction))
         }

@@ -96,7 +96,7 @@ extension CalendarView {
         let weekCount = term.cells.count
         let monthCellHeight = Constants.monthCellHeight + Constants.dateMonthCellSpacing
         let weekSectionHeight = Constants.dateCellHeight + monthCellHeight
-        let weekSpacing = Constants.weakSectionVerticalSpacing * CGFloat(weekCount - 1)
+        let weekSpacing = Constants.weekSectionVerticalSpacing * CGFloat(weekCount - 1)
         let calendar = weekSectionHeight * CGFloat(weekCount) + weekSpacing
 
         let bottom = Constants.termSectionBottomPadding
@@ -145,7 +145,7 @@ extension TermSectionView {
     }
 
     func termCalendarView(_ termDates: [[SolarTermGroupCell]], dateCellWidth: CGFloat) -> some View {
-        VStack(alignment: .leading, spacing: Constants.weakSectionVerticalSpacing) {
+        VStack(alignment: .leading, spacing: Constants.weekSectionVerticalSpacing) {
             ForEach(termDates.indices, id: \.self) { weekIndex in
                 HStack(spacing: Constants.dateCellHorizontalSpacing) {
                     ForEach(termDates[weekIndex]) { date in
@@ -215,7 +215,7 @@ extension TermSectionView {
                 Text(date.dayText)
                     .font(.body2Medium)
                     .foregroundStyle(
-                        // TODO: 색상 수정예정 -@준영
+                        // TODO: 색상 수정 예정 -@준영
                         date.isSelected ? Color.white : (date.isToday ? Color(hex: 0x43DA87) : Color.gray900)
                     )
             }
@@ -242,7 +242,7 @@ extension TermSectionView {
 
     func dateCellAnchorPoint(weekIndex: Int) -> CGFloat {
         let weekHeight = Constants.monthCellHeight + Constants.dateMonthCellSpacing + Constants.dateCellHeight
-        let weekStartY = CGFloat(weekIndex) * (weekHeight + Constants.weakSectionVerticalSpacing)
+        let weekStartY = CGFloat(weekIndex) * (weekHeight + Constants.weekSectionVerticalSpacing)
         return Constants.termSectionHeaderHeight + weekStartY + Constants.monthCellHeight + Constants
             .dateMonthCellSpacing - Constants.dateCellAnchorOffset
     }
@@ -334,7 +334,7 @@ private enum Constants {
     static let calendarHorizontalSpacing: CGFloat = 19.5
     static let termSectionHeaderHeight: CGFloat = 46
     static let termSectionBottomPadding: CGFloat = 24
-    static let weakSectionVerticalSpacing: CGFloat = 6
+    static let weekSectionVerticalSpacing: CGFloat = 6
 
     static let monthCellHeight: CGFloat = 20
     static let dateMonthCellSpacing: CGFloat = 2

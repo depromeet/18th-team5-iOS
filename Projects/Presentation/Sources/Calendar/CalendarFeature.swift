@@ -181,7 +181,7 @@ private extension CalendarFeature {
         inset: CGFloat
     ) -> Effect<Action> {
         // #1. 디테일 화면 데이터
-        // TODO: 임시데이터 -@준영
+        // TODO: 임시 데이터 -@준영
         state.topMostDetailCardIndex = 0
         state.calendarDetail = .init(cards: [
             .init(name: "card1"),
@@ -277,19 +277,17 @@ private extension CalendarFeature {
         for pageIndex in state.calendarState.pages.indices {
             for termIndex in state.calendarState.pages[pageIndex].items.indices {
                 let term = state.calendarState.pages[pageIndex].items[termIndex]
-                for weakIndex in term.cells.indices {
-                    for dateIndex in term.cells[weakIndex].indices {
-                        let cell = term.cells[weakIndex][dateIndex]
+                for weekIndex in term.cells.indices {
+                    for dateIndex in term.cells[weekIndex].indices {
+                        let cell = term.cells[weekIndex][dateIndex]
                         if case let .dateCell(date) = cell, date.id == id {
                             state.calendarState
                                 .pages[pageIndex]
                                 .items[termIndex]
-                                .cells[weakIndex][dateIndex] = .dateCell(newState(date))
+                                .cells[weekIndex][dateIndex] = .dateCell(newState(date))
                         }
                     }
                 }
-
-                for cellIndex in term.cells.flatMap(\.self).indices {}
             }
         }
     }
