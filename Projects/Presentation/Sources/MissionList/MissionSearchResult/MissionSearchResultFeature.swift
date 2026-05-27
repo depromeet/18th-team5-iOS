@@ -17,15 +17,26 @@ public struct MissionSearchResultFeature {
     public struct State: Equatable {
         // TODO: MOCK 데이터 - 추후에 수정 예정
         let solarTerm: SolarTerm = .ibha
-        let locationType: LocationType = .indoor
-        let participationType: ParticipationType = .together
-        let category: MissionCategory = .food
-        let missionTitle: String = "입하 레시피북 제작"
+        let mission: Mission
 
-        public init() {}
+        public init(_ mission: Mission) {
+            self.mission = mission
+        }
 
         var season: Season {
             solarTerm.season
+        }
+
+        var locationType: LocationType? {
+            mission.attribute?.locationType
+        }
+
+        var participationType: ParticipationType? {
+            mission.attribute?.participationType
+        }
+
+        var category: MissionCategory? {
+            mission.attribute?.category
         }
     }
 

@@ -11,14 +11,18 @@ import Domain
 extension MissionCategory {
     init?(_ value: String?) {
         guard let value else { return nil }
+        let type = MissionCategory.allCases.first { $0.value == value }
+        guard let type else { return nil }
+        self = type
+    }
 
-        switch value {
-        case "FOOD": self = .food
-        case "NATURE": self = .nature
-        case "RECORD": self = .record
-        case "PLACE": self = .place
-        case "SENSE": self = .music
-        default: return nil
+    var value: String {
+        switch self {
+        case .food: "FOOD"
+        case .nature: "NATURE"
+        case .record: "RECORD"
+        case .place: "PLACE"
+        case .music: "SENSE"
         }
     }
 }

@@ -56,6 +56,7 @@ public struct MissionListFeature {
         case themeTapped(MissionTheme)
         case indicatorIndexChanged(Int)
         case searchMissionButtonTapped
+        case searchResultFetched(Mission?)
         case binding(BindingAction<State>)
         case search(PresentationAction<MissionSearchFeature.Action>)
         case searchResult(PresentationAction<MissionSearchResultFeature.Action>)
@@ -68,6 +69,7 @@ public struct MissionListFeature {
         Reduce { state, action in
             switch action {
             case .onAppear:
+                guard state.searchedMission == nil else { return .none }
                 return .run { send in
                     await fetchSearchedMission(send)
                 }
@@ -81,12 +83,22 @@ public struct MissionListFeature {
                 state.selectedMission = state.missions[index]
                 return .none
             case .searchMissionButtonTapped:
-                state.search = .init(season: state.solarTerm.season)
+                if let mission = state.searchedMission {
+                    state.searchResult = .init(mission)
+                } else {
+                    state.search = .init(season: state.solarTerm.season)
+                }
                 return .none
-            case .search(.presented(.bottomButtonTapped)):
+            case let .searchResultFetched(mission):
+                guard let mission else { return .none }
+                state.searchedMission = mission
+                state.searchResult = .init(mission)
+                return .none
+            case let .search(.presented(.delegate(.searchMission(attribute)))):
                 state.search = nil
-                state.searchResult = .init()
-                return .none
+                return .run { send in
+                    await searchMission(attribute, send)
+                }
             case .binding: return .none
             case .search: return .none
             case .searchResult: return .none
@@ -105,8 +117,22 @@ private extension MissionListFeature {
     func fetchSearchedMission(_ send: Send<Action>) async {
         do {
             let mission = try await missionRepository.fetchSearchedMission()
-            print(mission)
-        } catch {}
+            await send(.set(\.searchedMission, mission))
+        } catch {
+            // TODO: 에러처리 - 정원
+        }
+    }
+
+    func searchMission(
+        _ attribute: MissionAttribute,
+        _ send: Send<Action>
+    ) async {
+        do {
+            let mission = try await missionRepository.searchMission(attribute: attribute)
+            await send(.searchResultFetched(mission))
+        } catch {
+            // TODO: 에러처리 - 정원
+        }
     }
 }
 

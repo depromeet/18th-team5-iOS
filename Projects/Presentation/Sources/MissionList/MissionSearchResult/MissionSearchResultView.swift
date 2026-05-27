@@ -86,7 +86,7 @@ private extension MissionSearchResultView {
                     .font(.body2Regular)
                     .foregroundStyle(Color.gray600)
 
-                Text(store.missionTitle)
+                Text(store.mission.title)
                     .font(.title2Semibold)
                     .foregroundStyle(Color.gray900)
             }
@@ -111,28 +111,37 @@ private extension MissionSearchResultView {
         .disabled(true)
     }
 
+    @ViewBuilder
     var locationTypeView: some View {
-        SearchCategoryChipView(
-            title: store.locationType.name,
-            image: store.locationType.image,
-            season: store.season
-        )
+        if let locationType = store.locationType {
+            SearchCategoryChipView(
+                title: locationType.name,
+                image: locationType.image,
+                season: store.season
+            )
+        }
     }
 
+    @ViewBuilder
     var participantTypeView: some View {
-        SearchCategoryChipView(
-            title: store.participationType.name,
-            image: store.participationType.image,
-            season: store.season
-        )
+        if let participationType = store.participationType {
+            SearchCategoryChipView(
+                title: participationType.name,
+                image: participationType.image,
+                season: store.season
+            )
+        }
     }
 
+    @ViewBuilder
     var categoryView: some View {
-        SearchCategoryChipView(
-            title: store.category.name,
-            image: store.category.image,
-            season: store.season
-        )
+        if let category = store.category {
+            SearchCategoryChipView(
+                title: category.name,
+                image: category.image,
+                season: store.season
+            )
+        }
     }
 
     var bottomButton: some View {

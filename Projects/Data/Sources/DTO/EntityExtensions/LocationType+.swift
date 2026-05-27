@@ -11,11 +11,15 @@ import Domain
 extension LocationType {
     init?(_ value: String?) {
         guard let value else { return nil }
+        let type = LocationType.allCases.first { $0.value == value }
+        guard let type else { return nil }
+        self = type
+    }
 
-        switch value {
-        case "INDOOR": self = .indoor
-        case "OUTDOOR": self = .outdoor
-        default: return nil
+    var value: String {
+        switch self {
+        case .indoor: "INDOOR"
+        case .outdoor: "OUTDOOR"
         }
     }
 }

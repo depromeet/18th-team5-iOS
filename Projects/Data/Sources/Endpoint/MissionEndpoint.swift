@@ -13,6 +13,7 @@ enum MissionEndpoint: APIEndpoint {
     case complete(missionId: Int, request: MissionCompleteRequestDTO)
     case fetchCompletions(missionId: Int)
     case fetchSearchedMission
+    case searchMission(request: MissionSearchRequestDTO)
 
     var path: String {
         switch self {
@@ -22,6 +23,8 @@ enum MissionEndpoint: APIEndpoint {
             "/api/v1/missions/\(missionId)/completions"
         case .fetchSearchedMission:
             "/api/v1/missions/selected/today"
+        case .searchMission:
+            "/api/v1/missions/selected"
         }
     }
 
@@ -30,6 +33,17 @@ enum MissionEndpoint: APIEndpoint {
         case .complete: .post
         case .fetchCompletions: .get
         case .fetchSearchedMission: .get
+        case .searchMission: .post
+        }
+    }
+
+    var queryItems: [URLQueryItem]? {
+        switch self {
+        case .complete: nil
+        case .fetchCompletions: nil
+        case .fetchSearchedMission: nil
+        case let .searchMission(request: request):
+            request.queryItems
         }
     }
 
@@ -38,6 +52,7 @@ enum MissionEndpoint: APIEndpoint {
         case let .complete(_, request): request
         case .fetchCompletions: nil
         case .fetchSearchedMission: nil
+        case .searchMission: nil
         }
     }
 }

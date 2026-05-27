@@ -11,11 +11,15 @@ import Domain
 extension ParticipationType {
     init?(_ value: String?) {
         guard let value else { return nil }
+        let type = ParticipationType.allCases.first { $0.value == value }
+        guard let type else { return nil }
+        self = type
+    }
 
-        switch value {
-        case "ALONE": self = .alone
-        case "TOGETHER": self = .together
-        default: return nil
+    var value: String {
+        switch self {
+        case .alone: "SOLO"
+        case .together: "TOGETHER"
         }
     }
 }

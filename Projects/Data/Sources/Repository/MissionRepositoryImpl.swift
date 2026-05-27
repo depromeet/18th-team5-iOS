@@ -97,6 +97,18 @@ public enum MissionRepositoryImpl {
                 } catch {
                     throw mapToDomainError(error)
                 }
+            },
+            searchMission: { attribute in
+                @Dependency(\.networkClient) var client
+
+                do {
+                    let request = MissionSearchRequestDTO(attribute: attribute)
+                    let endpoint = MissionEndpoint.searchMission(request: request)
+                    let response: MissionResponseDTO? = try await client.request(endpoint)
+                    return response?.searchedMission
+                } catch {
+                    throw mapToDomainError(error)
+                }
             }
         )
     }
