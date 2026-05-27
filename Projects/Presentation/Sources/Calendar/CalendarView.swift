@@ -22,7 +22,7 @@ struct CalendarView: View {
             VStack(spacing: 0) {
                 headerView
 
-                UIBridge<PagingTableView<SolarTermGroup, TermSectionView>>(
+                UIBridge<PagingTableView<SolarTermGroup>>(
                     state: store.calendarState,
                     actionHandler: { action in
                         switch action {
@@ -35,9 +35,11 @@ struct CalendarView: View {
                     arguments: .init(
                         defaultAnchorInset: Constants.termSectionHeaderHeight,
                         cellBuilder: {
-                            TermSectionView(termGroup: $0, dateCellWidth: dateCellWidth) { id, inset in
-                                store.send(.dateCellTapped(dateId: id, inset: inset))
-                            }
+                            termSectionView(
+                                termGroup: $0,
+                                dateCellWidth: dateCellWidth
+                            )
+                            .eraseView()
                         },
                         cellHeightProvider: termSectionViewHeight
                     )
@@ -106,12 +108,8 @@ extension CalendarView {
 
 // MARK: TermSectionView
 
-struct TermSectionView: View {
-    let termGroup: SolarTermGroup
-    let dateCellWidth: CGFloat
-    let onDateCellTapped: (SolarTermDate.ID, CGFloat) -> Void
-
-    var body: some View {
+extension CalendarView {
+    func termSectionView(termGroup: SolarTermGroup, dateCellWidth: CGFloat) -> some View {
         VStack(spacing: 0) {
             termSectionHeaderView(termGroup.termText)
             termCalendarView(termGroup.cells, dateCellWidth: dateCellWidth)
@@ -126,9 +124,7 @@ struct TermSectionView: View {
             }
         }
     }
-}
 
-extension TermSectionView {
     func termSectionHeaderView(_ termText: String) -> some View {
         VStack {
             HStack {
@@ -236,7 +232,7 @@ extension TermSectionView {
                 )
         }
         .onTapGesture {
-            onDateCellTapped(date.id, anchorInset)
+            store.send(.dateCellTapped(dateId: date.id, inset: anchorInset))
         }
     }
 
@@ -343,4 +339,8 @@ private enum Constants {
     static let dateCellAnchorOffset: CGFloat = 11
 
     static let detailViewTopPadding: CGFloat = 86
+}
+
+private extension View {
+    func eraseView() -> AnyView { AnyView(self) }
 }

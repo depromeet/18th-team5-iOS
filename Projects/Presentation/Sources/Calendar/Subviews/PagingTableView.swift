@@ -7,6 +7,7 @@
 //
 
 import Combine
+import Core
 import SwiftUI
 import UIKit
 
@@ -33,12 +34,12 @@ public struct PagingTableViewState<Item: Identifiable & Equatable>: Equatable {
 
 // MARK: - UIKit Paging Table View
 
-final class PagingTableView<Item: Identifiable & Equatable, CellView: View>: UIView, UITableViewDataSource,
+final class PagingTableView<Item: Identifiable & Equatable>: UIView, UITableViewDataSource,
     BridgingUIView,
     UITableViewDelegate {
     struct Arguments {
         let defaultAnchorInset: CGFloat
-        let cellBuilder: (Item) -> CellView
+        let cellBuilder: (Item) -> AnyView
         let cellHeightProvider: (Item) -> CGFloat
     }
 
@@ -56,7 +57,7 @@ final class PagingTableView<Item: Identifiable & Equatable, CellView: View>: UIV
     // MARK: Subviews
 
     private let tableView = UITableView(frame: .zero, style: .plain)
-    private typealias Cell = HostingTableViewCell<CellView>
+    private typealias Cell = HostingTableViewCell<AnyView>
 
     // MARK: Internal state
 
@@ -131,7 +132,7 @@ final class PagingTableView<Item: Identifiable & Equatable, CellView: View>: UIV
               tableView.bounds.height > 0
         else { return }
 
-        // 중앙 셀 변경 감지: 순수 함수 → 변화가 있을 때만 action 방출
+        // 앵커에 걸린 셀 변경 감지: 순수 함수 → 변화가 있을 때만 action 방출
         if let newAnchoredId = currentAnchoredItemId(),
            newAnchoredId != prevAnchoredId {
             prevAnchoredId = newAnchoredId
@@ -180,27 +181,29 @@ private extension PagingTableView {
         defer { isPageUpdating = false }
         isPageUpdating = true
 
-        // 위쪽 변화량 계산: prepend는 (+), front drop은 (-)
-        let prependedGroupCount = countPrependedPages(
-            oldPages: pages, newPages: newPages
-        )
-        let droppedGroupCount = countDroppedPagesFromFront(
-            oldPages: pages, newPages: newPages
-        )
+        let oldPages = pages
+        pages = newPages
 
+        let hasStructuralChanges = (oldPages.map(\.id) != newPages.map(\.id))
+        if hasStructuralChanges {
+            updateTableStructure(oldPages, newPages)
+        } else {
+            updateItems(oldPages, newPages)
+        }
+    }
+
+    func updateTableStructure(_ oldPages: [Page<Item>], _ newPages: [Page<Item>]) {
         var offsetDelta: CGFloat = 0
-        for groupOffset in 0 ..< prependedGroupCount {
+        for groupOffset in 0 ..< prependedCount(oldPages, newPages) {
             for item in newPages[groupOffset].items {
                 offsetDelta += arguments.cellHeightProvider(item)
             }
         }
-        for groupOffset in 0 ..< droppedGroupCount {
-            for item in pages[groupOffset].items {
+        for groupOffset in 0 ..< droppedCount(oldPages, newPages) {
+            for item in oldPages[groupOffset].items {
                 offsetDelta -= arguments.cellHeightProvider(item)
             }
         }
-
-        pages = newPages
 
         if offsetDelta != 0, tableView.bounds.height > 0 {
             let savedOffsetY = tableView.contentOffset.y
@@ -214,8 +217,32 @@ private extension PagingTableView {
         }
     }
 
+    func updateItems(_ oldPages: [Page<Item>], _ newPages: [Page<Item>]) {
+        guard oldPages.count == newPages.count else { return }
+
+        var diffIndexPaths: [IndexPath] = []
+        for pageIndex in 0 ..< oldPages.count {
+            guard let oldPage = oldPages[safe: pageIndex],
+                  let newPage = newPages[safe: pageIndex],
+                  oldPage.items.count == newPage.items.count
+            else { continue }
+
+            let indexPaths = (0 ..< oldPage.items.count).filter { itemIndex in
+                guard let oldItem = oldPage.items[safe: itemIndex],
+                      let newItem = newPage.items[safe: itemIndex]
+                else { return false }
+                return oldItem != newItem
+            }
+            .map { IndexPath(row: $0, section: pageIndex) }
+
+            diffIndexPaths.append(contentsOf: indexPaths)
+        }
+
+        guard !diffIndexPaths.isEmpty else { return }
+        tableView.reloadRows(at: diffIndexPaths, with: .none)
+    }
+
     func update(request: AnchorRequest<Item>) {
-        defer { isPageUpdating = false }
         isPageUpdating = true
 
         if let indexPath = indexPath(for: request.itemId) ?? middleIndexPath(in: pages) {
@@ -226,7 +253,11 @@ private extension PagingTableView {
 
             UIView.animate(withDuration: request.animated ? 0.5 : 0.0) {
                 self.tableView.contentOffset.y = targetContentOffsetY
+            } completion: { _ in
+                self.isPageUpdating = false
             }
+        } else {
+            isPageUpdating = false
         }
     }
 }
@@ -285,16 +316,16 @@ private extension PagingTableView {
         return nil
     }
 
-    func countPrependedPages(
-        oldPages: [Page<Item>],
-        newPages: [Page<Item>]
+    func prependedCount(
+        _ oldPages: [Page<Item>],
+        _ newPages: [Page<Item>]
     ) -> Int {
-        guard !oldPages.isEmpty, !newPages.isEmpty else { return 0 }
         guard let oldFirstId = oldPages.first?.id,
               let prependedCount = newPages.firstIndex(where: { $0.id == oldFirstId }),
               prependedCount > 0
         else { return 0 }
 
+        // prepend된 아이템을 제외한 나머지가 같은지 확인
         let overlapCount = min(oldPages.count, newPages.count - prependedCount)
         for offset in 0 ..< overlapCount where newPages[prependedCount + offset].id != oldPages[offset].id {
             return 0
@@ -302,16 +333,16 @@ private extension PagingTableView {
         return prependedCount
     }
 
-    func countDroppedPagesFromFront(
-        oldPages: [Page<Item>],
-        newPages: [Page<Item>]
+    func droppedCount(
+        _ oldPages: [Page<Item>],
+        _ newPages: [Page<Item>]
     ) -> Int {
-        guard !oldPages.isEmpty, !newPages.isEmpty else { return 0 }
         guard let newFirstId = newPages.first?.id,
               let droppedCount = oldPages.firstIndex(where: { $0.id == newFirstId }),
               droppedCount > 0
         else { return 0 }
 
+        // drop된 아이템을 제외한 나머지가 같은지 확인
         let overlapCount = min(newPages.count, oldPages.count - droppedCount)
         for offset in 0 ..< overlapCount where oldPages[droppedCount + offset].id != newPages[offset].id {
             return 0
