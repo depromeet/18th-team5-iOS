@@ -62,7 +62,7 @@ private extension MissionListView {
                 .padding(.trailing, 20)
                 .padding(.bottom, -38)
         }
-        .renderedIf(!store.isLoading)
+        .renderedIf(store.solarTerm != nil)
     }
 
     @ViewBuilder
