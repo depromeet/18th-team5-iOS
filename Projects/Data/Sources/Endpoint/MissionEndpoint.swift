@@ -12,6 +12,7 @@ import Foundation
 enum MissionEndpoint: APIEndpoint {
     case complete(missionId: Int, request: MissionCompleteRequestDTO)
     case fetchCompletions(missionId: Int)
+    case fetchRecommendedMissions
     case fetchSearchedMission
     case searchMission(request: MissionSearchRequestDTO)
 
@@ -21,6 +22,8 @@ enum MissionEndpoint: APIEndpoint {
             "/api/v1/missions/\(missionId)/complete/daily"
         case let .fetchCompletions(missionId):
             "/api/v1/missions/\(missionId)/completions"
+        case .fetchRecommendedMissions:
+            "/api/v1/missions/recommended"
         case .fetchSearchedMission:
             "/api/v1/missions/selected/today"
         case .searchMission:
@@ -32,6 +35,7 @@ enum MissionEndpoint: APIEndpoint {
         switch self {
         case .complete: .post
         case .fetchCompletions: .get
+        case .fetchRecommendedMissions: .get
         case .fetchSearchedMission: .get
         case .searchMission: .post
         }
@@ -41,6 +45,7 @@ enum MissionEndpoint: APIEndpoint {
         switch self {
         case .complete: nil
         case .fetchCompletions: nil
+        case .fetchRecommendedMissions: nil
         case .fetchSearchedMission: nil
         case let .searchMission(request: request):
             request.queryItems
@@ -51,6 +56,7 @@ enum MissionEndpoint: APIEndpoint {
         switch self {
         case let .complete(_, request): request
         case .fetchCompletions: nil
+        case .fetchRecommendedMissions: nil
         case .fetchSearchedMission: nil
         case .searchMission: nil
         }

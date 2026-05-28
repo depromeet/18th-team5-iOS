@@ -15,39 +15,37 @@ public struct MissionListFeature {
 
     @ObservableState
     public struct State: Equatable {
-        var userType: UserType = .explorer
-        var solarTerm: SolarTerm = .ibha
-        var isTooltipPresented: Bool = true
-        var isIndicatorEnabled: Bool = false
-
-        var missions: [Mission]
-        var selectedMission: Mission
+        var userType: UserType?
+        var solarTerm: SolarTerm?
+        var missions: [Mission] = []
+        var selectedMission: Mission?
         var searchedMission: Mission?
 
         @Presents var search: MissionSearchFeature.State?
         @Presents var searchResult: MissionSearchResultFeature.State?
 
-        public init() {
-            let missions: [Mission] = .mock
-            self.missions = missions
-            self.selectedMission = missions[1]
-        }
+        var isLoading: Bool = false
+        var isTooltipPresented: Bool = true
+        var isIndicatorEnabled: Bool = false
+
+        public init() {}
 
         var isSearchMissionButtonEnabled: Bool {
             // TODO: 추후 로직 구현
             true
         }
 
-        var season: Season {
-            solarTerm.season
+        var season: Season? {
+            solarTerm?.season
         }
 
         var theme: MissionTheme? {
-            selectedMission.theme
+            selectedMission?.theme
         }
 
         var selectedIndex: Int? {
-            missions.firstIndex(of: selectedMission)
+            guard let selectedMission else { return nil }
+            return missions.firstIndex(of: selectedMission)
         }
     }
 
@@ -56,6 +54,7 @@ public struct MissionListFeature {
         case themeTapped(MissionTheme)
         case indicatorIndexChanged(Int)
         case searchMissionButtonTapped
+        case recommendedMissionsFetched(RecommendedMission?)
         case searchResultFetched(Mission?)
         case binding(BindingAction<State>)
         case search(PresentationAction<MissionSearchFeature.Action>)
@@ -69,9 +68,8 @@ public struct MissionListFeature {
         Reduce { state, action in
             switch action {
             case .onAppear:
-                guard state.searchedMission == nil else { return .none }
-                return .run { send in
-                    await fetchSearchedMission(send)
+                return .run { [state] send in
+                    await fetchAll(state, send)
                 }
             case let .themeTapped(theme):
                 let mission = state.missions.first { $0.theme == theme }
@@ -86,7 +84,21 @@ public struct MissionListFeature {
                 if let mission = state.searchedMission {
                     state.searchResult = .init(mission)
                 } else {
-                    state.search = .init(season: state.solarTerm.season)
+                    guard let season = state.season else { return .none }
+                    state.search = .init(season: season)
+                }
+                return .none
+            case let .recommendedMissionsFetched(info):
+                guard let info else { return .none }
+                let isEqual = state.missions == info.missions
+                state.userType = info.userType
+                state.solarTerm = info.solarTerm
+                state.missions = info.missions
+
+                if isEqual { return .none }
+                state.selectedMission = switch info.missions.count {
+                case 2...: info.missions[safe: 1]
+                default: info.missions[safe: 0]
                 }
                 return .none
             case let .searchResultFetched(mission):
@@ -114,8 +126,26 @@ public struct MissionListFeature {
 }
 
 private extension MissionListFeature {
-    func fetchSearchedMission(_ send: Send<Action>) async {
+    func fetchAll(_ state: State, _ send: Send<Action>) async {
+        await send(.set(\.isLoading, true))
+        async let recommended = fetchRecommendedMissions(send)
+        async let searched = fetchSearchedMission(state, send)
+        _ = await (recommended, searched)
+        await send(.set(\.isLoading, false))
+    }
+
+    func fetchRecommendedMissions(_ send: Send<Action>) async {
         do {
+            let info = try await missionRepository.fetchRecommendedMissions()
+            await send(.recommendedMissionsFetched(info))
+        } catch {
+            // TODO: 에러처리 - 정원
+        }
+    }
+
+    func fetchSearchedMission(_ state: State, _ send: Send<Action>) async {
+        do {
+            guard state.searchedMission == nil else { return }
             let mission = try await missionRepository.fetchSearchedMission()
             await send(.set(\.searchedMission, mission))
         } catch {
@@ -134,99 +164,4 @@ private extension MissionListFeature {
             // TODO: 에러처리 - 정원
         }
     }
-}
-
-private extension [Mission] {
-    static let mock: [Mission] = [
-        .init(
-            id: 0,
-            title: "음식 관련 미션 예시입니다 1",
-            theme: .food,
-            isCompleted: false
-        ),
-        .init(
-            id: 1,
-            title: "음식 관련 미션 예시입니다 2",
-            theme: .food,
-            isCompleted: false
-        ),
-        .init(
-            id: 2,
-            title: "음식 관련 미션 예시입니다 3",
-            theme: .food,
-            isCompleted: true
-        ),
-        .init(
-            id: 3,
-            title: "음식 관련 미션 예시입니다 4",
-            theme: .food,
-            isCompleted: false
-        ),
-        .init(
-            id: 4,
-            title: "음식 관련 미션 예시입니다 5",
-            theme: .food,
-            isCompleted: false
-        ),
-        .init(
-            id: 5,
-            title: "콘텐츠 관련 미션 예시입니다 1",
-            theme: .contents,
-            isCompleted: false
-        ),
-        .init(
-            id: 6,
-            title: "콘텐츠 관련 미션 예시입니다 2",
-            theme: .contents,
-            isCompleted: false
-        ),
-        .init(
-            id: 7,
-            title: "콘텐츠 관련 미션 예시입니다 3",
-            theme: .contents,
-            isCompleted: true
-        ),
-        .init(
-            id: 8,
-            title: "콘텐츠 관련 미션 예시입니다 4",
-            theme: .contents,
-            isCompleted: false
-        ),
-        .init(
-            id: 9,
-            title: "콘텐츠 관련 미션 예시입니다 5",
-            theme: .contents,
-            isCompleted: false
-        ),
-        .init(
-            id: 10,
-            title: "활동 관련 미션 예시입니다 1",
-            theme: .activity,
-            isCompleted: false
-        ),
-        .init(
-            id: 11,
-            title: "활동 관련 미션 예시입니다 2",
-            theme: .activity,
-            isCompleted: false
-        ),
-        .init(
-            id: 12,
-            title: "활동 관련 미션 예시입니다 3",
-            theme: .activity,
-            isCompleted: true
-        ),
-        .init(
-            id: 13,
-            title: "활동 관련 미션 예시입니다 4",
-            theme: .activity,
-            isCompleted: false
-        ),
-        .init(
-            id: 14,
-            title: "활동 관련 미션 예시입니다 5",
-            theme: .activity,
-            isCompleted: false
-        )
-    ]
 }

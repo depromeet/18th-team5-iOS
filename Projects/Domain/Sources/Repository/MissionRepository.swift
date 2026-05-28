@@ -28,6 +28,7 @@ public struct MissionRepository: Sendable {
         _ contentType: String
     ) async throws -> String
 
+    public var fetchRecommendedMissions: @Sendable () async throws -> RecommendedMission?
     public var fetchSearchedMission: @Sendable () async throws -> Mission?
     public var searchMission: @Sendable (_ attribute: MissionAttribute) async throws -> Mission?
 }

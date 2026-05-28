@@ -18,4 +18,12 @@ public enum MissionTheme: CaseIterable {
         case .activity: "활동"
         }
     }
+
+    public var order: Int {
+        switch self {
+        case .food: 1
+        case .contents: 2
+        case .activity: 3
+        }
+    }
 }

@@ -16,6 +16,8 @@ struct MissionResponseDTO: Decodable {
     let intensityType: String?
     let companionType: String?
     let categoryType: String?
+    let enjoyType: String?
+    let isCompleted: Bool?
 }
 
 extension MissionResponseDTO {
@@ -34,6 +36,20 @@ extension MissionResponseDTO {
                 participationType: ParticipationType(companionType),
                 category: MissionCategory(categoryType)
             )
+        )
+    }
+
+    var recommendedMission: Mission? {
+        guard let id,
+              let title else {
+            return nil
+        }
+
+        return .init(
+            id: id,
+            title: title,
+            theme: MissionTheme(enjoyType),
+            isCompleted: isCompleted
         )
     }
 }
