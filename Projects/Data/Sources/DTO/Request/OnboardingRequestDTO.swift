@@ -11,7 +11,7 @@ import Domain
 
 struct OnboardingRequestDTO: Encodable, Sendable {
     let spaceType: String
-    let intensityType: String
+    let activityStyleType: String
     let enjoyTypeFirst: String
     let enjoyTypeSecond: String
     let enjoyTypeThird: String
@@ -19,7 +19,7 @@ struct OnboardingRequestDTO: Encodable, Sendable {
     init(preference: UserPreference) {
         let themes = preference.themeRanking.map(\.value)
         self.spaceType = preference.activityStyle?.value ?? ""
-        self.intensityType = preference.engagementLevel?.value ?? ""
+        self.activityStyleType = preference.engagementLevel?.value ?? ""
         self.enjoyTypeFirst = themes[safe: 0] ?? ""
         self.enjoyTypeSecond = themes[safe: 1] ?? ""
         self.enjoyTypeThird = themes[safe: 2] ?? ""
@@ -39,7 +39,7 @@ private extension EngagementLevel {
     var value: String {
         switch self {
         case .active: "ACTIVE"
-        case .casual: "LIGHT"
+        case .casual: "CASUAL"
         }
     }
 }
