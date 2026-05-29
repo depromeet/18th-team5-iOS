@@ -18,9 +18,13 @@ struct LoadingViewModifier: ViewModifier {
     func body(content: Content) -> some View {
         ZStack {
             content
-                .disabled(isLoading)
+                .allowsHitTesting(!isLoading)
 
             if isLoading {
+                Color.clear
+                    .contentShape(Rectangle())
+                    .ignoresSafeArea()
+
                 ProgressView()
                     .scaleEffect(1.5)
             }

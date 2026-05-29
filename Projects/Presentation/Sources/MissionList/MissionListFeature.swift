@@ -8,10 +8,12 @@
 
 import ComposableArchitecture
 import Domain
+import Foundation
 
 @Reducer
 public struct MissionListFeature {
     @Dependency(\.missionRepository) private var missionRepository
+    @Dependency(\.missionSearchGuideClient) private var missionSearchGuideClient
 
     @ObservableState
     public struct State: Equatable {
@@ -25,7 +27,7 @@ public struct MissionListFeature {
         @Presents var searchResult: MissionSearchResultFeature.State?
 
         var isLoading: Bool = false
-        var isTooltipPresented: Bool = true
+        var isTooltipPresented: Bool = false
         var isIndicatorEnabled: Bool = false
 
         public init() {}
@@ -68,6 +70,7 @@ public struct MissionListFeature {
         Reduce { state, action in
             switch action {
             case .onAppear:
+                handleTooltip(&state)
                 return .run { [state] send in
                     await fetchAll(state, send)
                 }
@@ -126,6 +129,17 @@ public struct MissionListFeature {
 }
 
 private extension MissionListFeature {
+    func handleTooltip(_ state: inout State) {
+        if state.isTooltipPresented { return }
+
+        let date = missionSearchGuideClient.lastGuidedDate()
+        let calendar = Calendar.current
+        if let date, calendar.isDateInToday(date) { return }
+
+        missionSearchGuideClient.setLastGuidedDate(Date.now)
+        state.isTooltipPresented = true
+    }
+
     func fetchAll(_ state: State, _ send: Send<Action>) async {
         await send(.set(\.isLoading, true))
         async let recommended = fetchRecommendedMissions(send)
@@ -158,7 +172,7 @@ private extension MissionListFeature {
         _ send: Send<Action>
     ) async {
         do {
-            let mission = try await missionRepository.searchMission(attribute: attribute)
+            let mission = try await missionRepository.searchMission(attribute)
             await send(.searchResultFetched(mission))
         } catch {
             // TODO: 에러처리 - 정원
