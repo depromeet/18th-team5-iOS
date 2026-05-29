@@ -13,7 +13,7 @@ public struct SolarTermGroup: Identifiable, Equatable {
     public let id: String
     public let termText: String
     public let solarTermInfo: SolarTermInfo
-    public let cells: [[SolarTermGroupCell]]
+    public var cells: [[SolarTermGroupCell]]
 }
 
 public enum SolarTermGroupCell: Identifiable, Equatable {
@@ -34,4 +34,5 @@ public struct SolarTermDate: Identifiable, Equatable {
     public let dayText: String
     public let isFirstDayOfMonth: Bool
     public var isToday: Bool
+    public var isSelected: Bool
 }

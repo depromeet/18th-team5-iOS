@@ -32,7 +32,7 @@ public struct CardStackView<Item, CardView: View>: View {
     public init(
         topCardIndex: Binding<Int>,
         items: [Item],
-        cardView: @escaping (Int, Item) -> CardView
+        @ViewBuilder cardView: @escaping (Int, Item) -> CardView
     ) {
         self._topCardIndex = topCardIndex
         self.items = items
