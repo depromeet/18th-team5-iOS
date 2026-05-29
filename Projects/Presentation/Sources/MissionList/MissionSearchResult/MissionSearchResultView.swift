@@ -54,17 +54,17 @@ private extension MissionSearchResultView {
                 .padding(.horizontal, 60)
 
             HStack {
+                Spacer()
+
                 Button {
                     store.send(.backButtonTapped)
                 } label: {
-                    Image.icArrowLeft
+                    Image.icClose
                         .renderingMode(.template)
                         .resizable()
                         .frame(width: 24, height: 24)
                         .foregroundStyle(Color.gray800)
                 }
-
-                Spacer()
             }
             .padding(.horizontal, 20)
         }
