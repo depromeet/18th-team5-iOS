@@ -87,7 +87,7 @@ private extension MissionSearchResultView {
                 Image.imgCamera
                     .resizable()
                     .scaledToFit()
-                    .frame(maxWidth: .infinity)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
 
             categoryListView
