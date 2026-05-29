@@ -84,9 +84,10 @@ private extension MissionSearchResultView {
             VStack(spacing: 20) {
                 textView
 
-                Color.gray50
+                Image.imgCamera
+                    .resizable()
+                    .scaledToFit()
                     .frame(maxWidth: .infinity)
-                    .frame(maxHeight: .infinity)
             }
 
             categoryListView
