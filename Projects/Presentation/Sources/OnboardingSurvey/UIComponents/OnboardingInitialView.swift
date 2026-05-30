@@ -13,12 +13,12 @@ struct OnboardingInitialView: View {
     var body: some View {
         VStack(spacing: 32) {
             VStack(spacing: 12) {
-                Text("바쁘게 지나가는 일상도")
-                    .font(.body2Regular)
+                Text("잊히기 쉬운 계절의 찰나,")
+                    .font(.body1Regular)
                     .foregroundStyle(Color.gray600)
 
-                Text("절기로 차곡차곡\n기록하세요")
-                    .font(.headline1Semibold)
+                Text("지금 이 순간에만 할 수 있는\n제철 경험을 추천하고 기록해요")
+                    .font(.title2Semibold)
                     .foregroundStyle(Color.gray800)
                     .multilineTextAlignment(.center)
             }
