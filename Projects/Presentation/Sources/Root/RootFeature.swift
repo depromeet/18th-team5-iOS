@@ -205,7 +205,7 @@ private extension RootFeature {
 private extension RootFeature {
     func loadOnboardingState(_ send: Send<Action>) async {
         do {
-            let isOnboarded = false
+            let isOnboarded = try await onboardingRepository.isOnboarded()
             await send(.onboardingStateLoaded(isOnboarded))
             await loadNotificationAuthorizationStatus(isOnboarded, send)
         } catch {
