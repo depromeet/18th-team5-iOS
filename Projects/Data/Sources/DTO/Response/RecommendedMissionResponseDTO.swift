@@ -24,10 +24,7 @@ extension RecommendedMissionResponseDTO {
         let missions = missions?
             .compactMap(\.recommendedMission)
             .sorted {
-                switch ($0.theme?.order, $1.theme?.order) {
-                case let (lhs?, rhs?): return lhs < rhs
-                default: return false
-                }
+                ($0.theme?.order ?? Int.max) < ($1.theme?.order ?? Int.max)
             } ?? []
 
         return .init(
