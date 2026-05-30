@@ -10,6 +10,7 @@ import Domain
 
 extension SolarTerm {
     init?(_ value: String?) {
+        guard let value else { return nil }
         let solarTerm = SolarTerm.allCases.first { $0.koreanName == value }
         guard let solarTerm else { return nil }
         self = solarTerm
