@@ -103,8 +103,10 @@ public enum MissionRepositoryImpl {
                 do {
                     let endpoint = MissionEndpoint.fetchSearchedMission
                     let response: SearchedMissionResponseDTO? = try await client.request(endpoint)
-                    guard response?.hasSelected == true else { return nil }
-                    return response?.mission?.searchedMission
+                    guard let response else { throw DomainError.nilResponse }
+
+                    guard response.hasSelected == true else { return nil }
+                    return response.mission?.searchedMission
                 } catch {
                     throw mapToDomainError(error)
                 }
