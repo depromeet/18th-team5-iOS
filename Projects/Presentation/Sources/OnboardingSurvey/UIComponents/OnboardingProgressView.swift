@@ -25,7 +25,7 @@ struct OnboardingProgressView: View {
         HStack(spacing: 6) {
             ForEach(0 ..< stepCount, id: \.self) { step in
                 Capsule()
-                    .frame(width: 75, height: 6)
+                    .frame(width: 81, height: 6)
                     .foregroundStyle(color(step))
             }
         }
@@ -35,6 +35,6 @@ struct OnboardingProgressView: View {
 
 private extension OnboardingProgressView {
     func color(_ step: Int) -> Color {
-        step > currentStep ? .gray300 : .init(hex: 0x43DA87)
+        step > currentStep ? .gray300 : .green500
     }
 }
