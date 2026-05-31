@@ -11,6 +11,8 @@ import Domain
 
 @Reducer
 public struct MainFeature {
+    @Dependency(\.notificationRepository) private var notificationRepository
+
     @ObservableState
     public struct State: Equatable {
         public var tab: Tab = .home
@@ -63,9 +65,9 @@ public struct MainFeature {
         Reduce { state, action in
             switch action {
             case .onAppear:
-                // TODO: 로깅 테스트용 호출입니다. 추후 제거부탁드립니다.
-                logger.debug(message: "MainView did appear")
-                return .none
+                return .run { send in
+                    await fetchNotificationSettings(send)
+                }
 
             case let .home(.delegate(.navigateToMissionCamera(missionId, title, missionTypeRaw, solarTermId))):
                 let missionType = MissionType(rawValue: missionTypeRaw) ?? {
@@ -146,6 +148,17 @@ public struct MainFeature {
         }
         .ifLet(\.$solarTermIntroContent, action: \.solarTermIntroContent) {
             SolarTermIntroContentFeature()
+        }
+    }
+}
+
+private extension MainFeature {
+    func fetchNotificationSettings(_ send: Send<Action>) async {
+        do {
+            let settings = try await notificationRepository.fetchNotificationSettings()
+            // TODO: sync 로직 구현 - 정원
+        } catch {
+            // TODO: 에러 처리 - 정원
         }
     }
 }
