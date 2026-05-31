@@ -18,11 +18,7 @@ public struct CircularWheelPicker<Item: Hashable, Content: View>: View {
 
     private let items: [Item]
     private let content: (Item) -> Content
-    private let cardLeadingInset: CGFloat = 20
-    private let cardTrailingInset: CGFloat = 58
-    private let cardHeight: CGFloat = 80
-    private let rotationFrameLengthRatio: CGFloat = 340.0 / 317.0
-    private let angleStep: Double = .pi / 12
+    private let configuration: CircularWheelPickerConfiguration
     private let scrollIntensity: CGFloat = 0.5 // (0<..<1)
     private let scrollAnimation: Animation = .easeInOut(duration: 0.4)
     private let interactionLockDuration: Duration = .milliseconds(450)
@@ -31,10 +27,12 @@ public struct CircularWheelPicker<Item: Hashable, Content: View>: View {
     public init(
         items: [Item],
         selection: Binding<Item>,
+        configuration: CircularWheelPickerConfiguration = .missionCard,
         @ViewBuilder content: @escaping (Item) -> Content
     ) {
         self.items = items
         self._selection = selection
+        self.configuration = configuration
         self.content = content
     }
 
@@ -92,11 +90,14 @@ private extension CircularWheelPicker {
     }
 
     func itemView(_ item: Item, proxy: GeometryProxy) -> some View {
-        let rotationFrameLength = (proxy.size.width - cardTrailingInset) * rotationFrameLengthRatio
+        let geometry = WheelGeometry(
+            containerWidth: proxy.size.width,
+            configuration: configuration
+        )
 
         return content(item)
-            .padding(.leading, cardLeadingInset)
-            .padding(.trailing, cardTrailingInset)
+            .padding(.leading, configuration.contentLeadingInset)
+            .padding(.trailing, configuration.contentTrailingInset)
             .frame(
                 width: proxy.size.width,
                 height: itemHeight(for: proxy.size.height)
@@ -105,10 +106,7 @@ private extension CircularWheelPicker {
                 let transform = WheelTransform(
                     itemFrame: itemProxy.frame(in: .global),
                     containerFrame: proxy.frame(in: .global),
-                    rotationFrameLength: rotationFrameLength,
-                    rotationFrameTrailingInset: cardTrailingInset,
-                    rotationFrameHeight: cardHeight,
-                    angleStep: angleStep,
+                    geometry: geometry,
                     scrollIntensity: scrollIntensity
                 )
 
@@ -191,6 +189,28 @@ private extension CircularWheelPicker {
     }
 }
 
+private struct WheelGeometry {
+    let rotationFrameLength: CGFloat
+    let contentTrailingInset: CGFloat
+    let contentHeight: CGFloat
+    let angleStep: Double
+
+    var leadingCornerDistance: CGFloat {
+        contentHeight / (2 * CGFloat(tan(angleStep / 2)))
+    }
+
+    init(
+        containerWidth: CGFloat,
+        configuration: CircularWheelPickerConfiguration
+    ) {
+        self.rotationFrameLength = (containerWidth - configuration.contentTrailingInset) * configuration
+            .rotationFrameLengthRatio
+        self.contentTrailingInset = configuration.contentTrailingInset
+        self.contentHeight = configuration.contentHeight
+        self.angleStep = configuration.angleStep.radians
+    }
+}
+
 private struct WheelTransform {
     let angle: Double
     let anchor: UnitPoint
@@ -199,22 +219,18 @@ private struct WheelTransform {
     init(
         itemFrame: CGRect,
         containerFrame: CGRect,
-        rotationFrameLength: CGFloat,
-        rotationFrameTrailingInset: CGFloat,
-        rotationFrameHeight: CGFloat,
-        angleStep: Double,
+        geometry: WheelGeometry,
         scrollIntensity: CGFloat
     ) {
         let scrollCenterY = containerFrame.midY
         let itemCenterY = itemFrame.midY
-        let rotationCenterX = containerFrame.maxX - rotationFrameTrailingInset - rotationFrameLength / 2
+        let rotationCenterX = containerFrame.maxX - geometry.contentTrailingInset - geometry.rotationFrameLength / 2
         let rotationCenterY = itemCenterY
 
         let distance = itemCenterY - scrollCenterY
-        let angle = -angleStep * distance / (containerFrame.height * scrollIntensity)
+        let angle = -geometry.angleStep * distance / (containerFrame.height * scrollIntensity)
 
-        let leadingCornerDistance = rotationFrameHeight / (2 * CGFloat(tan(angleStep / 2)))
-        let radius = rotationFrameLength / 2 + leadingCornerDistance
+        let radius = geometry.rotationFrameLength / 2 + geometry.leadingCornerDistance
         let pivotX = rotationCenterX - radius
         let pivotY = scrollCenterY
 
@@ -226,6 +242,7 @@ private struct WheelTransform {
             x: (rotationCenterX - itemFrame.minX) / itemFrame.width,
             y: 0.5
         )
+
         self.offset = .init(
             width: targetX - rotationCenterX,
             height: targetY - rotationCenterY
