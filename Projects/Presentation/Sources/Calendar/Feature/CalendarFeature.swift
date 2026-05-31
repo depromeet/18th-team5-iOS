@@ -14,6 +14,8 @@ import Foundation
 public struct CalendarFeature {
     @ObservableState
     public struct State: Equatable {
+        @Shared(.tabBarVisibility) var tabBarVisibility: Bool = true
+
         public var header: CalendarHeader?
         public var calendarState: PagingTableViewState<SolarTermGroup> = .init(pages: [])
         public var selectedDateId: SolarTermDate.ID?
