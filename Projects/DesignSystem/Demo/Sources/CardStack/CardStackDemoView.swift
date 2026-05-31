@@ -34,8 +34,8 @@ struct CardStackDemoView: View {
         CardStackView(
             topCardIndex: $topCardIndex,
             items: cards
-        ) {
-            $0.color
+        ) { _, item in
+            item.color
         }
     }
 
