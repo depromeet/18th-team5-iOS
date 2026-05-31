@@ -26,7 +26,11 @@ public struct MainView: View {
                         .toolbar(.hidden, for: .tabBar)
                 }
             }
-            .overlay(alignment: .bottom) { tabBar }
+            .overlay(alignment: .bottom) {
+                if store.tabBarVisibility {
+                    tabBar
+                }
+            }
             .navigationBarHidden(true)
             .navigationDestination(
                 item: $store.scope(state: \.missionRecord, action: \.missionRecord)
