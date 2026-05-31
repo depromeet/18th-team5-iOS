@@ -151,11 +151,13 @@ private extension MissionListView {
             GeometryReader { proxy in
                 let width = proxy.size.width
                 let height = proxy.size.height
+                let season = store.selectedMission.season
 
                 Indicator(
                     totalCount: store.missions.count,
                     selectedIndex: selectedIndex,
-                    mainColor: store.selectedMission.season.indicatorMainColor,
+                    mainColor: season.color(.scale500),
+                    subColor: season.color(.scale50),
                     isEnabled: $store.isIndicatorEnabled,
                     indexChanged: { store.send(.indicatorIndexChanged($0)) }
                 )
@@ -163,17 +165,6 @@ private extension MissionListView {
                 .frame(width: width, height: height, alignment: .topTrailing)
                 .padding(.top, height / 2 + 52)
             }
-        }
-    }
-}
-
-private extension Season {
-    var indicatorMainColor: Color {
-        switch self {
-        case .spring: .pink500
-        case .summer: .green500
-        case .autumn: .orange500
-        case .winter: .blue500
         }
     }
 }

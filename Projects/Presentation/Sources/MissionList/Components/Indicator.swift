@@ -16,7 +16,8 @@ struct Indicator: View {
     @State private var latestLocation: CGPoint?
 
     private let selectedWidth: CGFloat = 20
-    private let selectedHeight: CGFloat = 4
+    private let selectedHeight: CGFloat = 24
+    private let selectedInactiveHeight: CGFloat = 4
     private let unselectedWidth: CGFloat = 10
     private let unselectedHeight: CGFloat = 2
     private let itemSpacing: CGFloat = 8
@@ -25,18 +26,21 @@ struct Indicator: View {
     private let totalCount: Int
     private let selectedIndex: Int
     private let mainColor: Color
+    private let subColor: Color
     private let indexChanged: (Int) -> Void
 
     init(
         totalCount: Int,
         selectedIndex: Int,
         mainColor: Color,
+        subColor: Color,
         isEnabled: Binding<Bool>,
         indexChanged: @escaping (Int) -> Void
     ) {
         self.totalCount = totalCount
         self.selectedIndex = selectedIndex
         self.mainColor = mainColor
+        self.subColor = subColor
         self._isEnabled = isEnabled
         self.indexChanged = indexChanged
     }
@@ -51,12 +55,12 @@ struct Indicator: View {
                         unselectedCapsuleView
                     }
                 }
-                .frame(width: selectedWidth, height: selectedHeight)
             }
         }
         .padding(contentPadding)
         .contentShape(Rectangle())
         .gesture(dragGesture)
+        .animation(.easeInOut(duration: 0.25), value: isEnabled)
         .sensoryFeedback(
             .impact(weight: .heavy), trigger: isEnabled
         ) { _, newValue in
@@ -98,10 +102,25 @@ private extension Indicator {
             .foregroundStyle(Color.gray500)
     }
 
+    @ViewBuilder
     var selectedCapsuleView: some View {
-        Capsule()
-            .frame(width: selectedWidth, height: selectedHeight)
-            .foregroundStyle(mainColor)
+        if isEnabled {
+            ZStack {
+                subColor
+                    .frame(width: selectedWidth, height: selectedWidth)
+                    .clipShape(Circle())
+
+                mainColor
+                    .frame(width: 12, height: 12)
+                    .clipShape(Circle())
+            }
+            .padding(.vertical, 2)
+            .frame(height: selectedHeight)
+        } else {
+            Capsule()
+                .frame(width: selectedWidth, height: selectedInactiveHeight)
+                .foregroundStyle(mainColor)
+        }
     }
 
     func startActivationTaskIfNeeded() {
@@ -114,7 +133,6 @@ private extension Indicator {
             await MainActor.run {
                 guard let latestLocation else { return }
                 isEnabled = true
-                lastChangedIndex = selectedIndex
                 updateIndex(at: latestLocation)
             }
         }
@@ -122,14 +140,38 @@ private extension Indicator {
 
     func updateIndex(at location: CGPoint) {
         guard totalCount > 0 else { return }
-
-        let rowStride = selectedHeight + itemSpacing
-        let firstCenterY = contentPadding + selectedHeight / 2
-        let rawIndex = ((location.y - firstCenterY) / rowStride).rounded()
-        let index = min(max(Int(rawIndex), 0), totalCount - 1)
+        let index = nearestIndex(to: location.y)
 
         guard index != lastChangedIndex else { return }
         lastChangedIndex = index
         indexChanged(index)
+    }
+
+    func nearestIndex(to locationY: CGFloat) -> Int {
+        var itemTop = contentPadding
+        var nearestIndex = 0
+        var nearestDistance = CGFloat.greatestFiniteMagnitude
+
+        for index in 0 ..< totalCount {
+            let centerY = itemTop + itemHeight(at: index) / 2
+            let distance = abs(locationY - centerY)
+
+            if distance < nearestDistance {
+                nearestDistance = distance
+                nearestIndex = index
+            }
+
+            itemTop += itemHeight(at: index) + itemSpacing
+        }
+
+        return nearestIndex
+    }
+
+    func itemHeight(at index: Int) -> CGFloat {
+        guard index == selectedIndex else {
+            return unselectedHeight
+        }
+
+        return isEnabled ? selectedHeight : selectedInactiveHeight
     }
 }
