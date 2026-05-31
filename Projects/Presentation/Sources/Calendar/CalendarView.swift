@@ -250,21 +250,7 @@ extension CalendarView {
     func calendarDetailView(_ detail: CalendarDetail) -> some View {
         GeometryReader { _ in
             ZStack {
-                Color.white
-                    .overlay {
-                        VStack {
-                            LinearGradient(
-                                colors: [
-                                    .black.opacity(0.05),
-                                    .clear
-                                ],
-                                startPoint: .top,
-                                endPoint: .bottom
-                            )
-                            .frame(height: 30)
-                            Spacer()
-                        }
-                    }
+                detailViewBackgroundView
 
                 VStack {
                     CardStackView(
@@ -283,46 +269,52 @@ extension CalendarView {
                     Spacer()
                 }
 
-                // TODO: 디자인 시스템 반영 -@준영
-                VStack {
-                    Spacer()
-                    HStack(spacing: 8) {
-                        Button {
-                            store.send(.detailOkButtonTapped)
-                        } label: {
-                            HStack {
-                                Spacer()
-                                Text("확인")
-                                    .foregroundStyle(.white)
-                                Spacer()
-                            }
-                            .frame(height: 56)
-                            .background {
-                                RoundedRectangle(cornerRadius: 15)
-                            }
-                        }
-
-                        Button {
-                            store.send(.detailOkButtonTapped)
-                        } label: {
-                            HStack {
-                                Spacer()
-                                Text("확인")
-                                    .foregroundStyle(.white)
-                                Spacer()
-                            }
-                            .frame(height: 56)
-                            .background {
-                                RoundedRectangle(cornerRadius: 15)
-                            }
-                        }
-                    }
-                    .padding(.horizontal, 20)
-                }
-                .padding(.vertical, 16)
-                .padding(.bottom, 64)
+                detailViewBottomView
             }
         }
+    }
+
+    var detailViewBackgroundView: some View {
+        Color.white
+            .overlay {
+                VStack {
+                    LinearGradient(
+                        colors: [
+                            .black.opacity(0.05),
+                            .clear
+                        ],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                    .frame(height: 30)
+                    Spacer()
+                }
+            }
+    }
+
+    var detailViewBottomView: some View {
+        VStack {
+            Spacer()
+            HStack(spacing: 8) {
+                Button {
+                    // TODO: 수정
+                    store.send(.detailOkButtonTapped)
+                } label: {
+                    Text("이미지 저장")
+                }
+                .buttonStyle(.master(.large))
+
+                Button {
+                    // TODO: 수정
+                    store.send(.detailOkButtonTapped)
+                } label: {
+                    Text("이미지 공유")
+                }
+                .buttonStyle(.master(.large))
+            }
+            .padding(.horizontal, 20)
+        }
+        .padding(.vertical, 16)
     }
 }
 

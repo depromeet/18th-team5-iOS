@@ -78,19 +78,19 @@ public extension MasterButtonStyle {
         let cornerRadius: CornerRadius
         let typography: Typography
 
-        static let small = Size(
+        public static let small = Size(
             verticalPadding: 6,
             cornerRadius: .capsule,
             typography: .body2Medium
         )
 
-        static let medium = Size(
+        public static let medium = Size(
             verticalPadding: 12,
             cornerRadius: .fixed(12),
             typography: .body1Medium
         )
 
-        static let large = Size(
+        public static let large = Size(
             verticalPadding: 16,
             cornerRadius: .fixed(12),
             typography: .body1Medium
