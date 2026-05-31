@@ -18,6 +18,11 @@ public struct CircularWheelPicker<Item: Hashable, Content: View>: View {
 
     private let items: [Item]
     private let content: (Item) -> Content
+    private let cardLeadingInset: CGFloat = 20
+    private let cardTrailingInset: CGFloat = 58
+    private let cardHeight: CGFloat = 80
+    private let rotationFrameLengthRatio: CGFloat = 340.0 / 317.0
+    private let angleStep: Double = .pi / 12
     private let scrollIntensity: CGFloat = 0.5 // (0<..<1)
     private let scrollAnimation: Animation = .easeInOut(duration: 0.4)
     private let interactionLockDuration: Duration = .milliseconds(450)
@@ -87,7 +92,11 @@ private extension CircularWheelPicker {
     }
 
     func itemView(_ item: Item, proxy: GeometryProxy) -> some View {
-        content(item)
+        let rotationFrameLength = (proxy.size.width - cardTrailingInset) * rotationFrameLengthRatio
+
+        return content(item)
+            .padding(.leading, cardLeadingInset)
+            .padding(.trailing, cardTrailingInset)
             .frame(
                 width: proxy.size.width,
                 height: itemHeight(for: proxy.size.height)
@@ -96,11 +105,15 @@ private extension CircularWheelPicker {
                 let transform = WheelTransform(
                     itemFrame: itemProxy.frame(in: .global),
                     containerFrame: proxy.frame(in: .global),
+                    rotationFrameLength: rotationFrameLength,
+                    rotationFrameTrailingInset: cardTrailingInset,
+                    rotationFrameHeight: cardHeight,
+                    angleStep: angleStep,
                     scrollIntensity: scrollIntensity
                 )
 
                 return content
-                    .rotationEffect(.radians(-transform.angle))
+                    .rotationEffect(.radians(-transform.angle), anchor: transform.anchor)
                     .offset(x: transform.offset.width, y: transform.offset.height)
                     .opacity(transform.isVisible ? 1.0 : 0.0)
             }
@@ -180,33 +193,42 @@ private extension CircularWheelPicker {
 
 private struct WheelTransform {
     let angle: Double
+    let anchor: UnitPoint
     let offset: CGSize
 
     init(
         itemFrame: CGRect,
         containerFrame: CGRect,
+        rotationFrameLength: CGFloat,
+        rotationFrameTrailingInset: CGFloat,
+        rotationFrameHeight: CGFloat,
+        angleStep: Double,
         scrollIntensity: CGFloat
     ) {
         let scrollCenterY = containerFrame.midY
         let itemCenterY = itemFrame.midY
+        let rotationCenterX = containerFrame.maxX - rotationFrameTrailingInset - rotationFrameLength / 2
+        let rotationCenterY = itemCenterY
 
         let distance = itemCenterY - scrollCenterY
-        let angle = -(Double.pi / 6) * distance / (containerFrame.height * scrollIntensity)
+        let angle = -angleStep * distance / (containerFrame.height * scrollIntensity)
 
-        let radius = UIScreen.width
-        let pivotX = containerFrame.minX - (radius / 2)
+        let leadingCornerDistance = rotationFrameHeight / (2 * CGFloat(tan(angleStep / 2)))
+        let radius = rotationFrameLength / 2 + leadingCornerDistance
+        let pivotX = rotationCenterX - radius
         let pivotY = scrollCenterY
 
         let targetX = pivotX + radius * cos(angle)
         let targetY = pivotY - radius * sin(angle)
 
-        let currentX = itemFrame.midX
-        let currentY = itemFrame.midY
-
         self.angle = angle
+        self.anchor = .init(
+            x: (rotationCenterX - itemFrame.minX) / itemFrame.width,
+            y: 0.5
+        )
         self.offset = .init(
-            width: targetX - currentX,
-            height: targetY - currentY
+            width: targetX - rotationCenterX,
+            height: targetY - rotationCenterY
         )
     }
 
