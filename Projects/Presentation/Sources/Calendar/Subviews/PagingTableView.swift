@@ -239,7 +239,13 @@ private extension PagingTableView {
         }
 
         guard !diffIndexPaths.isEmpty else { return }
-        tableView.reloadRows(at: diffIndexPaths, with: .none)
+
+        for indexPath in diffIndexPaths {
+            if let cell = tableView.cellForRow(at: indexPath) as? Cell,
+               let item = itemAt(indexPath: indexPath) {
+                cell.configure(arguments.cellBuilder(item))
+            }
+        }
     }
 
     func update(request: AnchorRequest<Item>) {
