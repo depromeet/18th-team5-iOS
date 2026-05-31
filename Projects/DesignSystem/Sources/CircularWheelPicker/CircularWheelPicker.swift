@@ -203,8 +203,8 @@ private struct WheelGeometry {
         containerWidth: CGFloat,
         configuration: CircularWheelPickerConfiguration
     ) {
-        self.rotationFrameLength = (containerWidth - configuration.contentTrailingInset) * configuration
-            .rotationFrameLengthRatio
+        let availableWidth = containerWidth - configuration.contentTrailingInset
+        self.rotationFrameLength = availableWidth * configuration.rotationFrameLengthRatio
         self.contentTrailingInset = configuration.contentTrailingInset
         self.contentHeight = configuration.contentHeight
         self.angleStep = configuration.angleStep.radians
@@ -224,13 +224,15 @@ private struct WheelTransform {
     ) {
         let scrollCenterY = containerFrame.midY
         let itemCenterY = itemFrame.midY
-        let rotationCenterX = containerFrame.maxX - geometry.contentTrailingInset - geometry.rotationFrameLength / 2
+        let rotationFrameHalfLength = geometry.rotationFrameLength / 2
+        let rotationFrameTrailingX = containerFrame.maxX - geometry.contentTrailingInset
+        let rotationCenterX = rotationFrameTrailingX - rotationFrameHalfLength
         let rotationCenterY = itemCenterY
 
         let distance = itemCenterY - scrollCenterY
         let angle = -geometry.angleStep * distance / (containerFrame.height * scrollIntensity)
 
-        let radius = geometry.rotationFrameLength / 2 + geometry.leadingCornerDistance
+        let radius = rotationFrameHalfLength + geometry.leadingCornerDistance
         let pivotX = rotationCenterX - radius
         let pivotY = scrollCenterY
 
