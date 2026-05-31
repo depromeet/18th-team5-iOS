@@ -18,6 +18,7 @@ struct Indicator: View {
     private let selectedWidth: CGFloat = 20
     private let selectedHeight: CGFloat = 24
     private let selectedInactiveHeight: CGFloat = 4
+    private let selectedInnerCircleSize: CGFloat = 12
     private let unselectedWidth: CGFloat = 10
     private let unselectedHeight: CGFloat = 2
     private let itemSpacing: CGFloat = 8
@@ -102,25 +103,21 @@ private extension Indicator {
             .foregroundStyle(Color.gray500)
     }
 
-    @ViewBuilder
     var selectedCapsuleView: some View {
-        if isEnabled {
-            ZStack {
-                subColor
-                    .frame(width: selectedWidth, height: selectedWidth)
-                    .clipShape(Circle())
+        let outerHeight = isEnabled ? selectedWidth : selectedInactiveHeight
 
-                mainColor
-                    .frame(width: 12, height: 12)
-                    .clipShape(Circle())
-            }
-            .padding(.vertical, 2)
-            .frame(height: selectedHeight)
-        } else {
-            Capsule()
-                .frame(width: selectedWidth, height: selectedInactiveHeight)
+        return ZStack {
+            RoundedRectangle(cornerRadius: outerHeight / 2)
+                .frame(width: selectedWidth, height: outerHeight)
+                .foregroundStyle(isEnabled ? subColor : mainColor)
+
+            Circle()
+                .frame(width: selectedInnerCircleSize, height: selectedInnerCircleSize)
                 .foregroundStyle(mainColor)
+                .scaleEffect(isEnabled ? 1 : 0.3)
+                .opacity(isEnabled ? 1 : 0)
         }
+        .frame(height: itemHeight(at: selectedIndex))
     }
 
     func startActivationTaskIfNeeded() {
