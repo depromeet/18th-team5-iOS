@@ -11,21 +11,21 @@ import Domain
 struct NotificationSettingsResponseDTO: Decodable {
     let dailyMission: Bool?
     let solarTermEnd: Bool?
-    let solarTermChange: Bool?
+    let solarTermStart: Bool?
 }
 
 extension NotificationSettingsResponseDTO {
     var toDomain: [NotificationType: Bool]? {
         guard let dailyMission,
               let solarTermEnd,
-              let solarTermChange else {
+              let solarTermStart else {
             return nil
         }
 
         return [
             .dailyMission: dailyMission,
             .solarTermEnd: solarTermEnd,
-            .solarTermStart: solarTermChange
+            .solarTermStart: solarTermStart
         ]
     }
 }

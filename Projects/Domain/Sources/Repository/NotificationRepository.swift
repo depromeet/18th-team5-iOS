@@ -13,6 +13,7 @@ import Foundation
 @DependencyClient
 public struct NotificationRepository: Sendable {
     public var fetchNotificationSettings: @Sendable () async throws -> [NotificationType: Bool]?
+    public var syncNotificationSettings: @Sendable ([NotificationType: Bool]) async throws -> Void
 }
 
 extension NotificationRepository: TestDependencyKey {
