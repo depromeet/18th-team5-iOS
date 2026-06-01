@@ -1,7 +1,7 @@
+//
 //  CalendarRepository.swift
 //  Domain
 //
-//  Created by 송민교 on 5/7/26.
 //  Copyright © 2026 Orange. All rights reserved.
 //
 
@@ -11,8 +11,10 @@ import Foundation
 
 @DependencyClient
 public struct CalendarRepository: Sendable {
-    public var fetchMonthRecords: @Sendable (_ year: Int, _ month: Int) async throws -> [CalendarRecord]
-    public var fetchDayDetail: @Sendable (_ date: Date) async throws -> DayDetail
+    /// 현재 절기 캘린더 조회 (오늘 날짜 기준 현재 + 다음 절기 2개)
+    public var fetchCurrentSolarTerms: @Sendable () async throws -> CalendarSolarTermsResponse
+    /// 절기 캘린더 조회 (페이지네이션, 시작 절기 ID 기준 2개)
+    public var fetchSolarTerms: @Sendable (_ solarTermId: Int) async throws -> CalendarSolarTermsResponse
 }
 
 extension CalendarRepository: TestDependencyKey {
@@ -28,9 +30,11 @@ public extension DependencyValues {
 
 public extension CalendarRepository {
     static let previewValue = CalendarRepository(
-        fetchMonthRecords: { _, _ in [] },
-        fetchDayDetail: { date in
-            DayDetail(date: date)
+        fetchCurrentSolarTerms: {
+            CalendarSolarTermsResponse(solarTerms: [], prevSolarTermId: nil, nextSolarTermId: nil)
+        },
+        fetchSolarTerms: { _ in
+            CalendarSolarTermsResponse(solarTerms: [], prevSolarTermId: nil, nextSolarTermId: nil)
         }
     )
 }

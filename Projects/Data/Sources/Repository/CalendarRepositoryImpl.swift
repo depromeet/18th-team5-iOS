@@ -1,3 +1,10 @@
+//
+//  CalendarRepositoryImpl.swift
+//  Data
+//
+//  Copyright © 2026 Orange. All rights reserved.
+//
+
 import Dependencies
 import Domain
 import Foundation
@@ -9,28 +16,24 @@ extension CalendarRepository: @retroactive DependencyKey {
 public enum CalendarRepositoryImpl {
     public static func live() -> CalendarRepository {
         CalendarRepository(
-            fetchMonthRecords: { year, month in
+            fetchCurrentSolarTerms: {
                 @Dependency(\.networkClient) var client
-                let response: CalendarMonthDataDTO? = try await client.request(
-                    CalendarEndpoint.fetchMonthRecords(year: year, month: month)
+                let response: CalendarSolarTermsResponseDTO? = try await client.request(
+                    CalendarEndpoint.fetchCurrentSolarTerms
                 )
-
                 guard let response else {
                     throw DomainError.unknown("데이터 획득 실패")
                 }
-
-                return response.records.compactMap { $0.toDomain() }
+                return response.toDomain()
             },
-            fetchDayDetail: { date in
+            fetchSolarTerms: { solarTermId in
                 @Dependency(\.networkClient) var client
-                let response: DayDetailDataDTO? = try await client.request(
-                    CalendarEndpoint.fetchDayDetail(date: date)
+                let response: CalendarSolarTermsResponseDTO? = try await client.request(
+                    CalendarEndpoint.fetchSolarTerms(solarTermId: solarTermId)
                 )
-
                 guard let response else {
                     throw DomainError.unknown("데이터 획득 실패")
                 }
-
                 return response.toDomain()
             }
         )
@@ -39,20 +42,31 @@ public enum CalendarRepositoryImpl {
 
 // MARK: - Domain Mapping
 
-private extension CalendarRecordResponseDTO {
-    func toDomain() -> CalendarRecord? {
-        guard hasRecord, let urlString = thumbnailImageUrl, let url = URL(string: urlString) else {
-            return nil
-        }
-        let parsedDate = DateFormatter.yyyyMMdd.date(from: date) ?? Date()
-        return CalendarRecord(dateString: date, date: parsedDate, imageURL: url)
+private extension CalendarSolarTermsResponseDTO {
+    func toDomain() -> CalendarSolarTermsResponse {
+        CalendarSolarTermsResponse(
+            solarTerms: solarTerms.map { $0.toDomain() },
+            prevSolarTermId: prevSolarTermId,
+            nextSolarTermId: nextSolarTermId
+        )
     }
 }
 
-private extension DayDetailDataDTO {
-    func toDomain() -> DayDetail {
-        let parsedDate = DateFormatter.yyyyMMdd.date(from: date) ?? Date()
-        return DayDetail(date: parsedDate)
+private extension CalendarSolarTermDTO {
+    func toDomain() -> CalendarSolarTerm {
+        CalendarSolarTerm(
+            solarTermId: solarTermId,
+            dates: dates.map { $0.toDomain() }
+        )
+    }
+}
+
+private extension CalendarSolarTermDateDTO {
+    func toDomain() -> CalendarSolarTermDate {
+        CalendarSolarTermDate(
+            date: DateFormatter.yyyyMMdd.date(from: date) ?? Date(),
+            thumbnailURL: thumbnailUrl.flatMap { URL(string: $0) }
+        )
     }
 }
 
