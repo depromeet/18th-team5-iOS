@@ -18,6 +18,7 @@ public struct CircularWheelPicker<Item: Hashable, Content: View>: View {
 
     private let items: [Item]
     private let content: (Item) -> Content
+    private let configuration: CircularWheelPickerConfiguration
     private let scrollIntensity: CGFloat = 0.5 // (0<..<1)
     private let scrollAnimation: Animation = .easeInOut(duration: 0.4)
     private let interactionLockDuration: Duration = .milliseconds(450)
@@ -26,10 +27,12 @@ public struct CircularWheelPicker<Item: Hashable, Content: View>: View {
     public init(
         items: [Item],
         selection: Binding<Item>,
+        configuration: CircularWheelPickerConfiguration = .missionCard,
         @ViewBuilder content: @escaping (Item) -> Content
     ) {
         self.items = items
         self._selection = selection
+        self.configuration = configuration
         self.content = content
     }
 
@@ -87,7 +90,14 @@ private extension CircularWheelPicker {
     }
 
     func itemView(_ item: Item, proxy: GeometryProxy) -> some View {
-        content(item)
+        let geometry = WheelGeometry(
+            containerWidth: proxy.size.width,
+            configuration: configuration
+        )
+
+        return content(item)
+            .padding(.leading, configuration.contentLeadingInset)
+            .padding(.trailing, configuration.contentTrailingInset)
             .frame(
                 width: proxy.size.width,
                 height: itemHeight(for: proxy.size.height)
@@ -96,11 +106,12 @@ private extension CircularWheelPicker {
                 let transform = WheelTransform(
                     itemFrame: itemProxy.frame(in: .global),
                     containerFrame: proxy.frame(in: .global),
+                    geometry: geometry,
                     scrollIntensity: scrollIntensity
                 )
 
                 return content
-                    .rotationEffect(.radians(-transform.angle))
+                    .rotationEffect(.radians(-transform.angle), anchor: transform.anchor)
                     .offset(x: transform.offset.width, y: transform.offset.height)
                     .opacity(transform.isVisible ? 1.0 : 0.0)
             }
@@ -178,35 +189,65 @@ private extension CircularWheelPicker {
     }
 }
 
+private struct WheelGeometry {
+    let rotationFrameLength: CGFloat
+    let contentTrailingInset: CGFloat
+    let contentHeight: CGFloat
+    let angleStep: Double
+
+    var leadingCornerDistance: CGFloat {
+        contentHeight / (2 * CGFloat(tan(angleStep / 2)))
+    }
+
+    init(
+        containerWidth: CGFloat,
+        configuration: CircularWheelPickerConfiguration
+    ) {
+        let availableWidth = containerWidth - configuration.contentTrailingInset
+        self.rotationFrameLength = availableWidth * configuration.rotationFrameLengthRatio
+        self.contentTrailingInset = configuration.contentTrailingInset
+        self.contentHeight = configuration.contentHeight
+        self.angleStep = configuration.angleStep.radians
+    }
+}
+
 private struct WheelTransform {
     let angle: Double
+    let anchor: UnitPoint
     let offset: CGSize
 
     init(
         itemFrame: CGRect,
         containerFrame: CGRect,
+        geometry: WheelGeometry,
         scrollIntensity: CGFloat
     ) {
         let scrollCenterY = containerFrame.midY
         let itemCenterY = itemFrame.midY
+        let rotationFrameHalfLength = geometry.rotationFrameLength / 2
+        let rotationFrameTrailingX = containerFrame.maxX - geometry.contentTrailingInset
+        let rotationCenterX = rotationFrameTrailingX - rotationFrameHalfLength
+        let rotationCenterY = itemCenterY
 
         let distance = itemCenterY - scrollCenterY
-        let angle = -(Double.pi / 6) * distance / (containerFrame.height * scrollIntensity)
+        let angle = -geometry.angleStep * distance / (containerFrame.height * scrollIntensity)
 
-        let radius = UIScreen.width
-        let pivotX = containerFrame.minX - (radius / 2)
+        let radius = rotationFrameHalfLength + geometry.leadingCornerDistance
+        let pivotX = rotationCenterX - radius
         let pivotY = scrollCenterY
 
         let targetX = pivotX + radius * cos(angle)
         let targetY = pivotY - radius * sin(angle)
 
-        let currentX = itemFrame.midX
-        let currentY = itemFrame.midY
-
         self.angle = angle
+        self.anchor = .init(
+            x: (rotationCenterX - itemFrame.minX) / itemFrame.width,
+            y: 0.5
+        )
+
         self.offset = .init(
-            width: targetX - currentX,
-            height: targetY - currentY
+            width: targetX - rotationCenterX,
+            height: targetY - rotationCenterY
         )
     }
 

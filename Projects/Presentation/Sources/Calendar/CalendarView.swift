@@ -266,5 +266,7 @@ private enum Constants {
 }
 
 private extension View {
-    func eraseView() -> AnyView { AnyView(self) }
+    func eraseView() -> AnyView {
+        AnyView(self)
+    }
 }

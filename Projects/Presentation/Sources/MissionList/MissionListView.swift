@@ -127,13 +127,17 @@ private extension MissionListView {
     }
 
     var circleBackgroundView: some View {
-        let width = UIScreen.width
-        let diameter = width * 3 - 40
+        let diameter: CGFloat = 1290
 
-        return Color.gray50
-            .frame(width: diameter, height: diameter)
-            .clipShape(Circle())
-            .offset(x: -width)
+        return GeometryReader { proxy in
+            Color.gray50
+                .frame(width: diameter, height: diameter)
+                .clipShape(Circle())
+                .position(
+                    x: proxy.size.width - 20 - diameter / 2,
+                    y: proxy.size.height / 2
+                )
+        }
     }
 
     @ViewBuilder
@@ -156,8 +160,6 @@ private extension MissionListView {
                 isActive: store.selectedMission == mission,
                 action: {}
             )
-            .padding(.leading, 20)
-            .padding(.trailing, 58)
         }
     }
 
@@ -173,6 +175,7 @@ private extension MissionListView {
                     totalCount: store.missions.count,
                     selectedIndex: selectedIndex,
                     mainColor: season.color(.scale500),
+                    subColor: season.color(.scale50),
                     isEnabled: $store.isIndicatorEnabled,
                     indexChanged: { store.send(.indicatorIndexChanged($0)) }
                 )
