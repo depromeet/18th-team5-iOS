@@ -25,6 +25,8 @@ public enum DomainError: Error, Equatable {
     case dataCorrupted
     /// 서버 내부 오류 (500번대)
     case serverError
+    /// 빈 응답
+    case nilResponse
     /// 분류되지 않은 오류
     case unknown(String)
 }
