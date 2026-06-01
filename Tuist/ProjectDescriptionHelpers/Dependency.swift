@@ -32,7 +32,7 @@ private extension Module {
     
     var dependentExternalModules: [ExternalModule] {
         switch self {
-        case .app: [.firebaseCore, .firebaseMessaging, .firebaseRemoteConfig]
+        case .app: [.firebaseCore, .firebaseRemoteConfig]
         case .presentation: [.composableArchitecture, .firebaseRemoteConfig]
         case .domain: [.dependencies, .dependenciesMacros]
         case .data: [
@@ -40,6 +40,7 @@ private extension Module {
             .dependencies,
             .dependenciesMacros,
             .firebaseCore,
+            .firebaseMessaging,
             .firebaseRemoteConfig
         ]
         case .core: [.dependencies]
