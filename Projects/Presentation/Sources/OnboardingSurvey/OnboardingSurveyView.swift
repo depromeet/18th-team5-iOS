@@ -19,7 +19,7 @@ public struct OnboardingSurveyView: View {
     }
 
     public var body: some View {
-        VStack(spacing: 0) {
+        ZStack(alignment: .bottom) {
             ZStack {
                 switch store.status {
                 case .initial: initialView
@@ -74,6 +74,7 @@ private extension OnboardingSurveyView {
 private extension OnboardingSurveyView {
     var initialView: some View {
         OnboardingInitialView()
+            .padding(.bottom, 88)
     }
 
     var surveyView: some View {
@@ -94,6 +95,7 @@ private extension OnboardingSurveyView {
                 .padding(.top, 24)
             }
         }
+        .padding(.bottom, 88)
     }
 
     var headerView: some View {
@@ -185,18 +187,21 @@ private extension OnboardingSurveyView {
         }
         .disabled(!isButtonEnabled)
         .padding(.horizontal, 20)
-        .padding(.top, 8)
-        .padding(.bottom, 16)
+        .padding(.vertical, 16)
     }
 
-    @ViewBuilder
     var background: some View {
-        switch store.status {
-        case .initial, .result:
-            LinearGradient.onboardingBackground
-                .ignoresSafeArea()
-        case .inProgress: Color.white
+        Group {
+            switch store.status {
+            case .initial:
+                LinearGradient.onboardingBackground
+            case .inProgress:
+                Color.white
+            case .result:
+                store.userType?.background
+            }
         }
+        .ignoresSafeArea()
     }
 }
 
@@ -260,5 +265,27 @@ private extension ActivityTheme {
                 image: .icMovieProjector
             )
         }
+    }
+}
+
+private extension UserType {
+    var color: Color {
+        switch self {
+        case .explorer: .blue50
+        case .walker: .green50
+        case .lifeCreator: .pink50
+        case .aesthete: .orange50
+        }
+    }
+
+    var background: LinearGradient {
+        LinearGradient(
+            stops: [
+                .init(color: color, location: 0.0),
+                .init(color: .white, location: 0.4)
+            ],
+            startPoint: .topLeading,
+            endPoint: .bottomTrailing
+        )
     }
 }
