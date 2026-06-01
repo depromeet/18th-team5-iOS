@@ -79,13 +79,19 @@ public struct SolarTermIntroFeature {
 
             case let .solarTermInfosLoad(infos):
                 state.solarTermInfos = infos
+                if state.targetTerm == nil {
+                    let now = Date()
+                    if let current = infos.first(where: { $0.dateRange.contains(now) }) {
+                        state.targetTerm = current.term
+                        state.season = current.term.season
+                    }
+                }
                 return .none
 
             case let .selectSeason(season):
                 state.season = season
                 return .none
 
-            // TODO: 절기소개 별도 탭뷰 구조 추가 - @minkyo
             case let .onCardTap(solarTermIntro):
                 let dateLabel = state.fullDateLabels[solarTermIntro.term]
                 state.content = SolarTermIntroContentFeature.State(
