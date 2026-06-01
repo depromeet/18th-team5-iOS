@@ -9,33 +9,36 @@
 import Foundation
 
 public struct CalendarSolarTermsResponse {
-    public let solarTerms: [CalendarSolarTerm]
-    public let prevSolarTermId: Int?
-    public let nextSolarTermId: Int?
+    public let fetchedSolarTerms: [CalendarSolarTerm]
+    public let prevSolarTerm: CalendarSolarTerm?
+    public let nextSolarTerm: CalendarSolarTerm?
 
     public init(
-        solarTerms: [CalendarSolarTerm],
-        prevSolarTermId: Int?,
-        nextSolarTermId: Int?
+        fetchedSolarTerms: [CalendarSolarTerm],
+        prevSolarTerm: CalendarSolarTerm?,
+        nextSolarTerm: CalendarSolarTerm?
     ) {
-        self.solarTerms = solarTerms
-        self.prevSolarTermId = prevSolarTermId
-        self.nextSolarTermId = nextSolarTermId
+        self.fetchedSolarTerms = fetchedSolarTerms
+        self.prevSolarTerm = prevSolarTerm
+        self.nextSolarTerm = nextSolarTerm
     }
 }
 
 public struct CalendarSolarTerm: Equatable {
     public let solarTermId: Int
-    public let solarTermInfo: SolarTermInfo
+    public let term: SolarTerm
+    public let year: SolarTermYear
     public let dates: [CalendarSolarTermDate]
 
     public init(
         solarTermId: Int,
-        solarTermInfo: SolarTermInfo,
+        term: SolarTerm,
+        year: SolarTermYear,
         dates: [CalendarSolarTermDate]
     ) {
         self.solarTermId = solarTermId
-        self.solarTermInfo = solarTermInfo
+        self.term = term
+        self.year = year
         self.dates = dates
     }
 }

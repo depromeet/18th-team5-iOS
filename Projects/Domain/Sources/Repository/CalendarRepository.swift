@@ -31,10 +31,18 @@ public extension DependencyValues {
 public extension CalendarRepository {
     static let previewValue = CalendarRepository(
         fetchCurrentSolarTerms: {
-            CalendarSolarTermsResponse(solarTerms: [], prevSolarTermId: nil, nextSolarTermId: nil)
+            CalendarSolarTermsResponse(
+                fetchedSolarTerms: [],
+                prevSolarTerm: nil,
+                nextSolarTerm: nil
+            )
         },
         fetchSolarTerms: { _ in
-            CalendarSolarTermsResponse(solarTerms: [], prevSolarTermId: nil, nextSolarTermId: nil)
+            CalendarSolarTermsResponse(
+                fetchedSolarTerms: [],
+                prevSolarTerm: nil,
+                nextSolarTerm: nil
+            )
         }
     )
 }
