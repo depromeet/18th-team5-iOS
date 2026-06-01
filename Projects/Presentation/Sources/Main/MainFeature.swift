@@ -66,7 +66,7 @@ public struct MainFeature {
             switch action {
             case .onAppear:
                 return .run { send in
-                    await checNotificationSettings(send)
+                    await checkNotificationSettings(send)
                 }
 
             case let .home(.delegate(.navigateToMissionCamera(missionId, title, missionTypeRaw, solarTermId))):
@@ -153,7 +153,7 @@ public struct MainFeature {
 }
 
 private extension MainFeature {
-    func checNotificationSettings(_ send: Send<Action>) async {
+    func checkNotificationSettings(_ send: Send<Action>) async {
         do {
             let settings = try await notificationRepository.fetchNotificationSettings()
             guard let settings else { return }
