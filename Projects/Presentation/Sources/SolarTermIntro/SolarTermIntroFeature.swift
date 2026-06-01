@@ -51,6 +51,11 @@ public struct SolarTermIntroFeature {
         case content(PresentationAction<SolarTermIntroContentFeature.Action>)
         case solarTermsLoad([SolarTermIntro])
         case solarTermInfosLoad([SolarTermInfo])
+        case delegate(Delegate)
+
+        public enum Delegate {
+            case navigateToMissionTab
+        }
     }
 
     @Dependency(\.solarTermIntroRepository) var solarTermIntroRepository
@@ -79,7 +84,7 @@ public struct SolarTermIntroFeature {
 
             case let .solarTermInfosLoad(infos):
                 state.solarTermInfos = infos
-                if state.targetTerm == nil {
+                if state.targetTerm == nil, state.season == .currentSeason {
                     let now = Date()
                     if let current = infos.first(where: { $0.dateRange.contains(now) }) {
                         state.targetTerm = current.term
@@ -105,7 +110,14 @@ public struct SolarTermIntroFeature {
                 state.content = nil
                 return .none
 
+            case .content(.presented(.delegate(.navigateToMissionTab))):
+                state.content = nil
+                return .send(.delegate(.navigateToMissionTab))
+
             case .content:
+                return .none
+
+            case .delegate:
                 return .none
             }
         }

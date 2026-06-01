@@ -111,6 +111,11 @@ public struct MainFeature {
                 state.solarTermIntroContent = nil
                 return .none
 
+            case .solarTermIntroContent(.presented(.delegate(.navigateToMissionTab))):
+                state.solarTermIntroContent = nil
+                state.tab = .mission
+                return .none
+
             case .solarTermIntroContent:
                 return .none
 
@@ -132,6 +137,10 @@ public struct MainFeature {
                 return .none
 
             case .calendar:
+                return .none
+
+            case .solarTermIntro(.delegate(.navigateToMissionTab)):
+                state.tab = .mission
                 return .none
 
             case .solarTermIntro:
