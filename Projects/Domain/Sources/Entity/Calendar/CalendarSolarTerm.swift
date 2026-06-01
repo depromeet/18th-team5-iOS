@@ -26,13 +26,16 @@ public struct CalendarSolarTermsResponse {
 
 public struct CalendarSolarTerm: Equatable {
     public let solarTermId: Int
+    public let solarTermInfo: SolarTermInfo
     public let dates: [CalendarSolarTermDate]
 
     public init(
         solarTermId: Int,
+        solarTermInfo: SolarTermInfo,
         dates: [CalendarSolarTermDate]
     ) {
         self.solarTermId = solarTermId
+        self.solarTermInfo = solarTermInfo
         self.dates = dates
     }
 }

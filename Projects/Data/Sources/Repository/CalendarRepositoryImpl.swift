@@ -56,8 +56,18 @@ private extension CalendarSolarTermDTO {
     func toDomain() -> CalendarSolarTerm {
         CalendarSolarTerm(
             solarTermId: solarTermId,
+            solarTermInfo: toSolarTermInfo(),
             dates: dates.map { $0.toDomain() }
         )
+    }
+
+    // TODO: 임시 매핑 로직. name 매칭/연도 파싱 실패 시 fallback(.ipchun/.current)을 사용하므로 추후 보완 필요 -@준영
+    func toSolarTermInfo() -> SolarTermInfo {
+        let start = DateFormatter.yyyyMMdd.date(from: startDate) ?? Date()
+        let end = DateFormatter.yyyyMMdd.date(from: endDate) ?? Date()
+        let year = Int(startDate.prefix(4)).flatMap(SolarTermYear.init(rawValue:)) ?? .current
+        let term = SolarTerm.allCases.first { $0.koreanName == name } ?? .ipchun
+        return SolarTermInfo(year: year, term: term, startDate: start, endDate: end)
     }
 }
 
