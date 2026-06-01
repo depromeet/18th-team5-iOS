@@ -19,11 +19,15 @@ struct SolarTermIntroCardView: View {
     let onTap: () -> Void
 
     private var cardImage: Image {
-        let name = "img_\(solarTermIntro.term.rawValue)_solar_term_card"
-        if let _ = UIImage(named: name, in: DesignSystemResources.bundle, compatibleWith: nil) {
-            return Image(name, bundle: DesignSystemResources.bundle)
+        switch solarTermIntro.term {
+        case .ibha: .imgIbhaSolarTermCard
+        case .soman: .imgSomanSolarTermCard
+        case .mangjong: .imgMangjongSolarTermCard
+        case .haji: .imgHajiSolarTermCard
+        case .soseo: .imgSoseoSolarTermCard
+        case .daeseo: .imgDaeseoSolarTermCard
+        default: .imgSolarTermCardDefault
         }
-        return .imgSolarTermCardDefault
     }
 
     var body: some View {
@@ -84,8 +88,15 @@ struct CurrentSolarTermCardView: View {
     let onTap: () -> Void
 
     private var cardImage: Image {
-        let name = "img_\(solarTermIntro.term.rawValue)_01_1"
-        return Image(name, bundle: DesignSystemResources.bundle)
+        switch solarTermIntro.term {
+        case .ibha: .imgIbha011
+        case .soman: .imgSoman011
+        case .mangjong: .imgMangjong011
+        case .haji: .imgHaji011
+        case .soseo: .imgSoseo011
+        case .daeseo: .imgDaeseo011
+        default: .imgSolarTermCardDefault
+        }
     }
 
     var body: some View {
