@@ -67,16 +67,6 @@ private extension SolarTermIntroContentView {
 }
 
 private extension SolarTermIntroContentView {
-    // TODO: 계절별 이미지 추가되면 교체 - @minkyo
-    private var solarTermIntroImage: Image {
-        switch store.season {
-        case .spring: .imgSummerSolarTermIntroContent
-        case .summer: .imgSummerSolarTermIntroContent
-        case .autumn: .imgSummerSolarTermIntroContent
-        case .winter: .imgSummerSolarTermIntroContent
-        }
-    }
-
     var introHeaderSection: some View {
         VStack(alignment: .leading, spacing: 16) {
             Text(store.solarTermIntro.title)
@@ -84,19 +74,28 @@ private extension SolarTermIntroContentView {
                 .foregroundStyle(Color.gray900)
                 .frame(maxWidth: .infinity, alignment: .leading)
 
-            solarTermIntroImage
-                .resizable()
-                .frame(maxWidth: .infinity)
-                .overlay {
-                    VStack(spacing: 4) {
-                        solarTermLabel(label: store.solarTermIntro.term.koreanName)
+            VStack(spacing: 4) {
+                solarTermLabel(label: store.solarTermIntro.term.koreanName)
 
-                        Text(store.dateLabel)
-                            .foregroundStyle(Color.white)
-                            .font(.body1Semibold)
-                    }
-                    .padding(.vertical, 11)
-                }
+                Text(store.dateLabel)
+                    .foregroundStyle(Color.white)
+                    .font(.body1Semibold)
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 11)
+            .background(
+                RoundedRectangle(cornerRadius: .radius16)
+                    .fill(
+                        LinearGradient(
+                            colors: [
+                                store.season.color(.scale100),
+                                store.season.color(.scale300)
+                            ],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+                    )
+            )
 
             // 의미 & 특징
             VStack(spacing: 8) {
@@ -193,20 +192,40 @@ private extension SolarTermIntroContentView {
                 .font(.body2Medium)
                 .foregroundStyle(Color.blackAlpha700)
 
-            AsyncImage(url: URL(string: content.imageURL)) { image in
-                image
+            if content.imageURLs.count > 1 {
+                AutoScrollImageView(imageNames: content.imageURLs)
+            } else if let imageName = content.imageURLs.first {
+                Image(imageName, bundle: DesignSystemResources.bundle)
                     .resizable()
                     .scaledToFill()
-            } placeholder: {
-                Color.gray100
+                    .frame(maxWidth: .infinity)
+                    .clipShape(RoundedRectangle(cornerRadius: .radius16))
             }
-            .frame(height: 200)
-            .clipShape(RoundedRectangle(cornerRadius: .radius12))
 
             Text(content.body)
                 .font(.body2Regular)
                 .foregroundStyle(Color.gray600)
         }
+    }
+}
+
+// MARK: - Auto Scroll Image
+
+private struct AutoScrollImageView: View {
+    let imageNames: [String]
+    @State private var currentIndex = 0
+    private let timer = Timer.publish(every: 3.0, on: .main, in: .common).autoconnect()
+
+    var body: some View {
+        Image(imageNames[currentIndex], bundle: DesignSystemResources.bundle)
+            .resizable()
+            .scaledToFill()
+            .frame(maxWidth: .infinity)
+            .clipShape(RoundedRectangle(cornerRadius: .radius16))
+            .animation(.easeInOut(duration: 0.5), value: currentIndex)
+            .onReceive(timer) { _ in
+                currentIndex = (currentIndex + 1) % imageNames.count
+            }
     }
 }
 
