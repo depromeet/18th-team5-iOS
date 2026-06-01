@@ -26,6 +26,8 @@ final class HostingTableViewCell<RootView: View>: UITableViewCell {
             let controller = UIHostingController(rootView: rootView)
             controller.view.backgroundColor = .clear
             controller.view.translatesAutoresizingMaskIntoConstraints = false
+            controller.safeAreaRegions = []
+
             contentView.addSubview(controller.view)
             NSLayoutConstraint.activate([
                 controller.view.topAnchor.constraint(equalTo: contentView.topAnchor),
@@ -44,5 +46,6 @@ private extension HostingTableViewCell {
         selectionStyle = .none
         backgroundColor = .clear
         contentView.backgroundColor = .clear
+        contentView.clipsToBounds = true
     }
 }

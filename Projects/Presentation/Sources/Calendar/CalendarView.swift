@@ -14,6 +14,8 @@ import SwiftUI
 struct CalendarView: View {
     @Bindable var store: StoreOf<CalendarFeature>
 
+    @State var sheetHeight: CGFloat = .zero
+
     var body: some View {
         GeometryReader { geo in
             let containerWidth = geo.size.width - Constants.calendarHorizontalSpacing * 2
@@ -45,21 +47,29 @@ struct CalendarView: View {
                     )
                 )
                 .padding(.horizontal, Constants.calendarHorizontalSpacing)
-                .overlay {
-                    if let detail = store.calendarDetail {
-                        calendarDetailView(detail)
-                            .padding(.top, Constants.detailViewTopPadding)
-                            .transition(.move(edge: .bottom))
+                .background {
+                    GeometryReader {
+                        Color.clear
+                            .onChange(of: $0.size) { _, size in
+                                let calendarHeight = size.height - bottomSafeInset
+                                let cellHeight = CalendarDateCell.Constants.cellHeight
+                                sheetHeight = calendarHeight - cellHeight - 12
+                            }
                     }
                 }
-                .animation(
-                    .easeInOut(duration: 0.35),
-                    value: store.calendarDetail
-                )
             }
         }
+        .ignoresSafeArea(.container, edges: [.bottom])
         .onAppear {
             store.send(.onAppear)
+        }
+        .sheet(item: $store.calendarDetail) {
+            calendarDetailView($0)
+                .presentationBackgroundInteraction(.enabled)
+                .presentationDetents([.height(sheetHeight)])
+                .presentationDragIndicator(.hidden)
+                .presentationCornerRadius(0)
+                .interactiveDismissDisabled()
         }
     }
 }
@@ -101,6 +111,9 @@ extension CalendarView {
         let calendar = weekSectionHeight * CGFloat(weekCount) + weekSpacing
 
         let bottom = Constants.termSectionBottomPadding
+
+        print("\(term.solarTermInfo.term.koreanName): \(header + calendar + bottom)")
+
         return header + calendar + bottom
     }
 }
@@ -109,7 +122,7 @@ extension CalendarView {
 
 extension CalendarView {
     func termSectionView(termGroup: SolarTermGroup, dateCellWidth: CGFloat) -> some View {
-        VStack(spacing: 0) {
+        VStack(spacing: .zero) {
             termSectionHeaderView(termGroup.termText)
             termCalendarView(termGroup.cells, dateCellWidth: dateCellWidth)
         }
@@ -172,7 +185,8 @@ extension CalendarView {
 
     func dateCellAnchorPoint(weekIndex: Int) -> CGFloat {
         let weekHeight = CalendarDateCell.Constants.cellHeight
-        let weekStartY = CGFloat(weekIndex) * (weekHeight + Constants.weekSectionVerticalSpacing)
+        let weekSpacing = Constants.weekSectionVerticalSpacing
+        let weekStartY = (weekHeight + weekSpacing) * CGFloat(weekIndex)
         return Constants.termSectionHeaderHeight + weekStartY
     }
 }
@@ -251,10 +265,19 @@ extension CalendarView {
     }
 }
 
+private extension CalendarView {
+    var bottomSafeInset: CGFloat {
+        UIApplication.shared.connectedScenes
+            .compactMap { ($0 as? UIWindowScene)?.keyWindow }
+            .first?
+            .safeAreaInsets.bottom ?? 0
+    }
+}
+
 private enum Constants {
     static let calendarHorizontalSpacing: CGFloat = 19.5
     static let termSectionHeaderHeight: CGFloat = 56
-    static let termSectionBottomPadding: CGFloat = 24
+    static let termSectionBottomPadding: CGFloat = 12
     static let weekSectionVerticalSpacing: CGFloat = 4
 
     static let dateCellHorizontalSpacing: CGFloat = 7

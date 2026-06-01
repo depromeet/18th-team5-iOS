@@ -13,8 +13,6 @@ import Domain
 public struct MainFeature {
     @ObservableState
     public struct State: Equatable {
-        @Shared(.tabBarVisibility) var tabBarVisibility: Bool = true
-
         public var tab: Tab = .home
         var home: HomeFeature.State = .init()
         var solarTermIntro: SolarTermIntroFeature.State = .init()
@@ -23,13 +21,6 @@ public struct MainFeature {
 
         @Presents var missionRecord: MissionRecordFeature.State?
         @Presents var solarTermIntroContent: SolarTermIntroContentFeature.State?
-
-        init() {
-            self._tabBarVisibility = Shared(
-                wrappedValue: true,
-                .tabBarVisibility
-            )
-        }
     }
 
     public enum Action: BindableAction {

@@ -14,8 +14,6 @@ import Foundation
 public struct CalendarFeature {
     @ObservableState
     public struct State: Equatable {
-        @Shared(.tabBarVisibility) var tabBarVisibility: Bool = true
-
         public var header: CalendarHeader?
         public var calendarState: PagingTableViewState<SolarTermGroup> = .init(
             anchorRequest: nil,
@@ -71,9 +69,6 @@ public struct CalendarFeature {
             case .detailOkButtonTapped:
                 // TODO: 동작 및 액션 수정 -@준영
                 state.calendarDetail = nil
-                state.$tabBarVisibility.withLock {
-                    $0 = true
-                }
                 return .none
 
             case .binding(\.topMostDetailCardIndex):
@@ -185,12 +180,7 @@ private extension CalendarFeature {
         dateId: SolarTermDate.ID,
         inset: CGFloat
     ) -> Effect<Action> {
-        // #1. 탭바 닫기
-        state.$tabBarVisibility.withLock {
-            $0 = false
-        }
-
-        // #2. 디테일 화면 데이터
+        // #1. 디테일 화면 데이터
         // TODO: 임시 데이터 -@준영
         state.topMostDetailCardIndex = 0
         state.calendarDetail = .init(cards: [
@@ -201,7 +191,7 @@ private extension CalendarFeature {
             .init(name: "card5")
         ])
 
-        // #3. 이전 선택 셀 초기화
+        // #2. 이전 선택 셀 초기화
         let prevSelectedId = state.selectedDateId
         state.selectedDateId = dateId
 
@@ -213,14 +203,14 @@ private extension CalendarFeature {
             }
         }
 
-        // #4. 선택한 셀 선택됨으로 표시
+        // #3. 선택한 셀 선택됨으로 표시
         editDateCell(&state, id: dateId) { dateState in
             var newDateState = dateState
             newDateState.isSelected = true
             return newDateState
         }
 
-        // #5. 해당 셀 위치로 스크롤
+        // #4. 해당 셀 위치로 스크롤
         if let term = findTermGroup(
             pages: state.calendarState.pages,
             dateId: dateId
