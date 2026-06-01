@@ -6,6 +6,8 @@
 //  Copyright © 2026 Orange. All rights reserved.
 //
 
+import Core
+
 public enum SolarTerm: String, CaseIterable {
     case ipchun
     case usu
@@ -75,5 +77,37 @@ public enum SolarTerm: String, CaseIterable {
         case .ibdong, .soseol, .daeseol, .dongji, .sohan, .daehan:
             .winter
         }
+    }
+}
+
+public extension SolarTerm {
+    var orderIndex: Int {
+        Self.allCases.firstIndex(of: self) ?? 0
+    }
+
+    static var firstStartTermInYear: Self {
+        .ipchun
+    }
+
+    static var lastStartTermInYear: Self {
+        .daehan
+    }
+
+    func nextTermInYear() -> Self? {
+        let cases = Self.allCases
+        guard let index = cases.firstIndex(of: self)
+        else { return nil }
+
+        let nextIndex = index + 1
+        return cases[safe: nextIndex]
+    }
+
+    func prevTermInYear() -> Self? {
+        let cases = Self.allCases
+        guard let index = cases.firstIndex(of: self)
+        else { return nil }
+
+        let prevIndex = index - 1
+        return cases[safe: prevIndex]
     }
 }
