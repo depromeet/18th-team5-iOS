@@ -96,8 +96,7 @@ extension CalendarView {
         let header = Constants.termSectionHeaderHeight
 
         let weekCount = term.cells.count
-        let monthCellHeight = Constants.monthCellHeight + Constants.dateMonthCellSpacing
-        let weekSectionHeight = Constants.dateCellHeight + monthCellHeight
+        let weekSectionHeight = CalendarDateCell.Constants.cellHeight
         let weekSpacing = Constants.weekSectionVerticalSpacing * CGFloat(weekCount - 1)
         let calendar = weekSectionHeight * CGFloat(weekCount) + weekSpacing
 
@@ -133,7 +132,7 @@ extension CalendarView {
                     .foregroundStyle(Color.gray900)
                 Spacer()
             }
-            .padding(.top, 12)
+            .padding(.top, 24)
 
             Spacer()
         }
@@ -156,91 +155,25 @@ extension CalendarView {
         }
     }
 
+    @ViewBuilder
     func dateCellView(date: SolarTermGroupCell, cellWidth: CGFloat, anchorInset: CGFloat) -> some View {
-        VStack(spacing: Constants.dateMonthCellSpacing) {
-            switch date {
-            case .emptyCell:
-                Color.clear
-                    .frame(width: cellWidth, height: 1)
+        switch date {
+        case .emptyCell:
+            Color.clear
+                .frame(width: cellWidth, height: 1)
 
-            case let .dateCell(date):
-                VStack(spacing: Constants.dateMonthCellSpacing) {
-                    if date.isFirstDayOfMonth {
-                        monthCell(date.monthText, cellWidth)
-                    } else {
-                        Color.clear
-                            .frame(
-                                width: cellWidth,
-                                height: Constants.monthCellHeight
-                            )
-                    }
-
-                    dateCell(date, cellWidth, anchorInset: anchorInset)
-                }
+        case let .dateCell(date):
+            CalendarDateCell(date: date) {
+                store.send(.dateCellTapped(dateId: date.id, inset: anchorInset))
             }
-        }
-    }
-
-    func monthCell(_ text: String, _ cellWidth: CGFloat) -> some View {
-        RoundedRectangle(cornerRadius: 8)
-            .foregroundStyle(Color.gray50)
-            .overlay {
-                Text(text)
-                    .font(.caption2Medium)
-                    .foregroundStyle(Color.gray900)
-            }
-            .frame(width: cellWidth, height: Constants.monthCellHeight)
-    }
-
-    func dateCell(_ date: SolarTermDate, _ cellWidth: CGFloat, anchorInset: CGFloat) -> some View {
-        HStack(spacing: 0) {
-            Spacer(minLength: 5)
-            VStack(spacing: 0) {
-                // TODO: 이미지로 교체 -@준영
-                Rectangle()
-                    .foregroundStyle(.gray)
-                    .frame(width: 32, height: 32)
-                    .clipShape(
-                        CalendarCellImageShape(
-                            containerPadding: 2.56,
-                            containerRadius: 4,
-                            protrusionRadius: 1.78
-                        )
-                    )
-                Spacer(minLength: 0)
-                Text(date.dayText)
-                    .font(.body2Medium)
-                    .foregroundStyle(
-                        // TODO: 색상 수정 예정 -@준영
-                        date.isSelected ? Color.white : (date.isToday ? Color(hex: 0x43DA87) : Color.gray900)
-                    )
-            }
-            .padding(.vertical, 6)
-            Spacer(minLength: 5)
-        }
-        .frame(
-            width: cellWidth,
-            height: Constants.dateCellHeight
-        )
-        .background {
-            RoundedRectangle(cornerRadius: 8)
-                // TODO: 디자인 시스템 반영 필요 -@준영
-                .foregroundStyle(
-                    date.isSelected
-                        ? Color(hex: 0x43DA87)
-                        : Color(hex: 0xF7F8F9)
-                )
-        }
-        .onTapGesture {
-            store.send(.dateCellTapped(dateId: date.id, inset: anchorInset))
+            .frame(width: cellWidth)
         }
     }
 
     func dateCellAnchorPoint(weekIndex: Int) -> CGFloat {
-        let weekHeight = Constants.monthCellHeight + Constants.dateMonthCellSpacing + Constants.dateCellHeight
+        let weekHeight = CalendarDateCell.Constants.cellHeight
         let weekStartY = CGFloat(weekIndex) * (weekHeight + Constants.weekSectionVerticalSpacing)
-        return Constants.termSectionHeaderHeight + weekStartY + Constants.monthCellHeight + Constants
-            .dateMonthCellSpacing - Constants.dateCellAnchorOffset
+        return Constants.termSectionHeaderHeight + weekStartY
     }
 }
 
@@ -250,21 +183,7 @@ extension CalendarView {
     func calendarDetailView(_ detail: CalendarDetail) -> some View {
         GeometryReader { _ in
             ZStack {
-                Color.white
-                    .overlay {
-                        VStack {
-                            LinearGradient(
-                                colors: [
-                                    .black.opacity(0.05),
-                                    .clear
-                                ],
-                                startPoint: .top,
-                                endPoint: .bottom
-                            )
-                            .frame(height: 30)
-                            Spacer()
-                        }
-                    }
+                detailViewBackgroundView
 
                 VStack {
                     CardStackView(
@@ -283,62 +202,67 @@ extension CalendarView {
                     Spacer()
                 }
 
-                // TODO: 디자인 시스템 반영 -@준영
-                VStack {
-                    Spacer()
-                    HStack(spacing: 8) {
-                        Button {
-                            store.send(.detailOkButtonTapped)
-                        } label: {
-                            HStack {
-                                Spacer()
-                                Text("확인")
-                                    .foregroundStyle(.white)
-                                Spacer()
-                            }
-                            .frame(height: 56)
-                            .background {
-                                RoundedRectangle(cornerRadius: 15)
-                            }
-                        }
-
-                        Button {
-                            store.send(.detailOkButtonTapped)
-                        } label: {
-                            HStack {
-                                Spacer()
-                                Text("확인")
-                                    .foregroundStyle(.white)
-                                Spacer()
-                            }
-                            .frame(height: 56)
-                            .background {
-                                RoundedRectangle(cornerRadius: 15)
-                            }
-                        }
-                    }
-                    .padding(.horizontal, 20)
-                }
-                .padding(.vertical, 16)
-                .padding(.bottom, 64)
+                detailViewBottomView
             }
         }
+    }
+
+    var detailViewBackgroundView: some View {
+        Color.white
+            .overlay {
+                VStack {
+                    LinearGradient(
+                        colors: [
+                            .black.opacity(0.05),
+                            .clear
+                        ],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                    .frame(height: 30)
+                    Spacer()
+                }
+            }
+    }
+
+    var detailViewBottomView: some View {
+        VStack {
+            Spacer()
+            HStack(spacing: 8) {
+                Button {
+                    // TODO: 수정
+                    store.send(.detailOkButtonTapped)
+                } label: {
+                    Text("이미지 저장")
+                }
+                .buttonStyle(.master(.large))
+
+                Button {
+                    // TODO: 수정
+                    store.send(.detailOkButtonTapped)
+                } label: {
+                    Text("이미지 공유")
+                }
+                .buttonStyle(.master(.large))
+            }
+            .padding(.horizontal, 20)
+        }
+        .padding(.vertical, 16)
     }
 }
 
 private enum Constants {
     static let calendarHorizontalSpacing: CGFloat = 19.5
-    static let termSectionHeaderHeight: CGFloat = 46
+    static let termSectionHeaderHeight: CGFloat = 56
     static let termSectionBottomPadding: CGFloat = 24
-    static let weekSectionVerticalSpacing: CGFloat = 6
+    static let weekSectionVerticalSpacing: CGFloat = 4
 
-    static let monthCellHeight: CGFloat = 20
-    static let dateMonthCellSpacing: CGFloat = 2
     static let dateCellHorizontalSpacing: CGFloat = 7
-    static let dateCellHeight: CGFloat = 70
     static let dateCellAnchorOffset: CGFloat = 11
 
-    static let detailViewTopPadding: CGFloat = 86
+    static var detailViewTopPadding: CGFloat {
+        CalendarDateCell.Constants.cellHeight + 12
+    }
 }
 
 private extension View {
