@@ -23,6 +23,9 @@ public struct CalendarFeature {
         public var calendarDetail: CalendarDetail?
         public var topMostDetailCardIndex: Int = 0
 
+        public var termData: [String: CalendarTermData] = [:]
+
+        fileprivate var isAppeared: Bool = false
         fileprivate var anchoredTermId: SolarTermGroup.ID?
         fileprivate var isPaging: Bool = false
         fileprivate var currentYear: SolarTermYear = .y2026
@@ -40,12 +43,14 @@ public struct CalendarFeature {
         case updateCalendarPages([Page<SolarTermGroup>])
         case updateCalendarHeader(CalendarHeader)
         case updateAnchorRequest(AnchorRequest<SolarTermGroup>)
+        case updateTermData(id: String, data: CalendarTermData)
         case binding(BindingAction<State>)
     }
 
     @Dependency(\.logger) var logger
     @Dependency(\.date) var date
     @Dependency(\.solarTermRepository) var solarTermRepository
+    @Dependency(\.calendarRepository) var calendarRepository
 
     public var body: some ReducerOf<Self> {
         BindingReducer()
@@ -96,6 +101,10 @@ public struct CalendarFeature {
                 state.isPaging = false
                 return .none
 
+            case let .updateTermData(id, data):
+                state.termData[id] = data
+                return .none
+
             default:
                 return .none
             }
@@ -107,6 +116,9 @@ public struct CalendarFeature {
 
 private extension CalendarFeature {
     func onAppear(_ state: inout State) -> Effect<Action> {
+        guard !state.isAppeared else { return .none }
+        state.isAppeared = true
+
         let now = date.now
         guard let year = Calendar.current.dateComponents([.year], from: now).year,
               let currentYear = SolarTermYear(rawValue: year)
@@ -424,6 +436,46 @@ private extension CalendarFeature {
         df.dateFormat = "yyyy-MM-dd"
         return df
     }()
+}
+
+// MARK: - Data fetch
+
+private extension CalendarFeature {
+    func fetchCalendarData(_ id: Int) async -> Effect<Action> {
+        .run { send in
+            do {
+                let response = try await calendarRepository.fetchSolarTerms(solarTermId: id)
+
+                for item in response.fetchedSolarTerms {
+                    await send(.updateTermData(
+                        id: createDataId(item.year, item.term),
+                        data: CalendarTermData(
+                            requestId: item.solarTermId,
+                            isInflight: false,
+                            data: item
+                        )
+                    ))
+                }
+
+                for item in [response.prevSolarTerm, response.nextSolarTerm] {
+                    guard let item else { continue }
+                    await send(.updateTermData(
+                        id: createDataId(item.year, item.term),
+                        data: CalendarTermData(
+                            requestId: item.solarTermId,
+                            isInflight: false
+                        )
+                    ))
+                }
+            } catch {
+                logger.error(message: error.localizedDescription)
+            }
+        }
+    }
+
+    func createDataId(_ year: SolarTermYear, _ term: SolarTerm) -> String {
+        "\(year.rawValue)-\(term.rawValue)"
+    }
 }
 
 // MARK: - Anchor 탐색
