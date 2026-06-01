@@ -9,35 +9,24 @@
 public struct Mission: Equatable, Hashable {
     public let id: Int
     public let title: String
-    public let category: MissionCategory
-    public let season: Season
-    public let isCompleted: Bool
+    public let description: String?
+    public let theme: MissionTheme?
+    public let attribute: MissionAttribute?
+    public let isCompleted: Bool?
 
     public init(
         id: Int,
         title: String,
-        category: MissionCategory,
-        season: Season,
-        isCompleted: Bool
+        description: String? = nil,
+        theme: MissionTheme? = nil,
+        attribute: MissionAttribute? = nil,
+        isCompleted: Bool? = nil
     ) {
         self.id = id
         self.title = title
-        self.category = category
-        self.season = season
+        self.description = description
+        self.theme = theme
+        self.attribute = attribute
         self.isCompleted = isCompleted
-    }
-}
-
-public enum MissionCategory: CaseIterable {
-    case food
-    case contents
-    case activity
-
-    public var name: String {
-        switch self {
-        case .food: "음식"
-        case .contents: "콘텐츠"
-        case .activity: "활동"
-        }
     }
 }

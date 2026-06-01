@@ -42,7 +42,7 @@ public enum MissionRepositoryImpl {
                     missionType: missionType.rawValue,
                     solarTermId: solarTermId,
                     objectKey: objectKey,
-                    memo: memo,
+                    memo: memo
                 )
 
                 do {
@@ -82,6 +82,43 @@ public enum MissionRepositoryImpl {
                     )
                     try await s3Client.uploadImage(presignedUrl, imageData, contentType)
                     return objectKey
+                } catch {
+                    throw mapToDomainError(error)
+                }
+            },
+            fetchRecommendedMissions: {
+                @Dependency(\.networkClient) var client
+
+                do {
+                    let endpoint = MissionEndpoint.fetchRecommendedMissions
+                    let response: RecommendedMissionResponseDTO? = try await client.request(endpoint)
+                    return response?.toDomain
+                } catch {
+                    throw mapToDomainError(error)
+                }
+            },
+            fetchSearchedMission: {
+                @Dependency(\.networkClient) var client
+
+                do {
+                    let endpoint = MissionEndpoint.fetchSearchedMission
+                    let response: SearchedMissionResponseDTO? = try await client.request(endpoint)
+                    guard let response else { throw DomainError.nilResponse }
+
+                    guard response.hasSelected == true else { return nil }
+                    return response.mission?.searchedMission
+                } catch {
+                    throw mapToDomainError(error)
+                }
+            },
+            searchMission: { attribute in
+                @Dependency(\.networkClient) var client
+
+                do {
+                    let request = MissionSearchRequestDTO(attribute: attribute)
+                    let endpoint = MissionEndpoint.searchMission(request: request)
+                    let response: MissionResponseDTO? = try await client.request(endpoint)
+                    return response?.searchedMission
                 } catch {
                     throw mapToDomainError(error)
                 }

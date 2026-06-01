@@ -50,7 +50,10 @@ final class PagingTableView<Item: Identifiable & Equatable>: UIView, UITableView
         case reachedToEnd(direction: PageEndDirection)
     }
 
-    var action: AnyPublisher<Action, Never> { _action.eraseToAnyPublisher() }
+    var action: AnyPublisher<Action, Never> {
+        _action.eraseToAnyPublisher()
+    }
+
     private let _action: PassthroughSubject<Action, Never> = .init()
     private var store: Set<AnyCancellable> = []
 
@@ -73,7 +76,9 @@ final class PagingTableView<Item: Identifiable & Equatable>: UIView, UITableView
         setupTableView()
     }
 
-    required init?(coder: NSCoder) { nil }
+    required init?(coder: NSCoder) {
+        nil
+    }
 
     typealias State = PagingTableViewState<Item>
 
@@ -239,7 +244,13 @@ private extension PagingTableView {
         }
 
         guard !diffIndexPaths.isEmpty else { return }
-        tableView.reloadRows(at: diffIndexPaths, with: .none)
+
+        for indexPath in diffIndexPaths {
+            if let cell = tableView.cellForRow(at: indexPath) as? Cell,
+               let item = itemAt(indexPath: indexPath) {
+                cell.configure(arguments.cellBuilder(item))
+            }
+        }
     }
 
     func update(request: AnchorRequest<Item>) {

@@ -27,6 +27,10 @@ public struct MissionRepository: Sendable {
         _ fileName: String,
         _ contentType: String
     ) async throws -> String
+
+    public var fetchRecommendedMissions: @Sendable () async throws -> RecommendedMission?
+    public var fetchSearchedMission: @Sendable () async throws -> Mission?
+    public var searchMission: @Sendable (_ attribute: MissionAttribute) async throws -> Mission?
 }
 
 extension MissionRepository: TestDependencyKey {
