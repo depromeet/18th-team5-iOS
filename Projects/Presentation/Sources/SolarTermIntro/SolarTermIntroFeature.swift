@@ -51,6 +51,11 @@ public struct SolarTermIntroFeature {
         case content(PresentationAction<SolarTermIntroContentFeature.Action>)
         case solarTermsLoad([SolarTermIntro])
         case solarTermInfosLoad([SolarTermInfo])
+        case delegate(Delegate)
+
+        public enum Delegate {
+            case navigateToMissionTab
+        }
     }
 
     @Dependency(\.solarTermIntroRepository) var solarTermIntroRepository
@@ -79,13 +84,19 @@ public struct SolarTermIntroFeature {
 
             case let .solarTermInfosLoad(infos):
                 state.solarTermInfos = infos
+                if state.targetTerm == nil, state.season == .currentSeason {
+                    let now = Date()
+                    if let current = infos.first(where: { $0.dateRange.contains(now) }) {
+                        state.targetTerm = current.term
+                        state.season = current.term.season
+                    }
+                }
                 return .none
 
             case let .selectSeason(season):
                 state.season = season
                 return .none
 
-            // TODO: 절기소개 별도 탭뷰 구조 추가 - @minkyo
             case let .onCardTap(solarTermIntro):
                 let dateLabel = state.fullDateLabels[solarTermIntro.term]
                 state.content = SolarTermIntroContentFeature.State(
@@ -99,7 +110,14 @@ public struct SolarTermIntroFeature {
                 state.content = nil
                 return .none
 
+            case .content(.presented(.delegate(.navigateToMissionTab))):
+                state.content = nil
+                return .send(.delegate(.navigateToMissionTab))
+
             case .content:
+                return .none
+
+            case .delegate:
                 return .none
             }
         }

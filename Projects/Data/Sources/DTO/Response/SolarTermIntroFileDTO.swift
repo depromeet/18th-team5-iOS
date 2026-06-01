@@ -29,7 +29,7 @@ struct SolarTermIntroContentDTO: Decodable {
     let id: String
     let title: String
     let subtitle: String
-    let imageURL: String
+    let imageURLs: [String]
     let body: String
 }
 
@@ -63,7 +63,7 @@ extension SolarTermIntroContentDTO {
             id: id,
             title: title,
             subtitle: subtitle,
-            imageURL: imageURL,
+            imageURLs: imageURLs,
             body: body
         )
     }

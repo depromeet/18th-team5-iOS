@@ -20,10 +20,12 @@ public struct SolarTermIntroContentFeature {
 
     public enum Action {
         case onTapBack
+        case onMissionTap
         case delegate(Delegate)
 
         public enum Delegate {
             case dismiss
+            case navigateToMissionTab
         }
     }
 
@@ -34,6 +36,9 @@ public struct SolarTermIntroContentFeature {
             switch action {
             case .onTapBack:
                 return .send(.delegate(.dismiss))
+
+            case .onMissionTap:
+                return .send(.delegate(.navigateToMissionTab))
 
             case .delegate:
                 return .none
