@@ -25,7 +25,7 @@ struct OnboardingSelectionView<Item: Hashable>: View {
     }
 
     var body: some View {
-        HStack(alignment: .top, spacing: 10) {
+        HStack(alignment: .top, spacing: 12) {
             ForEach(items, id: \.self) { item in
                 itemView(item)
             }
@@ -34,20 +34,16 @@ struct OnboardingSelectionView<Item: Hashable>: View {
 }
 
 private extension OnboardingSelectionView {
-    func iconColor(_ isSelected: Bool) -> Color {
-        isSelected ? .init(hex: 0x0077FF) : .init(hex: 0x1A1C20)
-    }
-
     func titleColor(_ isSelected: Bool) -> Color {
-        isSelected ? .init(hex: 0x3DC67B) : .gray900
+        isSelected ? .green600 : .gray900
     }
 
     func backgroundColor(_ isSelected: Bool) -> Color {
-        isSelected ? .init(hex: 0x43DA87, alpha: 0.05) : .white
+        isSelected ? .green500.opacity(0.04) : .white
     }
 
     func strokeColor(_ isSelected: Bool) -> Color {
-        isSelected ? .init(hex: 0x43DA87) : .gray300
+        isSelected ? .green300 : .gray300
     }
 }
 
