@@ -22,8 +22,8 @@ struct SolarTermIntroContentView: View {
                     introHeaderSection
                     contentIntroSection
                     contentListSection
-                    BottomButton(title: "확인") {
-                        store.send(.onTapBack)
+                    BottomButton(title: "미션으로 이동") {
+                        store.send(.onMissionTap)
                     }
                 }
                 .padding(.horizontal, 16)
@@ -190,7 +190,7 @@ private extension SolarTermIntroContentView {
 
             Text(content.subtitle)
                 .font(.body2Medium)
-                .foregroundStyle(Color.blackAlpha700)
+                .foregroundStyle(Color.gray600)
 
             if content.imageURLs.count > 1 {
                 AutoScrollImageView(imageNames: content.imageURLs)
@@ -217,15 +217,28 @@ private struct AutoScrollImageView: View {
     private let timer = Timer.publish(every: 3.0, on: .main, in: .common).autoconnect()
 
     var body: some View {
-        Image(imageNames[currentIndex], bundle: DesignSystemResources.bundle)
-            .resizable()
-            .scaledToFill()
-            .frame(maxWidth: .infinity)
-            .clipShape(RoundedRectangle(cornerRadius: .radius16))
-            .animation(.easeInOut(duration: 0.5), value: currentIndex)
-            .onReceive(timer) { _ in
+        TabView(selection: $currentIndex) {
+            ForEach(Array(imageNames.enumerated()), id: \.offset) { index, imageName in
+                Image(imageName, bundle: DesignSystemResources.bundle)
+                    .resizable()
+                    .scaledToFill()
+                    .clipped()
+                    .tag(index)
+            }
+        }
+        .tabViewStyle(.page(indexDisplayMode: .never))
+        .frame(maxWidth: .infinity)
+        .aspectRatio(1.44, contentMode: .fit)
+        .clipShape(RoundedRectangle(cornerRadius: .radius16))
+        .onReceive(timer) { _ in
+            withAnimation(.easeInOut(duration: 0.5)) {
                 currentIndex = (currentIndex + 1) % imageNames.count
             }
+        }
+        .overlay(alignment: .bottom) {
+            ImageIndicator(count: imageNames.count, current: currentIndex)
+                .padding(.bottom, 6)
+        }
     }
 }
 
