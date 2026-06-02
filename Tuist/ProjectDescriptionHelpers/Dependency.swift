@@ -40,6 +40,7 @@ private extension Module {
             .dependencies,
             .dependenciesMacros,
             .firebaseCore,
+            .firebaseMessaging,
             .firebaseRemoteConfig
         ]
         case .core: [.dependencies]

@@ -11,6 +11,8 @@ import Domain
 
 @Reducer
 public struct MainFeature {
+    @Dependency(\.notificationRepository) private var notificationRepository
+
     @ObservableState
     public struct State: Equatable {
         public var tab: Tab = .home
@@ -61,9 +63,9 @@ public struct MainFeature {
         Reduce { state, action in
             switch action {
             case .onAppear:
-                // TODO: 로깅 테스트용 호출입니다. 추후 제거부탁드립니다.
-                logger.debug(message: "MainView did appear")
-                return .none
+                return .run { send in
+                    await checkNotificationSettings(send)
+                }
 
             case let .home(.delegate(.navigateToMissionCamera(missionId, title, missionTypeRaw, solarTermId))):
                 let missionType = MissionType(rawValue: missionTypeRaw) ?? {
@@ -109,6 +111,11 @@ public struct MainFeature {
                 state.solarTermIntroContent = nil
                 return .none
 
+            case .solarTermIntroContent(.presented(.delegate(.navigateToMissionTab))):
+                state.solarTermIntroContent = nil
+                state.tab = .mission
+                return .none
+
             case .solarTermIntroContent:
                 return .none
 
@@ -132,6 +139,10 @@ public struct MainFeature {
             case .calendar:
                 return .none
 
+            case .solarTermIntro(.delegate(.navigateToMissionTab)):
+                state.tab = .mission
+                return .none
+
             case .solarTermIntro:
                 return .none
 
@@ -144,6 +155,18 @@ public struct MainFeature {
         }
         .ifLet(\.$solarTermIntroContent, action: \.solarTermIntroContent) {
             SolarTermIntroContentFeature()
+        }
+    }
+}
+
+private extension MainFeature {
+    func checkNotificationSettings(_ send: Send<Action>) async {
+        do {
+            let settings = try await notificationRepository.fetchNotificationSettings()
+            guard let settings else { return }
+            try await notificationRepository.syncNotificationSettings(settings)
+        } catch {
+            // TODO: 에러 처리 - 정원
         }
     }
 }

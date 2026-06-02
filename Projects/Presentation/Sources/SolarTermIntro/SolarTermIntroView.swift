@@ -55,16 +55,11 @@ private extension SolarTermIntroView {
     var seasonChips: some View {
         HStack(spacing: 4) {
             ForEach(Season.allCases, id: \.self) { season in
-                Button {
+                Chip(
+                    title: season.displayName,
+                    type: store.season == season ? .default : .secondary
+                ) {
                     store.send(.selectSeason(season))
-                } label: {
-                    Text(season.displayName)
-                        .font(.body2Regular)
-                        .foregroundStyle(store.season == season ? .white : Color(hex: 0x2A3038))
-                        .padding(.vertical, 8)
-                        .padding(.horizontal, 16)
-                        .background(store.season == season ? Color.gray700 : Color.gray100)
-                        .clipShape(Capsule())
                 }
             }
         }
@@ -81,12 +76,23 @@ private extension SolarTermIntroView {
                 set: { _ in }
             )
         ) { solarTerm in
-            SolarTermIntroCardView(
-                solarTermIntro: solarTerm,
-                season: store.season,
-                dateLabel: store.dateLabels[solarTerm.term],
-                onTap: { store.send(.onCardTap(solarTerm)) }
-            )
+            Group {
+                if store.targetTerm == solarTerm.term {
+                    CurrentSolarTermCardView(
+                        solarTermIntro: solarTerm,
+                        season: store.season,
+                        dateLabel: store.dateLabels[solarTerm.term],
+                        onTap: { store.send(.onCardTap(solarTerm)) }
+                    )
+                } else {
+                    SolarTermIntroCardView(
+                        solarTermIntro: solarTerm,
+                        season: store.season,
+                        dateLabel: store.dateLabels[solarTerm.term],
+                        onTap: { store.send(.onCardTap(solarTerm)) }
+                    )
+                }
+            }
         }
     }
 }

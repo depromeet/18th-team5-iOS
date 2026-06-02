@@ -11,10 +11,10 @@ import SwiftUI
 public extension LinearGradient {
     static let onboardingBackground: Self = .init(
         stops: [
-            .init(color: .init(hex: 0xECFBF3), location: 0.0),
-            .init(color: .white, location: 0.4)
+            .init(color: Color.green50, location: 0.0),
+            .init(color: .white, location: 0.5)
         ],
-        startPoint: .topLeading,
-        endPoint: .bottomTrailing
+        startPoint: .top,
+        endPoint: .bottom
     )
 }
