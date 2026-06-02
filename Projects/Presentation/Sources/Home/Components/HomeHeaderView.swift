@@ -10,48 +10,75 @@ import DesignSystem
 import SwiftUI
 
 struct HomeHeaderView: View {
-    var scrollOffset: CGFloat = 0
+    private let showBlur: Bool
+    private let hasUnread: Bool
+    private let myPageAction: () -> Void
+    private let notificationAction: () -> Void
 
-    private var showBlur: Bool {
-        scrollOffset > 1
+    init(
+        showBlur: Bool,
+        hasUnread: Bool,
+        myPageAction: @escaping () -> Void,
+        notificationAction: @escaping () -> Void
+    ) {
+        self.showBlur = showBlur
+        self.hasUnread = hasUnread
+        self.myPageAction = myPageAction
+        self.notificationAction = notificationAction
     }
 
     var body: some View {
         HStack {
-            Image.peaktimeLogo
+            Image.imgPeaktimeLogo
                 .resizable()
-                .frame(width: 140, height: 28)
+                .frame(width: 126, height: 24)
 
             Spacer()
 
-            Button(action: {}) {
-                Image.bellEmptyAlarmIcon
-                    .resizable()
-                    .frame(width: 24, height: 24)
+            HStack(spacing: 14) {
+                myPageButton
+                notificationButton
             }
         }
-        .padding(.horizontal, 20)
-        .padding(.vertical, 16)
         .frame(maxWidth: .infinity)
+        .padding(.horizontal, 20)
+        .frame(height: 56)
         .background(alignment: .top) {
-            if showBlur {
-                BackgroundBlurView()
-                    .ignoresSafeArea(edges: .top)
-                    .transition(.opacity)
-            }
+            BackgroundBlurView()
+                .ignoresSafeArea(edges: .top)
+                .transition(.opacity)
+                .renderedIf(showBlur)
         }
         .animation(.easeInOut(duration: 0.2), value: showBlur)
     }
 }
 
-#Preview {
-    ZStack {
-        LinearGradient.onboardingBackground
-            .ignoresSafeArea()
+private extension HomeHeaderView {
+    var myPageButton: some View {
+        Button(action: myPageAction) {
+            Image.icPerson
+                .renderingMode(.template)
+                .resizable()
+                .frame(width: 24, height: 24)
+                .foregroundColor(Color.gray700)
+        }
+    }
 
-        ScrollView {
-            HomeHeaderView(scrollOffset: 0)
-            Spacer()
+    var notificationButton: some View {
+        Button(action: notificationAction) {
+            Image.icAlarm
+                .renderingMode(.template)
+                .resizable()
+                .frame(width: 24, height: 24)
+                .foregroundColor(Color.gray700)
+                .overlay(alignment: .topTrailing) {
+                    Color.systemRed
+                        .frame(width: 4, height: 4)
+                        .clipShape(Circle())
+                        .padding(.trailing, -1)
+                        .padding(.top, -1)
+                        .renderedIf(hasUnread)
+                }
         }
     }
 }
