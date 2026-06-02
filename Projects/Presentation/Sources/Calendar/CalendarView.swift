@@ -18,9 +18,6 @@ struct CalendarView: View {
 
     var body: some View {
         GeometryReader { geo in
-            let containerWidth = geo.size.width - Constants.calendarHorizontalSpacing * 2
-            let dateCellWidth = (containerWidth - Constants.dateCellHorizontalSpacing * 6) / 7
-
             VStack(spacing: 0) {
                 headerView
 
@@ -39,7 +36,7 @@ struct CalendarView: View {
                         cellBuilder: {
                             termSectionView(
                                 termGroup: $0,
-                                dateCellWidth: dateCellWidth
+                                dateCellWidth: cellWidth(screenWidth: geo.size.width)
                             )
                             .eraseView()
                         },
@@ -101,6 +98,8 @@ extension CalendarView {
     }
 }
 
+// MARK: Calc
+
 extension CalendarView {
     func termSectionViewHeight(_ term: SolarTermGroup) -> CGFloat {
         let header = Constants.termSectionHeaderHeight
@@ -115,6 +114,11 @@ extension CalendarView {
         print("\(term.solarTermInfo.term.koreanName): \(header + calendar + bottom)")
 
         return header + calendar + bottom
+    }
+
+    func cellWidth(screenWidth: CGFloat) -> CGFloat {
+        let containerWidth = screenWidth - Constants.calendarHorizontalSpacing * 2
+        return (containerWidth - Constants.dateCellHorizontalSpacing * 6) / 7
     }
 }
 
@@ -289,5 +293,7 @@ private enum Constants {
 }
 
 private extension View {
-    func eraseView() -> AnyView { AnyView(self) }
+    func eraseView() -> AnyView {
+        AnyView(self)
+    }
 }
