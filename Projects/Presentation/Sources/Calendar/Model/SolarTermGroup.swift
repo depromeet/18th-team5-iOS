@@ -12,6 +12,7 @@ import Foundation
 public struct SolarTermGroup: Identifiable, Equatable {
     public let id: String
     public let termText: String
+    public let containsToday: Bool
     public let solarTermInfo: SolarTermInfo
     public var cells: [[SolarTermGroupCell]]
 }

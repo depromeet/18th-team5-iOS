@@ -42,10 +42,16 @@ extension CalendarFeature {
                 id: "\(termInfo.year.rawValue)_\(termInfo.term.rawValue)_emptycell_\(index)"
             ))
         }
+
+        var containsToday = false
         for date in termInfo.termDates {
             guard let ymd = yearMonthDay(date),
                   let todayYmd = yearMonthDay(now)
             else { continue }
+
+            if !containsToday {
+                containsToday = (ymd == todayYmd)
+            }
             cells.append(
                 .dateCell(
                     SolarTermDate(
@@ -66,6 +72,7 @@ extension CalendarFeature {
         return SolarTermGroup(
             id: Self.termGroupId(year: termInfo.year, term: termInfo.term),
             termText: termInfo.term.koreanName,
+            containsToday: containsToday,
             solarTermInfo: termInfo,
             cells: cells.chunked(size: 7)
         )

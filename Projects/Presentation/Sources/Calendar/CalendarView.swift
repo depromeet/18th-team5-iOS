@@ -124,7 +124,7 @@ extension CalendarView {
 extension CalendarView {
     func termSectionView(termGroup: SolarTermGroup, dateCellWidth: CGFloat) -> some View {
         VStack(spacing: .zero) {
-            termSectionHeaderView(termGroup.termText)
+            termSectionHeaderView(termGroup)
             termCalendarView(termGroup.cells, dateCellWidth: dateCellWidth)
         }
         .padding(.bottom, Constants.termSectionBottomPadding)
@@ -138,12 +138,14 @@ extension CalendarView {
         }
     }
 
-    func termSectionHeaderView(_ termText: String) -> some View {
+    func termSectionHeaderView(_ termGroup: SolarTermGroup) -> some View {
         VStack {
             HStack {
-                Text(termText)
+                Text(termGroup.termText)
                     .font(.headline2Medium)
-                    .foregroundStyle(Color.gray900)
+                    .foregroundStyle(
+                        termGroup.containsToday ? Color.green600 : Color.gray900
+                    )
                 Spacer()
             }
             .padding(.top, 24)
