@@ -144,7 +144,7 @@ private extension [CalendarTermRecord] {
     func sortedByCalendarOrder() -> [CalendarTermRecord] {
         sorted { lhs, rhs in
             if lhs.year == rhs.year {
-                return lhs.term.orderIndex < rhs.term.orderIndex
+                return lhs.term.yearOrder < rhs.term.yearOrder
             }
             return lhs.year.rawValue < rhs.year.rawValue
         }
