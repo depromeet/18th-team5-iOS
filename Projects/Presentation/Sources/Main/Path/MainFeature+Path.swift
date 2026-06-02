@@ -11,6 +11,7 @@ import ComposableArchitecture
 extension MainFeature {
     @Reducer
     public enum Path {
+        case myPage(MyPageFeature)
         case solarTermIntroContent(SolarTermIntroContentFeature)
         case missionRecord(MissionRecordFeature)
     }

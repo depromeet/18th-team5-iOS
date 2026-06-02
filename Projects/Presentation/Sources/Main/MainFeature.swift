@@ -56,15 +56,17 @@ public struct MainFeature {
         Scope(state: \.home, action: \.home) {
             HomeFeature()
         }
+
+        Scope(state: \.mission, action: \.mission) {
+            MissionListFeature()
+        }
+
         Scope(state: \.calendar, action: \.calendar) {
             CalendarFeature()
         }
 
         Scope(state: \.solarTermIntro, action: \.solarTermIntro) {
             SolarTermIntroFeature()
-        }
-        Scope(state: \.mission, action: \.mission) {
-            MissionListFeature()
         }
 
         Reduce { state, action in
@@ -108,6 +110,10 @@ public struct MainFeature {
                         // TODO: Firebase 전환 후 에러핸들링 추가 - @minkyo
                     }
                 }
+
+            case .home(.delegate(.navigateToMyPage)):
+                state.path.append(.myPage(.init()))
+                return .none
 
             case let .solarTermIntroContentLoad(intro, dateLabel):
                 let solarTermIntroContent = SolarTermIntroContentFeature.State(

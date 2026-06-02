@@ -35,6 +35,7 @@ public struct HomeFeature {
             case navigateToMissionCamera(missionId: Int, title: String, missionType: String, solarTermId: Int)
             case navigateToMissionTab
             case navigateToSolarTermContent(SolarTerm)
+            case navigateToMyPage
         }
     }
 

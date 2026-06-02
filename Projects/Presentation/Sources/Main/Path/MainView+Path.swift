@@ -13,6 +13,7 @@ extension MainView {
     @ViewBuilder
     func pathView(store: StoreOf<MainFeature.Path>) -> some View {
         switch store.case {
+        case let .myPage(store): MyPageView(store: store)
         case let .solarTermIntroContent(store): SolarTermIntroContentView(store: store)
         case let .missionRecord(store): MissionRecordView(store: store)
         }
