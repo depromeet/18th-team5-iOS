@@ -15,20 +15,16 @@ public struct CalendarFeature {
     @ObservableState
     public struct State: Equatable {
         public var header: CalendarHeader?
-        public var calendarState: PagingTableViewState<SolarTermGroup> = .init(
-            anchorRequest: nil,
-            pages: []
-        )
+        public var calendarState: PagingTableViewState<SolarTermGroup> = .init(pages: [])
         public var selectedDateId: SolarTermDate.ID?
         public var calendarDetail: CalendarDetail?
         public var topMostDetailCardIndex: Int = 0
 
-        public var termRecordData: [String: CalendarTermRecordData] = [:]
-
+        var termRecordData: [String: CalendarTermRecordData] = [:]
         var isAppeared: Bool = false
         var anchoredTermId: SolarTermGroup.ID?
         var isPaging: Bool = false
-        var currentYear: SolarTermYear = .y2026
+        var currentYear: SolarTermYear = .current
     }
 
     public enum Action: BindableAction {
@@ -43,6 +39,7 @@ public struct CalendarFeature {
         case updateCalendarPages([Page<SolarTermGroup>])
         case updateCalendarHeader(CalendarHeader)
         case updateAnchorRequest(AnchorRequest<SolarTermGroup>)
+        case updateRowReloadRequest(RowReloadRequest<SolarTermGroup>)
         case updateTermRecordData(id: String, data: CalendarTermRecordData)
         case binding(BindingAction<State>)
     }
@@ -63,7 +60,7 @@ public struct CalendarFeature {
                 return calendarPagingRequest(&state, direction: direction)
 
             case let .anchoredTermChanged(termId):
-                return anchoredTermChanged(&state, termId: termId)
+                return anchoredTermChanged(&state, termGroupId: termId)
 
             case .detailOkButtonTapped:
                 // TODO: 동작 및 액션 수정 -@준영
@@ -96,12 +93,28 @@ public struct CalendarFeature {
                 return .none
 
             case let .updateTermRecordData(id, data):
+                print(id)
                 state.termRecordData[id] = data
+                return .none
+
+            case let .updateRowReloadRequest(request):
+                state.calendarState.rowReloadRequest = request
                 return .none
 
             default:
                 return .none
             }
+        }
+    }
+}
+
+extension CalendarFeature.State {
+    func dateData(_ date: SolarTermDate) -> CalendarDateRecord? {
+        let termRecordKey = CalendarFeature.termRecordKey(date.year, date.term)
+        guard let termRecord = termRecordData[termRecordKey]?.data else { return nil }
+        return termRecord.dates.first { dateRecord in
+            let components = Calendar.current.dateComponents([.day], from: dateRecord.date)
+            return components.day == date.day
         }
     }
 }

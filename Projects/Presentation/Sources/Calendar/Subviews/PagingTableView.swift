@@ -27,8 +27,14 @@ public struct AnchorRequest<Item: Identifiable & Equatable>: Equatable {
     public let animated: Bool
 }
 
+public struct RowReloadRequest<Item: Identifiable & Equatable>: Equatable {
+    public let requestId = UUID()
+    public let targetIds: [Item.ID]
+}
+
 public struct PagingTableViewState<Item: Identifiable & Equatable>: Equatable {
     public var anchorRequest: AnchorRequest<Item>?
+    public var rowReloadRequest: RowReloadRequest<Item>?
     public var pages: [Page<Item>]
 }
 
@@ -50,7 +56,10 @@ final class PagingTableView<Item: Identifiable & Equatable>: UIView, UITableView
         case reachedToEnd(direction: PageEndDirection)
     }
 
-    var action: AnyPublisher<Action, Never> { _action.eraseToAnyPublisher() }
+    var action: AnyPublisher<Action, Never> {
+        _action.eraseToAnyPublisher()
+    }
+
     private let _action: PassthroughSubject<Action, Never> = .init()
     private var store: Set<AnyCancellable> = []
 
@@ -73,7 +82,9 @@ final class PagingTableView<Item: Identifiable & Equatable>: UIView, UITableView
         setupTableView()
     }
 
-    required init?(coder: NSCoder) { nil }
+    required init?(coder: NSCoder) {
+        nil
+    }
 
     typealias State = PagingTableViewState<Item>
 
@@ -90,6 +101,14 @@ final class PagingTableView<Item: Identifiable & Equatable>: UIView, UITableView
 
         state
             .compactMap(\.anchorRequest)
+            .removeDuplicates()
+            .sink { [weak self] request in
+                self?.update(request: request)
+            }
+            .store(in: &store)
+
+        state
+            .compactMap(\.rowReloadRequest)
             .removeDuplicates()
             .sink { [weak self] request in
                 self?.update(request: request)
@@ -265,6 +284,17 @@ private extension PagingTableView {
         } else {
             isPageUpdating = false
         }
+    }
+
+    func update(request: RowReloadRequest<Item>) {
+        request.targetIds
+            .compactMap { indexPath(for: $0) }
+            .forEach { indexPath in
+                if let cell = tableView.cellForRow(at: indexPath) as? Cell,
+                   let item = itemAt(indexPath: indexPath) {
+                    cell.configure(arguments.cellBuilder(item))
+                }
+            }
     }
 }
 

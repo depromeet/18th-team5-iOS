@@ -28,12 +28,12 @@ extension CalendarFeature {
                 case .today:
                     try await calendarRecordRepository.fetchCurrentSolarTerms()
                 case let .specific(id):
-                    try await calendarRecordRepository.fetchSolarTerms(solarTermId: id)
+                    try await calendarRecordRepository.fetchSolarTerms(id)
                 }
 
                 for item in res.fetchedTermRecords {
                     await send(.updateTermRecordData(
-                        id: createDataId(item.year, item.term),
+                        id: Self.termRecordKey(item.year, item.term),
                         data: .data(
                             requestId: item.solarTermId,
                             data: item
@@ -41,28 +41,41 @@ extension CalendarFeature {
                     ))
                 }
 
+                var needsUpdateGroupIds: [String] = []
                 for item in [res.prevTermEmptyRecord, res.nextTermEmptyRecord] {
                     guard let item else { continue }
 
-                    let dataId = createDataId(item.year, item.term)
-                    if let record = state.termRecordData[dataId] {
+                    let termRecordKey = Self.termRecordKey(item.year, item.term)
+                    if let record = state.termRecordData[termRecordKey] {
                         if record.data != nil || record.isInflight {
                             continue
                         }
                     }
 
                     await send(.updateTermRecordData(
-                        id: dataId,
+                        id: termRecordKey,
                         data: .noData(requestId: item.solarTermId)
+                    ))
+                    needsUpdateGroupIds.append(
+                        Self.termGroupId(year: item.year, term: item.term)
+                    )
+                }
+                if !needsUpdateGroupIds.isEmpty {
+                    await send(.updateRowReloadRequest(
+                        .init(targetIds: needsUpdateGroupIds)
                     ))
                 }
             } catch {
+                // TODO: 에러처리 -@준영
                 logger.error(message: error.localizedDescription)
             }
         }
     }
 
-    func createDataId(_ year: SolarTermYear, _ term: SolarTerm) -> String {
+    static func termRecordKey(
+        _ year: SolarTermYear,
+        _ term: SolarTerm
+    ) -> String {
         "\(year.rawValue)-\(term.rawValue)"
     }
 }

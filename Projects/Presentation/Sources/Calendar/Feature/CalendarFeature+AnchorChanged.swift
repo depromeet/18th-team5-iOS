@@ -13,33 +13,31 @@ import Foundation
 // MARK: - Anchor changed
 
 extension CalendarFeature {
-    func anchoredTermChanged(_ state: inout State, termId: SolarTermGroup.ID) -> Effect<Action> {
-        var effects: [Effect<Action>] = []
-
-        if let currentTerm = findTermGroup(
+    func anchoredTermChanged(
+        _ state: inout State,
+        termGroupId: SolarTermGroup.ID
+    ) -> Effect<Action> {
+        guard let currentTerm = findTermGroup(
             pages: state.calendarState.pages,
-            termId: termId
-        ) {
+            termGroupId: termGroupId
+        ) else { return .none }
+
+        var effects: [Effect<Action>] = [
+            .send(.updateCalendarHeader(mapToHeader(currentTerm)))
+        ]
+
+        let info = currentTerm.solarTermInfo
+        let recordKey = Self.termRecordKey(info.year, info.term)
+        if let termRecordData = state.termRecordData[recordKey],
+           termRecordData.data == nil,
+           !termRecordData.isInflight {
+            state.termRecordData[recordKey]?.flight()
             effects.append(
-                .send(.updateCalendarHeader(mapToHeader(currentTerm)))
-            )
-        }
-
-        if let term = findTermGroup(pages: state.calendarState.pages, termId: termId) {
-            let info = term.solarTermInfo
-            let dataId = createDataId(info.year, info.term)
-
-            if let termRecordData = state.termRecordData[dataId],
-               termRecordData.data == nil,
-               !termRecordData.isInflight {
-                state.termRecordData[dataId]?.flight()
-                effects.append(
-                    fetchCalendarData(
-                        state,
-                        .specific(id: termRecordData.requestId)
-                    )
+                fetchCalendarData(
+                    state,
+                    .specific(id: termRecordData.requestId)
                 )
-            }
+            )
         }
         return .merge(effects)
     }

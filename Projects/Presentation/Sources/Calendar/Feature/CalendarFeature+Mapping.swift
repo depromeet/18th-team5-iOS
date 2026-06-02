@@ -54,13 +54,17 @@ extension CalendarFeature {
                         dayText: String(ymd.day),
                         isFirstDayOfMonth: ymd.day == 1,
                         isToday: ymd == todayYmd,
-                        isSelected: false
+                        isSelected: false,
+                        year: termInfo.year,
+                        term: termInfo.term,
+                        month: ymd.month,
+                        day: ymd.day
                     )
                 )
             )
         }
         return SolarTermGroup(
-            id: termInfo.identifier,
+            id: Self.termGroupId(year: termInfo.year, term: termInfo.term),
             termText: termInfo.term.koreanName,
             solarTermInfo: termInfo,
             cells: cells.chunked(size: 7)
@@ -112,10 +116,6 @@ private extension SolarTermInfo {
             next = subsequent
         }
         return dates
-    }
-
-    var identifier: String {
-        "\(year.rawValue)-\(term.rawValue)"
     }
 }
 

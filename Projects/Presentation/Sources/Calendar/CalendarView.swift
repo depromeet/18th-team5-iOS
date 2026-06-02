@@ -110,9 +110,6 @@ extension CalendarView {
         let calendar = weekSectionHeight * CGFloat(weekCount) + weekSpacing
 
         let bottom = Constants.termSectionBottomPadding
-
-        print("\(term.solarTermInfo.term.koreanName): \(header + calendar + bottom)")
-
         return header + calendar + bottom
     }
 
@@ -180,7 +177,10 @@ extension CalendarView {
                 .frame(width: cellWidth, height: 1)
 
         case let .dateCell(date):
-            CalendarDateCell(date: date) {
+            CalendarDateCell(
+                date: date,
+                data: store.state.dateData(date)
+            ) {
                 store.send(.dateCellTapped(dateId: date.id, inset: anchorInset))
             }
             .frame(width: cellWidth)

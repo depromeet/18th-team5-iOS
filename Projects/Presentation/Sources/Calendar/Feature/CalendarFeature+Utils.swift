@@ -26,12 +26,23 @@ extension CalendarFeature {
         return nil
     }
 
-    func findTermGroup(pages: [Page<SolarTermGroup>], termId: SolarTermGroup.ID) -> SolarTermGroup? {
+    func findTermGroup(
+        pages: [Page<SolarTermGroup>],
+        termGroupId: SolarTermGroup.ID
+    ) -> SolarTermGroup? {
         for yearPage in pages {
             for termGroup in yearPage.items {
-                if termGroup.id == termId { return termGroup }
+                if termGroup.id == termGroupId { return termGroup }
             }
         }
         return nil
+    }
+}
+
+// MARK: Keys
+
+extension CalendarFeature {
+    static func termGroupId(year: SolarTermYear, term: SolarTerm) -> String {
+        "\(year.rawValue)-\(term.rawValue)"
     }
 }

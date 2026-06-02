@@ -50,7 +50,7 @@ extension CalendarFeature {
               let anchoredTermId = state.anchoredTermId,
               let termGroup = findTermGroup(
                   pages: state.calendarState.pages,
-                  termId: anchoredTermId
+                  termGroupId: anchoredTermId
               )
         else { return .none }
 

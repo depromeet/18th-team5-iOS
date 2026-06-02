@@ -6,14 +6,18 @@
 //  Copyright © 2026 Orange. All rights reserved.
 //
 
+import Domain
+import Kingfisher
 import SwiftUI
 
 struct CalendarDateCell: View {
     enum Constants {
         static let cellHeight: CGFloat = 90
+        static let thumbnailSize: CGFloat = 32
     }
 
     let date: SolarTermDate
+    var data: CalendarDateRecord?
     let onTap: () -> Void
 
     var body: some View {
@@ -54,32 +58,57 @@ struct CalendarDateCell: View {
             }
     }
 
-    // TODO: 이미지로 교체 -@준영
     var thumbnailView: some View {
-        Rectangle()
-            .foregroundStyle(Color.gray200)
-            .frame(width: 32, height: 32)
-            .clipShape(
-                CalendarCellImageShape(
-                    containerPadding: 2.56,
-                    containerRadius: 4,
-                    protrusionRadius: 1.78
-                )
+        Group {
+            if let url = data?.thumbnailURL {
+                KFImage(url)
+                    .setProcessor(
+                        DownsamplingImageProcessor(
+                            size: CGSize(
+                                width: Constants.thumbnailSize,
+                                height: Constants.thumbnailSize
+                            )
+                        )
+                    )
+                    .placeholder { thumbnailPlaceHolder }
+                    .scaleFactor(UIScreen.main.scale)
+                    .fade(duration: 0.2)
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+            } else {
+                thumbnailPlaceHolder
+            }
+        }
+        .frame(
+            width: Constants.thumbnailSize,
+            height: Constants.thumbnailSize
+        )
+        .clipShape(
+            CalendarCellImageShape(
+                containerPadding: 2.56,
+                containerRadius: 4,
+                protrusionRadius: 1.78
             )
+        )
     }
 
     var dateTextView: some View {
         Text(date.dayText)
             .font(.body2Medium)
             .foregroundStyle(
-                (date.isSelected || date.isFirstDayOfMonth) ? Color.white : Color.gray900
+                (date.isSelected || date.isToday) ? Color.white : Color.gray900
             )
             .frame(maxWidth: .infinity)
             .background {
-                if date.isFirstDayOfMonth {
+                if date.isToday {
                     Capsule().fill(Color.green500)
                 }
             }
+    }
+
+    var thumbnailPlaceHolder: some View {
+        Rectangle()
+            .foregroundStyle(Color.gray200)
     }
 }
 
@@ -100,7 +129,11 @@ struct CalendarDateCell: View {
                     dayText: "12",
                     isFirstDayOfMonth: isFirstDayOfMonth,
                     isToday: isToday,
-                    isSelected: isSelected
+                    isSelected: isSelected,
+                    year: .current,
+                    term: .ipchun,
+                    month: 1,
+                    day: 1
                 ),
                 onTap: {}
             )
