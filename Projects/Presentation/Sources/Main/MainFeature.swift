@@ -115,6 +115,10 @@ public struct MainFeature {
                 state.path.append(.myPage(.init()))
                 return .none
 
+            case .home(.delegate(.navigateToNotificationList)):
+                state.path.append(.notificationList(.init()))
+                return .none
+
             case let .solarTermIntroContentLoad(intro, dateLabel):
                 let solarTermIntroContent = SolarTermIntroContentFeature.State(
                     solarTermIntro: intro,
