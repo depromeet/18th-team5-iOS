@@ -1,0 +1,19 @@
+//
+//  MainFeature+Path.swift
+//  Presentation
+//
+//  Created by 이정원 on 6/2/26.
+//  Copyright © 2026 Orange. All rights reserved.
+//
+
+import ComposableArchitecture
+
+extension MainFeature {
+    @Reducer
+    public enum Path {
+        case solarTermIntroContent(SolarTermIntroContentFeature)
+        case missionRecord(MissionRecordFeature)
+    }
+}
+
+extension MainFeature.Path.State: Equatable {}
