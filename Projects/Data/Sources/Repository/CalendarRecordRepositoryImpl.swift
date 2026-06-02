@@ -1,5 +1,5 @@
 //
-//  CalendarRepositoryImpl.swift
+//  CalendarRecordRepositoryImpl.swift
 //  Data
 //
 //  Copyright © 2026 Orange. All rights reserved.
@@ -9,16 +9,16 @@ import Dependencies
 import Domain
 import Foundation
 
-extension CalendarRepository: @retroactive DependencyKey {
-    public static let liveValue: CalendarRepository = CalendarRepositoryImpl.live()
+extension CalendarRecordRepository: @retroactive DependencyKey {
+    public static let liveValue: CalendarRecordRepository = CalendarRecordRepositoryImpl.live()
 }
 
-public enum CalendarRepositoryImpl {
-    public static func live() -> CalendarRepository {
-        CalendarRepository(
+public enum CalendarRecordRepositoryImpl {
+    public static func live() -> CalendarRecordRepository {
+        CalendarRecordRepository(
             fetchCurrentSolarTerms: {
                 @Dependency(\.networkClient) var client
-                let response: CalendarSolarTermsResponseDTO? = try await client.request(
+                let response: CalendarTermRecordsResponseDTO? = try await client.request(
                     CalendarEndpoint.fetchCurrentSolarTerms
                 )
                 guard let response else {
@@ -28,7 +28,7 @@ public enum CalendarRepositoryImpl {
             },
             fetchSolarTerms: { solarTermId in
                 @Dependency(\.networkClient) var client
-                let response: CalendarSolarTermsResponseDTO? = try await client.request(
+                let response: CalendarTermRecordsResponseDTO? = try await client.request(
                     CalendarEndpoint.fetchSolarTerms(solarTermId: solarTermId)
                 )
                 guard let response else {
@@ -42,28 +42,28 @@ public enum CalendarRepositoryImpl {
 
 // MARK: - Domain Mapping
 
-private extension CalendarSolarTermsResponseDTO {
-    func toDomain() -> CalendarSolarTermsResponse {
-        let terms = solarTerms.map { $0.toDomain() }
-        return CalendarSolarTermsResponse(
-            fetchedSolarTerms: terms.sortedByCalendarOrder(),
-            prevSolarTerm: CalendarSolarTerm.pageAnchor(
+private extension CalendarTermRecordsResponseDTO {
+    func toDomain() -> CalendarTermRecordsResponse {
+        let records = solarTerms.map { $0.toDomain() }
+        return CalendarTermRecordsResponse(
+            fetchedTermRecords: records.sortedByCalendarOrder(),
+            prevTermEmptyRecord: CalendarTermRecord.pageAnchor(
                 id: prevSolarTermId,
-                boundary: terms.first,
+                boundary: records.first,
                 direction: .previous
             ),
-            nextSolarTerm: CalendarSolarTerm.pageAnchor(
+            nextTermEmptyRecord: CalendarTermRecord.pageAnchor(
                 id: nextSolarTermId,
-                boundary: terms.last,
+                boundary: records.last,
                 direction: .next
             )
         )
     }
 }
 
-private extension CalendarSolarTermDTO {
-    func toDomain() -> CalendarSolarTerm {
-        CalendarSolarTerm(
+private extension CalendarTermRecordDTO {
+    func toDomain() -> CalendarTermRecord {
+        CalendarTermRecord(
             solarTermId: solarTermId,
             term: toSolarTerm(),
             year: toSolarTermYear(),
@@ -82,9 +82,9 @@ private extension CalendarSolarTermDTO {
     }
 }
 
-private extension CalendarSolarTermDateDTO {
-    func toDomain() -> CalendarSolarTermDate {
-        CalendarSolarTermDate(
+private extension CalendarDateRecordDTO {
+    func toDomain() -> CalendarDateRecord {
+        CalendarDateRecord(
             date: DateFormatter.yyyyMMdd.date(from: date) ?? Date(),
             thumbnailURL: thumbnailUrl.flatMap { URL(string: $0) }
         )
@@ -99,19 +99,19 @@ private enum PageDirection {
     case next
 }
 
-private extension CalendarSolarTerm {
-    /// 경계 절기(boundary)의 인접 절기를 주어진 id에 매핑해 페이지 앵커 절기를 생성합니다.
+private extension CalendarTermRecord {
+    /// 경계 기록(boundary)의 인접 절기를 주어진 id에 매핑해 페이지 앵커 기록을 생성합니다.
     /// id·boundary가 없거나 인접 절기를 구할 수 없으면 nil을 반환합니다.
     static func pageAnchor(
         id: Int?,
-        boundary: CalendarSolarTerm?,
+        boundary: CalendarTermRecord?,
         direction: PageDirection
-    ) -> CalendarSolarTerm? {
+    ) -> CalendarTermRecord? {
         guard let id,
               let adjacent = boundary?.adjacentTerm(direction)
         else { return nil }
 
-        return CalendarSolarTerm(
+        return CalendarTermRecord(
             solarTermId: id,
             term: adjacent.term,
             year: adjacent.year,
@@ -139,9 +139,9 @@ private extension CalendarSolarTerm {
     }
 }
 
-private extension [CalendarSolarTerm] {
+private extension [CalendarTermRecord] {
     /// 연도 → 절기 순서(orderIndex) 기준으로 정렬합니다.
-    func sortedByCalendarOrder() -> [CalendarSolarTerm] {
+    func sortedByCalendarOrder() -> [CalendarTermRecord] {
         sorted { lhs, rhs in
             if lhs.year == rhs.year {
                 return lhs.term.orderIndex < rhs.term.orderIndex

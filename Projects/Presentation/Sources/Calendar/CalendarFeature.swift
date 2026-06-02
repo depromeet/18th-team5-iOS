@@ -23,7 +23,7 @@ public struct CalendarFeature {
         public var calendarDetail: CalendarDetail?
         public var topMostDetailCardIndex: Int = 0
 
-        public var termData: [String: CalendarTermData] = [:]
+        public var termRecordData: [String: CalendarTermRecordData] = [:]
 
         fileprivate var isAppeared: Bool = false
         fileprivate var anchoredTermId: SolarTermGroup.ID?
@@ -43,14 +43,14 @@ public struct CalendarFeature {
         case updateCalendarPages([Page<SolarTermGroup>])
         case updateCalendarHeader(CalendarHeader)
         case updateAnchorRequest(AnchorRequest<SolarTermGroup>)
-        case updateTermData(id: String, data: CalendarTermData)
+        case updateTermRecordData(id: String, data: CalendarTermRecordData)
         case binding(BindingAction<State>)
     }
 
     @Dependency(\.logger) var logger
     @Dependency(\.date) var date
     @Dependency(\.solarTermRepository) var solarTermRepository
-    @Dependency(\.calendarRepository) var calendarRepository
+    @Dependency(\.calendarRecordRepository) var calendarRecordRepository
 
     public var body: some ReducerOf<Self> {
         BindingReducer()
@@ -63,13 +63,7 @@ public struct CalendarFeature {
                 return calendarPagingRequest(&state, direction: direction)
 
             case let .anchoredTermChanged(termId):
-                if let currentTerm = findTermGroup(
-                    pages: state.calendarState.pages,
-                    termId: termId
-                ) {
-                    return .send(.updateCalendarHeader(mapToHeader(currentTerm)))
-                }
-                return .none
+                return anchoredTermChanged(&state, termId: termId)
 
             case .detailOkButtonTapped:
                 // TODO: 동작 및 액션 수정 -@준영
@@ -101,8 +95,8 @@ public struct CalendarFeature {
                 state.isPaging = false
                 return .none
 
-            case let .updateTermData(id, data):
-                state.termData[id] = data
+            case let .updateTermRecordData(id, data):
+                state.termRecordData[id] = data
                 return .none
 
             default:
@@ -112,7 +106,7 @@ public struct CalendarFeature {
     }
 }
 
-// MARK: - Effect 분리
+// MARK: - OnAppear
 
 private extension CalendarFeature {
     func onAppear(_ state: inout State) -> Effect<Action> {
@@ -127,9 +121,52 @@ private extension CalendarFeature {
             return .none
         }
         state.currentYear = currentYear
-        return fetchInitialPages(currentYear: currentYear, now: now)
+        return .concatenate(
+            fetchInitialPages(currentYear: currentYear, now: now),
+            fetchCalendarData(state, .today)
+        )
     }
+}
 
+// MARK: Anchor changed
+
+private extension CalendarFeature {
+    func anchoredTermChanged(_ state: inout State, termId: SolarTermGroup.ID) -> Effect<Action> {
+        var effects: [Effect<Action>] = []
+
+        if let currentTerm = findTermGroup(
+            pages: state.calendarState.pages,
+            termId: termId
+        ) {
+            effects.append(
+                .send(.updateCalendarHeader(mapToHeader(currentTerm)))
+            )
+        }
+
+        if let term = findTermGroup(pages: state.calendarState.pages, termId: termId) {
+            let info = term.solarTermInfo
+            let dataId = createDataId(info.year, info.term)
+
+            if let termRecordData = state.termRecordData[dataId],
+               termRecordData.data == nil,
+               !termRecordData.isInflight {
+                state.termRecordData[dataId]?.flight()
+                effects.append(
+                    fetchCalendarData(
+                        state,
+                        .specific(id: termRecordData.requestId)
+                    )
+                )
+            }
+        }
+        return .merge(effects)
+    }
+}
+
+// MARK: 정적 절기 캘린더 페이징
+
+private extension CalendarFeature {
+    /// #1. 최초 페이지 로딩
     func fetchInitialPages(
         currentYear: SolarTermYear,
         now: Date
@@ -157,6 +194,7 @@ private extension CalendarFeature {
         }
     }
 
+    /// #2. 스크롤이 양끝에 도달한 경우 다음 페이지 요청 정보 도출
     func calendarPagingRequest(
         _ state: inout State,
         direction: PageEndDirection
@@ -187,6 +225,130 @@ private extension CalendarFeature {
         )
     }
 
+    /// #3. 해당 연도의 절기 정보 요청
+    func fetchPagingYear(
+        direction: PageEndDirection,
+        fetchingYear: SolarTermYear,
+        currentPages: [Page<SolarTermGroup>],
+        now: Date
+    ) -> Effect<Action> {
+        .run { send in
+            do {
+                let fetchedTerms = try await solarTermRepository.fetchSolarTerms(fetchingYear)
+                let newPage = mapToYearGroup(now: now, year: fetchingYear, terms: fetchedTerms)
+                let updated = applyPaging(direction: direction, newPage: newPage, to: currentPages)
+                await send(.updateCalendarPages(updated))
+            } catch {
+                try? await Task.sleep(for: .seconds(1))
+            }
+            await send(.yearPagesLayoutCompleted)
+        }
+    }
+
+    func applyPaging(
+        direction: PageEndDirection,
+        newPage: Page<SolarTermGroup>,
+        to pages: [Page<SolarTermGroup>]
+    ) -> [Page<SolarTermGroup>] {
+        var updated: [Page<SolarTermGroup>]
+        switch direction {
+        case .top:
+            updated = [newPage] + pages
+            if updated.count > 3 { updated.removeLast() }
+        case .bottom:
+            updated = pages + [newPage]
+            if updated.count > 3 { updated.removeFirst() }
+        }
+        return updated
+    }
+
+    func fetchYearPages(
+        years: [SolarTermYear],
+        now: Date
+    ) async -> [Page<SolarTermGroup>] {
+        await withTaskGroup(
+            of: (SolarTermYear, Page<SolarTermGroup>)?.self,
+            returning: [Page<SolarTermGroup>].self
+        ) { group in
+            for year in years {
+                group.addTask { [solarTermRepository] in
+                    guard let terms = try? await solarTermRepository.fetchSolarTerms(year)
+                    else { return nil }
+                    return (year, mapToYearGroup(now: now, year: year, terms: terms))
+                }
+            }
+            var results: [(SolarTermYear, Page<SolarTermGroup>)] = []
+            for await value in group {
+                guard let value else { continue }
+                results.append(value)
+            }
+            return results
+                .sorted(by: { $0.0.rawValue < $1.0.rawValue })
+                .map(\.1)
+        }
+    }
+}
+
+// MARK: - Term data, 캘린더 기록 정보
+
+private extension CalendarFeature {
+    enum TermFetchRequest {
+        case today
+        case specific(id: Int)
+    }
+
+    func fetchCalendarData(
+        _ state: State,
+        _ request: TermFetchRequest
+    ) -> Effect<Action> {
+        .run { send in
+            do {
+                let res = switch request {
+                case .today:
+                    try await calendarRecordRepository.fetchCurrentSolarTerms()
+                case let .specific(id):
+                    try await calendarRecordRepository.fetchSolarTerms(solarTermId: id)
+                }
+
+                for item in res.fetchedTermRecords {
+                    await send(.updateTermRecordData(
+                        id: createDataId(item.year, item.term),
+                        data: .data(
+                            requestId: item.solarTermId,
+                            data: item
+                        )
+                    ))
+                }
+
+                for item in [res.prevTermEmptyRecord, res.nextTermEmptyRecord] {
+                    guard let item else { continue }
+
+                    let dataId = createDataId(item.year, item.term)
+                    if let record = state.termRecordData[dataId] {
+                        if record.data != nil || record.isInflight {
+                            continue
+                        }
+                    }
+
+                    await send(.updateTermRecordData(
+                        id: dataId,
+                        data: .noData(requestId: item.solarTermId)
+                    ))
+                }
+            } catch {
+                logger.error(message: error.localizedDescription)
+            }
+        }
+    }
+
+    func createDataId(_ year: SolarTermYear, _ term: SolarTerm) -> String {
+        "\(year.rawValue)-\(term.rawValue)"
+    }
+}
+
+// MARK: 셀클릭 > DateDetail
+
+private extension CalendarFeature {
     func dateCellTapped(
         _ state: inout State,
         dateId: SolarTermDate.ID,
@@ -238,49 +400,6 @@ private extension CalendarFeature {
         return .none
     }
 
-    func fetchPagingYear(
-        direction: PageEndDirection,
-        fetchingYear: SolarTermYear,
-        currentPages: [Page<SolarTermGroup>],
-        now: Date
-    ) -> Effect<Action> {
-        .run { send in
-            do {
-                let fetchedTerms = try await solarTermRepository.fetchSolarTerms(fetchingYear)
-                let newPage = mapToYearGroup(now: now, year: fetchingYear, terms: fetchedTerms)
-                let updated = applyPaging(direction: direction, newPage: newPage, to: currentPages)
-                await send(.updateCalendarPages(updated))
-            } catch {
-                try? await Task.sleep(for: .seconds(1))
-            }
-            await send(.yearPagesLayoutCompleted)
-        }
-    }
-}
-
-private extension CalendarFeature {
-    func findTermGroup(pages: [Page<SolarTermGroup>], dateId: SolarTermDate.ID) -> SolarTermGroup? {
-        for yearPage in pages {
-            for termGroup in yearPage.items {
-                for cell in termGroup.cells.flatMap(\.self) {
-                    if case let .dateCell(date) = cell, date.id == dateId {
-                        return termGroup
-                    }
-                }
-            }
-        }
-        return nil
-    }
-
-    func findTermGroup(pages: [Page<SolarTermGroup>], termId: SolarTermGroup.ID) -> SolarTermGroup? {
-        for yearPage in pages {
-            for termGroup in yearPage.items {
-                if termGroup.id == termId { return termGroup }
-            }
-        }
-        return nil
-    }
-
     func editDateCell(
         _ state: inout State,
         id: SolarTermDate.ID,
@@ -306,54 +425,33 @@ private extension CalendarFeature {
     }
 }
 
-// MARK: - 페이지 유틸리티
+// MARK: Utils
 
 private extension CalendarFeature {
-    func applyPaging(
-        direction: PageEndDirection,
-        newPage: Page<SolarTermGroup>,
-        to pages: [Page<SolarTermGroup>]
-    ) -> [Page<SolarTermGroup>] {
-        var updated: [Page<SolarTermGroup>]
-        switch direction {
-        case .top:
-            updated = [newPage] + pages
-            if updated.count > 3 { updated.removeLast() }
-        case .bottom:
-            updated = pages + [newPage]
-            if updated.count > 3 { updated.removeFirst() }
-        }
-        return updated
-    }
-
-    func fetchYearPages(
-        years: [SolarTermYear],
-        now: Date
-    ) async -> [Page<SolarTermGroup>] {
-        await withTaskGroup(
-            of: (SolarTermYear, Page<SolarTermGroup>)?.self,
-            returning: [Page<SolarTermGroup>].self
-        ) { group in
-            for year in years {
-                group.addTask { [solarTermRepository] in
-                    guard let terms = try? await solarTermRepository.fetchSolarTerms(year)
-                    else { return nil }
-                    return (year, mapToYearGroup(now: now, year: year, terms: terms))
+    func findTermGroup(pages: [Page<SolarTermGroup>], dateId: SolarTermDate.ID) -> SolarTermGroup? {
+        for yearPage in pages {
+            for termGroup in yearPage.items {
+                for cell in termGroup.cells.flatMap(\.self) {
+                    if case let .dateCell(date) = cell, date.id == dateId {
+                        return termGroup
+                    }
                 }
             }
-            var results: [(SolarTermYear, Page<SolarTermGroup>)] = []
-            for await value in group {
-                guard let value else { continue }
-                results.append(value)
-            }
-            return results
-                .sorted(by: { $0.0.rawValue < $1.0.rawValue })
-                .map(\.1)
         }
+        return nil
+    }
+
+    func findTermGroup(pages: [Page<SolarTermGroup>], termId: SolarTermGroup.ID) -> SolarTermGroup? {
+        for yearPage in pages {
+            for termGroup in yearPage.items {
+                if termGroup.id == termId { return termGroup }
+            }
+        }
+        return nil
     }
 }
 
-// MARK: - 매핑 유틸리티
+// MARK: - 맵핑(Domin > Presentation)
 
 private extension CalendarFeature {
     func mapToHeader(_ term: SolarTermGroup) -> CalendarHeader {
@@ -436,46 +534,6 @@ private extension CalendarFeature {
         df.dateFormat = "yyyy-MM-dd"
         return df
     }()
-}
-
-// MARK: - Data fetch
-
-private extension CalendarFeature {
-    func fetchCalendarData(_ id: Int) async -> Effect<Action> {
-        .run { send in
-            do {
-                let response = try await calendarRepository.fetchSolarTerms(solarTermId: id)
-
-                for item in response.fetchedSolarTerms {
-                    await send(.updateTermData(
-                        id: createDataId(item.year, item.term),
-                        data: CalendarTermData(
-                            requestId: item.solarTermId,
-                            isInflight: false,
-                            data: item
-                        )
-                    ))
-                }
-
-                for item in [response.prevSolarTerm, response.nextSolarTerm] {
-                    guard let item else { continue }
-                    await send(.updateTermData(
-                        id: createDataId(item.year, item.term),
-                        data: CalendarTermData(
-                            requestId: item.solarTermId,
-                            isInflight: false
-                        )
-                    ))
-                }
-            } catch {
-                logger.error(message: error.localizedDescription)
-            }
-        }
-    }
-
-    func createDataId(_ year: SolarTermYear, _ term: SolarTerm) -> String {
-        "\(year.rawValue)-\(term.rawValue)"
-    }
 }
 
 // MARK: - Anchor 탐색
