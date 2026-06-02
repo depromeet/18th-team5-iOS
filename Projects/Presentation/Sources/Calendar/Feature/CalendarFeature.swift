@@ -93,7 +93,6 @@ public struct CalendarFeature {
                 return .none
 
             case let .updateTermRecordData(id, data):
-                print(id)
                 state.termRecordData[id] = data
                 return .none
 
