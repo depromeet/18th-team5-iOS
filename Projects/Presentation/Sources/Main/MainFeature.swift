@@ -72,9 +72,7 @@ public struct MainFeature {
         Reduce { state, action in
             switch action {
             case .onAppear:
-                return .run { send in
-                    await checkNotificationSettings(send)
-                }
+                return .none
 
             case let .home(.delegate(.navigateToMissionCamera(missionId, title, missionTypeRaw, solarTermId))):
                 let missionType = MissionType(rawValue: missionTypeRaw) ?? {
@@ -164,18 +162,6 @@ public struct MainFeature {
         }
         .ifLet(\.$solarTermIntroContent, action: \.solarTermIntroContent) {
             SolarTermIntroContentFeature()
-        }
-    }
-}
-
-private extension MainFeature {
-    func checkNotificationSettings(_ send: Send<Action>) async {
-        do {
-            let settings = try await notificationRepository.fetchNotificationSettings()
-            guard let settings else { return }
-            try await notificationRepository.syncNotificationSettings(settings)
-        } catch {
-            // TODO: 에러 처리 - 정원
         }
     }
 }
