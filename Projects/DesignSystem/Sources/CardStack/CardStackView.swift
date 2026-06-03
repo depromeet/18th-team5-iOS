@@ -252,15 +252,13 @@ private extension CardStackView {
     }
 }
 
-// TODO: 삭제예정 - @준영
+#if Debug
 
-public struct CardModel: Hashable {
-    public let color: Color = .random()
+struct CardModel: Hashable {
+    let color: Color = .random()
 
-    public init() {}
+    init() {}
 }
-
-// TODO: 삭제예정 - @준영
 
 extension Color {
     static func random() -> Color {
@@ -287,3 +285,4 @@ extension Color {
     }
     .border(.red)
 }
+#endif
