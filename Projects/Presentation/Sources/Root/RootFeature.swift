@@ -21,6 +21,7 @@ public struct RootFeature {
         var launchConfig: LaunchConfig?
         var hasFetchedConfig: Bool = false
         var isOnboarded: Bool?
+        var notificationAuthorizationStatus: NotificationAuthorizationStatus?
 
         public init(currentAppVersion: AppVersion = .current, isDebug: Bool = false) {
             self.currentAppVersion = currentAppVersion
@@ -30,11 +31,13 @@ public struct RootFeature {
 
     public enum Action {
         case onAppear
+        case appDidBecomeActive
         case path(Path.Action)
         case launchConfigLoaded(Result<LaunchConfig, Error>)
         case launchFlowFinished
         case loginFlowFinished(with: Result<Void, Error>)
         case onboardingStateLoaded(Bool)
+        case notificationAuthorizationStatusLoaded(NotificationAuthorizationStatus)
         case onboardingFinished
         case setDebugTokenFinished
         case navigation(Path.State)
@@ -60,6 +63,11 @@ public struct RootFeature {
                 guard !state.hasFetchedConfig else { return .none }
                 state.hasFetchedConfig = true
                 return loadLaunchConfig()
+
+            case .appDidBecomeActive:
+                return .run { [state] send in
+                    await checkNotificationAuthorizationStatusChange(state, send)
+                }
 
             case let .launchConfigLoaded(result):
                 switch result {
@@ -89,6 +97,10 @@ public struct RootFeature {
 
             case let .onboardingStateLoaded(isOnboarded):
                 state.isOnboarded = isOnboarded
+                return .none
+
+            case let .notificationAuthorizationStatusLoaded(status):
+                state.notificationAuthorizationStatus = status
                 return .none
 
             case .onboardingFinished:
@@ -220,6 +232,7 @@ private extension RootFeature {
     ) async {
         do {
             let status = try await notificationClient.getAuthorizationStatus()
+            await send(.notificationAuthorizationStatusLoaded(status))
 
             switch status {
             case .authorized, .provisional:
@@ -237,6 +250,33 @@ private extension RootFeature {
         } catch {
             // TODO: 알림 권한 조회 실패 에러처리 - @정원
             logger.error(message: "알림 권한 조회 실패 \(error.localizedDescription)")
+        }
+    }
+
+    func checkNotificationAuthorizationStatusChange(
+        _ state: State,
+        _ send: Send<Action>
+    ) async {
+        do {
+            let wasAuthorized = state.notificationAuthorizationStatus?.isAuthorized ?? false
+            let currentStatus = try await notificationClient.getAuthorizationStatus()
+            await send(.notificationAuthorizationStatusLoaded(currentStatus))
+
+            if !wasAuthorized, currentStatus.isAuthorized {
+                await notificationClient.registerForRemoteNotifications()
+            }
+        } catch {
+            // TODO: 알림 권한 조회 실패 에러처리 - @정원
+            logger.error(message: "알림 권한 조회 실패 \(error.localizedDescription)")
+        }
+    }
+}
+
+private extension NotificationAuthorizationStatus {
+    var isAuthorized: Bool {
+        switch self {
+        case .authorized, .provisional: return true
+        case .notDetermined, .denied: return false
         }
     }
 }
