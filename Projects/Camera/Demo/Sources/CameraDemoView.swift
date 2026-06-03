@@ -133,14 +133,16 @@ private extension CameraDemoView {
         return Button {
             proxy.send(.toggleSelfieZoom)
         } label: {
-            Image(systemName: isWide
-                ? "arrow.down.right.and.arrow.up.left"
-                : "arrow.up.left.and.arrow.down.right")
-                .font(.system(size: 14, weight: .semibold))
-                .foregroundStyle(.white)
-                .frame(width: 32, height: 32)
-                .background(Color.gray.opacity(0.5))
-                .clipShape(Circle())
+            Image(
+                systemName: isWide
+                    ? "arrow.down.right.and.arrow.up.left"
+                    : "arrow.up.left.and.arrow.down.right"
+            )
+            .font(.system(size: 14, weight: .semibold))
+            .foregroundStyle(.white)
+            .frame(width: 32, height: 32)
+            .background(Color.gray.opacity(0.5))
+            .clipShape(Circle())
         }
         .frame(height: 32)
     }

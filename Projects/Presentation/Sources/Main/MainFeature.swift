@@ -11,16 +11,26 @@ import Domain
 
 @Reducer
 public struct MainFeature {
+    @Dependency(\.notificationRepository) private var notificationRepository
+
     @ObservableState
     public struct State: Equatable {
+        @Shared(.tabBarVisibility) var tabBarVisibility: Bool = true
+
         public var tab: Tab = .home
         var home: HomeFeature.State = .init()
-        var solarTermIntro: SolarTermIntroFeature.State = .init()
         var mission: MissionListFeature.State = .init()
-        @Presents var missionRecord: MissionRecordFeature.State?
-        @Presents var solarTermIntroContent: SolarTermIntroContentFeature.State?
+        var calendar: CalendarFeature.State = .init()
+        var solarTermIntro: SolarTermIntroFeature.State = .init()
 
-        public init() {}
+        var path: StackState<Path.State> = .init()
+
+        init() {
+            self._tabBarVisibility = Shared(
+                wrappedValue: true,
+                .tabBarVisibility
+            )
+        }
     }
 
     public enum Action: BindableAction {
@@ -28,14 +38,15 @@ public struct MainFeature {
         case binding(BindingAction<State>)
         case home(HomeFeature.Action)
         case mission(MissionListFeature.Action)
-        case missionRecord(PresentationAction<MissionRecordFeature.Action>)
+        case calendar(CalendarFeature.Action)
         case solarTermIntro(SolarTermIntroFeature.Action)
-        case solarTermIntroContent(PresentationAction<SolarTermIntroContentFeature.Action>)
         case solarTermIntroContentLoad(SolarTermIntro, String)
+        case path(StackActionOf<Path>)
     }
 
     @Dependency(\.logger) var logger
     @Dependency(\.solarTermIntroRepository) var solarTermIntroRepository
+    @Dependency(\.solarTermRepository) var solarTermRepository
 
     public init() {}
 
@@ -46,18 +57,21 @@ public struct MainFeature {
             HomeFeature()
         }
 
-        Scope(state: \.solarTermIntro, action: \.solarTermIntro) {
-            SolarTermIntroFeature()
-        }
         Scope(state: \.mission, action: \.mission) {
             MissionListFeature()
+        }
+
+        Scope(state: \.calendar, action: \.calendar) {
+            CalendarFeature()
+        }
+
+        Scope(state: \.solarTermIntro, action: \.solarTermIntro) {
+            SolarTermIntroFeature()
         }
 
         Reduce { state, action in
             switch action {
             case .onAppear:
-                // TODO: 로깅 테스트용 호출입니다. 추후 제거부탁드립니다.
-                logger.debug(message: "MainView did appear")
                 return .none
 
             case let .home(.delegate(.navigateToMissionCamera(missionId, title, missionTypeRaw, solarTermId))):
@@ -65,12 +79,15 @@ public struct MainFeature {
                     assertionFailure("Unknown missionType: \(missionTypeRaw)")
                     return .daily
                 }()
-                state.missionRecord = MissionRecordFeature.State(
+
+                let missionRecord = MissionRecordFeature.State(
                     missionId: missionId,
                     missionTitle: title,
                     missionType: missionType,
                     solarTermId: solarTermId
                 )
+
+                state.path.append(.missionRecord(missionRecord))
                 return .none
 
             case .home(.delegate(.navigateToMissionTab)):
@@ -81,7 +98,7 @@ public struct MainFeature {
                 return .run { send in
                     do {
                         let cards = try await solarTermIntroRepository.fetchSolarTermCard()
-                        let infos = try await solarTermIntroRepository.fetchSolarTermInfos()
+                        let infos = try await solarTermRepository.fetchSolarTerms(.current)
                         let card = cards.first { $0.term == term }
                         let dateLabel = infos.first { $0.term == term }?.formattedFullDateRange
                         if let card {
@@ -92,47 +109,45 @@ public struct MainFeature {
                     }
                 }
 
+            case .home(.delegate(.navigateToMyPage)):
+                state.path.append(.myPage(.init()))
+                return .none
+
             case let .solarTermIntroContentLoad(intro, dateLabel):
-                state.solarTermIntroContent = SolarTermIntroContentFeature.State(
+                let solarTermIntroContent = SolarTermIntroContentFeature.State(
                     solarTermIntro: intro,
                     season: intro.term.season,
                     dateLabel: dateLabel
                 )
+
+                state.path.append(.solarTermIntroContent(solarTermIntroContent))
                 return .none
 
-            case .solarTermIntroContent(.presented(.delegate(.dismiss))):
-                state.solarTermIntroContent = nil
+            case .path(.element(
+                id: _,
+                action: .solarTermIntroContent(.delegate(.navigateToMissionTab))
+            )):
+                state.tab = .mission
                 return .none
 
-            case .solarTermIntroContent:
+            case .solarTermIntro(.delegate(.navigateToMissionTab)):
+                state.tab = .mission
                 return .none
 
-            case .missionRecord(.presented(.delegate(.dismiss))):
-                state.missionRecord = nil
-                return .none
+            case .home: return .none
 
-            case .missionRecord(.presented(.delegate(.submitted))):
-                state.missionRecord = nil
-                return .none
-
-            case .missionRecord:
-                return .none
-
-            case .home, .binding:
-                return .none
-
-            case .solarTermIntro:
-                return .none
-              
             case .mission: return .none
+
+            case .calendar: return .none
+
+            case .solarTermIntro: return .none
+
+            case .path: return .none
+
+            case .binding: return .none
             }
         }
-        .ifLet(\.$missionRecord, action: \.missionRecord) {
-            MissionRecordFeature()
-        }
-        .ifLet(\.$solarTermIntroContent, action: \.solarTermIntroContent) {
-            SolarTermIntroContentFeature()
-        }
+        .forEach(\.path, action: \.path)
     }
 }
 

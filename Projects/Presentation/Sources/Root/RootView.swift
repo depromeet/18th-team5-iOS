@@ -10,6 +10,7 @@ import ComposableArchitecture
 import SwiftUI
 
 public struct RootView: View {
+    @Environment(\.scenePhase) private var scenePhase
     private let store: StoreOf<RootFeature>
 
     public init(store: StoreOf<RootFeature>) {
@@ -30,5 +31,9 @@ public struct RootView: View {
         }
         .animation(.easeInOut, value: store.path)
         .onAppear { store.send(.onAppear) }
+        .onChange(of: scenePhase) { _, scenePhase in
+            guard scenePhase == .active else { return }
+            store.send(.appDidBecomeActive)
+        }
     }
 }

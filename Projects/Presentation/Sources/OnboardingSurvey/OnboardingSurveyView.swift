@@ -19,7 +19,7 @@ public struct OnboardingSurveyView: View {
     }
 
     public var body: some View {
-        VStack(spacing: 0) {
+        ZStack(alignment: .bottom) {
             ZStack {
                 switch store.status {
                 case .initial: initialView
@@ -40,14 +40,14 @@ private extension OnboardingSurveyView {
     var title: String {
         switch store.step {
         case 0: "갑자기 생긴 쉬는 날,\n어떻게 보내고 싶으세요?"
-        case 1: "계절 활동,\n어떤 방식이 더 잘 맞아요?"
+        case 1: "계절 활동,\n어떤 방식이 더 잘 맞나요?"
         case 2: "계절을 주로 어떻게 즐기는 편이에요?"
         default: ""
         }
     }
 
     var subtitle: String {
-        "(선호하는 순서대로 순위를 매겨 주세요)"
+        "선호하는 순서대로 1-2-3 순으로 탭해주세요"
     }
 
     var buttonTitle: String {
@@ -74,6 +74,7 @@ private extension OnboardingSurveyView {
 private extension OnboardingSurveyView {
     var initialView: some View {
         OnboardingInitialView()
+            .padding(.bottom, 88)
     }
 
     var surveyView: some View {
@@ -81,7 +82,7 @@ private extension OnboardingSurveyView {
             headerView
 
             ScrollView {
-                VStack(spacing: 40) {
+                VStack(spacing: 36) {
                     titleView
 
                     if store.step < 2 {
@@ -94,6 +95,7 @@ private extension OnboardingSurveyView {
                 .padding(.top, 24)
             }
         }
+        .padding(.bottom, 88)
     }
 
     var headerView: some View {
@@ -125,17 +127,23 @@ private extension OnboardingSurveyView {
     }
 
     var titleView: some View {
-        VStack(spacing: 6) {
+        VStack(alignment: .leading, spacing: 6) {
             Text(title)
                 .font(.headline1Semibold)
                 .foregroundStyle(Color.gray900)
                 .frame(maxWidth: .infinity, alignment: .leading)
 
             if store.step == 2 {
-                Text(subtitle)
-                    .font(.body2Regular)
-                    .foregroundStyle(Color.gray600)
-                    .frame(maxWidth: .infinity, alignment: .leading)
+                ZStack(alignment: .trailing) {
+                    Color.gray100
+                        .frame(width: 162, height: 20)
+                        .clipShape(RoundedRectangle(cornerRadius: 3))
+
+                    Text(subtitle)
+                        .font(.body1Medium)
+                        .foregroundStyle(Color.gray600)
+                        .padding(.trailing, 2)
+                }
             }
         }
     }
@@ -185,18 +193,21 @@ private extension OnboardingSurveyView {
         }
         .disabled(!isButtonEnabled)
         .padding(.horizontal, 20)
-        .padding(.top, 8)
-        .padding(.bottom, 16)
+        .padding(.vertical, 16)
     }
 
-    @ViewBuilder
     var background: some View {
-        switch store.status {
-        case .initial, .result:
-            LinearGradient.onboardingBackground
-                .ignoresSafeArea()
-        case .inProgress: Color.white
+        Group {
+            switch store.status {
+            case .initial:
+                LinearGradient.onboardingBackground
+            case .inProgress:
+                Color.white
+            case .result:
+                store.userType?.background
+            }
         }
+        .ignoresSafeArea()
     }
 }
 
@@ -207,13 +218,13 @@ private extension ActivityStyle {
             .init(
                 title: "밖에 나가서\n뭔가 하고 싶어요",
                 subtitle: "야외, 나들이, 장소\n방문 선호",
-                image: .icHandballPlayer
+                image: .icMountain
             )
         case .indoor:
             .init(
                 title: "집이나 실내에서\n편하게 쉬고 싶어요",
                 subtitle: "카페, 요리, 콘텐츠\n소비 선호",
-                image: .icSofaAndLamp
+                image: .icHome
             )
         }
     }
@@ -232,7 +243,7 @@ private extension EngagementLevel {
             .init(
                 title: "일상 안에서\n부담 없이",
                 subtitle: "동네 범위,\n이동 없이 5분 내에",
-                image: .icWalkingWoman
+                image: .icFootsteps
             )
         }
     }
@@ -245,20 +256,42 @@ private extension ActivityTheme {
             .init(
                 title: "자연이나 야외 활동",
                 subtitle: "봄나들이, 단풍 구경, 산책 등",
-                image: .icPineTree
+                image: .icTree
             )
         case .food:
             .init(
                 title: "제철 음식이나 요리",
                 subtitle: "봄나물, 제철 과일, 계절 음료 등",
-                image: .icFryingPan
+                image: .icFood
             )
         case .culture:
             .init(
                 title: "감성 콘텐츠나 문화",
                 subtitle: "전시, 독서, 영화, 음악 등",
-                image: .icMovieProjector
+                image: .icSlate
             )
         }
+    }
+}
+
+private extension UserType {
+    var color: Color {
+        switch self {
+        case .explorer: .blue50
+        case .walker: .green50
+        case .lifeCreator: .pink50
+        case .aesthete: .orange50
+        }
+    }
+
+    var background: LinearGradient {
+        LinearGradient(
+            stops: [
+                .init(color: color, location: 0.0),
+                .init(color: .white, location: 0.4)
+            ],
+            startPoint: .topLeading,
+            endPoint: .bottomTrailing
+        )
     }
 }

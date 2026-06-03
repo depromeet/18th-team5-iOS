@@ -9,6 +9,7 @@
 import Foundation
 
 public enum SolarTermYear: Int, CaseIterable, Sendable {
+    case y2023 = 2023
     case y2024 = 2024
     case y2025 = 2025
     case y2026 = 2026
@@ -19,6 +20,16 @@ public enum SolarTermYear: Int, CaseIterable, Sendable {
     }
 
     public var previous: SolarTermYear? {
+        SolarTermYear(rawValue: rawValue - 1)
+    }
+}
+
+public extension SolarTermYear {
+    var nextYear: Self? {
+        SolarTermYear(rawValue: rawValue + 1)
+    }
+
+    var prevYear: Self? {
         SolarTermYear(rawValue: rawValue - 1)
     }
 }

@@ -57,14 +57,14 @@ public extension SolarTermIntro {
                 id: "content_01",
                 title: "피크타임이 추천하는 입하의 첫 활동",
                 subtitle: "투명함으로 바꾸는 기분, 유리잔 바꿔주기",
-                imageURL: "https://picsum.photos/seed/ibha_01/400/300",
+                imageURLs: ["img_ibha_01_1", "img_ibha_01_2", "img_ibha_01_3"],
                 body: "무거운 세라믹 머그컵 대신, 찬장에 넣어두었던 유리잔을 꺼내는 것부터 시작하세요. 얼음을 가득 채웠을 때 컵 겉면에 맺히는 물방울은 시원한 휴식을 줍니다."
             ),
             SolarTermIntroContent(
                 id: "content_02",
                 title: "제철을 잘 챙기는\n두번째 방법, 제철음식 챙겨먹기",
                 subtitle: "이번 주 식탁의 주인공, '취나물'을 소개해요",
-                imageURL: "https://picsum.photos/seed/ibha_02/400/300",
+                imageURLs: ["img_ibha_02_1"],
                 body: "입하 즈음의 시장에서 꼭 찾아야 할 건 취나물입니다. 지금이 일 년 중 가장 연하면서도 향이 강한 시기거든요. 잎이 너무 크고 억센 것보다는 연둣빛이 감도는 어린잎을 골라보세요!"
             )
         ]

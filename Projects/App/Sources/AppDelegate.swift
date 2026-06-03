@@ -6,6 +6,8 @@
 //  Copyright © 2026 Orange. All rights reserved.
 //
 
+import Dependencies
+import Domain
 import FirebaseCore
 import FirebaseMessaging
 import UIKit
@@ -22,19 +24,13 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
     }
 }
 
-private extension AppDelegate {
-    func configureNotification() {
-        UNUserNotificationCenter.current().delegate = self
-        Messaging.messaging().delegate = self
-    }
-}
-
 extension AppDelegate: UNUserNotificationCenterDelegate {
     func application(
         _ application: UIApplication,
         didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data
     ) {
         Messaging.messaging().apnsToken = deviceToken
+        syncNotificationSettings()
     }
 
     func application(
@@ -57,5 +53,25 @@ extension AppDelegate: MessagingDelegate {
     func messaging(_ messaging: Messaging, didReceiveRegistrationToken fcmToken: String?) {
         // TODO: Send the refreshed FCM token to the server when the API is ready.
         // print(fcmToken)
+    }
+}
+
+private extension AppDelegate {
+    func configureNotification() {
+        UNUserNotificationCenter.current().delegate = self
+        Messaging.messaging().delegate = self
+    }
+
+    func syncNotificationSettings() {
+        Task {
+            do {
+                @Dependency(\.notificationRepository) var notificationRepository
+                let settings = try await notificationRepository.fetchNotificationSettings()
+                guard let settings else { return }
+                try await notificationRepository.syncNotificationSettings(settings)
+            } catch {
+                // TODO: 에러 처리 - @ 정원
+            }
+        }
     }
 }

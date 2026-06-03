@@ -19,11 +19,11 @@ public struct NotificationConsentView: View {
 
     public var body: some View {
         VStack(spacing: 0) {
-            VStack(spacing: 48) {
-                VStack(spacing: 12) {
+            VStack(spacing: 40) {
+                VStack(spacing: 16) {
                     Image.icAlarmClock
                         .resizable()
-                        .frame(width: 48, height: 48)
+                        .frame(width: 56, height: 56)
 
                     Text(title)
                         .font(.headline2Semibold)
@@ -56,7 +56,7 @@ private extension NotificationConsentView {
     }
 
     var nextButton: some View {
-        BottomButton(title: "다음") {
+        BottomButton(title: "확인") {
             store.send(.nextButtonTapped)
         }
     }

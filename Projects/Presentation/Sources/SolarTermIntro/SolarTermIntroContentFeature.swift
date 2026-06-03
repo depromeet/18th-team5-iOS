@@ -11,6 +11,8 @@ import Domain
 
 @Reducer
 public struct SolarTermIntroContentFeature {
+    @Dependency(\.dismiss) private var dismiss
+
     @ObservableState
     public struct State: Equatable {
         var solarTermIntro: SolarTermIntro
@@ -20,10 +22,12 @@ public struct SolarTermIntroContentFeature {
 
     public enum Action {
         case onTapBack
+        case onMissionTap
         case delegate(Delegate)
 
         public enum Delegate {
             case dismiss
+            case navigateToMissionTab
         }
     }
 
@@ -35,8 +39,11 @@ public struct SolarTermIntroContentFeature {
             case .onTapBack:
                 return .send(.delegate(.dismiss))
 
+            case .onMissionTap:
+                return .send(.delegate(.navigateToMissionTab))
+
             case .delegate:
-                return .none
+                return .run { _ in await dismiss() }
             }
         }
     }

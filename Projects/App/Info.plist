@@ -28,13 +28,15 @@
 	<string>$(CURRENT_PROJECT_VERSION)</string>
 	<key>Environment</key>
 	<string>$(ENV)</string>
+	<key>FirebaseAppDelegateProxyEnabled</key>
+	<false/>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSAppTransportSecurity</key>
 	<dict>
 		<key>NSExceptionDomains</key>
 		<dict>
-			<key>peaktime-api.swda.cloud</key>
+			<key>peaktime.swda.cloud</key>
 			<dict>
 				<key>NSExceptionAllowsInsecureHTTPLoads</key>
 				<true/>

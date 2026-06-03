@@ -80,10 +80,11 @@ public struct MissionRecordFeature {
         case submitted(imageData: Data?, memo: String)
     }
 
-    @Dependency(\.date) var date
-    @Dependency(\.missionRepository) var missionRepository
-    @Dependency(\.photoLibraryClient) var photoLibraryClient
-    @Dependency(\.picturePermissionClient) var picturePermissionClient
+    @Dependency(\.date) private var date
+    @Dependency(\.missionRepository) private var missionRepository
+    @Dependency(\.photoLibraryClient) private var photoLibraryClient
+    @Dependency(\.picturePermissionClient) private var picturePermissionClient
+    @Dependency(\.dismiss) private var dismiss
 
     public init() {}
 
@@ -238,19 +239,19 @@ public struct MissionRecordFeature {
                 return .none
 
             case .delegate:
-                return .none
+                return .run { _ in await dismiss() }
             }
         }
     }
 
     private func resolvePermission(_ kind: PicturePermissionKind) -> Effect<Action> {
         .run { send in
-            let status = (try? await picturePermissionClient.status(kind)) ?? .denied
+            let status = await (try? picturePermissionClient.status(kind)) ?? .denied
             switch status {
             case .authorized, .limited:
                 await send(kind == .camera ? .openCamera : .openPhotoPicker)
             case .notDetermined:
-                let granted = (try? await picturePermissionClient.request(kind)) ?? false
+                let granted = await (try? picturePermissionClient.request(kind)) ?? false
                 await send(.permissionResolved(kind, granted: granted))
             case .denied, .restricted:
                 await send(.permissionResolved(kind, granted: false))

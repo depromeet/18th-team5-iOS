@@ -23,16 +23,22 @@ public struct MissionListView: View {
             Color.white
                 .overlay { circleBackgroundView }
 
-            CircularWheelPicker(
-                items: store.missions,
-                selection: $store.selectedMission,
-                content: missionCardView
-            )
-            .animation(.easeInOut(duration: 0.25), value: store.selectedMission)
-            .allowsHitTesting(!store.isIndicatorEnabled)
-            .overlay(alignment: .trailing) { indicatorView }
+            pickerView
+                .animation(.easeInOut(duration: 0.25), value: store.selectedMission)
+                .allowsHitTesting(!store.isIndicatorEnabled)
+                .overlay(alignment: .trailing) { indicatorView }
         }
         .overlay(alignment: .top) { headerView }
+        .onAppear { store.send(.onAppear) }
+        .loading(isLoading: store.isLoading)
+        .sheet(item: $store.scope(state: \.search, action: \.search)) { store in
+            MissionSearchView(store: store)
+        }
+        .fullScreenCover(
+            item: $store.scope(state: \.searchResult, action: \.searchResult)
+        ) { store in
+            MissionSearchResultView(store: store)
+        }
     }
 }
 
@@ -42,9 +48,9 @@ private extension MissionListView {
             titleView
 
             HStack(spacing: 0) {
-                categoryListView
+                themeListView
                 Spacer()
-                selectMissionButton
+                searchMissionButton
             }
         }
         .padding(.horizontal, 20)
@@ -56,43 +62,48 @@ private extension MissionListView {
                 .padding(.trailing, 20)
                 .padding(.bottom, -38)
         }
+        .renderedIf(store.solarTerm != nil)
     }
 
+    @ViewBuilder
     var titleView: some View {
-        VStack(spacing: 2) {
-            Text("\(store.userType.name)님을 위한")
-                .font(.body1Regular)
-                .foregroundStyle(Color.gray900)
-                .frame(maxWidth: .infinity, alignment: .leading)
+        if let userName = store.userType?.name,
+           let solaTermName = store.solarTerm?.koreanName {
+            VStack(spacing: 2) {
+                Text("\(userName)님을 위한")
+                    .font(.body1Regular)
+                    .foregroundStyle(Color.gray900)
+                    .frame(maxWidth: .infinity, alignment: .leading)
 
-            Text("\(store.solarTerm.koreanName) 미션을 기록해볼까요?")
-                .font(.headline1Semibold)
-                .foregroundStyle(Color.gray900)
-                .frame(maxWidth: .infinity, alignment: .leading)
-        }
-    }
-
-    var categoryListView: some View {
-        HStack(spacing: 6) {
-            ForEach(MissionCategory.allCases, id: \.self) { category in
-                categoryView(category)
+                Text("\(solaTermName) 미션을 기록해볼까요?")
+                    .font(.headline1Semibold)
+                    .foregroundStyle(Color.gray900)
+                    .frame(maxWidth: .infinity, alignment: .leading)
             }
         }
     }
 
-    func categoryView(_ category: MissionCategory) -> some View {
+    var themeListView: some View {
+        HStack(spacing: 6) {
+            ForEach(MissionTheme.allCases, id: \.self) { theme in
+                themeView(theme)
+            }
+        }
+    }
+
+    func themeView(_ theme: MissionTheme) -> some View {
         Chip(
-            title: category.name,
-            type: category == store.category ? .default : .secondary,
-            action: { store.send(.categoryTapped(category)) }
+            title: theme.name,
+            type: theme == store.theme ? .default : .secondary,
+            action: { store.send(.themeTapped(theme)) }
         )
     }
 
-    var selectMissionButton: some View {
-        SelectMissionButton {
-            store.send(.selectMissionButtonTapped)
+    var searchMissionButton: some View {
+        SearchMissionButton {
+            store.send(.searchMissionButtonTapped)
         }
-        .disabled(!store.isSelectMissionButtonEnabled)
+        .disabled(!store.isSearchMissionButtonEnabled)
     }
 
     var tooltip: some View {
@@ -116,28 +127,46 @@ private extension MissionListView {
     }
 
     var circleBackgroundView: some View {
-        let width = UIScreen.width
-        let diameter = width * 3 - 40
+        let diameter: CGFloat = 1290
 
-        return Color.gray50
-            .frame(width: diameter, height: diameter)
-            .clipShape(Circle())
-            .offset(x: -width)
+        return GeometryReader { proxy in
+            Color.gray50
+                .frame(width: diameter, height: diameter)
+                .clipShape(Circle())
+                .position(
+                    x: proxy.size.width - 20 - diameter / 2,
+                    y: proxy.size.height / 2
+                )
+        }
     }
 
+    @ViewBuilder
+    var pickerView: some View {
+        if let selection = Binding($store.selectedMission) {
+            CircularWheelPicker(
+                items: store.missions,
+                selection: selection,
+                content: missionCardView
+            )
+        }
+    }
+
+    @ViewBuilder
     func missionCardView(_ mission: Mission) -> some View {
-        PickerMissionCardView(
-            mission: mission,
-            isActive: store.selectedMission == mission,
-            action: {}
-        )
-        .padding(.leading, 20)
-        .padding(.trailing, 58)
+        if let season = store.season {
+            PickerMissionCardView(
+                mission: mission,
+                season: season,
+                isActive: store.selectedMission == mission,
+                action: {}
+            )
+        }
     }
 
     @ViewBuilder
     var indicatorView: some View {
-        if let selectedIndex = store.selectedIndex {
+        if let selectedIndex = store.selectedIndex,
+           let season = store.season {
             GeometryReader { proxy in
                 let width = proxy.size.width
                 let height = proxy.size.height
@@ -145,7 +174,8 @@ private extension MissionListView {
                 Indicator(
                     totalCount: store.missions.count,
                     selectedIndex: selectedIndex,
-                    mainColor: store.selectedMission.season.indicatorMainColor,
+                    mainColor: season.color(.scale500),
+                    subColor: season.color(.scale50),
                     isEnabled: $store.isIndicatorEnabled,
                     indexChanged: { store.send(.indicatorIndexChanged($0)) }
                 )
@@ -153,17 +183,6 @@ private extension MissionListView {
                 .frame(width: width, height: height, alignment: .topTrailing)
                 .padding(.top, height / 2 + 52)
             }
-        }
-    }
-}
-
-private extension Season {
-    var indicatorMainColor: Color {
-        switch self {
-        case .spring: .pink500
-        case .summer: .green500
-        case .autumn: .orange500
-        case .winter: .blue500
         }
     }
 }

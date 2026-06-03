@@ -1,7 +1,8 @@
+//
 //  CalendarView.swift
 //  Presentation
 //
-//  Created by 송민교 on 5/7/26.
+//  Created by choijunios on 5/17/26.
 //  Copyright © 2026 Orange. All rights reserved.
 //
 
@@ -10,114 +11,292 @@ import DesignSystem
 import Domain
 import SwiftUI
 
-public struct CalendarView: View {
+struct CalendarView: View {
     @Bindable var store: StoreOf<CalendarFeature>
 
-    public init(store: StoreOf<CalendarFeature>) {
-        self.store = store
-    }
+    @State var sheetHeight: CGFloat = .zero
 
-    public var body: some View {
-        VStack(spacing: 12) {
-            CalendarHeaderView(
-                title: store.currentMonth.yearMonthString,
-                onPrevious: { store.send(.previousMonthTap) },
-                onNext: { store.send(.nextMonthTap) }
-            )
+    var body: some View {
+        GeometryReader { geo in
+            VStack(spacing: 0) {
+                headerView
 
-            WeekdayLabelRow()
-
-            CalendarGridView(
-                weeks: store.currentMonth.calendarWeeks,
-                dailyRecords: store.dailyRecords,
-                selectedDate: store.selectedDate,
-                onDayTap: { store.send(.dayTap($0)) }
-            )
+                UIBridge<PagingTableView<SolarTermGroup>>(
+                    state: store.calendarState,
+                    actionHandler: { action in
+                        switch action {
+                        case let .anchoredItemChanged(id):
+                            store.send(.anchoredTermChanged(id: id))
+                        case let .reachedToEnd(direction):
+                            store.send(.calendarReachToEnd(direction))
+                        }
+                    },
+                    arguments: .init(
+                        defaultAnchorInset: Constants.termSectionHeaderHeight,
+                        bottomPadding: Constants.tableBottomPadding,
+                        cellBuilder: {
+                            termSectionView(
+                                termGroup: $0,
+                                dateCellWidth: cellWidth(screenWidth: geo.size.width)
+                            )
+                            .eraseView()
+                        },
+                        cellHeightProvider: termSectionViewHeight
+                    )
+                )
+                .padding(.horizontal, Constants.calendarHorizontalSpacing)
+                .onGeometryChange(
+                    for: CGFloat.self,
+                    of: { $0.size.height - $0.safeAreaInsets.bottom }
+                ) { height in
+                    let cellHeight = CalendarDateCell.Constants.cellHeight
+                    sheetHeight = height - cellHeight - 12
+                }
+                .ignoresSafeArea(.container, edges: [.bottom])
+                .overlay {
+                    if let detail = store.calendarDetail {
+                        calendarDetailView(detail)
+                            .padding(.top, Constants.detailViewTopPadding)
+                            .transition(.move(edge: .bottom))
+                            .onDisappear { store.send(.detailViewDisappeared) }
+                    }
+                }
+                .animation(.easeInOut, value: store.calendarDetail)
+            }
         }
-        .padding(.horizontal, 20)
-        .padding(.top, 32)
-        .padding(.bottom, 24)
-        .onAppear { store.send(.onAppear) }
-        .sheet(
-            item: $store.scope(state: \.dayDetail, action: \.dayDetail)
-        ) { detailStore in
-            DayDetailView(store: detailStore)
+        .onAppear {
+            store.send(.onAppear)
         }
     }
 }
 
-// MARK: - CalendarGridView
+extension CalendarView {
+    var headerView: some View {
+        VStack(spacing: 12) {
+            HStack(alignment: .center, spacing: 8) {
+                Text(store.header?.termTitleText ?? "-")
+                    .font(.title2Semibold)
+                    .foregroundStyle(Color.gray900)
 
-struct CalendarGridView: View {
-    let weeks: [[Date?]]
-    let dailyRecords: [DateComponents: CalendarRecord]
-    let selectedDate: Date?
-    let onDayTap: (Date) -> Void
+                Text(store.header?.termRangeText ?? "-")
+                    .font(.caption1Medium)
+                    .foregroundStyle(Color.gray400)
 
-    var body: some View {
-        VStack(spacing: 8) {
-            ForEach(weeks.indices, id: \.self) { weekIndex in
-                HStack(spacing: 0) {
-                    ForEach(0 ..< 7) { dayIndex in
-                        if let date = weeks[weekIndex][dayIndex] {
-                            let key = Calendar.current.dateComponents([.year, .month, .day], from: date)
-                            let record = dailyRecords[key]
-                            let isSelected = selectedDate.map {
-                                Calendar.current.isDate($0, inSameDayAs: date)
-                            } ?? false
+                Spacer()
+            }
+            WeekdayLabelRow()
+        }
+        .padding(.horizontal, 20)
+        .padding(.top, 20)
+        .padding(.bottom, 8)
+        .overlay(alignment: .bottom) {
+            Rectangle()
+                .foregroundStyle(Color.blackAlpha200)
+                .frame(height: 1)
+        }
+    }
+}
 
-                            DayCell(
-                                day: Calendar.current.component(.day, from: date),
-                                imageURL: record?.imageURL,
-                                isSelected: isSelected,
-                                onTap: record != nil ? { onDayTap(date) } : nil
-                            )
-                            .frame(maxWidth: .infinity)
-                        } else {
-                            Color.clear
-                                .frame(maxWidth: .infinity)
-                                .frame(height: 70)
-                        }
+// MARK: Calc
+
+extension CalendarView {
+    func termSectionViewHeight(_ term: SolarTermGroup) -> CGFloat {
+        let header = Constants.termSectionHeaderHeight
+
+        let weekCount = term.cells.count
+        let weekSectionHeight = CalendarDateCell.Constants.cellHeight
+        let weekSpacing = Constants.weekSectionVerticalSpacing * CGFloat(weekCount - 1)
+        let calendar = weekSectionHeight * CGFloat(weekCount) + weekSpacing
+
+        let bottom = Constants.termSectionBottomPadding
+        return header + calendar + bottom
+    }
+
+    func cellWidth(screenWidth: CGFloat) -> CGFloat {
+        let containerWidth = screenWidth - Constants.calendarHorizontalSpacing * 2
+        return (containerWidth - Constants.dateCellHorizontalSpacing * 6) / 7
+    }
+}
+
+// MARK: TermSectionView
+
+extension CalendarView {
+    func termSectionView(termGroup: SolarTermGroup, dateCellWidth: CGFloat) -> some View {
+        VStack(spacing: .zero) {
+            termSectionHeaderView(termGroup)
+            termCalendarView(termGroup.cells, dateCellWidth: dateCellWidth)
+        }
+        .padding(.bottom, Constants.termSectionBottomPadding)
+        .overlay {
+            VStack {
+                Spacer()
+                Rectangle()
+                    .foregroundStyle(Color.gray200)
+                    .frame(height: 1)
+            }
+        }
+    }
+
+    func termSectionHeaderView(_ termGroup: SolarTermGroup) -> some View {
+        VStack {
+            HStack {
+                Text(termGroup.termText)
+                    .font(.headline2Medium)
+                    .foregroundStyle(
+                        termGroup.containsToday ? Color.green600 : Color.gray900
+                    )
+                Spacer()
+            }
+            .padding(.top, 24)
+
+            Spacer()
+        }
+        .frame(height: Constants.termSectionHeaderHeight)
+    }
+
+    func termCalendarView(_ termDates: [[SolarTermGroupCell]], dateCellWidth: CGFloat) -> some View {
+        VStack(alignment: .leading, spacing: Constants.weekSectionVerticalSpacing) {
+            ForEach(termDates.indices, id: \.self) { weekIndex in
+                HStack(spacing: Constants.dateCellHorizontalSpacing) {
+                    ForEach(termDates[weekIndex]) { date in
+                        dateCellView(
+                            date: date,
+                            cellWidth: dateCellWidth,
+                            anchorInset: dateCellAnchorPoint(weekIndex: weekIndex)
+                        )
                     }
                 }
             }
         }
     }
-}
 
-#Preview {
-    CalendarView(
-        store: .init(initialState: .init()) {
-            CalendarFeature()
-        } withDependencies: {
-            $0.calendarRepository = .mock
+    @ViewBuilder
+    func dateCellView(date: SolarTermGroupCell, cellWidth: CGFloat, anchorInset: CGFloat) -> some View {
+        switch date {
+        case .emptyCell:
+            Color.clear
+                .frame(width: cellWidth, height: 1)
+
+        case let .dateCell(date):
+            CalendarDateCell(
+                date: date,
+                data: store.state.dateData(date)
+            ) {
+                store.send(.dateCellTapped(dateId: date.id, inset: anchorInset))
+            }
+            .frame(width: cellWidth)
         }
-    )
+    }
+
+    func dateCellAnchorPoint(weekIndex: Int) -> CGFloat {
+        let weekHeight = CalendarDateCell.Constants.cellHeight
+        let weekSpacing = Constants.weekSectionVerticalSpacing
+        let weekStartY = (weekHeight + weekSpacing) * CGFloat(weekIndex)
+        return Constants.termSectionHeaderHeight + weekStartY
+    }
 }
 
-// MARK: - Date Helpers
+// MARK: DetailView
 
-private extension Date {
-    var calendarWeeks: [[Date?]] {
-        var calendar = Calendar.current
-        calendar.firstWeekday = 2
-        let components = calendar.dateComponents([.year, .month], from: self)
-        guard let firstDay = calendar.date(from: components),
-              let range = calendar.range(of: .day, in: .month, for: firstDay)
-        else { return [] }
+extension CalendarView {
+    func calendarDetailView(_ detail: CalendarDetail) -> some View {
+        GeometryReader { _ in
+            ZStack {
+                detailViewBackgroundView
+                    .ignoresSafeArea(.container, edges: [.bottom])
 
-        let weekday = calendar.component(.weekday, from: firstDay)
-        let offset = (weekday - 2 + 7) % 7
+                VStack {
+                    CardStackView(
+                        topCardIndex: $store.topMostDetailCardIndex,
+                        items: detail.cards
+                    ) { index, card in
+                        let isTopMost = index == store.topMostDetailCardIndex
+                        RoundedRectangle(cornerRadius: 20)
+                            .foregroundStyle(isTopMost ? Color.gray100 : Color.gray300)
+                            .frame(width: 311, height: 400)
+                            .overlay {
+                                Text(card.name)
+                            }
+                    }
+                    .padding(.top, 20)
+                    Spacer()
+                }
 
-        var days: [Date?] = Array(repeating: nil, count: offset)
-        for day in range {
-            if let date = calendar.date(byAdding: .day, value: day - 1, to: firstDay) {
-                days.append(date)
+                detailViewBottomView
             }
         }
-        while days.count % 7 != 0 {
-            days.append(nil)
+    }
+
+    var detailViewBackgroundView: some View {
+        Color.white
+            .overlay {
+                VStack {
+                    LinearGradient(
+                        colors: [
+                            .black.opacity(0.05),
+                            .clear
+                        ],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                    .frame(height: 30)
+                    Spacer()
+                }
+            }
+    }
+
+    var detailViewBottomView: some View {
+        VStack {
+            Spacer()
+            HStack(spacing: 8) {
+                Button {
+                    // TODO: 수정
+                    store.send(.detailOkButtonTapped)
+                } label: {
+                    Text("이미지 저장")
+                }
+                .buttonStyle(.master(.large))
+
+                Button {
+                    // TODO: 수정
+                    store.send(.detailOkButtonTapped)
+                } label: {
+                    Text("이미지 공유")
+                }
+                .buttonStyle(.master(.large))
+            }
+            .padding(.horizontal, 20)
         }
-        return stride(from: 0, to: days.count, by: 7).map { Array(days[$0 ..< $0 + 7]) }
+        .padding(.vertical, 16)
+    }
+}
+
+private extension CalendarView {
+    var bottomSafeInset: CGFloat {
+        UIApplication.shared.connectedScenes
+            .compactMap { ($0 as? UIWindowScene)?.keyWindow }
+            .first?
+            .safeAreaInsets.bottom ?? 0
+    }
+}
+
+private enum Constants {
+    static let calendarHorizontalSpacing: CGFloat = 19.5
+    static let termSectionHeaderHeight: CGFloat = 56
+    static let termSectionBottomPadding: CGFloat = 12
+    static let weekSectionVerticalSpacing: CGFloat = 4
+    static let tableBottomPadding: CGFloat = 300
+
+    static let dateCellHorizontalSpacing: CGFloat = 7
+    static let dateCellAnchorOffset: CGFloat = 11
+
+    static var detailViewTopPadding: CGFloat {
+        CalendarDateCell.Constants.cellHeight + 12
+    }
+}
+
+private extension View {
+    func eraseView() -> AnyView {
+        AnyView(self)
     }
 }

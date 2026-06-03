@@ -18,11 +18,15 @@ struct OnboardingResultView: View {
     }
 
     var body: some View {
-        VStack(spacing: 36) {
-            textView
+        ZStack(alignment: .bottom) {
             imageView
+
+            VStack {
+                textView
+                    .padding(.top, 104)
+                Spacer()
+            }
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }
 
@@ -43,8 +47,8 @@ private extension OnboardingResultView {
             Text("결과")
                 .font(.body2Medium)
                 .foregroundStyle(Color.gray900)
-                .frame(height: 28)
-                .padding(.horizontal, 10)
+                .frame(height: 30)
+                .padding(.horizontal, 12)
                 .background(Color.blackAlpha200)
                 .clipShape(Capsule())
 
@@ -65,7 +69,9 @@ private extension OnboardingResultView {
     var imageView: some View {
         image
             .resizable()
-            .frame(width: 200, height: 200)
+            .scaledToFit()
+            .frame(maxWidth: .infinity)
+            .padding(.bottom, -15)
     }
 }
 

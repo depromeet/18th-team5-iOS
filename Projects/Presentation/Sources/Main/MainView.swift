@@ -18,7 +18,7 @@ public struct MainView: View {
     }
 
     public var body: some View {
-        NavigationStack {
+        NavigationStack(path: $store.scope(state: \.path, action: \.path)) {
             TabView(selection: $store.tab) {
                 ForEach(MainFeature.Tab.allCases, id: \.self) { tab in
                     tabView(tab: tab)
@@ -26,19 +26,15 @@ public struct MainView: View {
                         .toolbar(.hidden, for: .tabBar)
                 }
             }
+            .overlay(alignment: .bottom) {
+                if store.tabBarVisibility {
+                    tabBar
+                }
+            }
             .navigationBarHidden(true)
-            .navigationDestination(
-                item: $store.scope(state: \.missionRecord, action: \.missionRecord)
-            ) { missionRecordStore in
-                MissionRecordView(store: missionRecordStore)
-            }
-            .fullScreenCover(
-                item: $store.scope(state: \.solarTermIntroContent, action: \.solarTermIntroContent)
-            ) { contentStore in
-                SolarTermIntroContentView(store: contentStore)
-            }
+        } destination: { store in
+            pathView(store: store)
         }
-        .overlay(alignment: .bottom) { tabBar }
         .onAppear { store.send(.onAppear) }
     }
 }
@@ -53,6 +49,8 @@ private extension MainView {
             SolarTermIntroView(store: store.scope(state: \.solarTermIntro, action: \.solarTermIntro))
         case .mission:
             MissionListView(store: store.scope(state: \.mission, action: \.mission))
+        case .calendar:
+            CalendarView(store: store.scope(state: \.calendar, action: \.calendar))
         default:
             Text(tab.title)
         }

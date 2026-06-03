@@ -45,11 +45,11 @@ struct OnboardingRankingView<Item: Hashable>: View {
 
 private extension OnboardingRankingView {
     func backgroundColor(_ isSelected: Bool) -> Color {
-        isSelected ? .init(hex: 0x43DA87, alpha: 0.05) : .white
+        isSelected ? .green500.opacity(0.04) : .white
     }
 
     func strokeColor(_ isSelected: Bool) -> Color {
-        isSelected ? .init(hex: 0x43DA87) : .gray300
+        isSelected ? .green300 : .gray300
     }
 }
 
@@ -68,7 +68,7 @@ private extension OnboardingRankingView {
                     HStack(spacing: 6) {
                         viewState.image
                             .resizable()
-                            .frame(width: 24, height: 24)
+                            .frame(width: 20, height: 20)
 
                         Text(viewState.title)
                             .font(.body1Semibold)
@@ -87,11 +87,11 @@ private extension OnboardingRankingView {
                 if let rank {
                     Text("\(rank + 1)순위")
                         .font(.body2Medium)
-                        .foregroundStyle(Color(hex: 0x3DC67B))
-                        .frame(height: 24)
-                        .padding(.horizontal, 8)
+                        .foregroundStyle(Color.green600)
+                        .frame(height: 26)
+                        .padding(.horizontal, 7)
                         .background(Color.blackAlpha200)
-                        .clipShape(RoundedRectangle(cornerRadius: .radius4))
+                        .clipShape(RoundedRectangle(cornerRadius: 6))
                 }
             }
             .padding(20)
@@ -112,8 +112,8 @@ private extension OnboardingRankingView {
             Text("초기화")
                 .font(.body2Medium)
                 .foregroundStyle(textColor)
-                .frame(height: 36)
-                .padding(.horizontal, 16)
+                .frame(height: 32)
+                .padding(.horizontal, 12)
                 .background(backgroundColor)
                 .clipShape(Capsule())
         }
