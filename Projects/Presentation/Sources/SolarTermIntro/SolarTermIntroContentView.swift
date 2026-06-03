@@ -182,26 +182,35 @@ private extension SolarTermIntroContentView {
         }
     }
 
+    /// 콘텐츠 카드 (제목 + 부제 + 이미지 + 본문)
     func contentCard(_ content: SolarTermIntroContent) -> some View {
         VStack(alignment: .leading, spacing: 12) {
+            // 콘텐츠 제목
             Text(content.title)
                 .font(.headline1Semibold)
                 .foregroundStyle(Color.gray900)
 
+            // 콘텐츠 부제
             Text(content.subtitle)
                 .font(.body2Medium)
                 .foregroundStyle(Color.gray600)
 
-            if content.imageURLs.count > 1 {
-                AutoScrollImageView(imageNames: content.imageURLs)
-            } else if let imageName = content.imageURLs.first {
-                Image(imageName, bundle: DesignSystemResources.bundle)
-                    .resizable()
-                    .scaledToFill()
+            // 이미지 영역 (Firebase Storage URL로 로딩)
+            if let urls = store.imageURL[content.id], !urls.isEmpty {
+                if urls.count > 1 {
+                    AutoScrollImageView(imageURLs: urls) // 여러 장: 자동 스크롤 + 스와이프
+                } else if let url = urls.first {
+                    AsyncImage(url: url) { image in // 1장: 단일 이미지
+                        image.resizable().scaledToFill()
+                    } placeholder: {
+                        Color.gray100
+                    }
                     .frame(maxWidth: .infinity)
                     .clipShape(RoundedRectangle(cornerRadius: .radius16))
+                }
             }
 
+            // 콘텐츠 본문
             Text(content.body)
                 .font(.body2Regular)
                 .foregroundStyle(Color.gray600)
@@ -209,21 +218,23 @@ private extension SolarTermIntroContentView {
     }
 }
 
-// MARK: - Auto Scroll Image
+// MARK: - Auto Scroll Image (여러 장 이미지 자동 전환 + 스와이프 + 인디케이터)
 
 private struct AutoScrollImageView: View {
-    let imageNames: [String]
+    let imageURLs: [URL]
     @State private var currentIndex = 0
     private let timer = Timer.publish(every: 3.0, on: .main, in: .common).autoconnect()
 
     var body: some View {
         TabView(selection: $currentIndex) {
-            ForEach(Array(imageNames.enumerated()), id: \.offset) { index, imageName in
-                Image(imageName, bundle: DesignSystemResources.bundle)
-                    .resizable()
-                    .scaledToFill()
-                    .clipped()
-                    .tag(index)
+            ForEach(Array(imageURLs.enumerated()), id: \.offset) { index, url in
+                AsyncImage(url: url) { image in
+                    image.resizable().scaledToFill()
+                } placeholder: {
+                    Color.gray100
+                }
+                .clipped()
+                .tag(index)
             }
         }
         .tabViewStyle(.page(indexDisplayMode: .never))
@@ -232,11 +243,11 @@ private struct AutoScrollImageView: View {
         .clipShape(RoundedRectangle(cornerRadius: .radius16))
         .onReceive(timer) { _ in
             withAnimation(.easeInOut(duration: 0.5)) {
-                currentIndex = (currentIndex + 1) % imageNames.count
+                currentIndex = (currentIndex + 1) % imageURLs.count
             }
         }
         .overlay(alignment: .bottom) {
-            ImageIndicator(count: imageNames.count, current: currentIndex)
+            ImageIndicator(count: imageURLs.count, current: currentIndex)
                 .padding(.bottom, 6)
         }
     }
@@ -246,8 +257,12 @@ private struct AutoScrollImageView: View {
     NavigationStack {
         SolarTermIntroContentView(
             store: Store(initialState: SolarTermIntroContentFeature.State(
-                solarTermIntro: .mock,
-                dateLabel: "2025년 5월 5일 - 5월 21일"
+                solarTermIntro: SolarTermIntro.mock,
+                dateLabel: "2025년 5월 5일 - 5월 21일",
+                imageURL: [
+                    "content_01": [URL(string: "https://picsum.photos/400/300")!],
+                    "content_02": [URL(string: "https://picsum.photos/400/200")!]
+                ]
             )) {
                 SolarTermIntroContentFeature()
             }
