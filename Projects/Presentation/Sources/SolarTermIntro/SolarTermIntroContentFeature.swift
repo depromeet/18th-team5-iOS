@@ -18,9 +18,12 @@ public struct SolarTermIntroContentFeature {
         var season: Season = .currentSeason
         var dateLabel: String
         var imageURL: [String: [URL]] = [:]
+        var isLoading: Bool = true
     }
 
     public enum Action {
+        case onAppear
+        case imageURLsLoad([String: [URL]])
         case onTapBack
         case onMissionTap
         case delegate(Delegate)
@@ -31,11 +34,25 @@ public struct SolarTermIntroContentFeature {
         }
     }
 
+    @Dependency(\.solarTermIntroRepository) var solarTermIntroRepository
+
     public init() {}
 
     public var body: some ReducerOf<Self> {
-        Reduce { _, action in
+        Reduce { state, action in
             switch action {
+            case .onAppear:
+                state.isLoading = true
+                return .run { [contents = state.solarTermIntro.contents] send in
+                    let urlDictionary = await solarTermIntroRepository.fetchContentImageURLs(contents)
+                    await send(.imageURLsLoad(urlDictionary))
+                }
+
+            case let .imageURLsLoad(urlDictionary):
+                state.imageURL = urlDictionary
+                state.isLoading = false
+                return .none
+
             case .onTapBack:
                 return .send(.delegate(.dismiss))
 

@@ -32,6 +32,8 @@ struct SolarTermIntroContentView: View {
             }
             .toolbar(.hidden, for: .tabBar)
         }
+        .loading(isLoading: store.isLoading)
+        .onAppear { store.send(.onAppear) }
         .background(Color.gray50)
         .navigationBarBackButtonHidden()
     }

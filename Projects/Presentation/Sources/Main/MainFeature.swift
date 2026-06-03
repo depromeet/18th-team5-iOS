@@ -44,7 +44,7 @@ public struct MainFeature {
         case missionRecord(PresentationAction<MissionRecordFeature.Action>)
         case solarTermIntro(SolarTermIntroFeature.Action)
         case solarTermIntroContent(PresentationAction<SolarTermIntroContentFeature.Action>)
-        case solarTermIntroContentLoad(SolarTermIntro, String, [String: [URL]])
+        case presentSolarTermContent(SolarTermIntro, String)
     }
 
     @Dependency(\.logger) var logger
@@ -102,20 +102,18 @@ public struct MainFeature {
                         let card = cards.first { $0.term == term }
                         let dateLabel = infos.first { $0.term == term }?.formattedFullDateRange
                         if let card {
-                            let urlMap = await solarTermIntroRepository.fetchContentImageURLs(card.contents)
-                            await send(.solarTermIntroContentLoad(card, dateLabel ?? "", urlMap))
+                            await send(.presentSolarTermContent(card, dateLabel ?? ""))
                         }
                     } catch {
                         // TODO: Firebase 전환 후 에러핸들링 추가 - @minkyo
                     }
                 }
 
-            case let .solarTermIntroContentLoad(solarTermIntro, dateLabel, urlDictionary):
+            case let .presentSolarTermContent(intro, dateLabel):
                 state.solarTermIntroContent = SolarTermIntroContentFeature.State(
-                    solarTermIntro: solarTermIntro,
-                    season: solarTermIntro.term.season,
-                    dateLabel: dateLabel,
-                    imageURL: urlDictionary
+                    solarTermIntro: intro,
+                    season: intro.term.season,
+                    dateLabel: dateLabel
                 )
                 return .none
 
