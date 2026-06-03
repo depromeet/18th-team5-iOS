@@ -12,7 +12,7 @@ enum Constants {
     static let maxDisplayCardCount: Int = 3
     static let dragToDismissThresholdPercent: CGFloat = 0.35
     static let dragVelocityThreshold: CGFloat = 25
-    static let cardOffsetYGap: CGFloat = 23
+    static let cardOffsetYGap: CGFloat = 18
     static let stackMinScale: CGFloat = 0.75
 }
 
@@ -44,14 +44,15 @@ public struct CardStackView<Item, CardView: View>: View {
     public var body: some View {
         ZStack {
             ForEach(renderedEntries, id: \.itemIndex) { entry in
+                let scale = scale(for: entry)
                 cardView(entry.itemIndex, entry.item)
                     .onGeometryChange(
                         for: CGSize.self,
                         of: { $0.size }
                     ) { cardSize = $0 }
+                    .scaleEffect(x: scale, y: scale, anchor: .top)
                     .offset(x: 0, y: offsetY(for: entry))
                     .opacity(cardOpacities[entry.itemIndex] ?? 1)
-                    .scaleEffect(scale(for: entry))
             }
         }
         .gesture(dragGesture)
@@ -148,15 +149,7 @@ private extension CardStackView {
     /// 마지막 카드의 idle 상태 visual top Y값을 기준으로 필요한 top padding을 계산합니다.
     /// scaleEffect는 카드 중심을 기준으로 축소되므로, 위쪽 엣지가 중심 방향으로 당겨집니다.
     var stackTopPadding: CGFloat {
-        let rearPos = Constants.maxDisplayCardCount - 1
-        let rearOffsetY = -Constants.cardOffsetYGap * CGFloat(rearPos)
-
-        let scaleRange = 1.0 - Constants.stackMinScale
-        let scaleChunk = scaleRange / CGFloat(Constants.maxDisplayCardCount)
-        let rearScale = 1.0 - scaleChunk * CGFloat(rearPos)
-
-        let scaleCompensation = cardSize.height / 2 * (1 - rearScale)
-        return max(0, abs(rearOffsetY) - scaleCompensation)
+        Constants.cardOffsetYGap * CGFloat(max(0, Constants.maxDisplayCardCount - 1))
     }
 }
 
@@ -252,12 +245,8 @@ private extension CardStackView {
     }
 }
 
-#if Debug
-
 struct CardModel: Hashable {
     let color: Color = .random()
-
-    init() {}
 }
 
 extension Color {
@@ -285,4 +274,3 @@ extension Color {
     }
     .border(.red)
 }
-#endif
