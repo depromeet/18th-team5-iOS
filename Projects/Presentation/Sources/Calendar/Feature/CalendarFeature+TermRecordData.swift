@@ -64,9 +64,11 @@ extension CalendarFeature {
                     ))
                 }
             } catch {
+                if error is CancellationError { return }
+                logger.error(message: error.localizedDescription)
+
                 try? await Task.sleep(for: .seconds(2))
                 await send(.calendarDataRequest(request))
-                logger.error(message: error.localizedDescription)
             }
         }
         .cancellable(id: request, cancelInFlight: true)
