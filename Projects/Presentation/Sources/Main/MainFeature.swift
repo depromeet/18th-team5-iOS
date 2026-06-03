@@ -19,12 +19,11 @@ public struct MainFeature {
 
         public var tab: Tab = .home
         var home: HomeFeature.State = .init()
-        var solarTermIntro: SolarTermIntroFeature.State = .init()
         var mission: MissionListFeature.State = .init()
         var calendar: CalendarFeature.State = .init()
+        var solarTermIntro: SolarTermIntroFeature.State = .init()
 
-        @Presents var missionRecord: MissionRecordFeature.State?
-        @Presents var solarTermIntroContent: SolarTermIntroContentFeature.State?
+        var path: StackState<Path.State> = .init()
 
         init() {
             self._tabBarVisibility = Shared(
@@ -40,10 +39,9 @@ public struct MainFeature {
         case home(HomeFeature.Action)
         case mission(MissionListFeature.Action)
         case calendar(CalendarFeature.Action)
-        case missionRecord(PresentationAction<MissionRecordFeature.Action>)
         case solarTermIntro(SolarTermIntroFeature.Action)
-        case solarTermIntroContent(PresentationAction<SolarTermIntroContentFeature.Action>)
         case solarTermIntroContentLoad(SolarTermIntro, String)
+        case path(StackActionOf<Path>)
     }
 
     @Dependency(\.logger) var logger
@@ -58,6 +56,11 @@ public struct MainFeature {
         Scope(state: \.home, action: \.home) {
             HomeFeature()
         }
+
+        Scope(state: \.mission, action: \.mission) {
+            MissionListFeature()
+        }
+
         Scope(state: \.calendar, action: \.calendar) {
             CalendarFeature()
         }
@@ -65,28 +68,26 @@ public struct MainFeature {
         Scope(state: \.solarTermIntro, action: \.solarTermIntro) {
             SolarTermIntroFeature()
         }
-        Scope(state: \.mission, action: \.mission) {
-            MissionListFeature()
-        }
 
         Reduce { state, action in
             switch action {
             case .onAppear:
-                return .run { send in
-                    await checkNotificationSettings(send)
-                }
+                return .none
 
             case let .home(.delegate(.navigateToMissionCamera(missionId, title, missionTypeRaw, solarTermId))):
                 let missionType = MissionType(rawValue: missionTypeRaw) ?? {
                     assertionFailure("Unknown missionType: \(missionTypeRaw)")
                     return .daily
                 }()
-                state.missionRecord = MissionRecordFeature.State(
+
+                let missionRecord = MissionRecordFeature.State(
                     missionId: missionId,
                     missionTitle: title,
                     missionType: missionType,
                     solarTermId: solarTermId
                 )
+
+                state.path.append(.missionRecord(missionRecord))
                 return .none
 
             case .home(.delegate(.navigateToMissionTab)):
@@ -108,75 +109,45 @@ public struct MainFeature {
                     }
                 }
 
+            case .home(.delegate(.navigateToMyPage)):
+                state.path.append(.myPage(.init()))
+                return .none
+
             case let .solarTermIntroContentLoad(intro, dateLabel):
-                state.solarTermIntroContent = SolarTermIntroContentFeature.State(
+                let solarTermIntroContent = SolarTermIntroContentFeature.State(
                     solarTermIntro: intro,
                     season: intro.term.season,
                     dateLabel: dateLabel
                 )
+
+                state.path.append(.solarTermIntroContent(solarTermIntroContent))
                 return .none
 
-            case .solarTermIntroContent(.presented(.delegate(.dismiss))):
-                state.solarTermIntroContent = nil
-                return .none
-
-            case .solarTermIntroContent(.presented(.delegate(.navigateToMissionTab))):
-                state.solarTermIntroContent = nil
+            case .path(.element(
+                id: _,
+                action: .solarTermIntroContent(.delegate(.navigateToMissionTab))
+            )):
                 state.tab = .mission
-                return .none
-
-            case .solarTermIntroContent:
-                return .none
-
-            case .missionRecord(.presented(.delegate(.dismiss))):
-                state.missionRecord = nil
-                return .none
-
-            case .missionRecord(.presented(.delegate(.submitted))):
-                state.missionRecord = nil
-                return .none
-
-            case .missionRecord:
-                return .none
-
-            case .home:
-                return .none
-
-            case .mission:
-                return .none
-
-            case .calendar:
                 return .none
 
             case .solarTermIntro(.delegate(.navigateToMissionTab)):
                 state.tab = .mission
                 return .none
 
-            case .solarTermIntro:
-                return .none
+            case .home: return .none
 
-            case .binding:
-                return .none
+            case .mission: return .none
+
+            case .calendar: return .none
+
+            case .solarTermIntro: return .none
+
+            case .path: return .none
+
+            case .binding: return .none
             }
         }
-        .ifLet(\.$missionRecord, action: \.missionRecord) {
-            MissionRecordFeature()
-        }
-        .ifLet(\.$solarTermIntroContent, action: \.solarTermIntroContent) {
-            SolarTermIntroContentFeature()
-        }
-    }
-}
-
-private extension MainFeature {
-    func checkNotificationSettings(_ send: Send<Action>) async {
-        do {
-            let settings = try await notificationRepository.fetchNotificationSettings()
-            guard let settings else { return }
-            try await notificationRepository.syncNotificationSettings(settings)
-        } catch {
-            // TODO: 에러 처리 - 정원
-        }
+        .forEach(\.path, action: \.path)
     }
 }
 

@@ -28,6 +28,8 @@
 	<string>$(CURRENT_PROJECT_VERSION)</string>
 	<key>Environment</key>
 	<string>$(ENV)</string>
+	<key>FirebaseAppDelegateProxyEnabled</key>
+	<false/>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSAppTransportSecurity</key>

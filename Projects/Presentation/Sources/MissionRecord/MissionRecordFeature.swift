@@ -78,9 +78,10 @@ public struct MissionRecordFeature {
         case submitted(imageData: Data?, memo: String)
     }
 
-    @Dependency(\.date) var date
-    @Dependency(\.missionRepository) var missionRepository
-    @Dependency(\.picturePermissionClient) var picturePermissionClient
+    @Dependency(\.date) private var date
+    @Dependency(\.missionRepository) private var missionRepository
+    @Dependency(\.picturePermissionClient) private var picturePermissionClient
+    @Dependency(\.dismiss) private var dismiss
 
     public init() {}
 
@@ -202,7 +203,7 @@ public struct MissionRecordFeature {
                 return .none
 
             case .delegate:
-                return .none
+                return .run { _ in await dismiss() }
             }
         }
         .ifLet(\.$completionModal, action: \.completionModal) {
