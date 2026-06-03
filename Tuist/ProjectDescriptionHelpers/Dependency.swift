@@ -9,7 +9,9 @@ import ProjectDescription
 
 extension Module {
     var dependencies: [TargetDependency] {
-        dependentModules.map(\.dependency) + dependentExternalModules.map(\.dependency)
+        dependentModules.map(\.dependency)
+            + dependentExternalModules.map(\.dependency)
+            + sdkDependencies
     }
 
     var demoDependencies: [TargetDependency] {
@@ -51,6 +53,13 @@ private extension Module {
     var demoDependentExternalModules: [ExternalModule] {
         switch self {
         case .camera: [.composableArchitecture]
+        default: []
+        }
+    }
+
+    var sdkDependencies: [TargetDependency] {
+        switch self {
+        case .data: [.sdk(name: "PhotosUI", type: .framework)]
         default: []
         }
     }

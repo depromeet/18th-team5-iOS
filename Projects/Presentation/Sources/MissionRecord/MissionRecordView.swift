@@ -9,13 +9,11 @@
 import ComposableArchitecture
 import DesignSystem
 import Domain
-import PhotosUI
 import SwiftUI
 
 public struct MissionRecordView: View {
     @Bindable private var store: StoreOf<MissionRecordFeature>
     @FocusState private var isMemoFocused: Bool
-    @State private var photosPickerItem: PhotosPickerItem?
 
     public init(store: StoreOf<MissionRecordFeature>) {
         self.store = store
@@ -59,18 +57,10 @@ public struct MissionRecordView: View {
         ) { cameraStore in
             CameraView(store: cameraStore)
         }
-        .photosPicker(
-            isPresented: $store.isPhotoPickerPresented,
-            selection: $photosPickerItem,
-            matching: .images
-        )
-        .onChange(of: photosPickerItem) { _, newItem in
-            guard let newItem else { return }
-            Task {
-                let data = try? await newItem.loadTransferable(type: Data.self)
-                let jpegData = data.flatMap { UIImage(data: $0)?.jpegData(compressionQuality: 0.9) }
-                store.send(.imageSelected(jpegData))
-            }
+        .sheet(
+            item: $store.scope(state: \.photoPicker, action: \.photoPicker)
+        ) { pickerStore in
+            PhotoPickerView(store: pickerStore)
         }
         .customAlert(
             isPresented: store.alert != nil,
