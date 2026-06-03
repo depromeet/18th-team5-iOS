@@ -18,7 +18,7 @@ public struct MainView: View {
     }
 
     public var body: some View {
-        NavigationStack {
+        NavigationStack(path: $store.scope(state: \.path, action: \.path)) {
             TabView(selection: $store.tab) {
                 ForEach(MainFeature.Tab.allCases, id: \.self) { tab in
                     tabView(tab: tab)
@@ -32,16 +32,8 @@ public struct MainView: View {
                 }
             }
             .navigationBarHidden(true)
-            .navigationDestination(
-                item: $store.scope(state: \.missionRecord, action: \.missionRecord)
-            ) { missionRecordStore in
-                MissionRecordView(store: missionRecordStore)
-            }
-            .navigationDestination(
-                item: $store.scope(state: \.solarTermIntroContent, action: \.solarTermIntroContent)
-            ) { contentStore in
-                SolarTermIntroContentView(store: contentStore)
-            }
+        } destination: { store in
+            pathView(store: store)
         }
         .onAppear { store.send(.onAppear) }
     }
