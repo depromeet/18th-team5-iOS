@@ -14,11 +14,10 @@ import SwiftUI
 struct CalendarView: View {
     @Bindable var store: StoreOf<CalendarFeature>
 
+    @State var sheetHeight: CGFloat = .zero
+
     var body: some View {
         GeometryReader { geo in
-            let containerWidth = geo.size.width - Constants.calendarHorizontalSpacing * 2
-            let dateCellWidth = (containerWidth - Constants.dateCellHorizontalSpacing * 6) / 7
-
             VStack(spacing: 0) {
                 headerView
 
@@ -34,10 +33,11 @@ struct CalendarView: View {
                     },
                     arguments: .init(
                         defaultAnchorInset: Constants.termSectionHeaderHeight,
+                        bottomPadding: Constants.tableBottomPadding,
                         cellBuilder: {
                             termSectionView(
                                 termGroup: $0,
-                                dateCellWidth: dateCellWidth
+                                dateCellWidth: cellWidth(screenWidth: geo.size.width)
                             )
                             .eraseView()
                         },
@@ -45,17 +45,23 @@ struct CalendarView: View {
                     )
                 )
                 .padding(.horizontal, Constants.calendarHorizontalSpacing)
+                .onGeometryChange(
+                    for: CGFloat.self,
+                    of: { $0.size.height - $0.safeAreaInsets.bottom }
+                ) { height in
+                    let cellHeight = CalendarDateCell.Constants.cellHeight
+                    sheetHeight = height - cellHeight - 12
+                }
+                .ignoresSafeArea(.container, edges: [.bottom])
                 .overlay {
                     if let detail = store.calendarDetail {
                         calendarDetailView(detail)
                             .padding(.top, Constants.detailViewTopPadding)
                             .transition(.move(edge: .bottom))
+                            .onDisappear { store.send(.detailViewDisappeared) }
                     }
                 }
-                .animation(
-                    .easeInOut(duration: 0.35),
-                    value: store.calendarDetail
-                )
+                .animation(.easeInOut, value: store.calendarDetail)
             }
         }
         .onAppear {
@@ -91,6 +97,8 @@ extension CalendarView {
     }
 }
 
+// MARK: Calc
+
 extension CalendarView {
     func termSectionViewHeight(_ term: SolarTermGroup) -> CGFloat {
         let header = Constants.termSectionHeaderHeight
@@ -103,14 +111,19 @@ extension CalendarView {
         let bottom = Constants.termSectionBottomPadding
         return header + calendar + bottom
     }
+
+    func cellWidth(screenWidth: CGFloat) -> CGFloat {
+        let containerWidth = screenWidth - Constants.calendarHorizontalSpacing * 2
+        return (containerWidth - Constants.dateCellHorizontalSpacing * 6) / 7
+    }
 }
 
 // MARK: TermSectionView
 
 extension CalendarView {
     func termSectionView(termGroup: SolarTermGroup, dateCellWidth: CGFloat) -> some View {
-        VStack(spacing: 0) {
-            termSectionHeaderView(termGroup.termText)
+        VStack(spacing: .zero) {
+            termSectionHeaderView(termGroup)
             termCalendarView(termGroup.cells, dateCellWidth: dateCellWidth)
         }
         .padding(.bottom, Constants.termSectionBottomPadding)
@@ -124,12 +137,14 @@ extension CalendarView {
         }
     }
 
-    func termSectionHeaderView(_ termText: String) -> some View {
+    func termSectionHeaderView(_ termGroup: SolarTermGroup) -> some View {
         VStack {
             HStack {
-                Text(termText)
+                Text(termGroup.termText)
                     .font(.headline2Medium)
-                    .foregroundStyle(Color.gray900)
+                    .foregroundStyle(
+                        termGroup.containsToday ? Color.green600 : Color.gray900
+                    )
                 Spacer()
             }
             .padding(.top, 24)
@@ -163,7 +178,10 @@ extension CalendarView {
                 .frame(width: cellWidth, height: 1)
 
         case let .dateCell(date):
-            CalendarDateCell(date: date) {
+            CalendarDateCell(
+                date: date,
+                data: store.state.dateData(date)
+            ) {
                 store.send(.dateCellTapped(dateId: date.id, inset: anchorInset))
             }
             .frame(width: cellWidth)
@@ -172,7 +190,8 @@ extension CalendarView {
 
     func dateCellAnchorPoint(weekIndex: Int) -> CGFloat {
         let weekHeight = CalendarDateCell.Constants.cellHeight
-        let weekStartY = CGFloat(weekIndex) * (weekHeight + Constants.weekSectionVerticalSpacing)
+        let weekSpacing = Constants.weekSectionVerticalSpacing
+        let weekStartY = (weekHeight + weekSpacing) * CGFloat(weekIndex)
         return Constants.termSectionHeaderHeight + weekStartY
     }
 }
@@ -184,6 +203,7 @@ extension CalendarView {
         GeometryReader { _ in
             ZStack {
                 detailViewBackgroundView
+                    .ignoresSafeArea(.container, edges: [.bottom])
 
                 VStack {
                     CardStackView(
@@ -251,11 +271,21 @@ extension CalendarView {
     }
 }
 
+private extension CalendarView {
+    var bottomSafeInset: CGFloat {
+        UIApplication.shared.connectedScenes
+            .compactMap { ($0 as? UIWindowScene)?.keyWindow }
+            .first?
+            .safeAreaInsets.bottom ?? 0
+    }
+}
+
 private enum Constants {
     static let calendarHorizontalSpacing: CGFloat = 19.5
     static let termSectionHeaderHeight: CGFloat = 56
-    static let termSectionBottomPadding: CGFloat = 24
+    static let termSectionBottomPadding: CGFloat = 12
     static let weekSectionVerticalSpacing: CGFloat = 4
+    static let tableBottomPadding: CGFloat = 300
 
     static let dateCellHorizontalSpacing: CGFloat = 7
     static let dateCellAnchorOffset: CGFloat = 11

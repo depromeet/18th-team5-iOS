@@ -27,8 +27,14 @@ public struct AnchorRequest<Item: Identifiable & Equatable>: Equatable {
     public let animated: Bool
 }
 
+public struct RowReloadRequest<Item: Identifiable & Equatable>: Equatable {
+    public let requestId = UUID()
+    public let targetIds: [Item.ID]
+}
+
 public struct PagingTableViewState<Item: Identifiable & Equatable>: Equatable {
     public var anchorRequest: AnchorRequest<Item>?
+    public var rowReloadRequest: RowReloadRequest<Item>?
     public var pages: [Page<Item>]
 }
 
@@ -39,6 +45,7 @@ final class PagingTableView<Item: Identifiable & Equatable>: UIView, UITableView
     UITableViewDelegate {
     struct Arguments {
         let defaultAnchorInset: CGFloat
+        let bottomPadding: CGFloat
         let cellBuilder: (Item) -> AnyView
         let cellHeightProvider: (Item) -> CGFloat
     }
@@ -95,6 +102,14 @@ final class PagingTableView<Item: Identifiable & Equatable>: UIView, UITableView
 
         state
             .compactMap(\.anchorRequest)
+            .removeDuplicates()
+            .sink { [weak self] request in
+                self?.update(request: request)
+            }
+            .store(in: &store)
+
+        state
+            .compactMap(\.rowReloadRequest)
             .removeDuplicates()
             .sink { [weak self] request in
                 self?.update(request: request)
@@ -167,6 +182,14 @@ private extension PagingTableView {
         tableView.backgroundColor = .clear
         tableView.contentInsetAdjustmentBehavior = .never
         tableView.showsVerticalScrollIndicator = false
+
+        // contentSize에 포함되는 빈 footer로 하단 패딩을 부여한다.
+        // 페이징 끝 감지(pagingDirectionNeeded)는 contentSize 기준이므로 트리거 위치가 패딩 끝으로 자연히 이동한다.
+        if arguments.bottomPadding > 0 {
+            let footer = UIView(frame: CGRect(x: 0, y: 0, width: 0, height: arguments.bottomPadding))
+            footer.backgroundColor = .clear
+            tableView.tableFooterView = footer
+        }
 
         addSubview(tableView)
         tableView.translatesAutoresizingMaskIntoConstraints = false
@@ -270,6 +293,17 @@ private extension PagingTableView {
         } else {
             isPageUpdating = false
         }
+    }
+
+    func update(request: RowReloadRequest<Item>) {
+        request.targetIds
+            .compactMap { indexPath(for: $0) }
+            .forEach { indexPath in
+                if let cell = tableView.cellForRow(at: indexPath) as? Cell,
+                   let item = itemAt(indexPath: indexPath) {
+                    cell.configure(arguments.cellBuilder(item))
+                }
+            }
     }
 }
 

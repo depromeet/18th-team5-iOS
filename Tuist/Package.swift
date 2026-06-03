@@ -17,5 +17,6 @@ let package = Package(
         .package(url: "https://github.com/Alamofire/Alamofire.git", from: "5.11.1"),
         .package(url: "https://github.com/pointfreeco/swift-composable-architecture.git", from: "1.25.5"),
         .package(url: "https://github.com/firebase/firebase-ios-sdk.git", from: "12.12.0"),
+        .package(url: "https://github.com/onevcat/Kingfisher.git", from: "8.9.0"),
     ]
 )

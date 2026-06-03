@@ -22,7 +22,7 @@ public struct HomeView: View {
     public var body: some View {
         ScrollView {
             content
-                .padding(.top, 76)
+                .padding(.top, 72)
                 .padding(.horizontal, 20)
                 .padding(.bottom, 117)
                 .overlay(alignment: .top) {
@@ -40,7 +40,12 @@ public struct HomeView: View {
         }
         .scrollIndicators(.hidden)
         .background(background)
-        .overlay(alignment: .top) { HomeHeaderView(scrollOffset: scrollOffset) }
+        .overlay(alignment: .top) {
+            HomeHeaderView(
+                showBlur: scrollOffset > 1,
+                myPageAction: { store.send(.delegate(.navigateToMyPage)) }
+            )
+        }
         .onAppear { store.send(.onAppear) }
     }
 

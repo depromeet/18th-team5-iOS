@@ -12,6 +12,8 @@ import Foundation
 
 @Reducer
 public struct SolarTermIntroContentFeature {
+    @Dependency(\.dismiss) private var dismiss
+
     @ObservableState
     public struct State: Equatable {
         var solarTermIntro: SolarTermIntro
@@ -60,7 +62,7 @@ public struct SolarTermIntroContentFeature {
                 return .send(.delegate(.navigateToMissionTab))
 
             case .delegate:
-                return .none
+                return .run { _ in await dismiss() }
             }
         }
     }
