@@ -6,6 +6,8 @@
 //  Copyright © 2026 Orange. All rights reserved.
 //
 
+import Core
+
 public enum SolarTerm: String, CaseIterable {
     case ipchun
     case usu
@@ -75,5 +77,67 @@ public enum SolarTerm: String, CaseIterable {
         case .ibdong, .soseol, .daeseol, .dongji, .sohan, .daehan:
             .winter
         }
+    }
+}
+
+public extension SolarTerm {
+    var yearOrder: Int {
+        switch self {
+        case .sohan: 0
+        case .daehan: 1
+        case .ipchun: 2
+        case .usu: 3
+        case .gyeongchip: 4
+        case .chunbun: 5
+        case .cheongmyeong: 6
+        case .gogu: 7
+        case .ibha: 8
+        case .soman: 9
+        case .mangjong: 10
+        case .haji: 11
+        case .soseo: 12
+        case .daeseo: 13
+        case .ibchu: 14
+        case .cheoseo: 15
+        case .baengno: 16
+        case .chubun: 17
+        case .hanro: 18
+        case .sanggang: 19
+        case .ibdong: 20
+        case .soseol: 21
+        case .daeseol: 22
+        case .dongji: 23
+        }
+    }
+
+    static var yearList: [SolarTerm] {
+        Array(allCases)
+            .sorted(by: { $0.yearOrder < $1.yearOrder })
+    }
+
+    static var firstStartTermInYear: Self {
+        yearList.first ?? .sohan
+    }
+
+    static var lastStartTermInYear: Self {
+        yearList.last ?? .dongji
+    }
+
+    func nextTermInYear() -> Self? {
+        let list = Self.yearList
+        guard let index = list.firstIndex(of: self)
+        else { return nil }
+
+        let nextIndex = index + 1
+        return list[safe: nextIndex]
+    }
+
+    func prevTermInYear() -> Self? {
+        let list = Self.yearList
+        guard let index = list.firstIndex(of: self)
+        else { return nil }
+
+        let prevIndex = index - 1
+        return list[safe: prevIndex]
     }
 }

@@ -21,7 +21,6 @@ struct PresentationDemoApp: App {
                 .init(initialState: .init()) {
                     // TODO: 서버 연동 완료 후 previewValue → liveValue 전환 또는 제거
                     RootFeature()
-                        .dependency(\.calendarRepository, .mock)
                         .dependency(\.homeRepository, .previewValue)
                         .dependency(\.solarTermIntroRepository, .previewValue)
                 }

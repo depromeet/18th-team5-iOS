@@ -12,6 +12,7 @@ import Foundation
 public struct SolarTermGroup: Identifiable, Equatable {
     public let id: String
     public let termText: String
+    public let containsToday: Bool
     public let solarTermInfo: SolarTermInfo
     public var cells: [[SolarTermGroupCell]]
 }
@@ -35,4 +36,8 @@ public struct SolarTermDate: Identifiable, Equatable {
     public let isFirstDayOfMonth: Bool
     public var isToday: Bool
     public var isSelected: Bool
+    public let year: SolarTermYear
+    public let term: SolarTerm
+    public let month: Int
+    public let day: Int
 }

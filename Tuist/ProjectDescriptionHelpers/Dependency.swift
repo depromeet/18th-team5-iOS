@@ -32,8 +32,8 @@ private extension Module {
     
     var dependentExternalModules: [ExternalModule] {
         switch self {
-        case .app: [.firebaseCore, .firebaseRemoteConfig]
-        case .presentation: [.composableArchitecture, .firebaseRemoteConfig]
+        case .app: [.firebaseCore, .firebaseMessaging, .firebaseRemoteConfig]
+        case .presentation: [.composableArchitecture, .firebaseRemoteConfig, .kingfisher]
         case .domain: [.dependencies, .dependenciesMacros]
         case .data: [
             .alamofire,
