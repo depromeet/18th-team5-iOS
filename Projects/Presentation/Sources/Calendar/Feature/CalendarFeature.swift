@@ -32,6 +32,7 @@ public struct CalendarFeature {
     public enum Action: BindableAction {
         case onAppear
         case detailOkButtonTapped
+        case headerBackButtonTapped
         case dateCellTapped(dateId: SolarTermDate.ID, inset: CGFloat)
         case anchoredTermChanged(id: SolarTermGroup.ID)
         case calendarReachToEnd(PageEndDirection)
@@ -59,6 +60,10 @@ public struct CalendarFeature {
             switch action {
             case .onAppear:
                 return onAppear(&state)
+
+            case .headerBackButtonTapped:
+                state.calendarDetail = nil
+                return .none
 
             case let .calendarDataRequest(request):
                 return fetchCalendarData(state, request)

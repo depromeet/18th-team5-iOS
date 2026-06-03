@@ -71,17 +71,34 @@ struct CalendarView: View {
 extension CalendarView {
     var headerView: some View {
         VStack(spacing: 12) {
-            HStack(alignment: .center, spacing: 8) {
-                Text(store.header?.termTitleText ?? "-")
-                    .font(.title2Semibold)
-                    .foregroundStyle(Color.gray900)
+            HStack(spacing: 4) {
+                if store.calendarDetail != nil {
+                    Button {
+                        store.send(.headerBackButtonTapped)
+                    } label: {
+                        Image.icArrowBack
+                            .resizable()
+                            .renderingMode(.template)
+                            .foregroundStyle(Color.gray800)
+                            .frame(width: 24, height: 24)
+                            .transition(.opacity)
+                    }
+                }
 
-                Text(store.header?.termRangeText ?? "-")
-                    .font(.caption1Medium)
-                    .foregroundStyle(Color.gray400)
+                HStack(alignment: .center, spacing: 8) {
+                    Text(store.header?.termTitleText ?? "-")
+                        .font(.title2Semibold)
+                        .foregroundStyle(Color.gray900)
 
-                Spacer()
+                    Text(store.header?.termRangeText ?? "-")
+                        .font(.caption1Medium)
+                        .foregroundStyle(Color.gray400)
+
+                    Spacer()
+                }
             }
+            .animation(.easeInOut, value: store.calendarDetail)
+
             WeekdayLabelRow()
         }
         .padding(.horizontal, 20)

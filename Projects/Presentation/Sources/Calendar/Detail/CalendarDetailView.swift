@@ -109,9 +109,7 @@ private extension CalendarDetailView {
                     HStack {
                         CardCountBadge(current: index + 1, total: cards.count)
                         Spacer()
-                        Button {
-                            //
-                        } label: {
+                        Button {} label: {
                             Image.icMenu
                                 .resizable()
                                 .renderingMode(.template)
