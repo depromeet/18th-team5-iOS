@@ -39,6 +39,7 @@ public struct CalendarFeature {
 
         // Internal actions
         case yearPagesLayoutCompleted
+        case calendarDataRequest(TermFetchRequest)
         case updateCalendarPages([Page<SolarTermGroup>])
         case updateCalendarHeader(CalendarHeader)
         case updateAnchorRequest(AnchorRequest<SolarTermGroup>)
@@ -58,6 +59,9 @@ public struct CalendarFeature {
             switch action {
             case .onAppear:
                 return onAppear(&state)
+
+            case let .calendarDataRequest(request):
+                return fetchCalendarData(state, request)
 
             case .detailViewDisappeared:
                 state.$tabBarVisibility.withLock { $0 = true }

@@ -12,12 +12,12 @@ import Foundation
 
 // MARK: - Term data, 캘린더 기록 정보
 
-extension CalendarFeature {
-    enum TermFetchRequest {
-        case today
-        case specific(id: Int)
-    }
+public enum TermFetchRequest: Hashable, Sendable {
+    case today
+    case specific(id: Int)
+}
 
+extension CalendarFeature {
     func fetchCalendarData(
         _ state: State,
         _ request: TermFetchRequest
@@ -46,10 +46,8 @@ extension CalendarFeature {
                     guard let item else { continue }
 
                     let termRecordKey = Self.termRecordKey(item.year, item.term)
-                    if let record = state.termRecordData[termRecordKey] {
-                        if record.data != nil || record.isInflight {
-                            continue
-                        }
+                    if let record = state.termRecordData[termRecordKey], record.data != nil {
+                        continue
                     }
 
                     await send(.updateTermRecordData(
@@ -66,10 +64,12 @@ extension CalendarFeature {
                     ))
                 }
             } catch {
-                // TODO: 에러처리 -@준영
+                try? await Task.sleep(for: .seconds(2))
+                await send(.calendarDataRequest(request))
                 logger.error(message: error.localizedDescription)
             }
         }
+        .cancellable(id: request, cancelInFlight: true)
     }
 
     static func termRecordKey(

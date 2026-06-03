@@ -29,14 +29,9 @@ extension CalendarFeature {
         let info = currentTerm.solarTermInfo
         let recordKey = Self.termRecordKey(info.year, info.term)
         if let termRecordData = state.termRecordData[recordKey],
-           termRecordData.data == nil,
-           !termRecordData.isInflight {
-            state.termRecordData[recordKey]?.flight()
+           termRecordData.data == nil {
             effects.append(
-                fetchCalendarData(
-                    state,
-                    .specific(id: termRecordData.requestId)
-                )
+                .send(.calendarDataRequest(.specific(id: termRecordData.requestId)))
             )
         }
         return .merge(effects)
