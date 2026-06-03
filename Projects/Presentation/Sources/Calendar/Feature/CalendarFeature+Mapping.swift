@@ -15,11 +15,16 @@ import Foundation
 extension CalendarFeature {
     func mapToHeader(_ term: SolarTermGroup) -> CalendarHeader {
         let info = term.solarTermInfo
-        let startText = Self.termDateFormatter.string(from: info.startDate)
-        let endText = Self.termDateFormatter.string(from: info.endDate)
+        let startDayText = Self.termDateFormatter.string(from: info.startDate)
+        let termLastDate = Calendar.current.date(
+            byAdding: .day,
+            value: -1,
+            to: info.endDate
+        ) ?? info.endDate
+        let lastDayText = Self.termDateFormatter.string(from: termLastDate)
         return CalendarHeader(
             termTitleText: term.termText,
-            termRangeText: "\(startText)~\(endText)"
+            termRangeText: "\(startDayText)~\(lastDayText)"
         )
     }
 
