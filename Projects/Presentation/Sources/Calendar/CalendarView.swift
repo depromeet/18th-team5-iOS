@@ -51,19 +51,20 @@ struct CalendarView: View {
                     let cellHeight = CalendarDateCell.Constants.cellHeight
                     sheetHeight = height - cellHeight - 12
                 }
+                .ignoresSafeArea(.container, edges: [.bottom])
+                .overlay {
+                    if let detail = store.calendarDetail {
+                        calendarDetailView(detail)
+                            .padding(.top, Constants.detailViewTopPadding)
+                            .transition(.move(edge: .bottom))
+                            .onDisappear { store.send(.detailViewDisappeared) }
+                    }
+                }
+                .animation(.easeInOut, value: store.calendarDetail)
             }
         }
-        .ignoresSafeArea(.container, edges: [.bottom])
         .onAppear {
             store.send(.onAppear)
-        }
-        .sheet(item: $store.calendarDetail) {
-            calendarDetailView($0)
-                .presentationBackgroundInteraction(.enabled)
-                .presentationDetents([.height(sheetHeight)])
-                .presentationDragIndicator(.hidden)
-                .presentationCornerRadius(0)
-                .interactiveDismissDisabled()
         }
     }
 }
@@ -201,6 +202,7 @@ extension CalendarView {
         GeometryReader { _ in
             ZStack {
                 detailViewBackgroundView
+                    .ignoresSafeArea(.container, edges: [.bottom])
 
                 VStack {
                     CardStackView(

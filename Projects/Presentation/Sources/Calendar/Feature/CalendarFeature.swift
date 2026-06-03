@@ -35,6 +35,7 @@ public struct CalendarFeature {
         case dateCellTapped(dateId: SolarTermDate.ID, inset: CGFloat)
         case anchoredTermChanged(id: SolarTermGroup.ID)
         case calendarReachToEnd(PageEndDirection)
+        case detailViewDisappeared
 
         // Internal actions
         case yearPagesLayoutCompleted
@@ -58,6 +59,10 @@ public struct CalendarFeature {
             case .onAppear:
                 return onAppear(&state)
 
+            case .detailViewDisappeared:
+                state.$tabBarVisibility.withLock { $0 = true }
+                return .none
+
             case let .calendarReachToEnd(direction):
                 return calendarPagingRequest(&state, direction: direction)
 
@@ -76,6 +81,7 @@ public struct CalendarFeature {
             // MARK: Internal actions
 
             case let .dateCellTapped(dateId, inset):
+                state.$tabBarVisibility.withLock { $0 = false }
                 return dateCellTapped(&state, dateId: dateId, inset: inset)
 
             case let .updateCalendarHeader(header):
