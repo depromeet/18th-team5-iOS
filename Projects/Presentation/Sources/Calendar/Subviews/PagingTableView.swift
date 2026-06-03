@@ -45,6 +45,7 @@ final class PagingTableView<Item: Identifiable & Equatable>: UIView, UITableView
     UITableViewDelegate {
     struct Arguments {
         let defaultAnchorInset: CGFloat
+        let bottomPadding: CGFloat
         let cellBuilder: (Item) -> AnyView
         let cellHeightProvider: (Item) -> CGFloat
     }
@@ -181,6 +182,14 @@ private extension PagingTableView {
         tableView.backgroundColor = .clear
         tableView.contentInsetAdjustmentBehavior = .never
         tableView.showsVerticalScrollIndicator = false
+
+        // contentSize에 포함되는 빈 footer로 하단 패딩을 부여한다.
+        // 페이징 끝 감지(pagingDirectionNeeded)는 contentSize 기준이므로 트리거 위치가 패딩 끝으로 자연히 이동한다.
+        if arguments.bottomPadding > 0 {
+            let footer = UIView(frame: CGRect(x: 0, y: 0, width: 0, height: arguments.bottomPadding))
+            footer.backgroundColor = .clear
+            tableView.tableFooterView = footer
+        }
 
         addSubview(tableView)
         tableView.translatesAutoresizingMaskIntoConstraints = false

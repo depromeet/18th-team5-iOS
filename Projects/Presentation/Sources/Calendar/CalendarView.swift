@@ -33,6 +33,7 @@ struct CalendarView: View {
                     },
                     arguments: .init(
                         defaultAnchorInset: Constants.termSectionHeaderHeight,
+                        bottomPadding: Constants.tableBottomPadding,
                         cellBuilder: {
                             termSectionView(
                                 termGroup: $0,
@@ -284,6 +285,7 @@ private enum Constants {
     static let termSectionHeaderHeight: CGFloat = 56
     static let termSectionBottomPadding: CGFloat = 12
     static let weekSectionVerticalSpacing: CGFloat = 4
+    static let tableBottomPadding: CGFloat = 300
 
     static let dateCellHorizontalSpacing: CGFloat = 7
     static let dateCellAnchorOffset: CGFloat = 11
