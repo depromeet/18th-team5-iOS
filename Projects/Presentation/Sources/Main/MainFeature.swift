@@ -8,6 +8,7 @@
 
 import ComposableArchitecture
 import Domain
+import Foundation
 
 @Reducer
 public struct MainFeature {
@@ -43,7 +44,7 @@ public struct MainFeature {
         case missionRecord(PresentationAction<MissionRecordFeature.Action>)
         case solarTermIntro(SolarTermIntroFeature.Action)
         case solarTermIntroContent(PresentationAction<SolarTermIntroContentFeature.Action>)
-        case solarTermIntroContentLoad(SolarTermIntro, String)
+        case solarTermIntroContentLoad(SolarTermIntro, String, [String: [URL]])
     }
 
     @Dependency(\.logger) var logger
@@ -101,18 +102,20 @@ public struct MainFeature {
                         let card = cards.first { $0.term == term }
                         let dateLabel = infos.first { $0.term == term }?.formattedFullDateRange
                         if let card {
-                            await send(.solarTermIntroContentLoad(card, dateLabel ?? ""))
+                            let urlMap = await solarTermIntroRepository.fetchContentImageURLs(card.contents)
+                            await send(.solarTermIntroContentLoad(card, dateLabel ?? "", urlMap))
                         }
                     } catch {
                         // TODO: Firebase 전환 후 에러핸들링 추가 - @minkyo
                     }
                 }
 
-            case let .solarTermIntroContentLoad(intro, dateLabel):
+            case let .solarTermIntroContentLoad(solarTermIntro, dateLabel, urlDictionary):
                 state.solarTermIntroContent = SolarTermIntroContentFeature.State(
-                    solarTermIntro: intro,
-                    season: intro.term.season,
-                    dateLabel: dateLabel
+                    solarTermIntro: solarTermIntro,
+                    season: solarTermIntro.term.season,
+                    dateLabel: dateLabel,
+                    imageURL: urlDictionary
                 )
                 return .none
 

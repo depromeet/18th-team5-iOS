@@ -51,6 +51,7 @@ public struct SolarTermIntroFeature {
         case content(PresentationAction<SolarTermIntroContentFeature.Action>)
         case solarTermsLoad([SolarTermIntro])
         case solarTermInfosLoad([SolarTermInfo])
+        case presentContent(SolarTermIntro, String, [String: [URL]])
         case delegate(Delegate)
 
         public enum Delegate {
@@ -99,10 +100,17 @@ public struct SolarTermIntroFeature {
 
             case let .onCardTap(solarTermIntro):
                 let dateLabel = state.fullDateLabels[solarTermIntro.term]
+                return .run { send in
+                    let urlDictionary = await solarTermIntroRepository.fetchContentImageURLs(solarTermIntro.contents)
+                    await send(.presentContent(solarTermIntro, dateLabel ?? "", urlDictionary))
+                }
+
+            case let .presentContent(solarTermIntro, dateLabel, urlDictionary):
                 state.content = SolarTermIntroContentFeature.State(
                     solarTermIntro: solarTermIntro,
                     season: state.season,
-                    dateLabel: dateLabel ?? ""
+                    dateLabel: dateLabel,
+                    imageURL: urlDictionary
                 )
                 return .none
 

@@ -8,6 +8,7 @@
 
 import Dependencies
 import Domain
+import FirebaseStorage
 import Foundation
 
 extension SolarTermIntroRepository: @retroactive DependencyKey {
@@ -16,14 +17,31 @@ extension SolarTermIntroRepository: @retroactive DependencyKey {
 
 public enum SolarTermIntroRepositoryImpl {
     public static func live() -> SolarTermIntroRepository {
-        SolarTermIntroRepository(
+        let storage = Storage.storage()
+
+        return SolarTermIntroRepository(
             fetchSolarTermCard: {
-                guard let url = Bundle.module.url(forResource: "solar_terms", withExtension: "json") else {
-                    throw DomainError.notFound
-                }
-                let data = try Data(contentsOf: url)
+                let ref = storage.reference().child("solar_terms.json")
+                let data = try await ref.data(maxSize: 1 * 1024 * 1024) // 1MB 제한
                 let dto = try JSONDecoder().decode(SolarTermIntroFileDTO.self, from: data)
                 return dto.toDomain()
+            },
+            fetchImageURL: { path in
+                let ref = Storage.storage().reference().child(path)
+                return try await ref.downloadURL()
+            },
+            fetchContentImageURLs: { contents in
+                var urlDictionary: [String: [URL]] = [:]
+                for content in contents {
+                    var urls: [URL] = []
+                    for path in content.imageURLs {
+                        if let url = try? await storage.reference().child(path).downloadURL() {
+                            urls.append(url)
+                        }
+                    }
+                    urlDictionary[content.id] = urls
+                }
+                return urlDictionary
             }
         )
     }

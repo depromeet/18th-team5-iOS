@@ -8,6 +8,7 @@
 
 import ComposableArchitecture
 import Domain
+import Foundation
 
 @Reducer
 public struct SolarTermIntroContentFeature {
@@ -16,6 +17,7 @@ public struct SolarTermIntroContentFeature {
         var solarTermIntro: SolarTermIntro
         var season: Season = .currentSeason
         var dateLabel: String
+        var imageURL: [String: [URL]] = [:]
     }
 
     public enum Action {
