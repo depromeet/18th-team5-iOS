@@ -201,11 +201,14 @@ private extension SolarTermIntroContentView {
                     AutoScrollImageView(imageURLs: urls) // 여러 장: 자동 스크롤 + 스와이프
                 } else if let url = urls.first {
                     AsyncImage(url: url) { image in // 1장: 단일 이미지
-                        image.resizable().scaledToFill()
+                        image
+                            .resizable()
+                            .scaledToFill()
                     } placeholder: {
                         Color.gray100
                     }
                     .frame(maxWidth: .infinity)
+                    .aspectRatio(303 / 210, contentMode: .fit)
                     .clipShape(RoundedRectangle(cornerRadius: .radius16))
                 }
             }
