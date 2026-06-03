@@ -54,12 +54,9 @@ struct CalendarView: View {
                 }
                 .ignoresSafeArea(.container, edges: [.bottom])
                 .overlay {
-                    if let detail = store.calendarDetail {
-                        EmptyView()
-//                        calendarDetailView(detail)
-//                            .padding(.top, Constants.detailViewTopPadding)
-//                            .transition(.move(edge: .bottom))
-//                            .onDisappear { store.send(.detailViewDisappeared) }
+                    if let _ = store.calendarDetail {
+                        CalendarDetailView()
+                            .padding(.top, Constants.detailViewTopPadding)
                     }
                 }
                 .animation(.easeInOut, value: store.calendarDetail)
