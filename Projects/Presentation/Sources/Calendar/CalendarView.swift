@@ -44,15 +44,12 @@ struct CalendarView: View {
                     )
                 )
                 .padding(.horizontal, Constants.calendarHorizontalSpacing)
-                .background {
-                    GeometryReader {
-                        Color.clear
-                            .onChange(of: $0.size) { _, size in
-                                let calendarHeight = size.height - bottomSafeInset
-                                let cellHeight = CalendarDateCell.Constants.cellHeight
-                                sheetHeight = calendarHeight - cellHeight - 12
-                            }
-                    }
+                .onGeometryChange(
+                    for: CGFloat.self,
+                    of: { $0.size.height - $0.safeAreaInsets.bottom }
+                ) { height in
+                    let cellHeight = CalendarDateCell.Constants.cellHeight
+                    sheetHeight = height - cellHeight - 12
                 }
             }
         }

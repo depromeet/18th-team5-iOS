@@ -44,7 +44,7 @@ struct CalendarDateCell: View {
             .padding(.top, 20)
             .onTapGesture(perform: onTap)
         }
-        .frame(height: 90)
+        .frame(height: Constants.cellHeight)
     }
 
     var monthView: some View {

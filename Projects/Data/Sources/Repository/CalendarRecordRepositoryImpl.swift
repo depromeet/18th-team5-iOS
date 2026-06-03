@@ -44,17 +44,17 @@ public enum CalendarRecordRepositoryImpl {
 
 private extension CalendarTermRecordsResponseDTO {
     func toDomain() -> CalendarTermRecordsResponse {
-        let records = solarTerms.map { $0.toDomain() }
+        let sortedRecords = solarTerms.map { $0.toDomain() }.sortedByCalendarOrder()
         return CalendarTermRecordsResponse(
-            fetchedTermRecords: records.sortedByCalendarOrder(),
+            fetchedTermRecords: sortedRecords,
             prevTermEmptyRecord: CalendarTermRecord.pageAnchor(
                 id: prevSolarTermId,
-                boundary: records.first,
+                boundary: sortedRecords.first,
                 direction: .previous
             ),
             nextTermEmptyRecord: CalendarTermRecord.pageAnchor(
                 id: nextSolarTermId,
-                boundary: records.last,
+                boundary: sortedRecords.last,
                 direction: .next
             )
         )
