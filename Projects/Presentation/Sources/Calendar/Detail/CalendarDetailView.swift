@@ -10,6 +10,8 @@ import DesignSystem
 import SwiftUI
 
 struct CalendarDetailView: View {
+    @State var cardIndex: Int = 0
+
     var body: some View {
         GeometryReader { _ in
             ZStack {
@@ -17,8 +19,15 @@ struct CalendarDetailView: View {
 
                 VStack {
                     CardStackView(
-                        topCardIndex: .constant(0),
-                        items: []
+                        topCardIndex: $cardIndex,
+                        items: [
+                            DateCard(),
+                            DateCard(),
+                            DateCard(),
+                            DateCard(),
+                            DateCard(),
+                            DateCard()
+                        ]
                     ) { _, _ in
                         EmptyView()
                     }
@@ -76,4 +85,8 @@ extension CalendarDetailView {
         }
         .padding(.vertical, 16)
     }
+}
+
+#Preview {
+    CalendarDetailView()
 }
