@@ -36,7 +36,6 @@ public struct HomeFeature {
             case navigateToMissionTab
             case navigateToSolarTermContent(SolarTerm)
             case navigateToMyPage
-            case navigateToNotificationList
         }
     }
 

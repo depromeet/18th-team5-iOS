@@ -43,13 +43,7 @@ public struct HomeView: View {
         .overlay(alignment: .top) {
             HomeHeaderView(
                 showBlur: scrollOffset > 1,
-                hasUnread: false, // TODO: 추후 구현 예정 - 정원
-                myPageAction: {
-                    store.send(.delegate(.navigateToMyPage))
-                },
-                notificationAction: {
-                    store.send(.delegate(.navigateToNotificationList))
-                }
+                myPageAction: { store.send(.delegate(.navigateToMyPage)) }
             )
         }
         .onAppear { store.send(.onAppear) }

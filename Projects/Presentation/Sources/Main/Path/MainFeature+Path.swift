@@ -12,7 +12,6 @@ extension MainFeature {
     @Reducer
     public enum Path {
         case myPage(MyPageFeature)
-        case notificationList(NotificationListFeature)
         case solarTermIntroContent(SolarTermIntroContentFeature)
         case missionRecord(MissionRecordFeature)
     }
