@@ -41,7 +41,8 @@ private extension Module {
             .dependenciesMacros,
             .firebaseCore,
             .firebaseMessaging,
-            .firebaseRemoteConfig
+            .firebaseRemoteConfig,
+            .firebaseStorage
         ]
         case .core: [.dependencies]
         case .camera: []
