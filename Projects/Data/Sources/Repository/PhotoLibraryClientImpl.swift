@@ -9,7 +9,6 @@
 import Dependencies
 import Domain
 import Photos
-import PhotosUI
 import UIKit
 
 extension PhotoLibraryClient: @retroactive DependencyKey {
@@ -30,9 +29,6 @@ public enum PhotoLibraryClientImpl {
             loadFullImage: { id in
                 await store.loadFullImage(id: id)
             },
-            presentLimitedPicker: {
-                await store.presentLimitedPicker()
-            },
             observeChanges: {
                 store.changeStream()
             }
@@ -49,7 +45,7 @@ private final class PhotoLibraryStore: NSObject, PHPhotoLibraryChangeObserver, @
     private var didRegisterObserver = false
 
     func fetchAssets() async -> [PhotoAsset] {
-        await registerObserverIfNeeded()
+        registerObserverIfNeeded()
         let options = PHFetchOptions()
         options.sortDescriptors = [NSSortDescriptor(key: "creationDate", ascending: false)]
         let result = PHAsset.fetchAssets(with: .image, options: options)
@@ -71,7 +67,7 @@ private final class PhotoLibraryStore: NSObject, PHPhotoLibraryChangeObserver, @
         options.isSynchronous = false
 
         return await withCheckedContinuation { (continuation: CheckedContinuation<Data?, Never>) in
-            var hasResumed = false
+            let resumeGate = OneTimeGate()
             imageManager.requestImage(
                 for: asset,
                 targetSize: size,
@@ -80,9 +76,11 @@ private final class PhotoLibraryStore: NSObject, PHPhotoLibraryChangeObserver, @
             ) { image, info in
                 let isDegraded = (info?[PHImageResultIsDegradedKey] as? Bool) ?? false
                 if isDegraded { return }
-                guard !hasResumed else { return }
-                hasResumed = true
-                let data = image?.jpegData(compressionQuality: 0.8)
+                guard resumeGate.closeIfOpen() else { return }
+
+                let data = image?.cgImage.flatMap {
+                    Self.jpegData(from: $0, compressionQuality: 0.8)
+                }
                 continuation.resume(returning: data)
             }
         }
@@ -97,24 +95,19 @@ private final class PhotoLibraryStore: NSObject, PHPhotoLibraryChangeObserver, @
 
         return await withCheckedContinuation { (continuation: CheckedContinuation<Data?, Never>) in
             imageManager.requestImageDataAndOrientation(for: asset, options: options) { data, _, _, _ in
-                guard let data, let image = UIImage(data: data) else {
+                guard let data else {
                     continuation.resume(returning: nil)
                     return
                 }
-                continuation.resume(returning: image.jpegData(compressionQuality: 0.9))
+                continuation.resume(returning: Self.jpegData(from: data, compressionQuality: 0.9))
             }
         }
     }
 
-    @MainActor
-    func presentLimitedPicker() {
-        guard let rootVC = Self.topViewController() else { return }
-        let library: PHPhotoLibrary = PHPhotoLibrary.shared()
-        library.presentLimitedLibraryPicker(from: rootVC)
-    }
-
     func changeStream() -> AsyncStream<Void> {
-        AsyncStream { continuation in
+        registerObserverIfNeeded()
+
+        return AsyncStream { continuation in
             let token = UUID()
             lock.lock()
             continuations[token] = continuation
@@ -147,21 +140,57 @@ private final class PhotoLibraryStore: NSObject, PHPhotoLibraryChangeObserver, @
         return result.firstObject
     }
 
-    @MainActor
     private func registerObserverIfNeeded() {
-        if didRegisterObserver { return }
-        didRegisterObserver = true
+        lock.lock()
+        let shouldRegister = !didRegisterObserver
+        if shouldRegister {
+            didRegisterObserver = true
+        }
+        lock.unlock()
+
+        guard shouldRegister else { return }
         PHPhotoLibrary.shared().register(self)
     }
 
-    private static func topViewController() -> UIViewController? {
-        let scenes = UIApplication.shared.connectedScenes
-            .compactMap { $0 as? UIWindowScene }
-        let keyWindow = scenes.flatMap(\.windows).first(where: \.isKeyWindow)
-        var top = keyWindow?.rootViewController
-        while let presented = top?.presentedViewController {
-            top = presented
+    private static func jpegData(from data: Data, compressionQuality: CGFloat) -> Data? {
+        guard let source = CGImageSourceCreateWithData(data as CFData, nil),
+              let image = CGImageSourceCreateImageAtIndex(source, 0, nil) else {
+            return nil
         }
-        return top
+        return jpegData(from: image, compressionQuality: compressionQuality)
+    }
+
+    private static func jpegData(from image: CGImage, compressionQuality: CGFloat) -> Data? {
+        let output = NSMutableData()
+        guard let destination = CGImageDestinationCreateWithData(
+            output,
+            "public.jpeg" as CFString,
+            1,
+            nil
+        ) else {
+            return nil
+        }
+
+        let options = [
+            kCGImageDestinationLossyCompressionQuality: compressionQuality
+        ] as CFDictionary
+        CGImageDestinationAddImage(destination, image, options)
+
+        guard CGImageDestinationFinalize(destination) else { return nil }
+        return output as Data
+    }
+}
+
+private final class OneTimeGate: @unchecked Sendable {
+    private let lock = NSLock()
+    private var isOpen = true
+
+    func closeIfOpen() -> Bool {
+        lock.lock()
+        defer { lock.unlock() }
+
+        guard isOpen else { return false }
+        isOpen = false
+        return true
     }
 }

@@ -9,6 +9,7 @@
 import ComposableArchitecture
 import DesignSystem
 import Domain
+import PhotosUI
 import SwiftUI
 
 public struct MissionRecordView: View {
@@ -68,6 +69,31 @@ public struct MissionRecordView: View {
             message: alertMessage,
             buttons: alertButtons
         )
+        .onChange(of: store.limitedPickerPresentationRequestID) { _, requestID in
+            guard requestID != nil else { return }
+            presentLimitedLibraryPicker()
+            store.send(.limitedPickerFinished)
+        }
+    }
+}
+
+// MARK: - Limited Library Picker
+
+private extension MissionRecordView {
+    func presentLimitedLibraryPicker() {
+        guard let rootVC = Self.topViewController() else { return }
+        PHPhotoLibrary.shared().presentLimitedLibraryPicker(from: rootVC)
+    }
+
+    static func topViewController() -> UIViewController? {
+        let scenes = UIApplication.shared.connectedScenes
+            .compactMap { $0 as? UIWindowScene }
+        let keyWindow = scenes.flatMap(\.windows).first(where: \.isKeyWindow)
+        var top = keyWindow?.rootViewController
+        while let presented = top?.presentedViewController {
+            top = presented
+        }
+        return top
     }
 }
 

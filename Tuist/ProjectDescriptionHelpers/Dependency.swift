@@ -60,7 +60,8 @@ private extension Module {
 
     var sdkDependencies: [TargetDependency] {
         switch self {
-        case .data: [.sdk(name: "PhotosUI", type: .framework)]
+        case .presentation: [.sdk(name: "PhotosUI", type: .framework)]
+        case .data: [.sdk(name: "Photos", type: .framework)]
         default: []
         }
     }

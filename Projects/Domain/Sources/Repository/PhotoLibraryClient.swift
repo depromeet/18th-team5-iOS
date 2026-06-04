@@ -26,7 +26,6 @@ public struct PhotoLibraryClient: Sendable {
     public var fetchAssets: @Sendable () async -> [PhotoAsset] = { [] }
     public var loadThumbnail: @Sendable (_ id: String, _ size: CGSize) async -> Data?
     public var loadFullImage: @Sendable (_ id: String) async -> Data?
-    public var presentLimitedPicker: @Sendable () async -> Void
     public var observeChanges: @Sendable () -> AsyncStream<Void> = { .finished }
 }
 

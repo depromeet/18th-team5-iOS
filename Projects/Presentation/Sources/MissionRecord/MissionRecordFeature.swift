@@ -42,6 +42,7 @@ public struct MissionRecordFeature {
         var memo: String = ""
         var isSubmitting: Bool = false
         var alert: RecordAlert?
+        var limitedPickerPresentationRequestID: UUID?
         @Presents var completionModal: CompletionModal.State?
         @Presents var camera: CameraFeature.State?
         @Presents var photoPicker: PhotoPickerFeature.State?
@@ -82,7 +83,6 @@ public struct MissionRecordFeature {
 
     @Dependency(\.date) private var date
     @Dependency(\.missionRepository) private var missionRepository
-    @Dependency(\.photoLibraryClient) private var photoLibraryClient
     @Dependency(\.picturePermissionClient) private var picturePermissionClient
     @Dependency(\.dismiss) private var dismiss
 
@@ -92,15 +92,15 @@ public struct MissionRecordFeature {
         BindingReducer()
 
         EmptyReducer()
-        .ifLet(\.$completionModal, action: \.completionModal) {
-            CompletionModal()
-        }
-        .ifLet(\.$camera, action: \.camera) {
-            CameraFeature()
-        }
-        .ifLet(\.$photoPicker, action: \.photoPicker) {
-            PhotoPickerFeature()
-        }
+            .ifLet(\.$completionModal, action: \.completionModal) {
+                CompletionModal()
+            }
+            .ifLet(\.$camera, action: \.camera) {
+                CameraFeature()
+            }
+            .ifLet(\.$photoPicker, action: \.photoPicker) {
+                PhotoPickerFeature()
+            }
 
         Reduce<State, Action> { state, action in
             switch action {
@@ -195,6 +195,7 @@ public struct MissionRecordFeature {
                 }
 
             case .limitedPickerFinished:
+                state.limitedPickerPresentationRequestID = nil
                 guard state.photoPicker != nil else { return .none }
                 return .send(.photoPicker(.presented(.libraryDidChange)))
 
@@ -230,10 +231,8 @@ public struct MissionRecordFeature {
                 return .none
 
             case .photoPicker(.presented(.delegate(.manageLimitedRequested))):
-                return .run { send in
-                    await photoLibraryClient.presentLimitedPicker()
-                    await send(.limitedPickerFinished)
-                }
+                state.limitedPickerPresentationRequestID = UUID()
+                return .none
 
             case .photoPicker:
                 return .none
