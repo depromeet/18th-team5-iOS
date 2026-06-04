@@ -56,7 +56,7 @@ struct SolarTermIntroCardView: View {
                             .lineLimit(3)
 
                         Text(solarTermIntro.introSubtitle)
-                            .font(.headline2Medium)
+                            .font(.body2Semibold)
                             .foregroundStyle(season.color(.scale500))
                     }
                     .padding(.horizontal, 20)
@@ -76,6 +76,11 @@ struct SolarTermIntroCardView: View {
             .padding(.vertical, 4)
             .background(Color.black.opacity(0.15))
             .clipShape(Capsule())
+            .background {
+                Color.black.opacity(0.15)
+                    .blur(radius: 10)
+            }
+            .clipShape(Capsule())
     }
 }
 
@@ -85,19 +90,8 @@ struct CurrentSolarTermCardView: View {
     let solarTermIntro: SolarTermIntro
     let season: Season
     let dateLabel: String?
+    let cardImageURL: URL?
     let onTap: () -> Void
-
-    private var cardImage: Image {
-        switch solarTermIntro.term {
-        case .ibha: .imgIbha011
-        case .soman: .imgSoman011
-        case .mangjong: .imgMangjong011
-        case .haji: .imgHaji011
-        case .soseo: .imgSoseo011
-        case .daeseo: .imgDaeseo011
-        default: .imgSolarTermCardDefault
-        }
-    }
 
     var body: some View {
         Button(action: onTap) {
@@ -114,29 +108,29 @@ struct CurrentSolarTermCardView: View {
                                 .lineLimit(3)
 
                             Text(solarTermIntro.introSubtitle)
-                                .font(.headline2Medium)
+                                .font(.body2Semibold)
                                 .foregroundStyle(season.color(.scale500))
                         }
                         .padding(.horizontal, 20)
                         .padding(.bottom, 23)
                     }
 
-                // 2. 실사 이미지
-                GeometryReader { geo in
-                    cardImage
-                        .resizable()
-                        .scaledToFill()
-                        .frame(width: geo.size.width, height: geo.size.height * 0.85)
-                        .clipped()
-                        .mask(
-                            LinearGradient(
-                                colors: [.black, .black, .clear],
-                                startPoint: .top,
-                                endPoint: .bottom
+                // 2. 실사 이미지 (Firebase Storage)
+                if let cardImageURL {
+                    GeometryReader { geo in
+                        RemoteImage(url: cardImageURL)
+                            .frame(width: geo.size.width, height: geo.size.height * 0.85)
+                            .clipped()
+                            .mask(
+                                LinearGradient(
+                                    colors: [.black, .black, .clear],
+                                    startPoint: .top,
+                                    endPoint: .bottom
+                                )
                             )
-                        )
+                    }
+                    .allowsHitTesting(false)
                 }
-                .allowsHitTesting(false)
 
                 // 3. 칩 - 절기날짜, 절기명 (맨 앞, 이미지 위)
                 VStack {
@@ -163,7 +157,10 @@ struct CurrentSolarTermCardView: View {
             .foregroundStyle(.white)
             .padding(.horizontal, 8)
             .padding(.vertical, 4)
-            .background(Color.black.opacity(0.15))
+            .background {
+                Color.black.opacity(0.15)
+                    .blur(radius: 10)
+            }
             .clipShape(Capsule())
     }
 }
@@ -175,7 +172,13 @@ struct CurrentSolarTermCardView: View {
 }
 
 #Preview("현재 절기") {
-    CurrentSolarTermCardView(solarTermIntro: .mock, season: .summer, dateLabel: "05.05 - 05.20", onTap: {})
-        .frame(width: 266, height: 400)
-        .padding()
+    CurrentSolarTermCardView(
+        solarTermIntro: .mock,
+        season: .summer,
+        dateLabel: "05.05 - 05.20",
+        cardImageURL: URL(string: "https://picsum.photos/400/300"),
+        onTap: {}
+    )
+    .frame(width: 266, height: 400)
+    .padding()
 }

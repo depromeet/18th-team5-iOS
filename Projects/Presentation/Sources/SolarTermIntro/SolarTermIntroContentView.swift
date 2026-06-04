@@ -18,7 +18,7 @@ struct SolarTermIntroContentView: View {
         VStack(spacing: 0) {
             navigationBar
             ScrollView {
-                VStack(spacing: 24) {
+                VStack(spacing: 12) {
                     introHeaderSection
                     contentIntroSection
                     contentListSection
@@ -117,10 +117,10 @@ private extension SolarTermIntroContentView {
         HStack(alignment: .top, spacing: 9) {
             Text(label)
                 .font(.body2Semibold)
-                .foregroundStyle(Color.gray800)
+                .foregroundStyle(Color.gray900)
                 .padding(.horizontal, 17)
                 .padding(.vertical, 5)
-                .background(Color.gray100)
+                .background(Color.gray200)
                 .clipShape(Capsule())
 
             Text(text)
@@ -155,7 +155,7 @@ private extension SolarTermIntroContentView {
 
             Text(store.solarTermIntro.contentBody)
                 .font(.body2Regular)
-                .foregroundStyle(Color.gray500)
+                .foregroundStyle(Color.gray600)
                 .padding(.vertical, 20)
                 .padding(.horizontal, 16)
                 .background(
@@ -171,7 +171,7 @@ private extension SolarTermIntroContentView {
 
 private extension SolarTermIntroContentView {
     var contentListSection: some View {
-        VStack(spacing: 24) {
+        VStack(spacing: 12) {
             ForEach(store.solarTermIntro.contents, id: \.id) { content in
                 contentCard(content)
             }
@@ -182,36 +182,33 @@ private extension SolarTermIntroContentView {
                     .fill(Color.white)
             )
         }
+        .frame(maxWidth: .infinity)
     }
 
     /// 콘텐츠 카드 (제목 + 부제 + 이미지 + 본문)
     func contentCard(_ content: SolarTermIntroContent) -> some View {
         VStack(alignment: .leading, spacing: 12) {
-            // 콘텐츠 제목
-            Text(content.title)
-                .font(.headline1Semibold)
-                .foregroundStyle(Color.gray900)
+            VStack(alignment: .leading, spacing: 8) {
+                // 콘텐츠 제목
+                Text(content.title)
+                    .font(.headline1Semibold)
+                    .foregroundStyle(Color.gray900)
 
-            // 콘텐츠 부제
-            Text(content.subtitle)
-                .font(.body2Medium)
-                .foregroundStyle(Color.gray600)
+                // 콘텐츠 부제
+                Text(content.subtitle)
+                    .font(.body2Medium)
+                    .foregroundStyle(Color.gray600)
+            }
 
             // 이미지 영역 (Firebase Storage URL로 로딩)
             if let urls = store.imageURL[content.id], !urls.isEmpty {
                 if urls.count > 1 {
                     AutoScrollImageView(imageURLs: urls) // 여러 장: 자동 스크롤 + 스와이프
                 } else if let url = urls.first {
-                    AsyncImage(url: url) { image in // 1장: 단일 이미지
-                        image
-                            .resizable()
-                            .scaledToFill()
-                    } placeholder: {
-                        Color.gray100
-                    }
-                    .frame(maxWidth: .infinity)
-                    .aspectRatio(303 / 210, contentMode: .fit)
-                    .clipShape(RoundedRectangle(cornerRadius: .radius16))
+                    RemoteImage(url: url)
+                        .frame(maxWidth: .infinity)
+                        .aspectRatio(303 / 210, contentMode: .fit)
+                        .clipShape(RoundedRectangle(cornerRadius: .radius16))
                 }
             }
 
@@ -220,6 +217,7 @@ private extension SolarTermIntroContentView {
                 .font(.body2Regular)
                 .foregroundStyle(Color.gray600)
         }
+        .frame(maxWidth: .infinity)
     }
 }
 
@@ -233,13 +231,9 @@ private struct AutoScrollImageView: View {
     var body: some View {
         TabView(selection: $currentIndex) {
             ForEach(Array(imageURLs.enumerated()), id: \.offset) { index, url in
-                AsyncImage(url: url) { image in
-                    image.resizable().scaledToFill()
-                } placeholder: {
-                    Color.gray100
-                }
-                .clipped()
-                .tag(index)
+                RemoteImage(url: url)
+                    .clipped()
+                    .tag(index)
             }
         }
         .tabViewStyle(.page(indexDisplayMode: .never))
