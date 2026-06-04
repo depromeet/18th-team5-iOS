@@ -18,21 +18,19 @@ public struct MyPageView: View {
     }
 
     public var body: some View {
-        VStack(spacing: 0) {
-            navigationBar
-            ScrollView {
-                VStack(spacing: 16) {
-                    MenuListView { menu in
-                        store.send(.menuTapped(menu))
-                    }
-
-                    versionInfoView
-                    deleteButton
+        ScrollView {
+            VStack(spacing: 16) {
+                MenuListView { menu in
+                    store.send(.menuTapped(menu))
                 }
-                .padding(.horizontal, 20)
-                .padding(.top, 16)
+
+                versionInfoView
+                deleteButton
             }
+            .padding(.horizontal, 20)
+            .padding(.top, 16)
         }
+        .navigationBar(title: "마이페이지") { store.send(.backButtonTapped) }
         .background { backgroundView }
         .navigationBarBackButtonHidden()
         .navigationDestination(
@@ -43,34 +41,6 @@ public struct MyPageView: View {
 }
 
 private extension MyPageView {
-    var navigationBar: some View {
-        ZStack {
-            Text("마이페이지")
-                .font(.body1Medium)
-                .foregroundStyle(Color.gray900)
-                .frame(maxWidth: .infinity)
-
-            HStack(spacing: 0) {
-                backButton
-                Spacer()
-            }
-            .padding(.horizontal, 20)
-        }
-        .frame(height: 56)
-    }
-
-    var backButton: some View {
-        Button {
-            store.send(.backButtonTapped)
-        } label: {
-            Image.icArrowLeft
-                .renderingMode(.template)
-                .resizable()
-                .frame(width: 24, height: 24)
-                .foregroundStyle(Color.gray800)
-        }
-    }
-
     var versionInfoView: some View {
         HStack(spacing: 12) {
             Text("버전")
