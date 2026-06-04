@@ -36,7 +36,6 @@ public struct MissionRecordFeature {
     public struct State: Equatable {
         let missionId: Int
         let missionType: MissionType
-        let solarTermId: Int
         var missionTitle: String
         var selectedImageData: Data?
         var memo: String = ""
@@ -46,11 +45,10 @@ public struct MissionRecordFeature {
         @Presents var completionModal: CompletionModal.State?
         @Presents var camera: CameraFeature.State?
 
-        public init(missionId: Int, missionTitle: String, missionType: MissionType, solarTermId: Int) {
+        public init(missionId: Int, missionTitle: String, missionType: MissionType) {
             self.missionId = missionId
             self.missionTitle = missionTitle
             self.missionType = missionType
-            self.solarTermId = solarTermId
         }
     }
 
@@ -133,7 +131,6 @@ public struct MissionRecordFeature {
                 state.isSubmitting = true
                 let missionId = state.missionId
                 let missionType = state.missionType
-                let solarTermId = state.solarTermId
                 let imageData = state.selectedImageData
                 let memo = state.memo.trimmingCharacters(in: .whitespacesAndNewlines)
 
@@ -150,7 +147,6 @@ public struct MissionRecordFeature {
                         let completionId = try await missionRepository.completeMission(
                             missionId,
                             missionType,
-                            solarTermId,
                             objectKey,
                             memo.isEmpty ? nil : memo
                         )
