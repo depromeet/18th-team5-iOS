@@ -59,5 +59,6 @@ public extension View {
         action: @escaping () -> Void
     ) -> some View {
         modifier(NavigationBarViewModifier(title: title, action: action))
+            .navigationBarBackButtonHidden()
     }
 }

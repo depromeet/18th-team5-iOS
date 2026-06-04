@@ -7,20 +7,43 @@
 //
 
 import ComposableArchitecture
+import Domain
 
 @Reducer
 public struct NotificationSettingsFeature {
+    @Dependency(\.dismiss) private var dismiss
+
     @ObservableState
     public struct State: Equatable {
-        public init() {}
+        let season: Season
+
+        // TODO: 이후에 하드코딩 제거 예정 - @정원
+        var settings: [NotificationType: Bool]? = [
+            .solarTermStart: false,
+            .solarTermEnd: false,
+            .dailyMission: true
+        ]
+
+        public init(_ season: Season) {
+            self.season = season
+        }
     }
 
-    public enum Action {}
+    public enum Action: BindableAction {
+        case backButtonTapped
+        case binding(BindingAction<State>)
+    }
 
     public init() {}
     public var body: some ReducerOf<Self> {
-        Reduce { _, _ in
-            return .none
+        BindingReducer()
+
+        Reduce { _, action in
+            switch action {
+            case .backButtonTapped:
+                return .run { _ in await dismiss() }
+            case .binding: return .none
+            }
         }
     }
 }

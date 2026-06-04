@@ -52,7 +52,7 @@ public struct MyPageFeature {
                 return .run { _ in await dismiss() }
             case let .menuTapped(menu):
                 let destination: Path.State? = switch menu {
-                case .notificationSettings: .notificationSettings(.init())
+                case .notificationSettings: .notificationSettings(.init(state.season))
                 default: nil
                 }
 
