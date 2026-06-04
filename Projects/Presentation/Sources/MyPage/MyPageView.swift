@@ -11,7 +11,7 @@ import DesignSystem
 import SwiftUI
 
 public struct MyPageView: View {
-    private let store: StoreOf<MyPageFeature>
+    @Bindable private var store: StoreOf<MyPageFeature>
 
     public init(store: StoreOf<MyPageFeature>) {
         self.store = store
@@ -35,6 +35,10 @@ public struct MyPageView: View {
         }
         .background { backgroundView }
         .navigationBarBackButtonHidden()
+        .navigationDestination(
+            item: $store.scope(state: \.path, action: \.path),
+            destination: pathView
+        )
     }
 }
 
