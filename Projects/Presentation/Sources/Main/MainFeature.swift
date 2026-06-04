@@ -160,7 +160,7 @@ private extension MainFeature {
     func fetchTodaysSolarTerm(_ send: Send<Action>) async {
         let year = SolarTermYear(rawValue: Date.now.year)
         guard let year else { return }
-        let solarTerms = try? await solarTermRepository.fetchSolarTerms(year: year)
+        let solarTerms = try? await solarTermRepository.fetchSolarTerms(year)
         let solarTerm = solarTerms?.first { $0.dateRange ~= Date.now }?.term
         await send(.set(\.solarTerm, solarTerm))
     }
