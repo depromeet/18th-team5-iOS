@@ -107,6 +107,24 @@ private extension CalendarDetailView {
                     Spacer()
                 }
 
+                VStack(spacing: 12) {
+                    Spacer()
+
+                    // 모델링 대상
+                    Text("나만의 여름 음료 개발하기")
+                        .font(.headline1Semibold)
+                        .foregroundStyle(.white)
+
+                    // 모델링 대상
+                    Text("이번 입하에는 여름 음료를 만들어 먹었다. 너무 맛있어")
+                        .font(.body2Medium)
+                        .foregroundStyle(.white)
+                        .underline(true, pattern: .solid, color: .white)
+                        .frame(minHeight: 52, alignment: .top)
+                }
+                .padding(.horizontal, 16)
+                .padding(.bottom, 20)
+
                 cardToolbarView(index)
             }
         case let .placeholder(index):
