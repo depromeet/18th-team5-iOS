@@ -43,7 +43,7 @@ public struct HomeView: View {
         .overlay(alignment: .top) {
             HomeHeaderView(
                 showBlur: scrollOffset > 1,
-                myPageAction: { store.send(.delegate(.navigateToMyPage)) }
+                myPageAction: { store.send(.myPageButtonTapped) }
             )
         }
         .onAppear { store.send(.onAppear) }

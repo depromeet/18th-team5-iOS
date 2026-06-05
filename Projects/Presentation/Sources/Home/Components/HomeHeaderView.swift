@@ -26,12 +26,11 @@ struct HomeHeaderView: View {
             Image.imgPeaktimeHomeLogo
                 .resizable()
                 .frame(width: 126, height: 24)
+                .padding(.leading, 20)
 
             Spacer()
             myPageButton
         }
-        .frame(maxWidth: .infinity)
-        .padding(.horizontal, 20)
         .frame(height: 56)
         .background(alignment: .top) {
             BackgroundBlurView()
@@ -51,6 +50,7 @@ private extension HomeHeaderView {
                 .resizable()
                 .frame(width: 24, height: 24)
                 .foregroundColor(Color.gray700)
+                .padding(.horizontal, 20)
         }
     }
 }

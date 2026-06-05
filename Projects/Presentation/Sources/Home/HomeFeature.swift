@@ -29,6 +29,7 @@ public struct HomeFeature {
         case onMissionTap
         case onMissionRecommendTap
         case onSolarTermDetailTap
+        case myPageButtonTapped
         case delegate(Delegate)
 
         public enum Delegate {
@@ -85,6 +86,9 @@ public struct HomeFeature {
             case .onSolarTermDetailTap:
                 guard let term = state.homeCard?.solarTerm.term else { return .none }
                 return .send(.delegate(.navigateToSolarTermContent(term)))
+
+            case .myPageButtonTapped:
+                return .send(.delegate(.navigateToMyPage))
 
             case .delegate:
                 return .none
