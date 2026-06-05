@@ -20,22 +20,10 @@ public struct NotificationSettingsView: View {
 
     public var body: some View {
         ScrollView {
-            VStack(spacing: 0) {
-                let allNotificationTypes = NotificationType.allCases
-                ForEach(allNotificationTypes, id: \.self) { type in
-                    ZStack(alignment: .bottom) {
-                        toggleItemView(title: type.name, isOn: isOn(type))
-
-                        Color.gray100
-                            .frame(height: 1)
-                            .renderedIf(type != allNotificationTypes.last)
-                    }
-                }
+            VStack(spacing: 16) {
+                notificationBanner
+                toggleListView
             }
-            .padding(.vertical, 8)
-            .padding(.horizontal, 16)
-            .background(Color.white)
-            .clipShape(RoundedRectangle(cornerRadius: .radius12))
             .padding(.horizontal, 20)
             .padding(.top, 16)
         }
@@ -52,6 +40,32 @@ private extension NotificationSettingsView {
 }
 
 private extension NotificationSettingsView {
+    var notificationBanner: some View {
+        NotificationBanner {
+            store.send(.bannerTapped)
+        }
+        .renderedIf(false)
+    }
+
+    var toggleListView: some View {
+        VStack(spacing: 0) {
+            let allNotificationTypes = NotificationType.allCases
+            ForEach(allNotificationTypes, id: \.self) { type in
+                ZStack(alignment: .bottom) {
+                    toggleItemView(title: type.name, isOn: isOn(type))
+
+                    Color.gray100
+                        .frame(height: 1)
+                        .renderedIf(type != allNotificationTypes.last)
+                }
+            }
+        }
+        .padding(.vertical, 8)
+        .padding(.horizontal, 16)
+        .background(Color.white)
+        .clipShape(RoundedRectangle(cornerRadius: .radius12))
+    }
+
     func toggleItemView(title: String, isOn: Binding<Bool>?) -> some View {
         HStack(spacing: 0) {
             Text(title)
@@ -65,6 +79,7 @@ private extension NotificationSettingsView {
                     isOn: isOn,
                     mainColor: store.season.color(.scale600)
                 )
+                .disabled(false)
             }
         }
         .frame(height: 60)

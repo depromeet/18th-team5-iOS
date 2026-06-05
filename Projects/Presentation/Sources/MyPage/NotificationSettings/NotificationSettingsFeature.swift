@@ -31,6 +31,7 @@ public struct NotificationSettingsFeature {
 
     public enum Action: BindableAction {
         case backButtonTapped
+        case bannerTapped
         case binding(BindingAction<State>)
     }
 
@@ -42,6 +43,8 @@ public struct NotificationSettingsFeature {
             switch action {
             case .backButtonTapped:
                 return .run { _ in await dismiss() }
+            case .bannerTapped:
+                return .none
             case .binding: return .none
             }
         }
