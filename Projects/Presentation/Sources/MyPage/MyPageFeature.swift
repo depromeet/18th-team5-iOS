@@ -42,6 +42,11 @@ public struct MyPageFeature {
         case updateButtonTapped
         case deleteButtonTapped
         case path(PresentationAction<Path.Action>)
+        case delegate(Delegate)
+    }
+
+    public enum Delegate {
+        case syncNotificationSettings([NotificationType: Bool])
     }
 
     public init() {}
@@ -59,11 +64,18 @@ public struct MyPageFeature {
                 guard let destination else { return .none }
                 state.path = destination
                 return .none
+            case let .path(.presented(.notificationSettings(action))):
+                switch action {
+                case let .delegate(.syncNotificationSettings(settings)):
+                    return .send(.delegate(.syncNotificationSettings(settings)))
+                default: return .none
+                }
             case .updateButtonTapped:
                 return .none
             case .deleteButtonTapped:
                 return .none
             case .path: return .none
+            case .delegate: return .none
             }
         }
         .ifLet(\.$path, action: \.path)
