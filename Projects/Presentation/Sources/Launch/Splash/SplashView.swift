@@ -7,6 +7,7 @@
 //
 
 import ComposableArchitecture
+import DesignSystem
 import SwiftUI
 
 public struct SplashView: View {
@@ -17,10 +18,17 @@ public struct SplashView: View {
     }
 
     public var body: some View {
-        VStack(spacing: 20) {
-            // TODO: 스플래시 로고/애니메이션 영역
-            Text("스플래시 화면")
+        ZStack {
+            Color.gray800
+                .ignoresSafeArea()
+
+            Image.imgPeaktimeSplashLogo
+                .resizable()
+                .frame(width: 270, height: 48)
+                .opacity(store.isLogoPresented ? 1.0 : 0.0)
+                .animation(.easeIn(duration: 0.7), value: store.isLogoPresented)
         }
+        .loading(isLoading: store.isLoading)
         .onAppear { store.send(.onAppear) }
     }
 }
