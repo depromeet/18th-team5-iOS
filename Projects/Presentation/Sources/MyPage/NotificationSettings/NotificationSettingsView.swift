@@ -12,6 +12,8 @@ import Domain
 import SwiftUI
 
 public struct NotificationSettingsView: View {
+    @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.openURL) private var openURL
     @Bindable private var store: StoreOf<NotificationSettingsFeature>
 
     public init(store: StoreOf<NotificationSettingsFeature>) {
@@ -29,6 +31,13 @@ public struct NotificationSettingsView: View {
         }
         .navigationBar(title: "알림 수신 설정") { store.send(.backButtonTapped) }
         .background(Color.gray100)
+        .loading(isLoading: store.isLoading)
+        .animation(.easeInOut(duration: 0.3), value: store.isAuthorized)
+        .onAppear { store.send(.onAppear) }
+        .onChange(of: scenePhase) { _, scenePhase in
+            guard scenePhase == .active else { return }
+            store.send(.appDidBecomeActive)
+        }
     }
 }
 
@@ -42,9 +51,11 @@ private extension NotificationSettingsView {
 private extension NotificationSettingsView {
     var notificationBanner: some View {
         NotificationBanner {
-            store.send(.bannerTapped)
+            let urlString = UIApplication.openNotificationSettingsURLString
+            guard let url = URL(string: urlString) else { return }
+            openURL(url)
         }
-        .renderedIf(false)
+        .renderedIf(store.isAuthorized == false)
     }
 
     var toggleListView: some View {
@@ -79,7 +90,7 @@ private extension NotificationSettingsView {
                     isOn: isOn,
                     mainColor: store.season.color(.scale600)
                 )
-                .disabled(false)
+                .disabled(store.isAuthorized == false)
             }
         }
         .frame(height: 60)
