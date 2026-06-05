@@ -12,6 +12,8 @@ import ComposableArchitecture
 public struct SplashFeature {
     @ObservableState
     public struct State: Equatable {
+        var isLogoPresented: Bool = false
+        var isLoading: Bool = false
         public init() {}
     }
 
@@ -23,9 +25,16 @@ public struct SplashFeature {
     public init() {}
 
     public var body: some ReducerOf<Self> {
-        Reduce { _, action in
+        Reduce { state, action in
             switch action {
-            case .onAppear, .splashDone:
+            case .onAppear:
+                state.isLogoPresented = true
+                return .run { send in
+                    try await Task.sleep(for: .seconds(1.2))
+                    await send(.splashDone)
+                }
+            case .splashDone:
+                state.isLoading = true
                 return .none
             }
         }

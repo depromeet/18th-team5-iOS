@@ -23,7 +23,7 @@ struct HomeHeaderView: View {
 
     var body: some View {
         HStack {
-            Image.imgPeaktimeLogo
+            Image.imgPeaktimeHomeLogo
                 .resizable()
                 .frame(width: 126, height: 24)
 
