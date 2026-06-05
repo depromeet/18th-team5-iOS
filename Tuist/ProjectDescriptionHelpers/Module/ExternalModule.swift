@@ -16,7 +16,8 @@ enum ExternalModule {
     case firebaseMessaging
     case firebaseRemoteConfig
     case kingfisher
-    
+    case swiftUIIntrospect
+
     var name: String {
         switch self {
         case .alamofire: "Alamofire"
@@ -27,6 +28,7 @@ enum ExternalModule {
         case .firebaseMessaging: "FirebaseMessaging"
         case .firebaseRemoteConfig: "FirebaseRemoteConfig"
         case .kingfisher: "Kingfisher"
+        case .swiftUIIntrospect: "SwiftUIIntrospect"
         }
     }
 }

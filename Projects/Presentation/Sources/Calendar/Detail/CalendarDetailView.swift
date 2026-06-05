@@ -10,27 +10,6 @@ import DesignSystem
 import SwiftUI
 
 struct CalendarDetailView: View {
-    enum Constants {
-        static let cardHorizontalPadding: CGFloat = 32.5
-
-        /// Figma 카드 기준 치수 (3868:21604)
-        static let cardBaseWidth: CGFloat = 311
-        static let cardBaseHeight: CGFloat = 391
-        static let cardRatio: CGFloat = cardBaseHeight / cardBaseWidth
-        static let cardCornerRadius: CGFloat = 20
-
-        /// 카드 배경 radial gradient 파라미터 (카드 기준 치수 좌표계)
-        static let cardGradientCenter = UnitPoint(x: 156 / cardBaseWidth, y: 133 / cardBaseHeight)
-        static let cardGradientRadiusRatio: CGFloat = 273 / cardBaseWidth
-        static let cardGradientStops: [Gradient.Stop] = [
-            .init(color: Color(hex: 0xE8FFB9), location: 0),
-            .init(color: Color(hex: 0xBBF4AF), location: 0.25),
-            .init(color: Color(hex: 0x8FE8A6), location: 0.5),
-            .init(color: Color(hex: 0x62DD9C), location: 0.75),
-            .init(color: Color.green400, location: 1)
-        ]
-    }
-
     @State var frontCardIndex: Int = 0
     @State var screenSize: CGSize = .zero
     let cards: [DateCard] = Array(repeating: .init(), count: 10)
@@ -176,21 +155,51 @@ private extension CalendarDetailView {
     }
 
     func cardToolbarView(_ cardIndex: Int) -> some View {
-        VStack(spacing: .zero) {
+        VStack(spacing: 12) {
             HStack {
                 CardCountBadge(current: cardIndex + 1, total: cards.count)
+
                 Spacer()
-                Button {} label: {
-                    Image.icMenu
-                        .resizable()
-                        .renderingMode(.template)
-                        .foregroundStyle(Color.gray800)
-                        .frame(width: 30, height: 30)
-                }
+
+                Image.icMenu
+                    .resizable()
+                    .renderingMode(.template)
+                    .foregroundStyle(Color.gray800)
+                    .frame(width: 30, height: 30)
+                    .contextMenus(verticalSpacing: 12) {
+                        cardMenuItem(tite: "삭제하기", icon: .icTrash) {
+                            // TODO: 액션 전송
+                        }
+                        cardMenuItem(tite: "수정하기", icon: .icEdit) {
+                            // TODO: 액션 전송
+                        }
+                    }
             }
             Spacer()
         }
         .padding([.top, .horizontal], 16)
+    }
+
+    func cardMenuItem(
+        tite: String,
+        icon: Image,
+        onTap: @escaping () -> Void
+    ) -> some View {
+        Button {
+            onTap()
+        } label: {
+            HStack(spacing: 6) {
+                icon
+                    .resizable()
+                    .renderingMode(.template)
+                    .foregroundStyle(Color.gray900)
+                    .frame(width: 20, height: 20)
+
+                Text(tite)
+                    .font(.body1Medium)
+                    .foregroundStyle(Color.gray900)
+            }
+        }
     }
 }
 
@@ -237,6 +246,29 @@ private extension CalendarDetailView {
             .padding(.horizontal, 20)
         }
         .padding(.vertical, 16)
+    }
+}
+
+extension CalendarDetailView {
+    enum Constants {
+        static let cardHorizontalPadding: CGFloat = 32.5
+
+        /// Figma 카드 기준 치수 (3868:21604)
+        static let cardBaseWidth: CGFloat = 311
+        static let cardBaseHeight: CGFloat = 391
+        static let cardRatio: CGFloat = cardBaseHeight / cardBaseWidth
+        static let cardCornerRadius: CGFloat = 20
+
+        /// 카드 배경 radial gradient 파라미터 (카드 기준 치수 좌표계)
+        static let cardGradientCenter = UnitPoint(x: 156 / cardBaseWidth, y: 133 / cardBaseHeight)
+        static let cardGradientRadiusRatio: CGFloat = 273 / cardBaseWidth
+        static let cardGradientStops: [Gradient.Stop] = [
+            .init(color: Color(hex: 0xE8FFB9), location: 0),
+            .init(color: Color(hex: 0xBBF4AF), location: 0.25),
+            .init(color: Color(hex: 0x8FE8A6), location: 0.5),
+            .init(color: Color(hex: 0x62DD9C), location: 0.75),
+            .init(color: Color.green400, location: 1)
+        ]
     }
 }
 

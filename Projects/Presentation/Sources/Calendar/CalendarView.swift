@@ -56,6 +56,7 @@ struct CalendarView: View {
                 .overlay {
                     if let _ = store.calendarDetail {
                         CalendarDetailView()
+                            .transition(.move(edge: .bottom))
                             .padding(.top, Constants.detailViewTopPadding)
                     }
                 }
