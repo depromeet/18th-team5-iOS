@@ -10,6 +10,8 @@ import DesignSystem
 import SwiftUI
 
 struct OnboardingInitialView: View {
+    @State private var isFloating = false
+
     var body: some View {
         VStack(spacing: 32) {
             VStack(spacing: 12) {
@@ -23,19 +25,39 @@ struct OnboardingInitialView: View {
                     .multilineTextAlignment(.center)
             }
 
-            graphicView
+            imageView
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .onAppear {
+            withAnimation(
+                .easeInOut(duration: 1)
+                    .repeatForever(autoreverses: true)
+            ) {
+                isFloating = true
+            }
+        }
     }
 }
 
 private extension OnboardingInitialView {
-    // TODO: Wireframe에 있는 임시 뷰. 추후 삭제 예정 - 정원
-    var graphicView: some View {
-        Text("Graphic")
-            .font(.headline1Semibold)
-            .foregroundStyle(Color.gray400)
-            .frame(width: 200, height: 200)
-            .background(Color.gray200)
+    var imageView: some View {
+        ZStack(alignment: .bottom) {
+            let deviceWidth = UIScreen.width
+            let scaleRatio = deviceWidth / 375.0
+            let cameraImageSize = scaleRatio * 200
+            let bottomPaddingSize = scaleRatio * 31
+            let floatOffset = scaleRatio * 20
+
+            Image.imgSparkles
+                .resizable()
+                .scaledToFit()
+                .frame(width: deviceWidth)
+
+            Image.imgCamera
+                .resizable()
+                .frame(width: cameraImageSize, height: cameraImageSize)
+                .padding(.bottom, bottomPaddingSize)
+                .offset(y: isFloating ? -floatOffset : 0)
+        }
     }
 }

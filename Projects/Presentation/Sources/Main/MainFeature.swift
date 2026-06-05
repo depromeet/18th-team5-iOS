@@ -78,7 +78,7 @@ public struct MainFeature {
                     await fetchTodaysSolarTerm(send)
                 }
 
-            case let .home(.delegate(.navigateToMissionCamera(missionId, title, missionTypeRaw, solarTermId))):
+            case let .home(.delegate(.navigateToMissionCamera(missionId, title, missionTypeRaw))):
                 let missionType = MissionType(rawValue: missionTypeRaw) ?? {
                     assertionFailure("Unknown missionType: \(missionTypeRaw)")
                     return .daily
@@ -87,8 +87,7 @@ public struct MainFeature {
                 let missionRecord = MissionRecordFeature.State(
                     missionId: missionId,
                     missionTitle: title,
-                    missionType: missionType,
-                    solarTermId: solarTermId
+                    missionType: missionType
                 )
 
                 state.path.append(.missionRecord(missionRecord))
