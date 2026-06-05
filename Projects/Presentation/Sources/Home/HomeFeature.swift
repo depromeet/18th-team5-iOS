@@ -32,7 +32,7 @@ public struct HomeFeature {
         case delegate(Delegate)
 
         public enum Delegate {
-            case navigateToMissionCamera(missionId: Int, title: String, missionType: String, solarTermId: Int)
+            case navigateToMissionCamera(missionId: Int, title: String, missionType: String)
             case navigateToMissionTab
             case navigateToSolarTermContent(SolarTerm)
             case navigateToMyPage
@@ -76,8 +76,7 @@ public struct HomeFeature {
                 return .send(.delegate(.navigateToMissionCamera(
                     missionId: mission.id,
                     title: mission.title,
-                    missionType: mission.missionType,
-                    solarTermId: homeCard.solarTerm.id
+                    missionType: mission.missionType
                 )))
 
             case .onMissionRecommendTap:
