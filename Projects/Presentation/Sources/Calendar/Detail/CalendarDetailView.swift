@@ -82,9 +82,7 @@ private extension CalendarDetailView {
         case placeholder(orderIndex: Int)
     }
 
-    /// Figma 3868:21604 — 카드 배경 radial gradient.
-    /// 중심·색상은 고정, 반지름은 cardWidth 에 비례해 카드 크기에 따라 동적으로 스케일.
-    static func cardBackgroundGradient(cardWidth: CGFloat) -> RadialGradient {
+    func cardBackgroundGradient(cardWidth: CGFloat) -> RadialGradient {
         RadialGradient(
             gradient: Gradient(stops: Constants.cardGradientStops),
             center: Constants.cardGradientCenter,
@@ -98,33 +96,37 @@ private extension CalendarDetailView {
         switch type {
         case let .content(index, _):
             ZStack {
-                // 백그라운드
-                RoundedRectangle(cornerRadius: Constants.cardCornerRadius)
-                    .fill(Self.cardBackgroundGradient(cardWidth: cardWidth))
+                cardBackground(cardWidth)
 
-                // 메인 컨텐츠
-
-                // 툴바
-                VStack(spacing: .zero) {
-                    HStack {
-                        CardCountBadge(current: index + 1, total: cards.count)
-                        Spacer()
-                        Button {} label: {
-                            Image.icMenu
-                                .resizable()
-                                .renderingMode(.template)
-                                .foregroundStyle(Color.gray800)
-                                .frame(width: 30, height: 30)
-                        }
-                    }
-                    Spacer()
-                }
-                .padding([.top, .horizontal], 16)
+                cardToolbarView(index)
             }
         case let .placeholder(index):
             RoundedRectangle(cornerRadius: Constants.cardCornerRadius)
                 .foregroundStyle(index <= 1 ? Color.gray200 : Color.gray50)
         }
+    }
+
+    func cardBackground(_ cardWidth: CGFloat) -> some View {
+        RoundedRectangle(cornerRadius: Constants.cardCornerRadius)
+            .fill(cardBackgroundGradient(cardWidth: cardWidth))
+    }
+
+    func cardToolbarView(_ cardIndex: Int) -> some View {
+        VStack(spacing: .zero) {
+            HStack {
+                CardCountBadge(current: cardIndex + 1, total: cards.count)
+                Spacer()
+                Button {} label: {
+                    Image.icMenu
+                        .resizable()
+                        .renderingMode(.template)
+                        .foregroundStyle(Color.gray800)
+                        .frame(width: 30, height: 30)
+                }
+            }
+            Spacer()
+        }
+        .padding([.top, .horizontal], 16)
     }
 }
 
