@@ -98,12 +98,58 @@ private extension CalendarDetailView {
             ZStack {
                 cardBackground(cardWidth)
 
+                VStack {
+                    cardImageView
+                        .aspectRatio(1.0, contentMode: .fit)
+                        .padding(.horizontal, 48)
+                        .padding(.top, 43.5)
+
+                    Spacer()
+                }
+
                 cardToolbarView(index)
             }
         case let .placeholder(index):
             RoundedRectangle(cornerRadius: Constants.cardCornerRadius)
                 .foregroundStyle(index <= 1 ? Color.gray200 : Color.gray50)
         }
+    }
+
+    var cardImageView: some View {
+        RoundedRectangle(cornerRadius: 12)
+            .padding(3)
+            .background {
+                RoundedRectangle(cornerRadius: 9)
+                    .fill(.white)
+            }
+            .padding(7)
+            .overlay {
+                ZStack {
+                    VStack {
+                        imageVerSticker
+                        Spacer()
+                        imageVerSticker
+                    }
+
+                    HStack {
+                        imageHorSticker
+                        Spacer()
+                        imageHorSticker
+                    }
+                }
+            }
+    }
+
+    var imageHorSticker: some View {
+        Rectangle()
+            .fill(.white)
+            .frame(width: 16, height: 6)
+    }
+
+    var imageVerSticker: some View {
+        Rectangle()
+            .fill(.white)
+            .frame(width: 6, height: 16)
     }
 
     func cardBackground(_ cardWidth: CGFloat) -> some View {
