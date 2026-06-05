@@ -58,6 +58,9 @@ struct CalendarView: View {
                         CalendarDetailView()
                             .transition(.move(edge: .bottom))
                             .padding(.top, Constants.detailViewTopPadding)
+                            .onDisappear {
+                                store.send(.detailViewDisappeared)
+                            }
                     }
                 }
                 .animation(.easeInOut, value: store.calendarDetail)

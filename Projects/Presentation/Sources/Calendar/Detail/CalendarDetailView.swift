@@ -12,6 +12,10 @@ import SwiftUI
 struct CalendarDetailView: View {
     @State var frontCardIndex: Int = 0
     @State var screenSize: CGSize = .zero
+    var cardWidth: CGFloat {
+        max(screenSize.width - Constants.cardHorizontalPadding * 2, 0)
+    }
+
     let cards: [DateCard] = Array(repeating: .init(), count: 10)
 
     var body: some View {
@@ -27,15 +31,16 @@ struct CalendarDetailView: View {
                     CardStackView(
                         topCardIndex: $frontCardIndex,
                         items: cards
-                    ) { index, item in
+                    ) { index, _ in
                         let orderIndex = index - frontCardIndex
-                        let cardWidth = max(screenSize.width - Constants.cardHorizontalPadding * 2, 0)
-
                         Group {
                             if orderIndex == 0 {
-                                card(.content(cardIndex: index, item), cardWidth: cardWidth)
+                                cardView(index: index)
                             } else {
-                                card(.placeholder(orderIndex: orderIndex), cardWidth: cardWidth)
+                                RoundedRectangle(cornerRadius: Constants.cardCornerRadius)
+                                    .foregroundStyle(
+                                        orderIndex <= 1 ? Color.gray200 : Color.gray50
+                                    )
                             }
                         }
                         .frame(
@@ -70,45 +75,38 @@ private extension CalendarDetailView {
         )
     }
 
-    @ViewBuilder
-    func card(_ type: CardType, cardWidth: CGFloat) -> some View {
-        switch type {
-        case let .content(index, _):
-            ZStack {
-                cardBackground(cardWidth)
+    func cardView(index: Int) -> some View {
+        ZStack {
+            cardBackground(cardWidth)
 
-                VStack {
-                    cardImageView
-                        .aspectRatio(1.0, contentMode: .fit)
-                        .padding(.horizontal, 48)
-                        .padding(.top, 43.5)
+            VStack {
+                cardImageView
+                    .aspectRatio(1.0, contentMode: .fit)
+                    .padding(.horizontal, 48)
+                    .padding(.top, 43.5)
 
-                    Spacer()
-                }
-
-                VStack(spacing: 12) {
-                    Spacer()
-
-                    // 모델링 대상
-                    Text("나만의 여름 음료 개발하기")
-                        .font(.headline1Semibold)
-                        .foregroundStyle(.white)
-
-                    // 모델링 대상
-                    Text("이번 입하에는 여름 음료를 만들어 먹었다. 너무 맛있어")
-                        .font(.body2Medium)
-                        .foregroundStyle(.white)
-                        .underline(true, pattern: .solid, color: .white)
-                        .frame(minHeight: 52, alignment: .top)
-                }
-                .padding(.horizontal, 16)
-                .padding(.bottom, 20)
-
-                cardToolbarView(index)
+                Spacer()
             }
-        case let .placeholder(index):
-            RoundedRectangle(cornerRadius: Constants.cardCornerRadius)
-                .foregroundStyle(index <= 1 ? Color.gray200 : Color.gray50)
+
+            VStack(spacing: 12) {
+                Spacer()
+
+                // 모델링 대상
+                Text("나만의 여름 음료 개발하기")
+                    .font(.headline1Semibold)
+                    .foregroundStyle(.white)
+
+                // 모델링 대상
+                Text("이번 입하에는 여름 음료를 만들어 먹었다. 너무 맛있어")
+                    .font(.body2Medium)
+                    .foregroundStyle(.white)
+                    .underline(true, pattern: .solid, color: .white)
+                    .frame(minHeight: 52, alignment: .top)
+            }
+            .padding(.horizontal, 16)
+            .padding(.bottom, 20)
+
+            cardToolbarView(index)
         }
     }
 
@@ -171,7 +169,7 @@ private extension CalendarDetailView {
                             // TODO: 액션 전송
                         }
                         cardMenuItem(tite: "수정하기", icon: .icEdit) {
-                            // TODO: 액션 전송
+                            // TODO: 액션 전송, 수정하기 버튼의 경우 현재 절기인 경우만 노출
                         }
                     }
             }
