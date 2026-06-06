@@ -24,7 +24,7 @@ public struct MasterButtonStyle: ButtonStyle {
             .font(size.typography)
             .foregroundStyle(state.foregroundColor)
             .padding(.vertical, size.verticalPadding)
-            .frame(maxWidth: .infinity)
+            .frame(minWidth: 50, maxWidth: .infinity)
             .background { backgroundView(state) }
             .mask { maskView(size) }
     }
