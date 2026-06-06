@@ -32,6 +32,7 @@ public struct MyPageView: View {
         }
         .navigationBar(title: "마이페이지") { store.send(.backButtonTapped) }
         .background { backgroundView }
+        .onAppear { store.send(.onAppear) }
         .navigationDestination(
             item: $store.scope(state: \.path, action: \.path),
             destination: pathView

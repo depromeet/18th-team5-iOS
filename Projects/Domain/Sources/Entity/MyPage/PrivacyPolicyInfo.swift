@@ -6,7 +6,7 @@
 //  Copyright © 2026 Orange. All rights reserved.
 //
 
-public struct PrivacyPolicyInfo {
+public struct PrivacyPolicyInfo: Equatable {
     public let title: String?
     public let content: String
 
