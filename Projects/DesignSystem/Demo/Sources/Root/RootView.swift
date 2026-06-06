@@ -32,6 +32,7 @@ private extension RootView {
         case .circularWheelPicker: CircularWheelPickerDemoView()
         case .cardStack: CardStackDemoView()
         case .font: FontDemoView()
+        case .toggle: ToggleDemoView()
         }
     }
 

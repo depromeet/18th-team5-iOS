@@ -84,7 +84,7 @@ private extension MissionSearchResultView {
             VStack(spacing: 20) {
                 textView
 
-                Image.imgCamera
+                Image.imgCameraWithSparkles
                     .resizable()
                     .scaledToFit()
                     .frame(maxWidth: .infinity, maxHeight: .infinity)

@@ -7,13 +7,12 @@
 //
 
 import ComposableArchitecture
+import Core
 import Domain
 import Foundation
 
 @Reducer
 public struct MainFeature {
-    @Dependency(\.notificationRepository) private var notificationRepository
-
     @ObservableState
     public struct State: Equatable {
         @Shared(.tabBarVisibility) var tabBarVisibility: Bool = true
@@ -25,6 +24,7 @@ public struct MainFeature {
         var solarTermIntro: SolarTermIntroFeature.State = .init()
 
         var path: StackState<Path.State> = .init()
+        var solarTerm: SolarTerm?
 
         init() {
             self._tabBarVisibility = Shared(
@@ -45,9 +45,10 @@ public struct MainFeature {
         case path(StackActionOf<Path>)
     }
 
-    @Dependency(\.logger) var logger
-    @Dependency(\.solarTermIntroRepository) var solarTermIntroRepository
-    @Dependency(\.solarTermRepository) var solarTermRepository
+    @Dependency(\.logger) private var logger
+    @Dependency(\.solarTermIntroRepository) private var solarTermIntroRepository
+    @Dependency(\.solarTermRepository) private var solarTermRepository
+    @Dependency(\.notificationRepository) private var notificationRepository
 
     public init() {}
 
@@ -73,9 +74,11 @@ public struct MainFeature {
         Reduce { state, action in
             switch action {
             case .onAppear:
-                return .none
+                return .run { send in
+                    await fetchTodaysSolarTerm(send)
+                }
 
-            case let .home(.delegate(.navigateToMissionCamera(missionId, title, missionTypeRaw, solarTermId))):
+            case let .home(.delegate(.navigateToMissionCamera(missionId, title, missionTypeRaw))):
                 let missionType = MissionType(rawValue: missionTypeRaw) ?? {
                     assertionFailure("Unknown missionType: \(missionTypeRaw)")
                     return .daily
@@ -84,8 +87,7 @@ public struct MainFeature {
                 let missionRecord = MissionRecordFeature.State(
                     missionId: missionId,
                     missionTitle: title,
-                    missionType: missionType,
-                    solarTermId: solarTermId
+                    missionType: missionType
                 )
 
                 state.path.append(.missionRecord(missionRecord))
@@ -111,7 +113,8 @@ public struct MainFeature {
                 }
 
             case .home(.delegate(.navigateToMyPage)):
-                state.path.append(.myPage(.init()))
+                guard let solarTerm = state.solarTerm else { return .none }
+                state.path.append(.myPage(.init(solarTerm)))
                 return .none
 
             case let .presentSolarTermContent(intro, dateLabel):
@@ -148,6 +151,16 @@ public struct MainFeature {
             }
         }
         .forEach(\.path, action: \.path)
+    }
+}
+
+private extension MainFeature {
+    func fetchTodaysSolarTerm(_ send: Send<Action>) async {
+        let year = SolarTermYear(rawValue: Date.now.year)
+        guard let year else { return }
+        let solarTerms = try? await solarTermRepository.fetchSolarTerms(year)
+        let solarTerm = solarTerms?.first { $0.dateRange ~= Date.now }?.term
+        await send(.set(\.solarTerm, solarTerm))
     }
 }
 

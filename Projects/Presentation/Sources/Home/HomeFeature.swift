@@ -29,10 +29,11 @@ public struct HomeFeature {
         case onMissionTap
         case onMissionRecommendTap
         case onSolarTermDetailTap
+        case myPageButtonTapped
         case delegate(Delegate)
 
         public enum Delegate {
-            case navigateToMissionCamera(missionId: Int, title: String, missionType: String, solarTermId: Int)
+            case navigateToMissionCamera(missionId: Int, title: String, missionType: String)
             case navigateToMissionTab
             case navigateToSolarTermContent(SolarTerm)
             case navigateToMyPage
@@ -76,8 +77,7 @@ public struct HomeFeature {
                 return .send(.delegate(.navigateToMissionCamera(
                     missionId: mission.id,
                     title: mission.title,
-                    missionType: mission.missionType,
-                    solarTermId: homeCard.solarTerm.id
+                    missionType: mission.missionType
                 )))
 
             case .onMissionRecommendTap:
@@ -86,6 +86,9 @@ public struct HomeFeature {
             case .onSolarTermDetailTap:
                 guard let term = state.homeCard?.solarTerm.term else { return .none }
                 return .send(.delegate(.navigateToSolarTermContent(term)))
+
+            case .myPageButtonTapped:
+                return .send(.delegate(.navigateToMyPage))
 
             case .delegate:
                 return .none

@@ -6,8 +6,8 @@
 //  Copyright © 2026 Orange. All rights reserved.
 //
 
-public enum NotificationType {
-    case dailyMission
-    case solarTermEnd
+public enum NotificationType: CaseIterable {
     case solarTermStart
+    case solarTermEnd
+    case dailyMission
 }
