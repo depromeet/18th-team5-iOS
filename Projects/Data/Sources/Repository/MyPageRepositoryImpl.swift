@@ -18,12 +18,19 @@ extension MyPageRepository: @retroactive DependencyKey {
 enum MyPageRepositoryImpl {
     static func live() -> MyPageRepository {
         let storage = Storage.storage()
+        let maxSize: Int64 = 64 * 1024 // max 64KB
 
         return MyPageRepository(
             fetchPrivacyPolicy: {
                 let reference = storage.reference().child("privacy_policy.json")
-                let data = try await reference.data(maxSize: 64 * 1024) // max 64KB
-                let response = try JSONDecoder().decode([PrivacyPolicyResponseDTO].self, from: data)
+                let data = try await reference.data(maxSize: maxSize)
+                let response = try JSONDecoder().decode([DocumentResponseDTO].self, from: data)
+                return response.compactMap(\.toDomain)
+            },
+            fetchTermsOfService: {
+                let reference = storage.reference().child("terms_of_service.json")
+                let data = try await reference.data(maxSize: maxSize)
+                let response = try JSONDecoder().decode([DocumentResponseDTO].self, from: data)
                 return response.compactMap(\.toDomain)
             }
         )

@@ -1,5 +1,5 @@
 //
-//  PrivacyPolicyFeature.swift
+//  TermsOfServiceFeature.swift
 //  Presentation
 //
 //  Created by 이정원 on 6/6/26.
@@ -10,24 +10,24 @@ import ComposableArchitecture
 import Domain
 
 @Reducer
-public struct PrivacyPolicyFeature {
+public struct TermsOfServiceFeature {
     @Dependency(\.dismiss) private var dismiss
 
     @ObservableState
     public struct State: Equatable {
-        var privacyPolicies: [DocumentInfo]?
+        var termsOfService: [DocumentInfo]?
         var isLoading: Bool
 
-        public init(_ privacyPolicies: [DocumentInfo]?) {
-            self.privacyPolicies = privacyPolicies
-            self.isLoading = privacyPolicies == nil
+        public init(_ termsOfService: [DocumentInfo]?) {
+            self.termsOfService = termsOfService
+            self.isLoading = termsOfService == nil
         }
     }
 
     public enum Action {
         case onAppear
         case backButtonTapped
-        case privacyPolicyFetched([DocumentInfo])
+        case termsOfServiceFetched([DocumentInfo])
         case showAlert
     }
 
@@ -36,18 +36,18 @@ public struct PrivacyPolicyFeature {
         Reduce { state, action in
             switch action {
             case .onAppear:
-                if state.privacyPolicies?.isEmpty == true {
+                if state.termsOfService?.isEmpty == true {
                     return .send(.showAlert)
                 }
                 return .none
             case .backButtonTapped:
                 return .run { _ in await dismiss() }
-            case let .privacyPolicyFetched(policies):
-                if policies.isEmpty {
+            case let .termsOfServiceFetched(terms):
+                if terms.isEmpty {
                     state.isLoading = false
                     return .send(.showAlert)
                 } else {
-                    state.privacyPolicies = policies
+                    state.termsOfService = terms
                     state.isLoading = false
                     return .none
                 }

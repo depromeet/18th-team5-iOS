@@ -1,5 +1,5 @@
 //
-//  PrivacyPolicyView.swift
+//  TermsOfServiceView.swift
 //  Presentation
 //
 //  Created by 이정원 on 6/6/26.
@@ -11,26 +11,26 @@ import DesignSystem
 import Domain
 import SwiftUI
 
-public struct PrivacyPolicyView: View {
-    private let store: StoreOf<PrivacyPolicyFeature>
+public struct TermsOfServiceView: View {
+    private let store: StoreOf<TermsOfServiceFeature>
 
-    public init(store: StoreOf<PrivacyPolicyFeature>) {
+    public init(store: StoreOf<TermsOfServiceFeature>) {
         self.store = store
     }
 
     public var body: some View {
         ScrollView {
-            if let policies = store.privacyPolicies {
+            if let terms = store.termsOfService {
                 VStack(spacing: 36) {
-                    ForEach(policies.indices, id: \.self) { index in
-                        privacyPolicyInfoView(policies[index])
+                    ForEach(terms.indices, id: \.self) { index in
+                        termsOfServiceInfoView(terms[index])
                     }
                 }
                 .padding(.horizontal, 20)
                 .padding(.vertical, 24)
             }
         }
-        .navigationBar(title: "개인정보처리방침") {
+        .navigationBar(title: "이용약관") {
             store.send(.backButtonTapped)
         }
         .background(Color.white)
@@ -39,8 +39,8 @@ public struct PrivacyPolicyView: View {
     }
 }
 
-private extension PrivacyPolicyView {
-    func privacyPolicyInfoView(_ info: DocumentInfo) -> some View {
+private extension TermsOfServiceView {
+    func termsOfServiceInfoView(_ info: DocumentInfo) -> some View {
         VStack(spacing: 12) {
             if let title = info.title {
                 Text(title)

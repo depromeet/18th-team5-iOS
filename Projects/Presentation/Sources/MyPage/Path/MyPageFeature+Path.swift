@@ -13,6 +13,7 @@ extension MyPageFeature {
     public enum Path {
         case notificationSettings(NotificationSettingsFeature)
         case privacyPolicy(PrivacyPolicyFeature)
+        case termsOfService(TermsOfServiceFeature)
     }
 }
 
