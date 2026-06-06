@@ -11,6 +11,7 @@ enum Menu: CaseIterable {
     case circularWheelPicker
     case cardStack
     case font
+    case toggle
 
     var name: String {
         switch self {
@@ -18,6 +19,7 @@ enum Menu: CaseIterable {
         case .circularWheelPicker: "Circular Wheel Picker"
         case .cardStack: "Card Stack"
         case .font: "Font"
+        case .toggle: "Toggle"
         }
     }
 }

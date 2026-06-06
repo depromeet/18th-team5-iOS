@@ -25,6 +25,7 @@ public struct MyPageFeature {
     public struct State: Equatable {
         let solarTerm: SolarTerm
         var version: String = "1.3.2" // TODO: 추후 수정 예정 - @정원
+        @Presents var path: Path.State?
 
         public init(_ solarTerm: SolarTerm) {
             self.solarTerm = solarTerm
@@ -40,21 +41,31 @@ public struct MyPageFeature {
         case menuTapped(Menu)
         case updateButtonTapped
         case deleteButtonTapped
+        case path(PresentationAction<Path.Action>)
     }
 
     public init() {}
     public var body: some ReducerOf<Self> {
-        Reduce { _, action in
+        Reduce { state, action in
             switch action {
             case .backButtonTapped:
                 return .run { _ in await dismiss() }
-            case .menuTapped:
+            case let .menuTapped(menu):
+                let destination: Path.State? = switch menu {
+                case .notificationSettings: .notificationSettings(.init(state.season))
+                default: nil
+                }
+
+                guard let destination else { return .none }
+                state.path = destination
                 return .none
             case .updateButtonTapped:
                 return .none
             case .deleteButtonTapped:
                 return .none
+            case .path: return .none
             }
         }
+        .ifLet(\.$path, action: \.path)
     }
 }
