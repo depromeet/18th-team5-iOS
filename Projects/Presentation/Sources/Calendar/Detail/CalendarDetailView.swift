@@ -12,6 +12,8 @@ import SwiftUI
 struct CalendarDetailView: View {
     @State var frontCardIndex: Int = 0
     @State var screenSize: CGSize = .zero
+    @State var toast: ToastModel?
+    @State var presentAlert: Bool = false
 
     let cards: [DateCard] = Array(repeating: .init(), count: 10)
 
@@ -37,6 +39,36 @@ struct CalendarDetailView: View {
 
                 bottomButtonContainer
             }
+            .presentToast($toast)
+            .toastContainer()
+            .customAlert(
+                isPresented: presentAlert,
+                message: "기록을 삭제할까요?",
+                buttons: [
+                    .init(
+                        title: "닫기",
+                        style: .secondary,
+                        action: {
+                            // TODO: 수정 -@준영
+                            print("닫기")
+                            presentAlert = false
+                        }
+                    ),
+                    .init(
+                        title: "확인",
+                        style: .primary,
+                        action: {
+                            presentAlert = false
+                            toast = .init(
+                                title: "기록이 삭제되었어요",
+                                duration: 1,
+                                bottomInset: 108,
+                                action: nil
+                            )
+                        }
+                    )
+                ]
+            )
         }
     }
 }

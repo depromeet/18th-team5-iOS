@@ -158,10 +158,11 @@ extension CalendarDetailView {
                     .frame(width: 30, height: 30)
                     .contextMenus(verticalSpacing: 12) {
                         cardMenuItem(tite: "삭제하기", icon: .icTrash) {
-                            // TODO: 액션 전송
+                            // TODO: 액션 전송, 상태 store로 이전 -@준영
+                            presentAlert = true
                         }
                         cardMenuItem(tite: "수정하기", icon: .icEdit) {
-                            // TODO: 액션 전송, 수정하기 버튼의 경우 현재 절기인 경우만 노출
+                            // TODO: 액션 전송, 수정하기 버튼의 경우 현재 절기인 경우만 노출 -@준영
                         }
                     }
             }
