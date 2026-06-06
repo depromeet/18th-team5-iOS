@@ -14,7 +14,7 @@ struct PrivacyPolicyResponseDTO: Decodable {
 }
 
 extension PrivacyPolicyResponseDTO {
-    var toDoamin: PrivacyPolicyInfo? {
+    var toDomain: PrivacyPolicyInfo? {
         guard let content else { return nil }
         return .init(title: title, content: content)
     }

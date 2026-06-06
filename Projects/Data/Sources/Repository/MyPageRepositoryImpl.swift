@@ -24,7 +24,7 @@ enum MyPageRepositoryImpl {
                 let reference = storage.reference().child("privacy_policy.json")
                 let data = try await reference.data(maxSize: 64 * 1024) // max 64KB
                 let response = try JSONDecoder().decode([PrivacyPolicyResponseDTO].self, from: data)
-                return response.compactMap(\.toDoamin)
+                return response.compactMap(\.toDomain)
             }
         )
     }
