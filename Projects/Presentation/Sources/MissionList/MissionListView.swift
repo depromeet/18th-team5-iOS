@@ -158,7 +158,7 @@ private extension MissionListView {
                 mission: mission,
                 season: season,
                 isActive: store.selectedMission == mission,
-                action: {}
+                action: { store.send(.missionCardTapped(mission)) }
             )
         }
     }

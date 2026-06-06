@@ -56,11 +56,17 @@ public struct MissionListFeature {
         case themeTapped(MissionTheme)
         case indicatorIndexChanged(Int)
         case searchMissionButtonTapped
+        case missionCardTapped(Mission)
         case recommendedMissionsFetched(RecommendedMission?)
         case searchResultFetched(Mission?)
         case binding(BindingAction<State>)
         case search(PresentationAction<MissionSearchFeature.Action>)
         case searchResult(PresentationAction<MissionSearchResultFeature.Action>)
+        case delegate(Delegate)
+    }
+
+    public enum Delegate {
+        case navigateToMissionRecord(Mission, MissionType)
     }
 
     public init() {}
@@ -91,9 +97,11 @@ public struct MissionListFeature {
                     state.search = .init(season: season)
                 }
                 return .none
+            case let .missionCardTapped(mission):
+                return .send(.delegate(.navigateToMissionRecord(mission, .recommended)))
             case let .recommendedMissionsFetched(info):
                 guard let info else { return .none }
-                let isEqual = state.missions == info.missions
+                let isEqual = state.missions.map(\.id) == info.missions.map(\.id)
                 state.userType = info.userType
                 state.solarTerm = info.solarTerm
                 state.missions = info.missions
@@ -117,6 +125,7 @@ public struct MissionListFeature {
             case .binding: return .none
             case .search: return .none
             case .searchResult: return .none
+            case .delegate: return .none
             }
         }
         .ifLet(\.$search, action: \.search) {
