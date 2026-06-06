@@ -53,6 +53,7 @@ public struct MyPageFeature {
             case let .menuTapped(menu):
                 let destination: Path.State? = switch menu {
                 case .notificationSettings: .notificationSettings(.init(state.season))
+                case .privacyPolicy: .privacyPolicy(.init())
                 default: nil
                 }
 
