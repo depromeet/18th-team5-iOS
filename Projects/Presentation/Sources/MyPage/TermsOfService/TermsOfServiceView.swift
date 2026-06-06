@@ -35,7 +35,6 @@ public struct TermsOfServiceView: View {
         }
         .background(Color.white)
         .loading(isLoading: store.isLoading)
-        .onAppear { store.send(.onAppear) }
     }
 }
 

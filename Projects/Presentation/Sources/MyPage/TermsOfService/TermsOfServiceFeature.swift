@@ -20,12 +20,11 @@ public struct TermsOfServiceFeature {
 
         public init(_ termsOfService: [DocumentInfo]?) {
             self.termsOfService = termsOfService
-            self.isLoading = termsOfService == nil
+            self.isLoading = termsOfService?.isEmpty != false
         }
     }
 
     public enum Action {
-        case onAppear
         case backButtonTapped
         case termsOfServiceFetched([DocumentInfo])
         case showAlert
@@ -35,11 +34,6 @@ public struct TermsOfServiceFeature {
     public var body: some ReducerOf<Self> {
         Reduce { state, action in
             switch action {
-            case .onAppear:
-                if state.termsOfService?.isEmpty == true {
-                    return .send(.showAlert)
-                }
-                return .none
             case .backButtonTapped:
                 return .run { _ in await dismiss() }
             case let .termsOfServiceFetched(terms):

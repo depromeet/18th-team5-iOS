@@ -20,12 +20,11 @@ public struct PrivacyPolicyFeature {
 
         public init(_ privacyPolicies: [DocumentInfo]?) {
             self.privacyPolicies = privacyPolicies
-            self.isLoading = privacyPolicies == nil
+            self.isLoading = privacyPolicies?.isEmpty != false
         }
     }
 
     public enum Action {
-        case onAppear
         case backButtonTapped
         case privacyPolicyFetched([DocumentInfo])
         case showAlert
@@ -35,11 +34,6 @@ public struct PrivacyPolicyFeature {
     public var body: some ReducerOf<Self> {
         Reduce { state, action in
             switch action {
-            case .onAppear:
-                if state.privacyPolicies?.isEmpty == true {
-                    return .send(.showAlert)
-                }
-                return .none
             case .backButtonTapped:
                 return .run { _ in await dismiss() }
             case let .privacyPolicyFetched(policies):
