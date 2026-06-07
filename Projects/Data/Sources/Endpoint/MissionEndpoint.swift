@@ -16,6 +16,7 @@ enum MissionEndpoint: APIEndpoint {
     case completeSelected(missionId: Int, request: MissionCompleteRequestDTO)
     case fetchCompletions(missionId: Int)
     case fetchRecommendedMissions
+    case fetchRecommendedMissionAvailability
     case fetchSearchedMission
     case searchMission(request: MissionSearchRequestDTO)
 
@@ -33,6 +34,8 @@ enum MissionEndpoint: APIEndpoint {
             "/api/v1/missions/\(missionId)/completions"
         case .fetchRecommendedMissions:
             "/api/v1/missions/recommended"
+        case .fetchRecommendedMissionAvailability:
+            "/api/v1/missions/recommended/availability"
         case .fetchSearchedMission:
             "/api/v1/missions/selected/today"
         case .searchMission:
@@ -42,35 +45,29 @@ enum MissionEndpoint: APIEndpoint {
 
     var method: HTTPMethod {
         switch self {
-        case .fetchRecordPage, .fetchCompletions, .fetchRecommendedMissions, .fetchSearchedMission: .get
+        case .fetchRecordPage: .get
+        case .fetchCompletions: .get
+        case .fetchRecommendedMissions: .get
+        case .fetchSearchedMission: .get
+        case .fetchRecommendedMissionAvailability: .get
         case .completeDaily, .completeRecommended, .completeSelected, .searchMission: .post
         }
     }
 
     var queryItems: [URLQueryItem]? {
         switch self {
-        case .fetchRecordPage: nil
-        case .completeDaily: nil
-        case .completeRecommended: nil
-        case .completeSelected: nil
-        case .fetchCompletions: nil
-        case .fetchRecommendedMissions: nil
-        case .fetchSearchedMission: nil
         case let .searchMission(request: request):
             request.queryItems
+        default: nil
         }
     }
 
     var body: Encodable? {
         switch self {
-        case .fetchRecordPage: nil
         case let .completeDaily(_, request): request
         case let .completeRecommended(_, request): request
         case let .completeSelected(_, request): request
-        case .fetchCompletions: nil
-        case .fetchRecommendedMissions: nil
-        case .fetchSearchedMission: nil
-        case .searchMission: nil
+        default: nil
         }
     }
 

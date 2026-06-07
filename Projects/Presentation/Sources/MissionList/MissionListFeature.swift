@@ -22,6 +22,8 @@ public struct MissionListFeature {
         var missions: [Mission] = []
         var selectedMission: Mission?
         var searchedMission: Mission?
+        var isAvailable: Bool?
+        var maxCount: Int?
 
         @Presents var search: MissionSearchFeature.State?
         @Presents var searchResult: MissionSearchResultFeature.State?
@@ -59,6 +61,7 @@ public struct MissionListFeature {
         case missionCardTapped(Mission)
         case recommendedMissionsFetched(RecommendedMission?)
         case searchResultFetched(Mission?)
+        case showCompleteAnimation
         case binding(BindingAction<State>)
         case search(PresentationAction<MissionSearchFeature.Action>)
         case searchResult(PresentationAction<MissionSearchResultFeature.Action>)
@@ -126,6 +129,8 @@ public struct MissionListFeature {
                 state.searchResult = nil
                 state.isLoading = true
                 return .send(.delegate(.navigateToMissionRecord(mission, .selected)))
+            case .showCompleteAnimation:
+                return .none
             case .binding: return .none
             case .search: return .none
             case .searchResult: return .none
@@ -157,7 +162,8 @@ private extension MissionListFeature {
         await send(.set(\.isLoading, true))
         async let recommended = fetchRecommendedMissions(send)
         async let searched = fetchSearchedMission(state, send)
-        _ = await (recommended, searched)
+        async let availability = fetchRecommendedMisisonAvailability(state, send)
+        _ = await (recommended, searched, availability)
         await send(.set(\.isLoading, false))
     }
 
@@ -187,6 +193,24 @@ private extension MissionListFeature {
         do {
             let mission = try await missionRepository.searchMission(attribute)
             await send(.searchResultFetched(mission))
+        } catch {
+            // TODO: 에러처리 - 정원
+        }
+    }
+
+    func fetchRecommendedMisisonAvailability(
+        _ state: State,
+        _ send: Send<Action>
+    ) async {
+        do {
+            let availability = try await missionRepository.fetchRecommendedMissionAvailability()
+            await send(.set(\.isAvailable, availability.isAvailable))
+            await send(.set(\.maxCount, availability.maxCount))
+
+            if state.isAvailable == true,
+               availability.isAvailable == false {
+                await send(.showCompleteAnimation)
+            }
         } catch {
             // TODO: 에러처리 - 정원
         }
