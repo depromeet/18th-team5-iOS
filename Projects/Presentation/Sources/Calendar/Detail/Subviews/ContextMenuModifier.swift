@@ -10,10 +10,12 @@ import DesignSystem
 import SwiftUI
 @_spi(Advanced) import SwiftUIIntrospect
 
+typealias Dismiss = () -> Void
+
 extension View {
     func contextMenus(
         verticalSpacing: CGFloat = .zero,
-        @ViewBuilder menus: @escaping () -> some View
+        @ViewBuilder menus: @escaping (@escaping Dismiss) -> some View
     ) -> some View {
         self.modifier(
             ContextMenuModifier(
@@ -29,8 +31,9 @@ struct ContextMenuModifier<MenuViews: View>: ViewModifier {
     @State private var menuPresents: Bool = false
     @State private var menusViewSize: CGSize = .zero
     @State private var screenSize: CGSize = .zero
+    @State private var viewController: UIViewController?
 
-    @ViewBuilder var menusBuilder: () -> MenuViews
+    @ViewBuilder var menusBuilder: (@escaping Dismiss) -> MenuViews
     let verticalSpacing: CGFloat
 
     func body(content: Content) -> some View {
@@ -43,6 +46,7 @@ struct ContextMenuModifier<MenuViews: View>: ViewModifier {
                     .introspect(.viewController, on: .iOS(.v16...)) { vc in
                         vc.modalPresentationStyle = .overFullScreen
                         vc.view.backgroundColor = .clear
+                        viewController = vc
                     }
             }
     }
@@ -69,7 +73,9 @@ struct ContextMenuModifier<MenuViews: View>: ViewModifier {
             menusViewBackground
 
             VStack(spacing: 12) {
-                menusBuilder()
+                menusBuilder {
+                    viewController?.dismiss(animated: false)
+                }
             }
             .padding(16)
             .background {

@@ -156,12 +156,14 @@ extension CalendarDetailView {
                     .renderingMode(.template)
                     .foregroundStyle(Color.gray800)
                     .frame(width: 30, height: 30)
-                    .contextMenus(verticalSpacing: 12) {
+                    .contextMenus(verticalSpacing: 12) { dismiss in
                         cardMenuItem(tite: "삭제하기", icon: .icTrash) {
                             store.send(.removeCardButtonTapped)
+                            dismiss()
                         }
                         cardMenuItem(tite: "수정하기", icon: .icEdit) {
                             // TODO: 액션 전송, 수정하기 버튼의 경우 현재 절기인 경우만 노출 -@준영
+                            dismiss()
                         }
                     }
             }
