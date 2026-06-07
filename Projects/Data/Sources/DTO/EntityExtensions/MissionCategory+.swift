@@ -22,7 +22,7 @@ extension MissionCategory {
         case .nature: "NATURE"
         case .record: "RECORD"
         case .place: "PLACE"
-        case .music: "SENSE"
+        case .music: "MUSIC"
         }
     }
 }

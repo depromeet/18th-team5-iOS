@@ -122,6 +122,10 @@ public struct MissionListFeature {
                 return .run { send in
                     await searchMission(attribute, send)
                 }
+            case let .searchResult(.presented(.delegate(.navigateToMissionRecord(mission)))):
+                state.searchResult = nil
+                state.isLoading = true
+                return .send(.delegate(.navigateToMissionRecord(mission, .selected)))
             case .binding: return .none
             case .search: return .none
             case .searchResult: return .none
