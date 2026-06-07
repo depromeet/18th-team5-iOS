@@ -35,7 +35,8 @@ extension MissionResponseDTO {
                 locationType: LocationType(spaceType),
                 participationType: ParticipationType(companionType),
                 category: MissionCategory(categoryType)
-            )
+            ),
+            isCompleted: isCompleted
         )
     }
 

@@ -95,14 +95,23 @@ public struct MissionListFeature {
                 return .none
             case .searchMissionButtonTapped:
                 if let mission = state.searchedMission {
-                    state.searchResult = .init(mission)
+                    if mission.isCompleted == true {
+                        // TODO: Alert 표시 - @정원
+                    } else {
+                        state.searchResult = .init(mission)
+                    }
                 } else {
                     guard let season = state.season else { return .none }
                     state.search = .init(season: season)
                 }
                 return .none
             case let .missionCardTapped(mission):
-                return .send(.delegate(.navigateToMissionRecord(mission, .recommended)))
+                if state.isAvailable == true {
+                    return .send(.delegate(.navigateToMissionRecord(mission, .recommended)))
+                } else {
+                    // TODO: Alert 표시 - @정원
+                    return .none
+                }
             case let .recommendedMissionsFetched(info):
                 guard let info else { return .none }
                 let isEqual = state.missions.map(\.id) == info.missions.map(\.id)
@@ -182,7 +191,6 @@ private extension MissionListFeature {
 
     func fetchSearchedMission(_ state: State, _ send: Send<Action>) async {
         do {
-            guard state.searchedMission == nil else { return }
             let mission = try await missionRepository.fetchSearchedMission()
             await send(.set(\.searchedMission, mission))
         } catch {
