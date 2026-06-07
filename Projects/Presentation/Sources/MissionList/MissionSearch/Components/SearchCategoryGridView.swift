@@ -41,11 +41,7 @@ struct SearchCategoryGridView<Item: Hashable>: View {
                 .foregroundStyle(Color.gray900)
                 .frame(maxWidth: .infinity, alignment: .leading)
 
-            LazyVGrid(
-                columns: .init(repeating: .init(.fixed(73), spacing: 6), count: 4),
-                alignment: .leading,
-                spacing: 6
-            ) {
+            FlowLayout(horizontalSpacing: 6, verticalSpacing: 6) {
                 ForEach(items, id: \.self) { item in
                     SearchCategoryChipView(
                         title: itemTitle(item),
