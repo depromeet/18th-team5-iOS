@@ -54,8 +54,8 @@ struct CalendarView: View {
                 }
                 .ignoresSafeArea(.container, edges: [.bottom])
                 .overlay {
-                    if let _ = store.calendarDetail {
-                        CalendarDetailView()
+                    if let detailStore = store.scope(state: \.detail, action: \.detail.presented) {
+                        CalendarDetailView(store: detailStore)
                             .transition(.move(edge: .bottom))
                             .padding(.top, Constants.detailViewTopPadding)
                             .onDisappear {
@@ -63,11 +63,23 @@ struct CalendarView: View {
                             }
                     }
                 }
-                .animation(.easeInOut, value: store.calendarDetail)
+                .animation(.easeInOut, value: store.detail != nil)
             }
         }
         .onAppear {
             store.send(.onAppear)
+        }
+        .customAlert(
+            isPresented: store.alertModel != nil,
+            message: store.alertModel?.message ?? "-",
+            buttons: store.alertModel?.buttons ?? []
+        ) { id in
+            switch id {
+            case .confirm:
+                store.send(.detail(.presented(.removeCardConfirmed)))
+            case .close:
+                store.send(.detail(.presented(.removeCardCancelled)))
+            }
         }
     }
 }
@@ -76,7 +88,7 @@ extension CalendarView {
     var headerView: some View {
         VStack(spacing: 12) {
             HStack(spacing: 4) {
-                if store.calendarDetail != nil {
+                if store.detail != nil {
                     Button {
                         store.send(.headerBackButtonTapped)
                     } label: {
@@ -101,7 +113,7 @@ extension CalendarView {
                     Spacer()
                 }
             }
-            .animation(.easeInOut, value: store.calendarDetail)
+            .animation(.easeInOut, value: store.detail != nil)
 
             WeekdayLabelRow()
         }

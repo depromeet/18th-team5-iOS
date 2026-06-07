@@ -13,31 +13,38 @@ public enum CustomAlertButtonStyle {
     case secondary
 }
 
-public struct CustomAlertButton {
+public struct CustomAlertButton<ID: Hashable>: Identifiable {
+    public let id: ID
     public let title: String
     public let style: CustomAlertButtonStyle
-    public let action: () -> Void
 
-    public init(title: String, style: CustomAlertButtonStyle, action: @escaping () -> Void) {
+    public init(
+        id: ID,
+        title: String,
+        style: CustomAlertButtonStyle
+    ) {
+        self.id = id
         self.title = title
         self.style = style
-        self.action = action
     }
 }
 
-struct CustomAlertView: View {
+struct CustomAlertView<ID: Hashable>: View {
     private let icon: Image?
     private let message: String
-    private let buttons: [CustomAlertButton]
+    private let buttons: [CustomAlertButton<ID>]
+    private var onAlertButtonTapped: (ID) -> Void
 
     init(
         icon: Image? = nil,
         message: String,
-        buttons: [CustomAlertButton]
+        buttons: [CustomAlertButton<ID>],
+        onAlertButtonTapped: @escaping (ID) -> Void
     ) {
         self.icon = icon
         self.message = message
         self.buttons = buttons
+        self.onAlertButtonTapped = onAlertButtonTapped
     }
 
     var body: some View {
@@ -77,8 +84,10 @@ struct CustomAlertView: View {
         }
     }
 
-    private func alertButton(_ button: CustomAlertButton) -> some View {
-        Button(action: button.action) {
+    private func alertButton(_ button: CustomAlertButton<ID>) -> some View {
+        Button {
+            onAlertButtonTapped(button.id)
+        } label: {
             Text(button.title)
                 .font(.body1Medium)
                 .foregroundStyle(button.style.foregroundColor)
@@ -122,9 +131,10 @@ private extension CustomAlertButtonStyle {
         CustomAlertView(
             message: "기록이 저장되었어요",
             buttons: [
-                CustomAlertButton(title: "확인", style: .primary) {}
+                CustomAlertButton(id: "ok", title: "확인", style: .primary)
             ]
-        )
+        ) { _ in
+        }
     }
 }
 
@@ -135,9 +145,10 @@ private extension CustomAlertButtonStyle {
             icon: Image(systemName: "camera.fill"),
             message: "미션 기록 사진을 찍기 위해서\n카메라 접근 권한이 필요해요.",
             buttons: [
-                CustomAlertButton(title: "취소", style: .secondary) {},
-                CustomAlertButton(title: "확인", style: .primary) {}
+                CustomAlertButton(id: "cancel", title: "취소", style: .secondary),
+                CustomAlertButton(id: "ok", title: "확인", style: .primary)
             ]
-        )
+        ) { _ in
+        }
     }
 }

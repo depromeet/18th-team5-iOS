@@ -19,8 +19,8 @@ public struct CalendarFeature {
         public var header: CalendarHeader?
         public var calendarState: PagingTableViewState<SolarTermGroup> = .init(pages: [])
         public var selectedDateId: SolarTermDate.ID?
-        public var calendarDetail: CalendarDetail?
-        public var topMostDetailCardIndex: Int = 0
+        @Presents public var detail: CalendarDetailFeature.State?
+        public var alertModel: CalendarAlertModel?
 
         var termRecordData: [String: CalendarTermRecordData] = [:]
         var isAppeared: Bool = false
@@ -37,6 +37,7 @@ public struct CalendarFeature {
         case anchoredTermChanged(id: SolarTermGroup.ID)
         case calendarReachToEnd(PageEndDirection)
         case detailViewDisappeared
+        case detail(PresentationAction<CalendarDetailFeature.Action>)
 
         // Internal actions
         case yearPagesLayoutCompleted
@@ -62,7 +63,7 @@ public struct CalendarFeature {
                 return onAppear(&state)
 
             case .headerBackButtonTapped:
-                state.calendarDetail = nil
+                state.detail = nil
                 return .none
 
             case let .calendarDataRequest(request):
@@ -80,11 +81,11 @@ public struct CalendarFeature {
 
             case .detailOkButtonTapped:
                 // TODO: 동작 및 액션 수정 -@준영
-                state.calendarDetail = nil
+                state.detail = nil
                 return .none
 
-            case .binding(\.topMostDetailCardIndex):
-                // TODO: 최상단 카드 처리 -@준영
+            case let .detail(.presented(.delegate(.requestAlert(alertModel)))):
+                state.alertModel = alertModel
                 return .none
 
             // MARK: Internal actions
@@ -120,6 +121,9 @@ public struct CalendarFeature {
             default:
                 return .none
             }
+        }
+        .ifLet(\.$detail, action: \.detail) {
+            CalendarDetailFeature()
         }
     }
 }

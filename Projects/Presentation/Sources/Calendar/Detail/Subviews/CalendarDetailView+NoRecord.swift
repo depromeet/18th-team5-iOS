@@ -6,6 +6,7 @@
 //  Copyright © 2026 Orange. All rights reserved.
 //
 
+import ComposableArchitecture
 import DesignSystem
 import SwiftUI
 
@@ -67,9 +68,19 @@ extension CalendarDetailView {
 }
 
 #Preview {
-    CalendarDetailView().currentTermNoRecordView(onRecordButtonTapped: {})
+    CalendarDetailView(
+        store: .init(initialState: .init()) {
+            CalendarDetailFeature()
+        }
+    )
+    .currentTermNoRecordView(onRecordButtonTapped: {})
 }
 
 #Preview {
-    CalendarDetailView().passedTermNoRecordView
+    CalendarDetailView(
+        store: .init(initialState: .init()) {
+            CalendarDetailFeature()
+        }
+    )
+    .passedTermNoRecordView
 }

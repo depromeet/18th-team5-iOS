@@ -77,7 +77,18 @@ public struct MissionRecordView: View {
             icon: alertIcon,
             message: alertMessage,
             buttons: alertButtons
-        )
+        ) { id in
+            switch id {
+            case "permission_cancel":
+                store.send(.alertCancelTapped)
+            case "permission_ok":
+                store.send(.alertOpenSettingsTapped)
+            case "submit_failure_cancel":
+                store.send(.alertCancelTapped)
+            default:
+                break
+            }
+        }
     }
 }
 
@@ -316,22 +327,17 @@ private extension MissionRecordView {
         }
     }
 
-    var alertButtons: [CustomAlertButton] {
+    var alertButtons: [CustomAlertButton<String>] {
         switch store.alert {
         case .permissionDenied:
             return [
-                CustomAlertButton(title: "취소", style: .secondary) {
-                    store.send(.alertCancelTapped)
-                },
-                CustomAlertButton(title: "확인", style: .primary) {
-                    store.send(.alertOpenSettingsTapped)
-                }
+                CustomAlertButton(id: "permission_cancel", title: "취소", style: .secondary),
+
+                CustomAlertButton(id: "permission_ok", title: "확인", style: .primary)
             ]
         case .submitFailed:
             return [
-                CustomAlertButton(title: "확인", style: .primary) {
-                    store.send(.alertCancelTapped)
-                }
+                CustomAlertButton(id: "submit_failure_cancel", title: "확인", style: .primary)
             ]
         case .none:
             return []

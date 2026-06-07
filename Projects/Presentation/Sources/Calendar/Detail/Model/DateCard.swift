@@ -8,6 +8,6 @@
 
 import Foundation
 
-struct DateCard: Identifiable {
+struct DateCard: Identifiable, Equatable {
     let id = UUID()
 }
