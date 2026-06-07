@@ -31,6 +31,7 @@ public struct MissionListFeature {
         var isLoading: Bool = false
         var isTooltipPresented: Bool = false
         var isIndicatorEnabled: Bool = false
+        var isCompleteViewPresented: Bool = false
 
         public init() {}
 
@@ -130,7 +131,10 @@ public struct MissionListFeature {
                 state.isLoading = true
                 return .send(.delegate(.navigateToMissionRecord(mission, .selected)))
             case .showCompleteAnimation:
-                return .none
+                return .run { send in
+                    try await Task.sleep(for: .seconds(0.3))
+                    await send(.set(\.isCompleteViewPresented, true))
+                }
             case .binding: return .none
             case .search: return .none
             case .searchResult: return .none
