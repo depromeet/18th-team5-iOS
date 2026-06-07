@@ -157,11 +157,11 @@ extension CalendarDetailView {
                     .foregroundStyle(Color.gray800)
                     .frame(width: 30, height: 30)
                     .contextMenus(verticalSpacing: 12) { dismiss in
-                        cardMenuItem(tite: "삭제하기", icon: .icTrash) {
+                        cardMenuItem(title: "삭제하기", icon: .icTrash) {
                             store.send(.removeCardButtonTapped)
                             dismiss()
                         }
-                        cardMenuItem(tite: "수정하기", icon: .icEdit) {
+                        cardMenuItem(title: "수정하기", icon: .icEdit) {
                             // TODO: 액션 전송, 수정하기 버튼의 경우 현재 절기인 경우만 노출 -@준영
                             dismiss()
                         }
@@ -173,7 +173,7 @@ extension CalendarDetailView {
     }
 
     private func cardMenuItem(
-        tite: String,
+        title: String,
         icon: Image,
         onTap: @escaping () -> Void
     ) -> some View {
@@ -187,7 +187,7 @@ extension CalendarDetailView {
                     .foregroundStyle(Color.gray900)
                     .frame(width: 20, height: 20)
 
-                Text(tite)
+                Text(title)
                     .font(.body1Medium)
                     .foregroundStyle(Color.gray900)
             }

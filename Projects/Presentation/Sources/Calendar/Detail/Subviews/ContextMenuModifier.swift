@@ -74,7 +74,11 @@ struct ContextMenuModifier<MenuViews: View>: ViewModifier {
 
             VStack(spacing: 12) {
                 menusBuilder {
-                    viewController?.dismiss(animated: false)
+                    if let viewController {
+                        viewController.dismiss(animated: false)
+                    } else {
+                        setPresents(false)
+                    }
                 }
             }
             .padding(16)

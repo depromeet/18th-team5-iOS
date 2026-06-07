@@ -72,9 +72,10 @@ private extension CardStackView {
 
     func itemIndices(startIndex: Int, endIndex: Int) -> [Int] {
         guard items.indices.contains(startIndex) else { return [] }
+        let renderCount = min(Constants.maxDisplayCardCount, items.count)
         var indices: [Int] = []
         var index = startIndex
-        while indices.count < Constants.maxDisplayCardCount {
+        while indices.count < renderCount {
             indices.append(index)
             index = (index + 1) % endIndex
         }
@@ -174,7 +175,11 @@ private extension CardStackView {
                 dragPercent = max(0, min(1, state.translation.height * 0.25 / dragThreshold))
             }
             .onEnded { state in
-                let dragDirection = DragDirection(translation: state.translation.height)
+                let dragDirection = DragDirection(
+                    translation: state.translation.height,
+                    velocity: state.velocity.height,
+                    threshold: dragThreshold
+                )
                 if abs(state.translation.height) >= dragThreshold ||
                     abs(state.velocity.height) > Constants.dragVelocityThreshold {
                     snapToDismiss(
@@ -190,8 +195,10 @@ private extension CardStackView {
     enum DragDirection {
         case top, bottom
 
-        init(translation: CGFloat) {
-            self = translation > 0 ? .bottom : .top
+        init(translation: CGFloat, velocity: CGFloat, threshold: CGFloat) {
+            // 드래그 이동량이 일정양 넘어설때만 비교 기준으로 사용
+            let reference = abs(translation) >= threshold ? translation : velocity
+            self = reference > 0 ? .bottom : .top
         }
     }
 }
