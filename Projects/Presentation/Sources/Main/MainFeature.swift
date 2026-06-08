@@ -26,7 +26,7 @@ public struct MainFeature {
         var path: StackState<Path.State> = .init()
         var solarTerm: SolarTerm?
 
-        init() {
+        public init() {
             self._tabBarVisibility = Shared(
                 wrappedValue: true,
                 .tabBarVisibility
@@ -126,6 +126,16 @@ public struct MainFeature {
                 state.path.append(.solarTermIntroContent(solarTermIntroContent))
                 return .none
 
+            case let .mission(.delegate(.navigateToMissionRecord(mission, missionType))):
+                let missionRecord: Path.State = .missionRecord(.init(
+                    missionId: mission.id,
+                    missionTitle: mission.title,
+                    missionType: missionType
+                ))
+
+                state.path.append(missionRecord)
+                return .none
+
             case .path(.element(
                 id: _,
                 action: .solarTermIntroContent(.delegate(.navigateToMissionTab))
@@ -136,6 +146,14 @@ public struct MainFeature {
             case .solarTermIntro(.delegate(.navigateToMissionTab)):
                 state.tab = .mission
                 return .none
+
+            case .path(.element(
+                id: _,
+                action: .myPage(.delegate(.syncNotificationSettings(let settings)))
+            )):
+                return .run { _ in
+                    await syncNotificationSettings(settings)
+                }
 
             case .home: return .none
 
@@ -161,6 +179,10 @@ private extension MainFeature {
         let solarTerms = try? await solarTermRepository.fetchSolarTerms(year)
         let solarTerm = solarTerms?.first { $0.dateRange ~= Date.now }?.term
         await send(.set(\.solarTerm, solarTerm))
+    }
+
+    func syncNotificationSettings(_ settings: [NotificationType: Bool]) async {
+        try? await notificationRepository.syncNotificationSettings(settings)
     }
 }
 

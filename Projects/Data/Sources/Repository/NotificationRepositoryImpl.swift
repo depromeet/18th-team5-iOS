@@ -22,7 +22,14 @@ enum NotificationRepositoryImpl {
         NotificationRepository(
             fetchNotificationSettings: {
                 @Dependency(\.networkClient) var client
-                let endpoint = NotificationEndpoint.fetchNotificaitonInfo
+                let endpoint = NotificationEndpoint.fetchNotificaitonSettings
+                let response: NotificationSettingsResponseDTO? = try await client.request(endpoint)
+                return response?.toDomain
+            },
+            setNotificationSettings: { settings in
+                @Dependency(\.networkClient) var client
+                let body = NotificationSettingsRequestDTO(settings: settings)
+                let endpoint = NotificationEndpoint.setNotificationSettings(body)
                 let response: NotificationSettingsResponseDTO? = try await client.request(endpoint)
                 return response?.toDomain
             },
