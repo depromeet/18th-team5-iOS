@@ -21,6 +21,7 @@ public struct MissionListView: View {
     public var body: some View {
         ZStack {
             Color.white
+                .ignoresSafeArea()
                 .overlay { circleBackgroundView }
 
             pickerView
