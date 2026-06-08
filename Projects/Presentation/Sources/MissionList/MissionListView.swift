@@ -206,3 +206,20 @@ private extension MissionListView {
         }
     }
 }
+
+extension MissionListFeature.Alert: AlertPresentable {
+    public var alertInfo: AlertInfo {
+        switch self {
+        case .missionUnavailable:
+            let title = """
+            오늘의 카드 미션을 모두 기록했어요
+            다른 제철 일상을 기록해볼까요?
+            """
+
+            return AlertInfo(
+                title: title,
+                buttonTitle: "확인"
+            )
+        }
+    }
+}

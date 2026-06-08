@@ -15,6 +15,10 @@ public struct MissionListFeature {
     @Dependency(\.missionRepository) private var missionRepository
     @Dependency(\.missionSearchGuideClient) private var missionSearchGuideClient
 
+    public enum Alert: Equatable {
+        case missionUnavailable
+    }
+
     @ObservableState
     public struct State: Equatable {
         var userType: UserType?
@@ -71,6 +75,7 @@ public struct MissionListFeature {
 
     public enum Delegate {
         case navigateToMissionRecord(Mission, MissionType)
+        case showAlert(Alert)
     }
 
     public init() {}
@@ -96,21 +101,21 @@ public struct MissionListFeature {
             case .searchMissionButtonTapped:
                 if let mission = state.searchedMission {
                     if mission.isCompleted == true {
-                        // TODO: Alert 표시 - @정원
+                        return .send(.delegate(.showAlert(.missionUnavailable)))
                     } else {
                         state.searchResult = .init(mission)
+                        return .none
                     }
                 } else {
                     guard let season = state.season else { return .none }
                     state.search = .init(season: season)
+                    return .none
                 }
-                return .none
             case let .missionCardTapped(mission):
                 if state.isAvailable == true {
                     return .send(.delegate(.navigateToMissionRecord(mission, .recommended)))
                 } else {
-                    // TODO: Alert 표시 - @정원
-                    return .none
+                    return .send(.delegate(.showAlert(.missionUnavailable)))
                 }
             case let .recommendedMissionsFetched(info):
                 guard let info else { return .none }
