@@ -213,6 +213,8 @@ def main() -> None:
 
     except subprocess.CalledProcessError as e:
         print(f"Command execution failed: {e}", file=sys.stderr)
+        if e.stdout:
+            print(f"stdout: {e.stdout}", file=sys.stderr)
         if e.stderr:
             print(f"stderr: {e.stderr}", file=sys.stderr)
         sys.exit(1)
