@@ -1,5 +1,5 @@
 //
-//  PrivacyPolicyResponseDTO.swift
+//  DocumentResponseDTO.swift
 //  Data
 //
 //  Created by 이정원 on 6/6/26.
@@ -8,13 +8,13 @@
 
 import Domain
 
-struct PrivacyPolicyResponseDTO: Decodable {
+struct DocumentResponseDTO: Decodable {
     let title: String?
     let content: String?
 }
 
-extension PrivacyPolicyResponseDTO {
-    var toDomain: PrivacyPolicyInfo? {
+extension DocumentResponseDTO {
+    var toDomain: DocumentInfo? {
         guard let content else { return nil }
         return .init(title: title, content: content)
     }

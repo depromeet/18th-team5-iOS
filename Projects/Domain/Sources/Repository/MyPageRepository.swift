@@ -11,7 +11,8 @@ import DependenciesMacros
 
 @DependencyClient
 public struct MyPageRepository: Sendable {
-    public var fetchPrivacyPolicy: @Sendable () async throws -> [PrivacyPolicyInfo]
+    public var fetchPrivacyPolicy: @Sendable () async throws -> [DocumentInfo]
+    public var fetchTermsOfService: @Sendable () async throws -> [DocumentInfo]
 }
 
 extension MyPageRepository: TestDependencyKey {

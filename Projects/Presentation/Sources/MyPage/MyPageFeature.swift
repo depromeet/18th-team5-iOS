@@ -25,7 +25,8 @@ public struct MyPageFeature {
     @ObservableState
     public struct State: Equatable {
         let solarTerm: SolarTerm
-        var privacyPolicies: [PrivacyPolicyInfo]?
+        var privacyPolicies: [DocumentInfo]?
+        var termsOfService: [DocumentInfo]?
         var version: String = "1.3.2" // TODO: 추후 수정 예정 - @정원
         @Presents var path: Path.State?
 
@@ -40,12 +41,13 @@ public struct MyPageFeature {
 
     public enum Action {
         case onAppear
-        case fetchPrivacyPolicy
+        case fetchAll
         case backButtonTapped
         case menuTapped(Menu)
         case updateButtonTapped
         case deleteButtonTapped
-        case privacyPolicyFetched([PrivacyPolicyInfo])
+        case privacyPolicyFetched([DocumentInfo])
+        case termsOfServiceFetched([DocumentInfo])
         case path(PresentationAction<Path.Action>)
         case delegate(Delegate)
     }
@@ -59,10 +61,10 @@ public struct MyPageFeature {
         Reduce { state, action in
             switch action {
             case .onAppear:
-                return .send(.fetchPrivacyPolicy)
-            case .fetchPrivacyPolicy:
+                return .send(.fetchAll)
+            case .fetchAll:
                 return .run { [state] send in
-                    await fetchPrivacyPolicy(state, send)
+                    await fetchAll(state, send)
                 }
             case .backButtonTapped:
                 return .run { _ in await dismiss() }
@@ -73,10 +75,16 @@ public struct MyPageFeature {
                     return .none
                 case .privacyPolicy:
                     state.path = .privacyPolicy(.init(state.privacyPolicies))
-                    if state.privacyPolicies?.isEmpty == true {
-                        return .send(.fetchPrivacyPolicy)
+                    guard state.privacyPolicies?.isEmpty == true else { return .none }
+                    return .run { [state] send in
+                        await fetchPrivacyPolicy(state, send)
                     }
-                    return .none
+                case .termsOfService:
+                    state.path = .termsOfService(.init(state.termsOfService))
+                    guard state.termsOfService?.isEmpty == true else { return .none }
+                    return .run { [state] send in
+                        await fetchTermsOfService(state, send)
+                    }
                 default: return .none
                 }
             case let .path(.presented(.notificationSettings(action))):
@@ -95,6 +103,12 @@ public struct MyPageFeature {
                 return .send(.path(.presented(
                     .privacyPolicy(.privacyPolicyFetched(policies))
                 )))
+            case let .termsOfServiceFetched(terms):
+                state.termsOfService = terms
+                guard case .termsOfService = state.path else { return .none }
+                return .send(.path(.presented(
+                    .termsOfService(.termsOfServiceFetched(terms))
+                )))
             case .path: return .none
             case .delegate: return .none
             }
@@ -104,9 +118,21 @@ public struct MyPageFeature {
 }
 
 private extension MyPageFeature {
+    func fetchAll(_ state: State, _ send: Send<Action>) async {
+        async let privacyPolicy = fetchPrivacyPolicy(state, send)
+        async let fetchTermsOfService = fetchTermsOfService(state, send)
+        _ = await (privacyPolicy, fetchTermsOfService)
+    }
+
     func fetchPrivacyPolicy(_ state: State, _ send: Send<Action>) async {
         if state.privacyPolicies?.isEmpty == false { return }
         let policies = try? await myPageRepository.fetchPrivacyPolicy()
         await send(.privacyPolicyFetched(policies ?? []))
+    }
+
+    func fetchTermsOfService(_ state: State, _ send: Send<Action>) async {
+        if state.termsOfService?.isEmpty == false { return }
+        let terms = try? await myPageRepository.fetchTermsOfService()
+        await send(.termsOfServiceFetched(terms ?? []))
     }
 }

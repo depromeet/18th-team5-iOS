@@ -15,6 +15,7 @@ extension MyPageView {
         switch store.case {
         case let .notificationSettings(store): NotificationSettingsView(store: store)
         case let .privacyPolicy(store): PrivacyPolicyView(store: store)
+        case let .termsOfService(store): TermsOfServiceView(store: store)
         }
     }
 }

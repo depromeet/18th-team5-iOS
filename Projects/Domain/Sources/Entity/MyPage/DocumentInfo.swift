@@ -1,12 +1,12 @@
 //
-//  PrivacyPolicyInfo.swift
+//  DocumentInfo.swift
 //  Domain
 //
 //  Created by 이정원 on 6/6/26.
 //  Copyright © 2026 Orange. All rights reserved.
 //
 
-public struct PrivacyPolicyInfo: Equatable {
+public struct DocumentInfo: Equatable {
     public let title: String?
     public let content: String
 
