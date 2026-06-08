@@ -37,7 +37,13 @@ public struct CardStackView<Item, CardView: View>: View {
         @ViewBuilder cardView: @escaping (Int, Item) -> CardView
     ) {
         self._topCardItemIndex = topCardIndex
-        self.items = items
+        self.items = {
+            var populatedItems: [Item] = items
+            while populatedItems.count <= Constants.maxDisplayCardCount * 2 {
+                populatedItems.append(contentsOf: items)
+            }
+            return populatedItems
+        }()
         self.cardView = cardView
     }
 
@@ -96,21 +102,6 @@ private extension CardStackView {
                 olderIndex: orderIndex,
                 isDismissing: false
             )
-        }
-        var idleCardStack2: [RenderEntry] = []
-        var currentIndex = topCardItemIndex
-        while idleCardStack2.count < Constants.maxDisplayCardCount {
-            if !dismissingCardItemIndices.contains(currentIndex) {
-                idleCardStack2.append(
-                    RenderEntry(
-                        item: items[currentIndex],
-                        itemIndex: currentIndex,
-                        olderIndex: idleCardStack2.count,
-                        isDismissing: false
-                    )
-                )
-            }
-            currentIndex = (currentIndex + 1) % items.endIndex
         }
 
         let dismissingCardStack: [RenderEntry] = dismissingCardItemIndices.compactMap { index in
@@ -272,6 +263,22 @@ extension Color {
     CardStackView(
         topCardIndex: $topCardIndex,
         items: (0 ..< 10).map { _ in CardModel() }
+    ) { _, item in
+        ZStack {
+            RoundedRectangle(cornerRadius: 15)
+                .foregroundStyle(item.color)
+        }
+        .frame(width: 200, height: 300)
+    }
+    .border(.red)
+}
+
+#Preview("원카드") {
+    @Previewable @State var topCardIndex = 0
+
+    CardStackView(
+        topCardIndex: $topCardIndex,
+        items: [CardModel()]
     ) { _, item in
         ZStack {
             RoundedRectangle(cornerRadius: 15)
