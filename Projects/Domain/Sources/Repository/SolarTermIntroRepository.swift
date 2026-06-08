@@ -37,6 +37,14 @@ public extension SolarTermIntroRepository {
     static let previewValue = SolarTermIntroRepository(
         fetchSolarTermCard: { SolarTermIntro.mockList },
         fetchImageURL: { _ in URL(string: "https://picsum.photos/400/300")! },
-        fetchContentImageURLs: { _ in [:] }
+        fetchContentImageURLs: { contents in
+            var result: [String: [URL]] = [:]
+            for content in contents {
+                result[content.id] = content.imageURLs.map { _ in
+                    URL(string: "https://picsum.photos/600/400")!
+                }
+            }
+            return result
+        }
     )
 }

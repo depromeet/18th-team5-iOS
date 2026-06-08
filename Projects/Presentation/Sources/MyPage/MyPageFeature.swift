@@ -49,6 +49,11 @@ public struct MyPageFeature {
         case privacyPolicyFetched([DocumentInfo])
         case termsOfServiceFetched([DocumentInfo])
         case path(PresentationAction<Path.Action>)
+        case delegate(Delegate)
+    }
+
+    public enum Delegate {
+        case syncNotificationSettings([NotificationType: Bool])
     }
 
     public init() {}
@@ -82,6 +87,12 @@ public struct MyPageFeature {
                     }
                 default: return .none
                 }
+            case let .path(.presented(.notificationSettings(action))):
+                switch action {
+                case let .delegate(.syncNotificationSettings(settings)):
+                    return .send(.delegate(.syncNotificationSettings(settings)))
+                default: return .none
+                }
             case .updateButtonTapped:
                 return .none
             case .deleteButtonTapped:
@@ -99,6 +110,7 @@ public struct MyPageFeature {
                     .termsOfService(.termsOfServiceFetched(terms))
                 )))
             case .path: return .none
+            case .delegate: return .none
             }
         }
         .ifLet(\.$path, action: \.path)

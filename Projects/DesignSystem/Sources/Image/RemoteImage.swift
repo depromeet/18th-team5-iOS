@@ -6,24 +6,25 @@
 //  Copyright © 2026 Orange. All rights reserved.
 //
 
+import Kingfisher
 import SwiftUI
 
 public struct RemoteImage: View {
     private let url: URL?
-    private let contentMode: ContentMode
+    private let contentMode: SwiftUI.ContentMode
 
-    public init(url: URL?, contentMode: ContentMode = .fill) {
+    public init(url: URL?, contentMode: SwiftUI.ContentMode = .fill) {
         self.url = url
         self.contentMode = contentMode
     }
 
     public var body: some View {
-        AsyncImage(url: url) { image in
-            image
-                .resizable()
-                .aspectRatio(contentMode: contentMode)
-        } placeholder: {
-            Color.gray100
-        }
+        KFImage(url)
+            .placeholder {
+                Color.gray100
+            }
+            .fade(duration: 0.25)
+            .resizable()
+            .aspectRatio(contentMode: contentMode)
     }
 }
