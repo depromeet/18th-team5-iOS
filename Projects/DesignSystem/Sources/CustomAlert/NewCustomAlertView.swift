@@ -76,6 +76,7 @@ private extension NewCustomAlertView {
                 Text(secondaryButtonTitle)
                     .font(.body1Medium)
                     .foregroundStyle(Color.gray900)
+                    .lineLimit(1)
                     .frame(maxWidth: .infinity)
                     .frame(height: 48)
                     .background(Color.gray200)
