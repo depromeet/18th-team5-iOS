@@ -69,18 +69,7 @@ struct CalendarView: View {
         .onAppear {
             store.send(.onAppear)
         }
-        .customAlert(
-            isPresented: store.alertModel != nil,
-            message: store.alertModel?.message ?? "-",
-            buttons: store.alertModel?.buttons ?? []
-        ) { id in
-            switch id {
-            case .confirm:
-                store.send(.detail(.presented(.removeCardConfirmed)))
-            case .close:
-                store.send(.detail(.presented(.removeCardCancelled)))
-            }
-        }
+        .customAlert(store.scope(state: \.alert, action: \.alert))
     }
 }
 

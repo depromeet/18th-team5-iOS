@@ -97,6 +97,19 @@ private extension CalendarDetailView {
     }
 }
 
+extension CalendarDetailFeature.Alert: AlertPresentable {
+    public var alertInfo: AlertInfo {
+        switch self {
+        case .removeCard:
+            return AlertInfo(
+                title: "기록을 삭제할까요?",
+                primaryButtonTitle: "확인",
+                secondaryButtonTitle: "닫기"
+            )
+        }
+    }
+}
+
 #Preview {
     CalendarDetailView(
         store: .init(initialState: .init()) {

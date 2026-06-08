@@ -11,6 +11,10 @@ import DesignSystem
 
 @Reducer
 public struct CalendarDetailFeature {
+    public enum Alert: Equatable {
+        case removeCard
+    }
+
     @ObservableState
     public struct State: Equatable {
         // TODO: 임시모델 -@준영
@@ -23,12 +27,11 @@ public struct CalendarDetailFeature {
     public enum Action: BindableAction {
         case removeCardButtonTapped
         case removeCardConfirmed
-        case removeCardCancelled
         case delegate(Delegate)
         case binding(BindingAction<State>)
 
         public enum Delegate: Equatable {
-            case requestAlert(CalendarAlertModel?)
+            case showAlert(Alert)
         }
     }
 
@@ -42,17 +45,7 @@ public struct CalendarDetailFeature {
             switch action {
             case .removeCardButtonTapped:
                 // TODO: 카드 식별 및 실제 삭제 처리 연결 -@준영
-                let alertModel = CalendarAlertModel(
-                    message: "기록을 삭제할까요?",
-                    buttons: [
-                        .init(id: .close, title: "닫기", style: .secondary),
-                        .init(id: .confirm, title: "확인", style: .primary)
-                    ]
-                )
-                return .send(.delegate(.requestAlert(alertModel)))
-
-            case .removeCardCancelled:
-                return .send(.delegate(.requestAlert(nil)))
+                return .send(.delegate(.showAlert(.removeCard)))
 
             case .removeCardConfirmed:
                 state.toast = .init(
@@ -61,7 +54,7 @@ public struct CalendarDetailFeature {
                     bottomInset: 108,
                     action: nil
                 )
-                return .send(.delegate(.requestAlert(nil)))
+                return .none
 
             case .delegate,
                  .binding:

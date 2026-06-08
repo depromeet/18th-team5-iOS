@@ -7,11 +7,16 @@
 //
 
 import ComposableArchitecture
+import DesignSystem
 import Domain
 import Foundation
 
 @Reducer
 public struct CalendarFeature {
+    public enum Alert: Equatable {
+        case detail(CalendarDetailFeature.Alert)
+    }
+
     @ObservableState
     public struct State: Equatable {
         @Shared(.tabBarVisibility) var tabBarVisibility: Bool = true
@@ -20,7 +25,7 @@ public struct CalendarFeature {
         public var calendarState: PagingTableViewState<SolarTermGroup> = .init(pages: [])
         public var selectedDateId: SolarTermDate.ID?
         @Presents public var detail: CalendarDetailFeature.State?
-        public var alertModel: CalendarAlertModel?
+        public var alert: CustomAlertFeature<Alert>.State?
 
         var termRecordData: [String: CalendarTermRecordData] = [:]
         var isAppeared: Bool = false
@@ -38,6 +43,7 @@ public struct CalendarFeature {
         case calendarReachToEnd(PageEndDirection)
         case detailViewDisappeared
         case detail(PresentationAction<CalendarDetailFeature.Action>)
+        case alert(CustomAlertFeature<Alert>.Action)
 
         // Internal actions
         case yearPagesLayoutCompleted
@@ -84,8 +90,16 @@ public struct CalendarFeature {
                 state.detail = nil
                 return .none
 
-            case let .detail(.presented(.delegate(.requestAlert(alertModel)))):
-                state.alertModel = alertModel
+            case let .detail(.presented(.delegate(.showAlert(alert)))):
+                state.alert = .init(.detail(alert))
+                return .none
+
+            case .alert(.primaryButtonTapped):
+                state.alert = nil
+                return .send(.detail(.presented(.removeCardConfirmed)))
+
+            case .alert(.secondaryButtonTapped):
+                state.alert = nil
                 return .none
 
             // MARK: Internal actions
@@ -124,6 +138,17 @@ public struct CalendarFeature {
         }
         .ifLet(\.$detail, action: \.detail) {
             CalendarDetailFeature()
+        }
+        .ifLet(\.alert, action: \.alert) {
+            CustomAlertFeature()
+        }
+    }
+}
+
+extension CalendarFeature.Alert: AlertPresentable {
+    public var alertInfo: AlertInfo {
+        switch self {
+        case let .detail(alert): alert.alertInfo
         }
     }
 }
