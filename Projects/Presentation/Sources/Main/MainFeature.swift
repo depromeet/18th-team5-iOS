@@ -26,7 +26,7 @@ public struct MainFeature {
         var path: StackState<Path.State> = .init()
         var solarTerm: SolarTerm?
 
-        init() {
+        public init() {
             self._tabBarVisibility = Shared(
                 wrappedValue: true,
                 .tabBarVisibility
@@ -41,7 +41,7 @@ public struct MainFeature {
         case mission(MissionListFeature.Action)
         case calendar(CalendarFeature.Action)
         case solarTermIntro(SolarTermIntroFeature.Action)
-        case solarTermIntroContentLoad(SolarTermIntro, String)
+        case presentSolarTermContent(SolarTermIntro, String)
         case path(StackActionOf<Path>)
     }
 
@@ -105,7 +105,7 @@ public struct MainFeature {
                         let card = cards.first { $0.term == term }
                         let dateLabel = infos.first { $0.term == term }?.formattedFullDateRange
                         if let card {
-                            await send(.solarTermIntroContentLoad(card, dateLabel ?? ""))
+                            await send(.presentSolarTermContent(card, dateLabel ?? ""))
                         }
                     } catch {
                         // TODO: Firebase 전환 후 에러핸들링 추가 - @minkyo
@@ -117,13 +117,12 @@ public struct MainFeature {
                 state.path.append(.myPage(.init(solarTerm)))
                 return .none
 
-            case let .solarTermIntroContentLoad(intro, dateLabel):
+            case let .presentSolarTermContent(intro, dateLabel):
                 let solarTermIntroContent = SolarTermIntroContentFeature.State(
                     solarTermIntro: intro,
                     season: intro.term.season,
                     dateLabel: dateLabel
                 )
-
                 state.path.append(.solarTermIntroContent(solarTermIntroContent))
                 return .none
 

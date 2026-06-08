@@ -15,6 +15,7 @@ enum ExternalModule {
     case firebaseCore
     case firebaseMessaging
     case firebaseRemoteConfig
+    case firebaseStorage
     case kingfisher
     
     var name: String {
@@ -26,6 +27,7 @@ enum ExternalModule {
         case .firebaseCore: "FirebaseCore"
         case .firebaseMessaging: "FirebaseMessaging"
         case .firebaseRemoteConfig: "FirebaseRemoteConfig"
+        case .firebaseStorage: "FirebaseStorage"
         case .kingfisher: "Kingfisher"
         }
     }
