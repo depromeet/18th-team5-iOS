@@ -205,7 +205,7 @@ private extension SolarTermIntroContentView {
                 if urls.count > 1 {
                     AutoScrollImageView(imageURLs: urls) // 여러 장: 자동 스크롤 + 스와이프
                 } else if let url = urls.first {
-                    RemoteImage(url: url)
+                    RemoteImage(url: url, contentMode: .fit)
                         .frame(maxWidth: .infinity)
                         .aspectRatio(303 / 210, contentMode: .fit)
                         .clipShape(RoundedRectangle(cornerRadius: .radius16))
@@ -238,7 +238,7 @@ private struct AutoScrollImageView: View {
         }
         .tabViewStyle(.page(indexDisplayMode: .never))
         .frame(maxWidth: .infinity)
-        .aspectRatio(1.44, contentMode: .fit)
+        .aspectRatio(303 / 210, contentMode: .fit)
         .clipShape(RoundedRectangle(cornerRadius: .radius16))
         .onReceive(timer) { _ in
             withAnimation(.easeInOut(duration: 0.5)) {
