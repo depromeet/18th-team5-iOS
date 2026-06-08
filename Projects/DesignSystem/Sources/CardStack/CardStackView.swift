@@ -2,31 +2,33 @@
 //  CardStackView.swift
 //  DesignSystem
 //
-//  Created by choijunios on 5/5/26.
-//  Copyright © 2026 Orange. All rights reserved.
+//  Created by NHN on 6/2/26.
 //
 
 import Core
 import SwiftUI
 
-private enum Constants {
-    static let maxDisplayCardCount: Int = 5
-    static let dragToDismissThresholdPercent: CGFloat = 0.5
-    static let dismissTargetY: CGFloat = 700
-    static let cardOffsetYGap: CGFloat = 23
+enum Constants {
+    static let maxDisplayCardCount: Int = 3
+    static let dragToDismissThresholdPercent: CGFloat = 0.35
+    static let dragVelocityThreshold: CGFloat = 25
+    static let cardOffsetYGap: CGFloat = 18
     static let stackMinScale: CGFloat = 0.75
 }
 
 public struct CardStackView<Item, CardView: View>: View {
-    @Binding var topCardIndex: Int
     private let items: [Item]
+
+    @Binding private var topCardItemIndex: Int
     @State private var currentDragableCardOffsetY: CGFloat = 0
     @State private var prevDragOffset: CGPoint?
     @State private var dragPercent: CGFloat = 0
     @State private var cardOffsets: [Int: CGFloat] = [:]
-    @State private var dismissingIndices: [Int] = []
-    @State private var cardSize: CGSize?
+    @State private var cardOpacities: [Int: CGFloat] = [:]
+    @State private var dismissingCardItemIndices: Set<Int> = []
 
+    // Card UI
+    @State private var cardSize: CGSize = .zero
     private var cardView: (Int, Item) -> CardView
 
     public init(
@@ -34,18 +36,29 @@ public struct CardStackView<Item, CardView: View>: View {
         items: [Item],
         @ViewBuilder cardView: @escaping (Int, Item) -> CardView
     ) {
-        self._topCardIndex = topCardIndex
-        self.items = items
+        self._topCardItemIndex = topCardIndex
+        self.items = {
+            var populatedItems: [Item] = items
+            while populatedItems.count <= Constants.maxDisplayCardCount * 2 {
+                populatedItems.append(contentsOf: items)
+            }
+            return populatedItems
+        }()
         self.cardView = cardView
     }
 
     public var body: some View {
         ZStack {
-            ForEach(renderedEntries, id: \.realIndex) { entry in
-                cardView(entry.realIndex, entry.item)
-                    .size { cardSize = $0 }
+            ForEach(renderedEntries, id: \.itemIndex) { entry in
+                let scale = scale(for: entry)
+                cardView(entry.itemIndex, entry.item)
+                    .onGeometryChange(
+                        for: CGSize.self,
+                        of: { $0.size }
+                    ) { cardSize = $0 }
+                    .scaleEffect(x: scale, y: scale, anchor: .top)
                     .offset(x: 0, y: offsetY(for: entry))
-                    .scaleEffect(scale(for: entry))
+                    .opacity(cardOpacities[entry.itemIndex] ?? 1)
             }
         }
         .gesture(dragGesture)
@@ -55,85 +68,91 @@ public struct CardStackView<Item, CardView: View>: View {
 
 // MARK: - Render Entry
 
-extension CardStackView {
-    private struct RenderEntry {
+private extension CardStackView {
+    struct RenderEntry {
         let item: Item
-        let realIndex: Int
-        let relativePosition: Int
+        let itemIndex: Int
+        let olderIndex: Int
         let isDismissing: Bool
     }
 
-    private var renderedEntries: [RenderEntry] {
-        var stack: [RenderEntry] = []
-        let endIndex = min(topCardIndex + Constants.maxDisplayCardCount, items.endIndex)
-        for index in topCardIndex ..< endIndex {
-            let item = items[index]
-            if !dismissingIndices.contains(index) {
-                stack.append(RenderEntry(
-                    item: item,
-                    realIndex: index,
-                    relativePosition: index - topCardIndex,
-                    isDismissing: false
-                ))
-            }
+    func itemIndices(startIndex: Int, endIndex: Int) -> [Int] {
+        guard items.indices.contains(startIndex) else { return [] }
+        let renderCount = min(Constants.maxDisplayCardCount, items.count)
+        var indices: [Int] = []
+        var index = startIndex
+        while indices.count < renderCount {
+            indices.append(index)
+            index = (index + 1) % endIndex
         }
-        let stackInDrawOrder = Array(stack.reversed())
+        return indices
+    }
 
-        let dismissing: [RenderEntry] = dismissingIndices.compactMap { index in
+    var renderedEntries: [RenderEntry] {
+        let idleCardStack: [RenderEntry] = itemIndices(
+            startIndex: topCardItemIndex,
+            endIndex: items.endIndex
+        )
+        .enumerated()
+        .compactMap { orderIndex, itemIndex in
+            guard !dismissingCardItemIndices.contains(itemIndex) else { return nil }
+            return RenderEntry(
+                item: items[itemIndex],
+                itemIndex: itemIndex,
+                olderIndex: orderIndex,
+                isDismissing: false
+            )
+        }
+
+        let dismissingCardStack: [RenderEntry] = dismissingCardItemIndices.compactMap { index in
             guard let item = items[safe: index] else { return nil }
             return RenderEntry(
                 item: item,
-                realIndex: index,
-                relativePosition: 0,
+                itemIndex: index,
+                olderIndex: 0,
                 isDismissing: true
             )
         }
-        return stackInDrawOrder + dismissing
+        return (dismissingCardStack + idleCardStack).reversed()
     }
 }
 
 // MARK: - Card Transform
 
-extension CardStackView {
-    private func offsetY(for entry: RenderEntry) -> CGFloat {
-        if entry.isDismissing { return cardOffsets[entry.realIndex] ?? 0 }
-        if entry.realIndex == topCardIndex { return currentDragableCardOffsetY }
+private extension CardStackView {
+    func offsetY(for entry: RenderEntry) -> CGFloat {
+        if entry.isDismissing { return cardOffsets[entry.itemIndex] ?? 0 }
+        if entry.itemIndex == topCardItemIndex {
+            return currentDragableCardOffsetY
+        }
         let chunk = Constants.cardOffsetYGap
-        return chunk * (dragPercent - CGFloat(entry.relativePosition))
+        return chunk * (dragPercent - CGFloat(entry.olderIndex))
     }
 
-    private func scale(for entry: RenderEntry) -> CGFloat {
-        if entry.isDismissing { return 1.0 }
+    func scale(for entry: RenderEntry) -> CGFloat {
+        if entry.isDismissing || entry.olderIndex == 0 {
+            return 1.0
+        }
         let scaleRange = 1.0 - Constants.stackMinScale
         let chunk = scaleRange / CGFloat(Constants.maxDisplayCardCount)
-        return 1.0 - chunk * (CGFloat(entry.relativePosition) - dragPercent)
+        return 1.0 - chunk * (CGFloat(entry.olderIndex) - dragPercent)
     }
 
     /// 마지막 카드의 idle 상태 visual top Y값을 기준으로 필요한 top padding을 계산합니다.
     /// scaleEffect는 카드 중심을 기준으로 축소되므로, 위쪽 엣지가 중심 방향으로 당겨집니다.
-    private var stackTopPadding: CGFloat {
-        let rearPos = Constants.maxDisplayCardCount - 1
-        let rearOffsetY = -Constants.cardOffsetYGap * CGFloat(rearPos)
-
-        let scaleRange = 1.0 - Constants.stackMinScale
-        let scaleChunk = scaleRange / CGFloat(Constants.maxDisplayCardCount)
-        let rearScale = 1.0 - scaleChunk * CGFloat(rearPos)
-
-        let cardHeight = cardSize?.height ?? 0
-        let scaleCompensation = cardHeight / 2 * (1 - rearScale)
-
-        return max(0, abs(rearOffsetY) - scaleCompensation)
+    var stackTopPadding: CGFloat {
+        Constants.cardOffsetYGap * CGFloat(max(0, Constants.maxDisplayCardCount - 1))
     }
 }
 
 // MARK: - Drag Gesture
 
-extension CardStackView {
-    private var dragThreshold: CGFloat {
-        max(cardSize?.height ?? 300, 1) * Constants.dragToDismissThresholdPercent
+private extension CardStackView {
+    var dragThreshold: CGFloat {
+        max(cardSize.height, 1) * Constants.dragToDismissThresholdPercent
     }
 
-    private var dragGesture: some Gesture {
+    var dragGesture: some Gesture {
         DragGesture()
             .onChanged { state in
                 if prevDragOffset == nil {
@@ -143,23 +162,42 @@ extension CardStackView {
                 let dY = state.location.y - prev.y
                 prevDragOffset = state.location
 
-                currentDragableCardOffsetY += dY
-                dragPercent = max(0, min(1, state.translation.height / dragThreshold)) * 0.5
+                currentDragableCardOffsetY += (dY * 0.65)
+                dragPercent = max(0, min(1, state.translation.height * 0.25 / dragThreshold))
             }
             .onEnded { state in
-                if state.translation.height >= dragThreshold {
-                    snapToDismiss(verticalVelocity: state.velocity.height)
+                let dragDirection = DragDirection(
+                    translation: state.translation.height,
+                    velocity: state.velocity.height,
+                    threshold: dragThreshold
+                )
+                if abs(state.translation.height) >= dragThreshold ||
+                    abs(state.velocity.height) > Constants.dragVelocityThreshold {
+                    snapToDismiss(
+                        direction: dragDirection,
+                        verticalVelocity: state.velocity.height
+                    )
                 } else {
                     snapToIdentity()
                 }
             }
     }
+
+    enum DragDirection {
+        case top, bottom
+
+        init(translation: CGFloat, velocity: CGFloat, threshold: CGFloat) {
+            // 드래그 이동량이 일정양 넘어설때만 비교 기준으로 사용
+            let reference = abs(translation) >= threshold ? translation : velocity
+            self = reference > 0 ? .bottom : .top
+        }
+    }
 }
 
 // MARK: - Snap Actions
 
-extension CardStackView {
-    private func snapToIdentity() {
+private extension CardStackView {
+    func snapToIdentity() {
         prevDragOffset = nil
         withAnimation {
             currentDragableCardOffsetY = .zero
@@ -167,49 +205,47 @@ extension CardStackView {
         }
     }
 
-    private func snapToDismiss(verticalVelocity: CGFloat) {
-        if topCardIndex == items.endIndex - 1 {
-            snapToIdentity()
-            return
-        }
-
+    func snapToDismiss(direction: DragDirection, verticalVelocity: CGFloat) {
         prevDragOffset = nil
 
-        let dismissingIndex = topCardIndex
+        let dismissIdx = topCardItemIndex
         let startOffsetY = currentDragableCardOffsetY
 
-        cardOffsets[dismissingIndex] = startOffsetY
-        dismissingIndices.append(dismissingIndex)
+        cardOffsets[dismissIdx] = startOffsetY
+        dismissingCardItemIndices.insert(dismissIdx)
         currentDragableCardOffsetY = 0
 
-        let remainingDistance = Constants.dismissTargetY - startOffsetY
+        let dismissYPos = switch direction {
+        case .top: -cardSize.height
+        case .bottom: cardSize.height
+        }
+
+        let remainingDistance = dismissYPos - startOffsetY
         let initialVelocity: CGFloat = remainingDistance > 0
             ? max(0, verticalVelocity / remainingDistance)
             : 0
 
         withAnimation(.easeInOut) {
             dragPercent = 0
-            topCardIndex += 1
+            topCardItemIndex = (topCardItemIndex + 1) % items.endIndex
         }
 
         withAnimation(.interpolatingSpring(stiffness: 120, damping: 18, initialVelocity: initialVelocity)) {
-            cardOffsets[dismissingIndex] = Constants.dismissTargetY
+            cardOffsets[dismissIdx] = dismissYPos
+            cardOpacities[dismissIdx] = 0.0
         } completion: {
-            dismissingIndices.removeAll { $0 == dismissingIndex }
-            cardOffsets[dismissingIndex] = nil
+            DispatchQueue.main.async {
+                dismissingCardItemIndices.remove(dismissIdx)
+                cardOffsets.removeValue(forKey: dismissIdx)
+                cardOpacities.removeValue(forKey: dismissIdx)
+            }
         }
     }
 }
 
-// TODO: 삭제예정 - @준영
-
-public struct CardModel: Hashable {
-    public let color: Color = .random()
-
-    public init() {}
+struct CardModel: Hashable {
+    let color: Color = .random()
 }
-
-// TODO: 삭제예정 - @준영
 
 extension Color {
     static func random() -> Color {
@@ -221,36 +257,28 @@ extension Color {
     }
 }
 
-private struct SizePreferenceKey: PreferenceKey {
-    static var defaultValue: CGSize = .zero
-    static func reduce(value: inout CGSize, nextValue: () -> CGSize) {
-        value = nextValue()
-    }
-}
-
-private extension View {
-    func size(onChange: @escaping (CGSize) -> Void) -> some View {
-        background(
-            GeometryReader { geometry in
-                Color.clear
-                    .preference(
-                        key: SizePreferenceKey.self,
-                        value: geometry.size
-                    )
-            }
-        )
-        .onPreferenceChange(SizePreferenceKey.self) { size in
-            onChange(size)
-        }
-    }
-}
-
 #Preview {
     @Previewable @State var topCardIndex = 0
 
     CardStackView(
         topCardIndex: $topCardIndex,
         items: (0 ..< 10).map { _ in CardModel() }
+    ) { _, item in
+        ZStack {
+            RoundedRectangle(cornerRadius: 15)
+                .foregroundStyle(item.color)
+        }
+        .frame(width: 200, height: 300)
+    }
+    .border(.red)
+}
+
+#Preview("원카드") {
+    @Previewable @State var topCardIndex = 0
+
+    CardStackView(
+        topCardIndex: $topCardIndex,
+        items: [CardModel()]
     ) { _, item in
         ZStack {
             RoundedRectangle(cornerRadius: 15)
