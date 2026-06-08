@@ -26,7 +26,7 @@ public struct MainFeature {
         var path: StackState<Path.State> = .init()
         var solarTerm: SolarTerm?
 
-        init() {
+        public init() {
             self._tabBarVisibility = Shared(
                 wrappedValue: true,
                 .tabBarVisibility
