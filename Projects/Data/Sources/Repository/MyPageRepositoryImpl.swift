@@ -8,6 +8,7 @@
 
 import Dependencies
 import Domain
+import FirebaseRemoteConfig
 import FirebaseStorage
 import Foundation
 
@@ -32,6 +33,18 @@ enum MyPageRepositoryImpl {
                 let data = try await reference.data(maxSize: maxSize)
                 let response = try JSONDecoder().decode([DocumentResponseDTO].self, from: data)
                 return response.compactMap(\.toDomain)
+            },
+            fetchContactUsURL: {
+                let settings = RemoteConfigSettings()
+                settings.minimumFetchInterval = 0
+                settings.fetchTimeout = 10
+
+                let remoteConfig = RemoteConfig.remoteConfig()
+                remoteConfig.configSettings = settings
+
+                try await remoteConfig.fetchAndActivate()
+                let url = remoteConfig["contactUsURL"].stringValue
+                return url.isEmpty ? nil : url
             }
         )
     }
