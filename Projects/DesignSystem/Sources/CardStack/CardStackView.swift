@@ -1,6 +1,6 @@
 //
 //  CardStackView.swift
-//  SUPlayground
+//  DesignSystem
 //
 //  Created by NHN on 6/2/26.
 //
