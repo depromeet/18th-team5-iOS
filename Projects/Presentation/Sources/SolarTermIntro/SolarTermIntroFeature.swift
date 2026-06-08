@@ -18,6 +18,7 @@ public struct SolarTermIntroFeature {
         var solarTermInfos: [SolarTermInfo] = []
         var season: Season = .currentSeason
         var targetTerm: SolarTerm?
+        var currentCardImageURL: URL?
         @Presents var content: SolarTermIntroContentFeature.State?
 
         public init(currentSolarTerm: SolarTerm? = nil) {
@@ -51,6 +52,7 @@ public struct SolarTermIntroFeature {
         case content(PresentationAction<SolarTermIntroContentFeature.Action>)
         case solarTermsLoad([SolarTermIntro])
         case solarTermInfosLoad([SolarTermInfo])
+        case currentCardImageURLLoaded(URL)
         case delegate(Delegate)
 
         public enum Delegate {
@@ -89,8 +91,19 @@ public struct SolarTermIntroFeature {
                     if let current = infos.first(where: { $0.dateRange.contains(now) }) {
                         state.targetTerm = current.term
                         state.season = current.term.season
+                        let term = current.term
+                        return .run { send in
+                            let path = "solar_terms/img_\(term.rawValue)_01_1.png"
+                            if let url = try? await solarTermIntroRepository.fetchImageURL(path) {
+                                await send(.currentCardImageURLLoaded(url))
+                            }
+                        }
                     }
                 }
+                return .none
+
+            case let .currentCardImageURLLoaded(url):
+                state.currentCardImageURL = url
                 return .none
 
             case let .selectSeason(season):
