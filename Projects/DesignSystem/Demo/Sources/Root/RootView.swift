@@ -33,6 +33,7 @@ private extension RootView {
         case .cardStack: CardStackDemoView()
         case .font: FontDemoView()
         case .toggle: ToggleDemoView()
+        case .customAlert: AlertDemoView()
         }
     }
 

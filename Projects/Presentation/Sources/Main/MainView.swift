@@ -32,6 +32,7 @@ public struct MainView: View {
                 }
             }
             .navigationBarHidden(true)
+            .customAlert(store.scope(state: \.alert, action: \.alert))
         } destination: { store in
             pathView(store: store)
         }
@@ -110,6 +111,14 @@ private extension MainFeature.Tab {
         case .solarTerm: "절기소개"
         case .mission: "미션"
         case .calendar: "캘린더"
+        }
+    }
+}
+
+extension MainFeature.Alert: AlertPresentable {
+    public var alertInfo: AlertInfo {
+        switch self {
+        case let .mission(alert): alert.alertInfo
         }
     }
 }

@@ -13,6 +13,10 @@ import Foundation
 
 @Reducer
 public struct MainFeature {
+    public enum Alert: Equatable {
+        case mission(MissionListFeature.Alert)
+    }
+
     @ObservableState
     public struct State: Equatable {
         @Shared(.tabBarVisibility) var tabBarVisibility: Bool = true
@@ -25,6 +29,7 @@ public struct MainFeature {
 
         var path: StackState<Path.State> = .init()
         var solarTerm: SolarTerm?
+        var alert: CustomAlertFeature<Alert>.State?
 
         public init() {
             self._tabBarVisibility = Shared(
@@ -43,6 +48,7 @@ public struct MainFeature {
         case solarTermIntro(SolarTermIntroFeature.Action)
         case presentSolarTermContent(SolarTermIntro, String)
         case path(StackActionOf<Path>)
+        case alert(CustomAlertFeature<Alert>.Action)
     }
 
     @Dependency(\.logger) private var logger
@@ -136,6 +142,14 @@ public struct MainFeature {
                 state.path.append(missionRecord)
                 return .none
 
+            case let .mission(.delegate(.showAlert(alert))):
+                state.alert = .init(.mission(alert))
+                return .none
+
+            case .alert(.primaryButtonTapped):
+                state.alert = nil
+                return .none
+
             case .path(.element(
                 id: _,
                 action: .solarTermIntroContent(.delegate(.navigateToMissionTab))
@@ -155,6 +169,8 @@ public struct MainFeature {
                     await syncNotificationSettings(settings)
                 }
 
+            case .alert: return .none
+
             case .home: return .none
 
             case .mission: return .none
@@ -169,6 +185,9 @@ public struct MainFeature {
             }
         }
         .forEach(\.path, action: \.path)
+        .ifLet(\.alert, action: \.alert) {
+            CustomAlertFeature()
+        }
     }
 }
 
