@@ -70,27 +70,46 @@ private extension PhotoPickerView {
 
 private extension PhotoPickerView {
     var header: some View {
-        HStack {
-            closeButton
-            Spacer()
-            Text("사진")
-                .font(.body1Semibold)
-                .foregroundStyle(Color.gray900)
-            Spacer()
-            confirmButton
+        VStack(spacing: 0) {
+            indicator
+                .padding(.vertical, 6)
+
+            ZStack {
+                Text("사진")
+                    .font(.body1Medium)
+                    .foregroundStyle(Color.gray900)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 44)
+                    .padding(.horizontal, 64)
+
+                HStack {
+                    closeButton
+                    Spacer()
+                    confirmButton
+                }
+                .padding(.horizontal, 20)
+            }
         }
-        .padding(EdgeInsets(top: 0, leading: 16, bottom: 18, trailing: 16))
+        .padding(.bottom, 16)
+    }
+
+    var indicator: some View {
+        Capsule()
+            .frame(width: 36, height: 5)
+            .foregroundStyle(Color.gray200)
     }
 
     var closeButton: some View {
         Button {
             store.send(.closeTapped)
         } label: {
-            Image(systemName: "xmark")
-                .font(.system(size: 20, weight: .bold))
+            Image.icClose
+                .renderingMode(.template)
+                .resizable()
+                .frame(width: 20, height: 20)
                 .foregroundStyle(Color.monoWhite)
-                .frame(width: 44, height: 44)
-                .background(Color.gray400)
+                .padding(12)
+                .background(Color.blackAlpha600)
                 .clipShape(.circle)
         }
         .accessibilityLabel("닫기")
@@ -101,11 +120,13 @@ private extension PhotoPickerView {
         return Button {
             store.send(.confirmTapped)
         } label: {
-            Image(systemName: "arrow.up")
-                .font(.system(size: 20, weight: .bold))
+            Image.icArrowUp
+                .renderingMode(.template)
+                .resizable()
+                .frame(width: 20, height: 20)
                 .foregroundStyle(Color.monoWhite)
-                .frame(width: 44, height: 44)
-                .background(isEnabled ? Color.gray700 : Color.gray400)
+                .padding(12)
+                .background(isEnabled ? Color.blackAlpha600 : Color.gray400)
                 .clipShape(.circle)
         }
         .disabled(!isEnabled)
@@ -142,16 +163,15 @@ private extension PhotoPickerView {
 private extension PhotoPickerView {
     var grid: some View {
         GeometryReader { geometry in
-            let spacing: CGFloat = 2
             let columnCount: CGFloat = 3
-            let cellSide = (geometry.size.width - spacing * (columnCount - 1)) / columnCount
+            let cellSide = geometry.size.width / columnCount
             let columns = Array(
-                repeating: GridItem(.fixed(cellSide), spacing: spacing),
+                repeating: GridItem(.fixed(cellSide), spacing: .zero),
                 count: Int(columnCount)
             )
 
             ScrollView {
-                LazyVGrid(columns: columns, spacing: spacing) {
+                LazyVGrid(columns: columns, spacing: .zero) {
                     ForEach(store.assets) { asset in
                         PhotoThumbnailCell(
                             assetId: asset.id,
@@ -180,7 +200,7 @@ struct PhotoThumbnailCell: View {
 
     var body: some View {
         Button(action: onTap) {
-            ZStack {
+            ZStack(alignment: .bottomTrailing) {
                 Color.gray200
 
                 if let image {
@@ -192,20 +212,14 @@ struct PhotoThumbnailCell: View {
                 }
 
                 if isSelected {
-                    Color.black.opacity(0.3)
-
-                    VStack {
-                        Spacer()
-                        HStack {
-                            Spacer()
-                            checkmark
-                                .padding(6)
-                        }
-                    }
+                    checkmark
+                        .padding(12)
                 }
             }
             .frame(width: side, height: side)
-            .contentShape(Rectangle())
+            .clipShape(.rect(cornerRadius: 16))
+            .contentShape(.rect(cornerRadius: 16))
+            .overlay { RoundedRectangle(cornerRadius: 16).stroke(Color.whiteAlpha500, lineWidth: 1.5) }
         }
         .buttonStyle(.plain)
         .task(id: assetId) {
@@ -216,14 +230,14 @@ struct PhotoThumbnailCell: View {
     }
 
     private var checkmark: some View {
-        ZStack {
-            Circle()
-                .fill(Color.gray800)
-                .frame(width: 22, height: 22)
-            Image(systemName: "checkmark")
-                .font(.system(size: 12, weight: .bold))
-                .foregroundStyle(Color.monoWhite)
-        }
+        Image.icCheck
+            .renderingMode(.template)
+            .resizable()
+            .frame(width: 12, height: 12)
+            .foregroundStyle(Color.monoWhite)
+            .padding(6)
+            .background(Color.blackAlpha600)
+            .clipShape(.circle)
     }
 
     private func loadImage(size: CGSize) async -> UIImage? {

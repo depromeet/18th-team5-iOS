@@ -62,6 +62,8 @@ public struct MissionRecordView: View {
             item: $store.scope(state: \.photoPicker, action: \.photoPicker)
         ) { pickerStore in
             PhotoPickerView(store: pickerStore)
+                .presentationDetents([.fraction(0.9)])
+                .presentationDragIndicator(.hidden)
         }
         .customAlert(
             isPresented: store.alert != nil,
