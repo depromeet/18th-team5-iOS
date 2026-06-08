@@ -9,18 +9,27 @@
 import Alamofire
 
 enum NotificationEndpoint: APIEndpoint {
-    case fetchNotificaitonInfo
+    case fetchNotificaitonSettings
+    case setNotificationSettings(NotificationSettingsRequestDTO)
 
     var path: String {
         switch self {
-        case .fetchNotificaitonInfo:
+        case .fetchNotificaitonSettings, .setNotificationSettings:
             "/api/v1/notifications/settings"
         }
     }
 
     var method: HTTPMethod {
         switch self {
-        case .fetchNotificaitonInfo: .get
+        case .fetchNotificaitonSettings: .get
+        case .setNotificationSettings: .put
+        }
+    }
+
+    var body: Encodable? {
+        switch self {
+        case .fetchNotificaitonSettings: nil
+        case let .setNotificationSettings(body): body
         }
     }
 }
