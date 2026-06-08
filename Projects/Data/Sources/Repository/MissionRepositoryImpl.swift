@@ -115,6 +115,15 @@ public enum MissionRepositoryImpl {
                     throw mapToDomainError(error)
                 }
             },
+            fetchRecommendedMissionAvailability: {
+                @Dependency(\.networkClient) var client
+
+                do {
+                    let endpoint = MissionEndpoint.fetchRecommendedMissionAvailability
+                    let response: MissionAvailabilityResponseDTO? = try await client.request(endpoint)
+                    return response?.toDomain ?? .init(isAvailable: nil, maxCount: nil)
+                }
+            },
             fetchSearchedMission: {
                 @Dependency(\.networkClient) var client
 

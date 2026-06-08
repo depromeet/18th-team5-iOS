@@ -126,6 +126,16 @@ public struct MainFeature {
                 state.path.append(.solarTermIntroContent(solarTermIntroContent))
                 return .none
 
+            case let .mission(.delegate(.navigateToMissionRecord(mission, missionType))):
+                let missionRecord: Path.State = .missionRecord(.init(
+                    missionId: mission.id,
+                    missionTitle: mission.title,
+                    missionType: missionType
+                ))
+
+                state.path.append(missionRecord)
+                return .none
+
             case .path(.element(
                 id: _,
                 action: .solarTermIntroContent(.delegate(.navigateToMissionTab))

@@ -168,7 +168,7 @@ extension MissionCategory {
         switch self {
         case .food: .icFood
         case .nature: .icTree
-        case .record: .icSlate
+        case .content: .icSlate
         case .place: .icLocation
         case .music: .icMusic
         }

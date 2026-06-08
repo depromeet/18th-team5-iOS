@@ -20,9 +20,9 @@ extension MissionCategory {
         switch self {
         case .food: "FOOD"
         case .nature: "NATURE"
-        case .record: "RECORD"
+        case .content: "CONTENT"
         case .place: "PLACE"
-        case .music: "SENSE"
+        case .music: "MUSIC"
         }
     }
 }
