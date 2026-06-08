@@ -44,6 +44,8 @@ struct NewCustomAlertViewModifier<Alert: AlertPresentable>: ViewModifier {
                 )
             }
         }
+        .transition(.opacity)
+        .animation(.easeInOut(duration: 0.25), value: store == nil)
     }
 }
 
