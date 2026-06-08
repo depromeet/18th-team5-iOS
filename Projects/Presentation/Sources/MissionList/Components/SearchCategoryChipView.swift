@@ -44,7 +44,8 @@ struct SearchCategoryChipView: View {
                     .font(.body2Regular)
                     .foregroundStyle(Color.gray900)
             }
-            .frame(width: 73, height: 36)
+            .padding(.horizontal, 12)
+            .frame(height: 36)
             .background(backgroundColor(isSelected))
             .clipShape(Capsule())
             .overlay(Capsule().stroke(borderColor(isSelected)))

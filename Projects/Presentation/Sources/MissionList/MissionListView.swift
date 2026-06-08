@@ -21,6 +21,7 @@ public struct MissionListView: View {
     public var body: some View {
         ZStack {
             Color.white
+                .ignoresSafeArea()
                 .overlay { circleBackgroundView }
 
             pickerView
@@ -29,8 +30,11 @@ public struct MissionListView: View {
                 .overlay(alignment: .trailing) { indicatorView }
         }
         .overlay(alignment: .top) { headerView }
+        .allowsHitTesting(!store.isCompleteViewPresented)
         .onAppear { store.send(.onAppear) }
         .loading(isLoading: store.isLoading)
+        .overlay { completeView }
+        .animation(.smooth(duration: 0.5), value: store.isCompleteViewPresented)
         .sheet(item: $store.scope(state: \.search, action: \.search)) { store in
             MissionSearchView(store: store)
         }
@@ -38,6 +42,13 @@ public struct MissionListView: View {
             item: $store.scope(state: \.searchResult, action: \.searchResult)
         ) { store in
             MissionSearchResultView(store: store)
+        }
+        .onChange(of: store.isCompleteViewPresented) { _, newValue in
+            guard newValue else { return }
+            Task {
+                try await Task.sleep(for: .seconds(3))
+                store.send(.set(\.isCompleteViewPresented, false))
+            }
         }
     }
 }
@@ -158,8 +169,9 @@ private extension MissionListView {
                 mission: mission,
                 season: season,
                 isActive: store.selectedMission == mission,
-                action: {}
+                action: { store.send(.missionCardTapped(mission)) }
             )
+            .blur(radius: store.isCompleteViewPresented ? 1.2 : 0)
         }
     }
 
@@ -183,6 +195,32 @@ private extension MissionListView {
                 .frame(width: width, height: height, alignment: .topTrailing)
                 .padding(.top, height / 2 + 52)
             }
+        }
+    }
+
+    @ViewBuilder
+    var completeView: some View {
+        if let maxCount = store.maxCount,
+           store.isCompleteViewPresented {
+            MissionCompleteView(maxCount: maxCount)
+                .ignoresSafeArea()
+        }
+    }
+}
+
+extension MissionListFeature.Alert: AlertPresentable {
+    public var alertInfo: AlertInfo {
+        switch self {
+        case .missionUnavailable:
+            let title = """
+            오늘의 카드 미션을 모두 기록했어요
+            다른 제철 일상을 기록해볼까요?
+            """
+
+            return AlertInfo(
+                title: title,
+                buttonTitle: "확인"
+            )
         }
     }
 }

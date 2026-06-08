@@ -30,6 +30,7 @@ public struct MissionRepository: Sendable {
     ) async throws -> String
 
     public var fetchRecommendedMissions: @Sendable () async throws -> RecommendedMission?
+    public var fetchRecommendedMissionAvailability: @Sendable () async throws -> MissionAvailability
     public var fetchSearchedMission: @Sendable () async throws -> Mission?
     public var searchMission: @Sendable (_ attribute: MissionAttribute) async throws -> Mission?
 }

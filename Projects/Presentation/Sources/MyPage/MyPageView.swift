@@ -11,6 +11,7 @@ import DesignSystem
 import SwiftUI
 
 public struct MyPageView: View {
+    @Environment(\.openURL) private var openURL
     @Bindable private var store: StoreOf<MyPageFeature>
 
     public init(store: StoreOf<MyPageFeature>) {
@@ -21,7 +22,13 @@ public struct MyPageView: View {
         ScrollView {
             VStack(spacing: 16) {
                 MenuListView { menu in
-                    store.send(.menuTapped(menu))
+                    switch menu {
+                    case .contactUs:
+                        guard let url = store.contactUsURL else { return }
+                        openURL(url)
+                    default:
+                        store.send(.menuTapped(menu))
+                    }
                 }
 
                 versionInfoView
@@ -32,6 +39,7 @@ public struct MyPageView: View {
         }
         .navigationBar(title: "마이페이지") { store.send(.backButtonTapped) }
         .background { backgroundView }
+        .onAppear { store.send(.onAppear) }
         .navigationDestination(
             item: $store.scope(state: \.path, action: \.path),
             destination: pathView

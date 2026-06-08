@@ -9,7 +9,7 @@
 public enum MissionCategory: CaseIterable {
     case food
     case nature
-    case record
+    case content
     case place
     case music
 
@@ -17,7 +17,7 @@ public enum MissionCategory: CaseIterable {
         switch self {
         case .food: "음식"
         case .nature: "자연"
-        case .record: "기록"
+        case .content: "콘텐츠"
         case .place: "장소"
         case .music: "음악"
         }

@@ -20,11 +20,11 @@ struct SolarTermIntroView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            headerSection
+            navigationBar
+            bodySection
             cardCarousel
             Spacer()
         }
-        .navigationTitle("제철 소개")
         .navigationBarTitleDisplayMode(.inline)
         .onAppear { store.send(.onAppear) }
         .fullScreenCover(
@@ -38,7 +38,15 @@ struct SolarTermIntroView: View {
 // MARK: - Subviews
 
 private extension SolarTermIntroView {
-    var headerSection: some View {
+    var navigationBar: some View {
+        Text("절기 소개")
+            .font(.body1Medium)
+            .foregroundStyle(Color.gray900)
+            .frame(maxWidth: .infinity)
+            .frame(height: 56)
+    }
+
+    var bodySection: some View {
         VStack(alignment: .leading, spacing: 16) {
             Text("Peaktime이 소개하는\n24절기 제철 가이드")
                 .font(.headline1Semibold)
@@ -82,6 +90,7 @@ private extension SolarTermIntroView {
                         solarTermIntro: solarTerm,
                         season: store.season,
                         dateLabel: store.dateLabels[solarTerm.term],
+                        cardImageURL: store.currentCardImageURL,
                         onTap: { store.send(.onCardTap(solarTerm)) }
                     )
                 } else {

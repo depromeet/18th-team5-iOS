@@ -41,8 +41,10 @@ private extension Module {
             .dependenciesMacros,
             .firebaseCore,
             .firebaseMessaging,
-            .firebaseRemoteConfig
+            .firebaseRemoteConfig,
+            .firebaseStorage
         ]
+        case .designSystem: [.kingfisher]
         case .core: [.dependencies]
         case .camera: []
         default: []
