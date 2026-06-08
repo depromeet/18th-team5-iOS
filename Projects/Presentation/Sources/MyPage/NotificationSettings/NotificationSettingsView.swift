@@ -12,6 +12,8 @@ import Domain
 import SwiftUI
 
 public struct NotificationSettingsView: View {
+    @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.openURL) private var openURL
     @Bindable private var store: StoreOf<NotificationSettingsFeature>
 
     public init(store: StoreOf<NotificationSettingsFeature>) {
@@ -29,22 +31,24 @@ public struct NotificationSettingsView: View {
         }
         .navigationBar(title: "알림 수신 설정") { store.send(.backButtonTapped) }
         .background(Color.gray100)
-    }
-}
-
-private extension NotificationSettingsView {
-    func isOn(_ type: NotificationType) -> Binding<Bool>? {
-        guard let settings = Binding($store.settings) else { return nil }
-        return Binding(settings[type])
+        .loading(isLoading: store.isLoading)
+        .animation(.easeInOut(duration: 0.3), value: store.isAuthorized)
+        .onAppear { store.send(.onAppear) }
+        .onChange(of: scenePhase) { _, scenePhase in
+            guard scenePhase == .active else { return }
+            store.send(.appDidBecomeActive)
+        }
     }
 }
 
 private extension NotificationSettingsView {
     var notificationBanner: some View {
         NotificationBanner {
-            store.send(.bannerTapped)
+            let urlString = UIApplication.openNotificationSettingsURLString
+            guard let url = URL(string: urlString) else { return }
+            openURL(url)
         }
-        .renderedIf(false)
+        .renderedIf(store.isAuthorized == false)
     }
 
     var toggleListView: some View {
@@ -52,7 +56,7 @@ private extension NotificationSettingsView {
             let allNotificationTypes = NotificationType.allCases
             ForEach(allNotificationTypes, id: \.self) { type in
                 ZStack(alignment: .bottom) {
-                    toggleItemView(title: type.name, isOn: isOn(type))
+                    toggleItemView(type: type, isOn: store.settings?[type])
 
                     Color.gray100
                         .frame(height: 1)
@@ -66,9 +70,9 @@ private extension NotificationSettingsView {
         .clipShape(RoundedRectangle(cornerRadius: .radius12))
     }
 
-    func toggleItemView(title: String, isOn: Binding<Bool>?) -> some View {
+    func toggleItemView(type: NotificationType, isOn: Bool?) -> some View {
         HStack(spacing: 0) {
-            Text(title)
+            Text(type.name)
                 .font(.body1Medium)
                 .foregroundStyle(Color.gray900)
 
@@ -76,10 +80,13 @@ private extension NotificationSettingsView {
 
             if let isOn {
                 CustomToggle(
-                    isOn: isOn,
+                    isOn: Binding(
+                        get: { isOn },
+                        set: { store.send(.toggleChanged(type, $0)) }
+                    ),
                     mainColor: store.season.color(.scale600)
                 )
-                .disabled(false)
+                .disabled(store.isAuthorized == false)
             }
         }
         .frame(height: 60)
