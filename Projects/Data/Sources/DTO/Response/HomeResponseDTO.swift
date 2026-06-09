@@ -27,6 +27,7 @@ struct DailyMissionResponseDTO: Decodable {
     let title: String
     let participantCount: Int
     let missionType: String
+    let isCompleted: Bool
 }
 
 // MARK: - Domain Mapping
@@ -66,7 +67,8 @@ extension DailyMissionResponseDTO {
             id: id,
             title: title,
             participantCount: participantCount,
-            missionType: missionType
+            missionType: missionType,
+            isCompleted: isCompleted
         )
     }
 }
