@@ -30,7 +30,7 @@ public struct HomeFeature {
         case onMissionRecommendTap
         case onSolarTermDetailTap
         case myPageButtonTapped
-        case calenderButtonTapped
+        case calendarButtonTapped
         case delegate(Delegate)
 
         public enum Delegate {
@@ -92,7 +92,7 @@ public struct HomeFeature {
             case .myPageButtonTapped:
                 return .send(.delegate(.navigateToMyPage))
 
-            case .calenderButtonTapped:
+            case .calendarButtonTapped:
                 return .send(.delegate(.navigateToCalendar))
 
             case .delegate:

@@ -17,22 +17,16 @@ struct SolarTermCardView: View {
     let onDetailTap: () -> Void
 
     var body: some View {
-        ZStack(alignment: .bottom) {
-            (solarTerm.term?.cardImage ?? Image.imgSolarTermCardDefault)
-                .resizable()
-                .scaledToFill()
-
+        VStack(spacing: 0) {
             // 상단 텍스트 영역
             VStack(alignment: .leading, spacing: 12) {
-                HStack {
-                    Text("\(solarTerm.startDate) - \(solarTerm.endDate)")
-                        .font(.caption1Semibold)
-                        .foregroundStyle(.white)
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 4)
-                        .background(Color.blackAlpha300)
-                        .clipShape(Capsule())
-                }
+                Text("\(solarTerm.startDate) - \(solarTerm.endDate)")
+                    .font(.caption1Semibold)
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 4)
+                    .background(Color.blackAlpha300)
+                    .clipShape(Capsule())
 
                 VStack(alignment: .leading, spacing: 0) {
                     ForEach(descriptionLines(solarTerm.description), id: \.self) { line in
@@ -54,12 +48,12 @@ struct SolarTermCardView: View {
                             .foregroundStyle(Color.white)
                     }
                 }
-
-                Spacer().frame(width: 56)
             }
             .padding(.horizontal, 20)
             .padding(.top, 24)
-            .frame(maxWidth: .infinity, alignment: .topLeading)
+            .frame(maxWidth: .infinity, alignment: .leading)
+
+            Spacer()
 
             // 하단 미션 카드
             if let mission {
@@ -72,8 +66,12 @@ struct SolarTermCardView: View {
             }
         }
         .frame(maxWidth: .infinity)
-        .aspectRatio(335.0 / 400.0, contentMode: .fit)
-        .clipped()
+        .frame(height: 400)
+        .background {
+            (solarTerm.term?.cardImage ?? Image.imgSolarTermCardDefault)
+                .resizable()
+                .scaledToFill()
+        }
         .clipShape(RoundedRectangle(cornerRadius: .radius16))
     }
 }
