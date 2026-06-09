@@ -1,5 +1,5 @@
 //
-//  AnnouncementsView.swift
+//  AnnouncementListView.swift
 //  Presentation
 //
 //  Created by 이정원 on 6/9/26.
@@ -7,15 +7,14 @@
 //
 
 import ComposableArchitecture
-import Core
 import DesignSystem
 import Domain
 import SwiftUI
 
-public struct AnnouncementsView: View {
-    private let store: StoreOf<AnnouncementsFeature>
+public struct AnnouncementListView: View {
+    @Bindable private var store: StoreOf<AnnouncementListFeature>
 
-    public init(store: StoreOf<AnnouncementsFeature>) {
+    public init(store: StoreOf<AnnouncementListFeature>) {
         self.store = store
     }
 
@@ -37,20 +36,14 @@ public struct AnnouncementsView: View {
         }
         .navigationBar(title: "") { store.send(.backButtonTapped) }
         .background(Color.white)
+        .navigationDestination(
+            item: $store.scope(state: \.detail, action: \.detail),
+            destination: AnnouncementDetailView.init
+        )
     }
 }
 
-private extension AnnouncementsView {
-    func dateString(_ date: Date) -> String {
-        if abs(date.timeIntervalSinceNow) < 24 * 60 * 60 {
-            date.relativeTimeString
-        } else {
-            date.string(.shortYearMonthDayDot)
-        }
-    }
-}
-
-private extension AnnouncementsView {
+private extension AnnouncementListView {
     var titleView: some View {
         Text("공지사항")
             .font(.headline1Semibold)
@@ -72,7 +65,7 @@ private extension AnnouncementsView {
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .multilineTextAlignment(.leading)
 
-                Text(dateString(announcement.date))
+                Text(announcement.dateString)
                     .font(.caption1Medium)
                     .foregroundStyle(Color.gray600)
             }

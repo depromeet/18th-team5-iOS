@@ -6,6 +6,7 @@
 //  Copyright © 2026 Orange. All rights reserved.
 //
 
+import Core
 import Foundation
 
 public struct Announcement: Equatable {
@@ -21,5 +22,13 @@ public struct Announcement: Equatable {
         self.title = title
         self.content = content
         self.date = date
+    }
+
+    public var dateString: String {
+        if abs(date.timeIntervalSinceNow) < 24 * 60 * 60 {
+            date.relativeTimeString
+        } else {
+            date.string(.shortYearMonthDayDot)
+        }
     }
 }

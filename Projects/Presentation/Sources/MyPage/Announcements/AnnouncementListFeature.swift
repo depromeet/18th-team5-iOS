@@ -1,5 +1,5 @@
 //
-//  AnnouncementsFeature.swift
+//  AnnouncementListFeature.swift
 //  Presentation
 //
 //  Created by 이정원 on 6/9/26.
@@ -10,30 +10,39 @@ import ComposableArchitecture
 import Domain
 
 @Reducer
-public struct AnnouncementsFeature {
+public struct AnnouncementListFeature {
     @Dependency(\.dismiss) private var dismiss
 
     @ObservableState
     public struct State: Equatable {
         var announcements: [Announcement] = .sample
         var isLoading: Bool = false
+        @Presents var detail: AnnouncementDetailFeature.State?
+        
         public init() {}
     }
 
     public enum Action {
         case backButtonTapped
         case announcementTapped(Int)
+        case detail(PresentationAction<AnnouncementDetailFeature.Action>)
     }
 
     public init() {}
     public var body: some ReducerOf<Self> {
-        Reduce { _, action in
+        Reduce { state, action in
             switch action {
             case .backButtonTapped:
                 return .run { _ in await dismiss() }
-            case .announcementTapped:
+            case .announcementTapped(let index):
+                let announcement = state.announcements[index]
+                state.detail = .init(announcement)
                 return .none
+            case .detail: return .none
             }
+        }
+        .ifLet(\.$detail, action: \.detail) {
+            AnnouncementDetailFeature()
         }
     }
 }
