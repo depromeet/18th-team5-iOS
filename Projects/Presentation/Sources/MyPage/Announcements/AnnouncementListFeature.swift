@@ -18,7 +18,7 @@ public struct AnnouncementListFeature {
         var announcements: [Announcement] = .sample
         var isLoading: Bool = false
         @Presents var detail: AnnouncementDetailFeature.State?
-        
+
         public init() {}
     }
 
@@ -34,7 +34,7 @@ public struct AnnouncementListFeature {
             switch action {
             case .backButtonTapped:
                 return .run { _ in await dismiss() }
-            case .announcementTapped(let index):
+            case let .announcementTapped(index):
                 let announcement = state.announcements[index]
                 state.detail = .init(announcement)
                 return .none
@@ -55,17 +55,17 @@ private extension [Announcement] {
             date: .now.addingTimeInterval(-10)
         ),
         .init(
-            title: "16분이 지난 경우의 날짜 표시 예시입니다.",
+            title: "제목 한 줄일 때 예시입니다.",
             content: .sample,
             date: .now.addingTimeInterval(-16 * 60)
         ),
         .init(
-            title: "9시간이 지난 경우의 날짜 표시 예시입니다.",
+            title: "제목 두 줄일 때 예시입니다. 최대 40자까지 입력할 수 있습니다.",
             content: .sample,
             date: .now.addingTimeInterval(-9 * 60 * 60)
         ),
         .init(
-            title: "23시간이 지난 경우의 날짜 표시 예시입니다.",
+            title: "제목 한 줄일 때 예시입니다.",
             content: .sample,
             date: .now.addingTimeInterval(-23 * 60 * 60)
         ),
@@ -73,6 +73,31 @@ private extension [Announcement] {
             title: "제목 한 줄일 때 예시입니다.",
             content: .sample,
             date: .now.addingTimeInterval(-4 * 60 * 60 * 24)
+        ),
+        .init(
+            title: "제목 두 줄일 때 예시입니다. 최대 40자까지 입력할 수 있습니다.",
+            content: .sample,
+            date: .now.addingTimeInterval(-5 * 60 * 60 * 24)
+        ),
+        .init(
+            title: "제목 한 줄일 때 예시입니다.",
+            content: .sample,
+            date: .now.addingTimeInterval(-6 * 60 * 60 * 24)
+        ),
+        .init(
+            title: "제목 두 줄일 때 예시입니다. 최대 40자까지 입력할 수 있습니다.",
+            content: .sample,
+            date: .now.addingTimeInterval(-14 * 60 * 60 * 24)
+        ),
+        .init(
+            title: "제목 한 줄일 때 예시입니다.",
+            content: .sample,
+            date: .now.addingTimeInterval(-30 * 60 * 60 * 24)
+        ),
+        .init(
+            title: "제목 한 줄일 때 예시입니다.",
+            content: .sample,
+            date: .now.addingTimeInterval(-180 * 60 * 60 * 24)
         )
     ]
 }

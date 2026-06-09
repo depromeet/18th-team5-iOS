@@ -12,6 +12,7 @@ import Domain
 import SwiftUI
 
 public struct AnnouncementListView: View {
+    @State private var scrollOffset: CGFloat = 0
     @Bindable private var store: StoreOf<AnnouncementListFeature>
 
     public init(store: StoreOf<AnnouncementListFeature>) {
@@ -33,13 +34,28 @@ public struct AnnouncementListView: View {
                 }
             }
             .padding(.bottom, 56)
+            .readScrollOffset { scrollOffset = $0.y }
         }
-        .navigationBar(title: "") { store.send(.backButtonTapped) }
+        .scrollOffsetCoordinateSpace()
+        .navigationBar(title: navigationTitle, shouldBlur: shouldBlur) {
+            store.send(.backButtonTapped)
+        }
         .background(Color.white)
+        .animation(.easeInOut(duration: 0.2), value: shouldBlur)
         .navigationDestination(
             item: $store.scope(state: \.detail, action: \.detail),
             destination: AnnouncementDetailView.init
         )
+    }
+}
+
+private extension AnnouncementListView {
+    var shouldBlur: Bool {
+        scrollOffset >= 24
+    }
+
+    var navigationTitle: String {
+        shouldBlur ? "공지사항" : ""
     }
 }
 
