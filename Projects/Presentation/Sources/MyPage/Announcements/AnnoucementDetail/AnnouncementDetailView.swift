@@ -51,7 +51,7 @@ private extension AnnouncementDetailView {
 
     var contentView: some View {
         Text(store.announcement.content)
-            .font(.body2Regular)
+            .font(size: 14, weight: .regular, lineHeight: 24)
             .foregroundStyle(Color.gray900)
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.horizontal, 20)
