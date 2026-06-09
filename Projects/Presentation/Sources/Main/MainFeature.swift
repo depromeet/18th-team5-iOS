@@ -123,6 +123,10 @@ public struct MainFeature {
                 state.path.append(.myPage(.init(solarTerm)))
                 return .none
 
+            case .home(.delegate(.navigateToCalendar)):
+                state.tab = .calendar
+                return .none
+
             case let .presentSolarTermContent(intro, dateLabel):
                 let solarTermIntroContent = SolarTermIntroContentFeature.State(
                     solarTermIntro: intro,
