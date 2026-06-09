@@ -15,7 +15,7 @@ public struct AnnouncementListFeature {
 
     @ObservableState
     public struct State: Equatable {
-        var announcements: [Announcement] = .sample
+        var announcements: [Announcement]?
         var isLoading: Bool = false
         @Presents var detail: AnnouncementDetailFeature.State?
 
@@ -23,6 +23,8 @@ public struct AnnouncementListFeature {
     }
 
     public enum Action {
+        case onAppear
+        case annoucementsFetched([Announcement])
         case backButtonTapped
         case announcementTapped(Int)
         case detail(PresentationAction<AnnouncementDetailFeature.Action>)
@@ -32,10 +34,21 @@ public struct AnnouncementListFeature {
     public var body: some ReducerOf<Self> {
         Reduce { state, action in
             switch action {
+            case .onAppear:
+                state.isLoading = true
+                return .run { send in
+                    try await Task.sleep(for: .seconds(1))
+                    await send(.annoucementsFetched(.sample))
+                }
+            case let .annoucementsFetched(announcements):
+                state.announcements = announcements
+                state.isLoading = false
+                return .none
             case .backButtonTapped:
                 return .run { _ in await dismiss() }
             case let .announcementTapped(index):
-                let announcement = state.announcements[index]
+                let announcement = state.announcements?[index]
+                guard let announcement else { return .none }
                 state.detail = .init(announcement)
                 return .none
             case .detail: return .none
@@ -48,6 +61,7 @@ public struct AnnouncementListFeature {
 }
 
 private extension [Announcement] {
+    // TODO: 이후 PR에서 제거 예정 - @정원
     static let sample: Self = [
         .init(
             title: "제목 두 줄일 때 예시입니다. 최대 40자까지 입력할 수 있습니다.",

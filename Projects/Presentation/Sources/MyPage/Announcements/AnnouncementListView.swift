@@ -20,28 +20,21 @@ public struct AnnouncementListView: View {
     }
 
     public var body: some View {
-        ScrollView {
-            VStack(spacing: 0) {
+        Group {
+            if let announcements = store.announcements {
+                if announcements.isEmpty { emptyView } else { scrollView(announcements) }
+            } else {
                 titleView
-                VStack(spacing: 0) {
-                    ForEach(store.announcements.indices, id: \.self) { index in
-                        Button {
-                            store.send(.announcementTapped(index))
-                        } label: {
-                            announcementView(store.announcements[index])
-                        }
-                    }
-                }
+                    .frame(maxHeight: .infinity, alignment: .top)
             }
-            .padding(.bottom, 56)
-            .readScrollOffset { scrollOffset = $0.y }
         }
-        .scrollOffsetCoordinateSpace()
         .navigationBar(title: navigationTitle, shouldBlur: shouldBlur) {
             store.send(.backButtonTapped)
         }
         .background(Color.white)
+        .loading(isLoading: store.isLoading)
         .animation(.easeInOut(duration: 0.2), value: shouldBlur)
+        .onAppear { store.send(.onAppear) }
         .navigationDestination(
             item: $store.scope(state: \.detail, action: \.detail),
             destination: AnnouncementDetailView.init
@@ -60,6 +53,53 @@ private extension AnnouncementListView {
 }
 
 private extension AnnouncementListView {
+    var emptyView: some View {
+        VStack(spacing: 0) {
+            titleView
+
+            VStack(spacing: 8) {
+                let text = """
+                현재 등록된 공지사항이 없어요.
+                새로운 소식은 여기서 확인하실 수 있어요.
+                """
+
+                Text(text)
+                    .font(.body1Medium)
+                    .foregroundStyle(Color.gray600)
+                    .multilineTextAlignment(.center)
+
+                emptyImageView
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+        }
+    }
+
+    var emptyImageView: some View {
+        Image.imgNoRecord
+            .resizable()
+            .frame(width: 200, height: 163)
+    }
+
+    func scrollView(_ announcements: [Announcement]) -> some View {
+        ScrollView {
+            VStack(spacing: 0) {
+                titleView
+                VStack(spacing: 0) {
+                    ForEach(announcements.indices, id: \.self) { index in
+                        Button {
+                            store.send(.announcementTapped(index))
+                        } label: {
+                            announcementView(announcements[index])
+                        }
+                    }
+                }
+            }
+            .padding(.bottom, 56)
+            .readScrollOffset { scrollOffset = $0.y }
+        }
+        .scrollOffsetCoordinateSpace()
+    }
+
     var titleView: some View {
         Text("공지사항")
             .font(.headline1Semibold)
