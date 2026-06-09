@@ -18,8 +18,9 @@ struct SolarTermCardView: View {
 
     var body: some View {
         ZStack(alignment: .bottom) {
-            Image.homeSeasonCard
+            (solarTerm.term?.cardImage ?? Image.imgSolarTermCardDefault)
                 .resizable()
+                .scaledToFill()
 
             // 상단 텍스트 영역
             VStack(alignment: .leading, spacing: 12) {
@@ -29,23 +30,8 @@ struct SolarTermCardView: View {
                         .foregroundStyle(.white)
                         .padding(.horizontal, 12)
                         .padding(.vertical, 4)
-                        .background(Color.white.opacity(0.13))
+                        .background(Color.blackAlpha300)
                         .clipShape(Capsule())
-
-                    Spacer()
-
-                    Button(action: onDetailTap) {
-                        HStack {
-                            Text("더보기")
-                                .foregroundStyle(Color.white)
-                                .font(.body2Medium)
-                            Image.icArrowRight
-                                .renderingMode(.template)
-                                .resizable()
-                                .frame(width: 24, height: 24)
-                                .foregroundStyle(Color.white)
-                        }
-                    }
                 }
 
                 VStack(alignment: .leading, spacing: 0) {
@@ -56,23 +42,38 @@ struct SolarTermCardView: View {
                     }
                 }
 
-                Spacer()
+                Button(action: onDetailTap) {
+                    HStack(spacing: 0) {
+                        Text("더보기")
+                            .foregroundStyle(Color.white)
+                            .font(.body2Medium)
+                        Image.icArrowRight
+                            .renderingMode(.template)
+                            .resizable()
+                            .frame(width: 20, height: 20)
+                            .foregroundStyle(Color.white)
+                    }
+                }
+
+                Spacer().frame(width: 56)
             }
             .padding(.horizontal, 20)
             .padding(.top, 24)
-            .frame(maxWidth: .infinity, maxHeight: 400, alignment: .topLeading)
+            .frame(maxWidth: .infinity, alignment: .topLeading)
 
             // 하단 미션 카드
             if let mission {
                 MissionCardView(
                     mission: mission,
+                    season: solarTerm.term?.season ?? .summer,
                     onMissionTap: onMissionTap
                 )
                 .padding(.bottom, 16)
             }
         }
         .frame(maxWidth: .infinity)
-        .frame(height: 400)
+        .aspectRatio(335.0 / 400.0, contentMode: .fit)
+        .clipped()
         .clipShape(RoundedRectangle(cornerRadius: .radius16))
     }
 }
@@ -86,44 +87,55 @@ extension SolarTermCardView {
 
 private struct MissionCardView: View {
     let mission: CurrentMissionCard
+    let season: Season
     let onMissionTap: () -> Void
 
     var body: some View {
         VStack(spacing: 12) {
-            Text(mission.title)
-                .font(.body1Semibold)
-                .foregroundStyle(Color(hex: 0x1A1C20))
-                .frame(maxWidth: .infinity, alignment: .leading)
+            // 미션 제목
+            HStack {
+                Text(mission.title)
+                    .font(.body1Semibold)
+                    .foregroundStyle(Color.gray900)
+
+                Spacer()
+
+                if mission.isCompleted {
+                    Image.icCheck
+                        .renderingMode(.template)
+                        .resizable()
+                        .frame(width: 12, height: 12)
+                        .foregroundStyle(season.color(.scale500))
+                        .padding(6)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 8)
+                                .stroke(season.color(.scale300), lineWidth: 1)
+                        )
+                        .shadow(color: .blackAlpha200.opacity(0.0627), radius: 4)
+                }
+            }
 
             VStack(spacing: 8) {
-                Button(action: onMissionTap) {
-                    Text("미션 참여하기")
-                        .font(.body1Medium)
-                        .foregroundStyle(.white)
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 48)
-                        .background(
-                            LinearGradient(
-                                colors: [Color(hex: 0x43DA87), Color(hex: 0x3DC67B)],
-                                startPoint: .leading,
-                                endPoint: .trailing
-                            )
-                        )
-                        .clipShape(RoundedRectangle(cornerRadius: 14))
-                }
+                Button(mission.isCompleted ? "미션을 기록했어요" : "미션 기록하기", action: onMissionTap)
+                    .buttonStyle(.seasonGradient(season))
+                    .disabled(mission.isCompleted)
 
                 Text("해당 미션에 \(mission.participantCount)명이 참여했어요")
                     .font(.caption1Regular)
-                    .foregroundStyle(Color(hex: 0x868B94))
+                    .foregroundStyle(Color.gray600)
                     .frame(maxWidth: .infinity, alignment: .center)
             }
         }
         .padding(.top, 20)
         .padding(.horizontal, 16)
-        .padding(.bottom, 15)
+        .padding(.bottom, 16)
         .frame(maxWidth: .infinity)
-        .background(Color.white.opacity(0.9))
+        .background(Color.white)
         .clipShape(RoundedRectangle(cornerRadius: .radius12))
+        .overlay(
+            RoundedRectangle(cornerRadius: .radius12)
+                .stroke(Color.green50, lineWidth: 1)
+        )
         .padding(.horizontal, 16)
     }
 }
