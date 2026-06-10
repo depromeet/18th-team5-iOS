@@ -36,7 +36,6 @@ public struct CalendarFeature {
 
     public enum Action: BindableAction {
         case onAppear
-        case detailOkButtonTapped
         case headerBackButtonTapped
         case dateCellTapped(dateId: SolarTermDate.ID, inset: CGFloat)
         case anchoredTermChanged(id: SolarTermGroup.ID)
@@ -70,6 +69,7 @@ public struct CalendarFeature {
 
             case .headerBackButtonTapped:
                 state.detail = nil
+                state.calendarState.scrollEnabled = true
                 return .none
 
             case let .calendarDataRequest(request):
@@ -84,11 +84,6 @@ public struct CalendarFeature {
 
             case let .anchoredTermChanged(termId):
                 return anchoredTermChanged(&state, termGroupId: termId)
-
-            case .detailOkButtonTapped:
-                // TODO: 동작 및 액션 수정 -@준영
-                state.detail = nil
-                return .none
 
             case let .detail(.presented(.delegate(.showAlert(alert)))):
                 state.alert = .init(.detail(alert))

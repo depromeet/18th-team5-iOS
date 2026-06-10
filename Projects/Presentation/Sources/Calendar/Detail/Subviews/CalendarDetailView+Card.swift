@@ -104,10 +104,10 @@ extension CalendarDetailView {
 
     private var cardImageView: some View {
         RoundedRectangle(cornerRadius: 12)
-            .padding(3)
-            .background {
-                RoundedRectangle(cornerRadius: 9)
-                    .fill(.white)
+            .clipShape(RoundedRectangle(cornerRadius: 12))
+            .overlay {
+                RoundedRectangle(cornerRadius: 12)
+                    .strokeBorder(.white, lineWidth: 3)
             }
             .padding(7)
             .overlay {

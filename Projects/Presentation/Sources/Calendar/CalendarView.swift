@@ -97,7 +97,7 @@ extension CalendarView {
 
                     Text(store.header?.termRangeText ?? "-")
                         .font(.caption1Medium)
-                        .foregroundStyle(Color.gray400)
+                        .foregroundStyle(Color.gray600)
 
                     Spacer()
                 }

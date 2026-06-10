@@ -35,6 +35,7 @@ public struct RowReloadRequest<Item: Identifiable & Equatable>: Equatable {
 public struct PagingTableViewState<Item: Identifiable & Equatable>: Equatable {
     public var anchorRequest: AnchorRequest<Item>?
     public var rowReloadRequest: RowReloadRequest<Item>?
+    public var scrollEnabled: Bool = true
     public var pages: [Page<Item>]
 }
 
@@ -113,6 +114,13 @@ final class PagingTableView<Item: Identifiable & Equatable>: UIView, UITableView
             .removeDuplicates()
             .sink { [weak self] request in
                 self?.update(request: request)
+            }
+            .store(in: &store)
+
+        state
+            .map(\.scrollEnabled)
+            .sink { [weak self] scrollEnabled in
+                self?.tableView.isScrollEnabled = scrollEnabled
             }
             .store(in: &store)
     }

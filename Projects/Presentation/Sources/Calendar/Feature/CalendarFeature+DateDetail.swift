@@ -21,6 +21,7 @@ extension CalendarFeature {
         // #1. 디테일 화면 데이터
         // TODO: 임시 데이터 -@준영
         state.detail = .init()
+        state.calendarState.scrollEnabled = false
 
         // #2. 이전 선택 셀 초기화
         let prevSelectedId = state.selectedDateId
