@@ -1,8 +1,7 @@
 //
-//  MissionRecordView.swift
+//  FreeRecordView.swift
 //  Presentation
 //
-//  Created by 진준호 on 5/8/26.
 //  Copyright © 2026 Orange. All rights reserved.
 //
 
@@ -10,11 +9,11 @@ import ComposableArchitecture
 import DesignSystem
 import SwiftUI
 
-public struct MissionRecordView: View {
-    @Bindable private var store: StoreOf<MissionRecordFeature>
+public struct FreeRecordView: View {
+    @Bindable private var store: StoreOf<FreeRecordFeature>
     @FocusState private var isMemoFocused: Bool
 
-    public init(store: StoreOf<MissionRecordFeature>) {
+    public init(store: StoreOf<FreeRecordFeature>) {
         self.store = store
     }
 
@@ -24,8 +23,8 @@ public struct MissionRecordView: View {
                 navigationBar
 
                 ScrollView {
-                    VStack(spacing: 24) {
-                        missionTitleCard
+                    VStack(alignment: .leading, spacing: 24) {
+                        dateSection
                         photoArea
                         memoSection
                     }
@@ -55,9 +54,6 @@ public struct MissionRecordView: View {
             }
         )
         .presentToast($store.toast)
-        .onAppear {
-            store.send(.onAppear)
-        }
     }
 
     var background: some View {
@@ -68,10 +64,10 @@ public struct MissionRecordView: View {
 
 // MARK: - Navigation Bar
 
-private extension MissionRecordView {
+private extension FreeRecordView {
     var navigationBar: some View {
         ZStack {
-            Text("미션 기록하기")
+            Text("기록하기")
                 .font(.body1Medium)
                 .foregroundStyle(Color.gray900)
 
@@ -95,45 +91,64 @@ private extension MissionRecordView {
     }
 }
 
-// MARK: - Mission Title Card
+// MARK: - Date Section
 
-private extension MissionRecordView {
-    var missionTitleCard: some View {
-        VStack(alignment: .leading, spacing: 2) {
-            Text(store.missionTitle)
+private extension FreeRecordView {
+    var dateSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("날짜 선택하기")
                 .font(.body1Semibold)
-                .foregroundStyle(Color.gray900)
-                .frame(maxWidth: .infinity, alignment: .leading)
+                .foregroundStyle(Color.gray800)
 
-            if let description = store.missionDescription {
-                Text(description)
-                    .font(.body2Regular)
-                    .foregroundStyle(Color.gray700)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-            }
+            datePickerField
         }
-        .frame(maxWidth: .infinity)
+    }
+
+    var datePickerField: some View {
+        HStack {
+            Text(Self.displayDateFormatter.string(from: store.recordDate))
+                .font(.body2Regular)
+                .foregroundStyle(Color.gray900)
+
+            Spacer()
+
+            Image(systemName: "chevron.down")
+                .font(.system(size: 14, weight: .medium))
+                .foregroundStyle(Color.gray500)
+        }
         .padding(.vertical, 16)
-        .padding(.horizontal, 20)
+        .padding(.horizontal, 16)
         .background(Color.monoWhite)
         .clipShape(.rect(cornerRadius: .radius16))
+        .overlay {
+            DatePicker(
+                "",
+                selection: $store.recordDate,
+                displayedComponents: .date
+            )
+            .labelsHidden()
+            .datePickerStyle(.compact)
+            .opacity(0.02)
+            .frame(maxWidth: .infinity, alignment: .trailing)
+        }
     }
 }
 
 // MARK: - Photo Area
 
-private extension MissionRecordView {
+private extension FreeRecordView {
     var photoArea: some View {
         RecordPhotoView(
             store: store.scope(state: \.photo, action: \.photo),
-            title: "사진으로 미션을 기록해주세요"
+            title: "사진으로 기록을 남겨주세요",
+            subtitle: "하루 1개의 사진을 자유롭게 기록할 수 있어요"
         )
     }
 }
 
 // MARK: - Memo Section
 
-private extension MissionRecordView {
+private extension FreeRecordView {
     var memoSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("한줄 메모 남기기")
@@ -143,7 +158,7 @@ private extension MissionRecordView {
             memoInputField
 
             if store.isMemoLimitExceeded {
-                Text("\(MissionRecordFeature.maxMemoLength)자까지 메모할 수 있어요.")
+                Text("\(FreeRecordFeature.maxMemoLength)자까지 메모할 수 있어요.")
                     .font(.caption1Regular)
                     .foregroundStyle(Color.systemRed)
             }
@@ -171,10 +186,10 @@ private extension MissionRecordView {
 
 // MARK: - Submit Button
 
-private extension MissionRecordView {
+private extension FreeRecordView {
     var isSubmitEnabled: Bool {
-        store.photo.selectedImageData != nil && !store.isSubmitting
-            && !store.memo.trimmingCharacters(in: .whitespaces).isEmpty
+        store.photo.selectedImageData != nil
+            && !store.isSubmitting
             && !store.isMemoLimitExceeded
     }
 
@@ -190,7 +205,7 @@ private extension MissionRecordView {
 
 // MARK: - Custom Alert Mapping
 
-private extension MissionRecordView {
+private extension FreeRecordView {
     var alertMessage: String {
         switch store.alert {
         case .submitFailed:
@@ -210,18 +225,19 @@ private extension MissionRecordView {
             return []
         }
     }
+
+    static let displayDateFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy년 M월 d일"
+        formatter.locale = Locale(identifier: "ko_KR")
+        return formatter
+    }()
 }
 
 #Preview {
-    MissionRecordView(
-        store: .init(
-            initialState: .init(
-                missionId: 0,
-                missionTitle: "나만의 여름 음료 개발",
-                missionType: .daily
-            )
-        ) {
-            MissionRecordFeature()
+    FreeRecordView(
+        store: .init(initialState: .init(recordDate: Date())) {
+            FreeRecordFeature()
         }
     )
 }
