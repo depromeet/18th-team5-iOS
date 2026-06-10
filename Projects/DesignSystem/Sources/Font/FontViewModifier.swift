@@ -56,8 +56,9 @@ public extension View {
     func font(size: CGFloat, weight: FontWeight, lineHeight: CGFloat) -> some View {
         modifier(FontViewModifier(
             family: .pretendard,
-            size: size, weight:
-            weight, lineHeight: lineHeight
+            size: size,
+            weight: weight,
+            lineHeight: lineHeight
         ))
     }
 }
