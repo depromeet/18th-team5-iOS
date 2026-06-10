@@ -32,7 +32,7 @@ public struct MissionRecordView: View {
                         memoSection
                     }
                     .padding(.horizontal, 20)
-                    .padding(.top, 16)
+                    .padding(.top, 24)
                     .padding(.bottom, 120)
                 }
                 .scrollDismissesKeyboard(.interactively)
@@ -41,7 +41,7 @@ public struct MissionRecordView: View {
 
                 submitButton
             }
-            .background(Color.gray50)
+            .background(background)
             .contentShape(.rect)
             .onTapGesture { isMemoFocused = false }
             .allowsHitTesting(store.completionModal == nil)
@@ -87,6 +87,11 @@ public struct MissionRecordView: View {
         .onAppear {
             store.send(.onAppear)
         }
+    }
+
+    var background: some View {
+        LinearGradient.missionRecordBackground
+            .ignoresSafeArea()
     }
 }
 
@@ -277,21 +282,29 @@ private extension MissionRecordView {
             && !store.memo.trimmingCharacters(in: .whitespaces).isEmpty
     }
 
+    @ViewBuilder
+    var buttonBackground: some View {
+        if isSubmitEnabled {
+            Color.gray400
+        } else {
+            EllipticalGradient(
+                stops: [
+                    .init(color: .gray800, location: 0.0),
+                    .init(color: .clear, location: 1.0)
+                ],
+                center: .center
+            )
+            .background(Color.gray700)
+        }
+    }
+
     var submitButton: some View {
-        Button {
+        BottomButton(title: "확인") {
             store.send(.submitButtonTapped)
-        } label: {
-            Text("기록 완료하기")
-                .font(.body1Medium)
-                .foregroundStyle(Color.monoWhite)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 16)
-                .background(isSubmitEnabled ? Color.gray700 : Color.gray400)
-                .clipShape(RoundedRectangle(cornerRadius: .radius12))
         }
         .disabled(!isSubmitEnabled)
         .padding(.horizontal, 20)
-        .padding(.bottom, 36)
+        .padding(.vertical, 16)
     }
 }
 
