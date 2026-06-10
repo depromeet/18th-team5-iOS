@@ -24,7 +24,7 @@ public struct AnnouncementListFeature {
 
     public enum Action {
         case onAppear
-        case annoucementsFetched([Announcement])
+        case announcementsFetched([Announcement])
         case backButtonTapped
         case announcementTapped(Int)
         case detail(PresentationAction<AnnouncementDetailFeature.Action>)
@@ -38,9 +38,9 @@ public struct AnnouncementListFeature {
                 state.isLoading = true
                 return .run { send in
                     try await Task.sleep(for: .seconds(1))
-                    await send(.annoucementsFetched(.sample))
+                    await send(.announcementsFetched(.sample))
                 }
-            case let .annoucementsFetched(announcements):
+            case let .announcementsFetched(announcements):
                 state.announcements = announcements
                 state.isLoading = false
                 return .none
