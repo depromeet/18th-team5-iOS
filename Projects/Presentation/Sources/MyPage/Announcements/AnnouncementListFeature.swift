@@ -7,6 +7,7 @@
 //
 
 import ComposableArchitecture
+import Core
 import Domain
 
 @Reducer
@@ -47,7 +48,7 @@ public struct AnnouncementListFeature {
             case .backButtonTapped:
                 return .run { _ in await dismiss() }
             case let .announcementTapped(index):
-                let announcement = state.announcements?[index]
+                let announcement = state.announcements?[safe: index]
                 guard let announcement else { return .none }
                 state.detail = .init(announcement)
                 return .none
