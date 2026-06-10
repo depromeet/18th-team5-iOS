@@ -262,15 +262,32 @@ private extension MissionRecordView {
                 .font(.body1Semibold)
                 .foregroundStyle(Color.gray800)
 
-            TextField("함께 남기고 싶은 메모를 입력해주세요", text: $store.memo)
-                .font(.body2Regular)
-                .foregroundStyle(Color.gray600)
-                .padding(.horizontal, 12)
-                .padding(.vertical, 16)
-                .background(Color.monoWhite)
-                .clipShape(RoundedRectangle(cornerRadius: .radius16))
-                .focused($isMemoFocused)
+            memoInputField
+
+            if store.isMemoLimitExceeded {
+                Text("\(MissionRecordFeature.maxMemoLength)자까지 메모할 수 있어요.")
+                    .font(.caption1Regular)
+                    .foregroundStyle(Color.systemRed)
+            }
         }
+    }
+
+    var memoInputField: some View {
+        TextField("", text: $store.memo, axis: .vertical)
+            .font(.body2Regular)
+            .foregroundStyle(Color.gray900)
+            .focused($isMemoFocused)
+            .overlay(alignment: .leading) {
+                if store.memo.isEmpty {
+                    Text("함께 남기고 싶은 메모를 입력해주세요")
+                        .font(.body2Regular)
+                        .foregroundStyle(Color.gray500)
+                        .allowsHitTesting(false)
+                }
+            }
+            .padding(EdgeInsets(top: 16, leading: 12, bottom: 16, trailing: 16))
+            .background(Color.monoWhite)
+            .clipShape(.rect(cornerRadius: .radius16))
     }
 }
 
@@ -280,6 +297,7 @@ private extension MissionRecordView {
     var isSubmitEnabled: Bool {
         store.selectedImageData != nil && !store.isSubmitting
             && !store.memo.trimmingCharacters(in: .whitespaces).isEmpty
+            && !store.isMemoLimitExceeded
     }
 
     @ViewBuilder

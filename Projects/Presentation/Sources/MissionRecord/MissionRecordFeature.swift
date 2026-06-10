@@ -13,6 +13,8 @@ import Foundation
 
 @Reducer
 public struct MissionRecordFeature {
+    static let maxMemoLength = 48
+
     @Reducer
     public struct CompletionModal {
         @ObservableState
@@ -52,6 +54,10 @@ public struct MissionRecordFeature {
             self.missionId = missionId
             self.missionTitle = missionTitle
             self.missionType = missionType
+        }
+
+        var isMemoLimitExceeded: Bool {
+            memo.count > MissionRecordFeature.maxMemoLength
         }
     }
 
@@ -164,7 +170,9 @@ public struct MissionRecordFeature {
                 return .none
 
             case .submitButtonTapped:
-                guard !state.isSubmitting else { return .none }
+                guard !state.isSubmitting,
+                      !state.isMemoLimitExceeded
+                else { return .none }
                 state.isSubmitting = true
                 let missionId = state.missionId
                 let missionType = state.missionType
