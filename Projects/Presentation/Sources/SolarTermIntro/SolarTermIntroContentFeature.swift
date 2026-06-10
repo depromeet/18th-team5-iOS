@@ -52,6 +52,7 @@ public struct SolarTermIntroContentFeature {
         Reduce { state, action in
             switch action {
             case .onAppear:
+                guard state.solarTermIntro == nil else { return .none }
                 state.isLoading = true
                 return .run { [term = state.term] send in
                     async let cards = solarTermIntroRepository.fetchSolarTermCard()
@@ -67,11 +68,11 @@ public struct SolarTermIntroContentFeature {
             case let .introLoaded(intro, dateLabel):
                 state.solarTermIntro = intro
                 state.dateLabel = dateLabel
+                state.isLoading = false
                 return .none
 
             case let .imageURLsLoad(urlDictionary):
                 state.imageURL = urlDictionary
-                state.isLoading = false
                 return .none
 
             case .onTapBack:
