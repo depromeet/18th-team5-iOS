@@ -46,13 +46,11 @@ public struct MainFeature {
         case mission(MissionListFeature.Action)
         case calendar(CalendarFeature.Action)
         case solarTermIntro(SolarTermIntroFeature.Action)
-        case presentSolarTermContent(SolarTermIntro, String)
         case path(StackActionOf<Path>)
         case alert(CustomAlertFeature<Alert>.Action)
     }
 
     @Dependency(\.logger) private var logger
-    @Dependency(\.solarTermIntroRepository) private var solarTermIntroRepository
     @Dependency(\.solarTermRepository) private var solarTermRepository
     @Dependency(\.notificationRepository) private var notificationRepository
 
@@ -104,19 +102,8 @@ public struct MainFeature {
                 return .send(.mission(.openFromHome))
 
             case let .home(.delegate(.navigateToSolarTermContent(term))):
-                return .run { send in
-                    do {
-                        let cards = try await solarTermIntroRepository.fetchSolarTermCard()
-                        let infos = try await solarTermRepository.fetchSolarTerms(.current)
-                        let card = cards.first { $0.term == term }
-                        let dateLabel = infos.first { $0.term == term }?.formattedFullDateRange
-                        if let card {
-                            await send(.presentSolarTermContent(card, dateLabel ?? ""))
-                        }
-                    } catch {
-                        // TODO: Firebase 전환 후 에러핸들링 추가 - @minkyo
-                    }
-                }
+                state.path.append(.solarTermIntroContent(.init(term: term)))
+                return .none
 
             case .home(.delegate(.navigateToMyPage)):
                 guard let solarTerm = state.solarTerm else { return .none }
@@ -125,15 +112,6 @@ public struct MainFeature {
 
             case .home(.delegate(.navigateToCalendar)):
                 state.tab = .calendar
-                return .none
-
-            case let .presentSolarTermContent(intro, dateLabel):
-                let solarTermIntroContent = SolarTermIntroContentFeature.State(
-                    solarTermIntro: intro,
-                    season: intro.term.season,
-                    dateLabel: dateLabel
-                )
-                state.path.append(.solarTermIntroContent(solarTermIntroContent))
                 return .none
 
             case let .mission(.delegate(.navigateToMissionRecord(mission, missionType))):

@@ -19,11 +19,13 @@ struct SolarTermIntroContentView: View {
             navigationBar
             ScrollView {
                 VStack(spacing: 12) {
-                    introHeaderSection
-                    contentIntroSection
-                    contentListSection
-                    BottomButton(title: "미션으로 이동") {
-                        store.send(.onMissionTap)
+                    if let intro = store.solarTermIntro {
+                        introHeaderSection(intro)
+                        contentIntroSection(intro)
+                        contentListSection(intro)
+                        BottomButton(title: "미션으로 이동") {
+                            store.send(.onMissionTap)
+                        }
                     }
                 }
                 .padding(.horizontal, 16)
@@ -44,7 +46,7 @@ struct SolarTermIntroContentView: View {
 private extension SolarTermIntroContentView {
     var navigationBar: some View {
         ZStack {
-            Text("\(store.solarTermIntro.term.koreanName) 소개보기")
+            Text("\(store.term.koreanName) 소개보기")
                 .font(.body1Medium)
                 .foregroundStyle(Color.gray900)
 
@@ -69,15 +71,15 @@ private extension SolarTermIntroContentView {
 }
 
 private extension SolarTermIntroContentView {
-    var introHeaderSection: some View {
+    func introHeaderSection(_ intro: SolarTermIntro) -> some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text(store.solarTermIntro.title)
+            Text(intro.title)
                 .font(.headline1Semibold)
                 .foregroundStyle(Color.gray900)
                 .frame(maxWidth: .infinity, alignment: .leading)
 
             VStack(spacing: 4) {
-                solarTermLabel(label: store.solarTermIntro.term.koreanName)
+                solarTermLabel(label: intro.term.koreanName)
 
                 Text(store.dateLabel)
                     .foregroundStyle(Color.white)
@@ -101,8 +103,8 @@ private extension SolarTermIntroContentView {
 
             // 의미 & 특징
             VStack(spacing: 8) {
-                infoLabel(label: "의미", text: store.solarTermIntro.meaning)
-                infoLabel(label: "특징", text: store.solarTermIntro.characteristic)
+                infoLabel(label: "의미", text: intro.meaning)
+                infoLabel(label: "특징", text: intro.characteristic)
             }
         }
         .padding(.horizontal, 16)
@@ -147,13 +149,13 @@ private extension SolarTermIntroContentView {
 // MARK: - Content Intro
 
 private extension SolarTermIntroContentView {
-    var contentIntroSection: some View {
+    func contentIntroSection(_ intro: SolarTermIntro) -> some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text(store.solarTermIntro.contentTitle)
+            Text(intro.contentTitle)
                 .font(.headline2Semibold)
                 .foregroundStyle(Color.gray900)
 
-            Text(store.solarTermIntro.contentBody)
+            Text(intro.contentBody)
                 .font(.body2Regular)
                 .foregroundStyle(Color.gray600)
                 .padding(.vertical, 20)
@@ -170,9 +172,9 @@ private extension SolarTermIntroContentView {
 // MARK: - Content List
 
 private extension SolarTermIntroContentView {
-    var contentListSection: some View {
+    func contentListSection(_ intro: SolarTermIntro) -> some View {
         VStack(spacing: 12) {
-            ForEach(store.solarTermIntro.contents, id: \.id) { content in
+            ForEach(intro.contents, id: \.id) { content in
                 contentCard(content)
             }
             .padding(.vertical, 20)
@@ -255,14 +257,7 @@ private struct AutoScrollImageView: View {
 #Preview {
     NavigationStack {
         SolarTermIntroContentView(
-            store: Store(initialState: SolarTermIntroContentFeature.State(
-                solarTermIntro: SolarTermIntro.mock,
-                dateLabel: "2025년 5월 5일 - 5월 21일",
-                imageURL: [
-                    "content_01": [URL(string: "https://picsum.photos/400/300")!],
-                    "content_02": [URL(string: "https://picsum.photos/400/200")!]
-                ]
-            )) {
+            store: Store(initialState: SolarTermIntroContentFeature.State(term: .ibha)) {
                 SolarTermIntroContentFeature()
             }
         )
