@@ -125,8 +125,7 @@ private extension MissionRecordView {
 private extension MissionRecordView {
     var photoArea: some View {
         RecordPhotoView(
-            store: store.scope(state: \.photo, action: \.photo),
-            title: "사진으로 미션을 기록해주세요"
+            store: store.scope(state: \.photo, action: \.photo)
         )
     }
 }

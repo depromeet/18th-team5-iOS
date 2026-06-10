@@ -14,16 +14,13 @@ import SwiftUI
 
 struct RecordPhotoView: View {
     @Bindable var store: StoreOf<RecordPhotoFeature>
-    let title: String
     let subtitle: String?
 
     init(
         store: StoreOf<RecordPhotoFeature>,
-        title: String,
         subtitle: String? = nil
     ) {
         self.store = store
-        self.title = title
         self.subtitle = subtitle
     }
 
@@ -102,7 +99,7 @@ private extension RecordPhotoView {
     var photoPlaceholder: some View {
         VStack(spacing: 20) {
             VStack(spacing: 4) {
-                Text(title)
+                Text("사진으로 기록을 남겨주세요")
                     .font(.body2Regular)
                     .foregroundStyle(Color.gray400)
 
