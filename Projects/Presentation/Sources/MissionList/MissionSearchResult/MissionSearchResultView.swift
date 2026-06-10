@@ -84,7 +84,7 @@ private extension MissionSearchResultView {
             VStack(spacing: 20) {
                 textView
 
-                Image.imgCamera
+                Image.imgCameraWithSparkles
                     .resizable()
                     .scaledToFit()
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -179,8 +179,10 @@ private extension MissionSearchResultView {
     }
 
     var bottomButton: some View {
-        BottomButton(title: "미션 기록하기") {}
-            .padding(.horizontal, 20)
-            .padding(.bottom, 16)
+        BottomButton(title: "미션 기록하기") {
+            store.send(.bottomButtonTapped)
+        }
+        .padding(.horizontal, 20)
+        .padding(.bottom, 16)
     }
 }

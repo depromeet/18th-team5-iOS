@@ -18,6 +18,8 @@ public struct RootFeature {
         let isDebug: Bool
         let currentAppVersion: AppVersion
         var path: Path.State = .splash(.init())
+        var initialPath: Path.State?
+        var splashDone: Bool = false
         var launchConfig: LaunchConfig?
         var hasFetchedConfig: Bool = false
         var isOnboarded: Bool?
@@ -40,6 +42,7 @@ public struct RootFeature {
         case notificationAuthorizationStatusLoaded(NotificationAuthorizationStatus)
         case onboardingFinished
         case setDebugTokenFinished
+        case initialPathDetermined(Path.State)
         case navigation(Path.State)
     }
 
@@ -131,6 +134,16 @@ public struct RootFeature {
 
             case .path(.debugToken(.delegate(.completed))):
                 return .send(.setDebugTokenFinished)
+
+            case .path(.splash(.splashDone)):
+                state.splashDone = true
+                guard let path = state.initialPath else { return .none }
+                return .send(.navigation(path))
+
+            case let .initialPathDetermined(path):
+                state.initialPath = path
+                guard state.splashDone else { return .none }
+                return .send(.navigation(path))
 
             case let .navigation(destination):
                 state.path = destination
@@ -242,10 +255,10 @@ private extension RootFeature {
 
             switch status {
             case .notDetermined:
-                await send(.navigation(.notificationConsent(.init())))
+                await send(.initialPathDetermined(.notificationConsent(.init())))
             case .authorized, .denied, .provisional:
                 let destination: Path.State = isOnboarded ? .main(.init()) : .survey(.init())
-                await send(.navigation(destination))
+                await send(.initialPathDetermined(destination))
             }
         } catch {
             // TODO: 알림 권한 조회 실패 에러처리 - @정원

@@ -42,14 +42,23 @@ public struct MissionSearchResultFeature {
 
     public enum Action {
         case backButtonTapped
+        case bottomButtonTapped
+        case delegate(Delegate)
+    }
+
+    public enum Delegate {
+        case navigateToMissionRecord(Mission)
     }
 
     public init() {}
     public var body: some ReducerOf<Self> {
-        Reduce { _, action in
+        Reduce { state, action in
             switch action {
             case .backButtonTapped:
                 return .run { _ in await dismiss() }
+            case .bottomButtonTapped:
+                return .send(.delegate(.navigateToMissionRecord(state.mission)))
+            case .delegate: return .none
             }
         }
     }

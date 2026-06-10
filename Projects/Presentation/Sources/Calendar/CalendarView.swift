@@ -54,36 +54,56 @@ struct CalendarView: View {
                 }
                 .ignoresSafeArea(.container, edges: [.bottom])
                 .overlay {
-                    if let detail = store.calendarDetail {
-                        calendarDetailView(detail)
-                            .padding(.top, Constants.detailViewTopPadding)
+                    if let detailStore = store.scope(state: \.detail, action: \.detail.presented) {
+                        CalendarDetailView(store: detailStore)
                             .transition(.move(edge: .bottom))
-                            .onDisappear { store.send(.detailViewDisappeared) }
+                            .padding(.top, Constants.detailViewTopPadding)
+                            .onDisappear {
+                                store.send(.detailViewDisappeared)
+                            }
                     }
                 }
-                .animation(.easeInOut, value: store.calendarDetail)
+                .animation(.easeInOut, value: store.detail != nil)
             }
         }
         .onAppear {
             store.send(.onAppear)
         }
+        .customAlert(store.scope(state: \.alert, action: \.alert))
     }
 }
 
 extension CalendarView {
     var headerView: some View {
         VStack(spacing: 12) {
-            HStack(alignment: .center, spacing: 8) {
-                Text(store.header?.termTitleText ?? "-")
-                    .font(.title2Semibold)
-                    .foregroundStyle(Color.gray900)
+            HStack(spacing: 4) {
+                if store.detail != nil {
+                    Button {
+                        store.send(.headerBackButtonTapped)
+                    } label: {
+                        Image.icArrowBack
+                            .resizable()
+                            .renderingMode(.template)
+                            .foregroundStyle(Color.gray800)
+                            .frame(width: 24, height: 24)
+                            .transition(.opacity)
+                    }
+                }
 
-                Text(store.header?.termRangeText ?? "-")
-                    .font(.caption1Medium)
-                    .foregroundStyle(Color.gray400)
+                HStack(alignment: .center, spacing: 8) {
+                    Text(store.header?.termTitleText ?? "-")
+                        .font(.title2Semibold)
+                        .foregroundStyle(Color.gray900)
 
-                Spacer()
+                    Text(store.header?.termRangeText ?? "-")
+                        .font(.caption1Medium)
+                        .foregroundStyle(Color.gray400)
+
+                    Spacer()
+                }
             }
+            .animation(.easeInOut, value: store.detail != nil)
+
             WeekdayLabelRow()
         }
         .padding(.horizontal, 20)
@@ -193,81 +213,6 @@ extension CalendarView {
         let weekSpacing = Constants.weekSectionVerticalSpacing
         let weekStartY = (weekHeight + weekSpacing) * CGFloat(weekIndex)
         return Constants.termSectionHeaderHeight + weekStartY
-    }
-}
-
-// MARK: DetailView
-
-extension CalendarView {
-    func calendarDetailView(_ detail: CalendarDetail) -> some View {
-        GeometryReader { _ in
-            ZStack {
-                detailViewBackgroundView
-                    .ignoresSafeArea(.container, edges: [.bottom])
-
-                VStack {
-                    CardStackView(
-                        topCardIndex: $store.topMostDetailCardIndex,
-                        items: detail.cards
-                    ) { index, card in
-                        let isTopMost = index == store.topMostDetailCardIndex
-                        RoundedRectangle(cornerRadius: 20)
-                            .foregroundStyle(isTopMost ? Color.gray100 : Color.gray300)
-                            .frame(width: 311, height: 400)
-                            .overlay {
-                                Text(card.name)
-                            }
-                    }
-                    .padding(.top, 20)
-                    Spacer()
-                }
-
-                detailViewBottomView
-            }
-        }
-    }
-
-    var detailViewBackgroundView: some View {
-        Color.white
-            .overlay {
-                VStack {
-                    LinearGradient(
-                        colors: [
-                            .black.opacity(0.05),
-                            .clear
-                        ],
-                        startPoint: .top,
-                        endPoint: .bottom
-                    )
-                    .frame(height: 30)
-                    Spacer()
-                }
-            }
-    }
-
-    var detailViewBottomView: some View {
-        VStack {
-            Spacer()
-            HStack(spacing: 8) {
-                Button {
-                    // TODO: 수정
-                    store.send(.detailOkButtonTapped)
-                } label: {
-                    Text("이미지 저장")
-                }
-                .buttonStyle(.master(.large))
-
-                Button {
-                    // TODO: 수정
-                    store.send(.detailOkButtonTapped)
-                } label: {
-                    Text("이미지 공유")
-                }
-                .buttonStyle(.master(.large))
-            }
-            .padding(.horizontal, 20)
-        }
-        .padding(.vertical, 16)
     }
 }
 

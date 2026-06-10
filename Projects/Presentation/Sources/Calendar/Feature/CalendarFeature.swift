@@ -7,11 +7,16 @@
 //
 
 import ComposableArchitecture
+import DesignSystem
 import Domain
 import Foundation
 
 @Reducer
 public struct CalendarFeature {
+    public enum Alert: Equatable {
+        case detail(CalendarDetailFeature.Alert)
+    }
+
     @ObservableState
     public struct State: Equatable {
         @Shared(.tabBarVisibility) var tabBarVisibility: Bool = true
@@ -19,8 +24,8 @@ public struct CalendarFeature {
         public var header: CalendarHeader?
         public var calendarState: PagingTableViewState<SolarTermGroup> = .init(pages: [])
         public var selectedDateId: SolarTermDate.ID?
-        public var calendarDetail: CalendarDetail?
-        public var topMostDetailCardIndex: Int = 0
+        @Presents public var detail: CalendarDetailFeature.State?
+        public var alert: CustomAlertFeature<Alert>.State?
 
         var termRecordData: [String: CalendarTermRecordData] = [:]
         var isAppeared: Bool = false
@@ -32,10 +37,13 @@ public struct CalendarFeature {
     public enum Action: BindableAction {
         case onAppear
         case detailOkButtonTapped
+        case headerBackButtonTapped
         case dateCellTapped(dateId: SolarTermDate.ID, inset: CGFloat)
         case anchoredTermChanged(id: SolarTermGroup.ID)
         case calendarReachToEnd(PageEndDirection)
         case detailViewDisappeared
+        case detail(PresentationAction<CalendarDetailFeature.Action>)
+        case alert(CustomAlertFeature<Alert>.Action)
 
         // Internal actions
         case yearPagesLayoutCompleted
@@ -60,6 +68,10 @@ public struct CalendarFeature {
             case .onAppear:
                 return onAppear(&state)
 
+            case .headerBackButtonTapped:
+                state.detail = nil
+                return .none
+
             case let .calendarDataRequest(request):
                 return fetchCalendarData(state, request)
 
@@ -75,11 +87,19 @@ public struct CalendarFeature {
 
             case .detailOkButtonTapped:
                 // TODO: 동작 및 액션 수정 -@준영
-                state.calendarDetail = nil
+                state.detail = nil
                 return .none
 
-            case .binding(\.topMostDetailCardIndex):
-                // TODO: 최상단 카드 처리 -@준영
+            case let .detail(.presented(.delegate(.showAlert(alert)))):
+                state.alert = .init(.detail(alert))
+                return .none
+
+            case .alert(.primaryButtonTapped):
+                state.alert = nil
+                return .send(.detail(.presented(.removeCardConfirmed)))
+
+            case .alert(.secondaryButtonTapped):
+                state.alert = nil
                 return .none
 
             // MARK: Internal actions
@@ -115,6 +135,20 @@ public struct CalendarFeature {
             default:
                 return .none
             }
+        }
+        .ifLet(\.$detail, action: \.detail) {
+            CalendarDetailFeature()
+        }
+        .ifLet(\.alert, action: \.alert) {
+            CustomAlertFeature()
+        }
+    }
+}
+
+extension CalendarFeature.Alert: AlertPresentable {
+    public var alertInfo: AlertInfo {
+        switch self {
+        case let .detail(alert): alert.alertInfo
         }
     }
 }

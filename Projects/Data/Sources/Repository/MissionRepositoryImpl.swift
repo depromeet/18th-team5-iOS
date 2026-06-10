@@ -35,19 +35,37 @@ public enum MissionRepositoryImpl {
 
     public static func live() -> MissionRepository {
         MissionRepository(
-            completeMission: { missionId, missionType, solarTermId, objectKey, memo in
+            fetchMissionRecordPage: { missionId in
+                @Dependency(\.networkClient) var client
+
+                do {
+                    let result: MissionRecordPageResponseDTO? = try await client.request(
+                        MissionEndpoint.fetchRecordPage(missionId: missionId)
+                    )
+                    guard let result else {
+                        throw DomainError.unknown("데이터 획득 실패")
+                    }
+                    return result.toDomain()
+                } catch {
+                    throw mapToDomainError(error)
+                }
+            },
+            completeMission: { missionId, missionType, objectKey, memo in
                 @Dependency(\.networkClient) var client
 
                 let requestDTO = MissionCompleteRequestDTO(
-                    missionType: missionType.rawValue,
-                    solarTermId: solarTermId,
                     objectKey: objectKey,
                     memo: memo
+                )
+                let endpoint = MissionEndpoint.complete(
+                    missionId: missionId,
+                    missionType: missionType,
+                    request: requestDTO
                 )
 
                 do {
                     let result: MissionCompleteResultDTO? = try await client.request(
-                        MissionEndpoint.complete(missionId: missionId, request: requestDTO)
+                        endpoint
                     )
                     guard let result else {
                         throw DomainError.unknown("데이터 획득 실패")
@@ -97,6 +115,15 @@ public enum MissionRepositoryImpl {
                     throw mapToDomainError(error)
                 }
             },
+            fetchRecommendedMissionAvailability: {
+                @Dependency(\.networkClient) var client
+
+                do {
+                    let endpoint = MissionEndpoint.fetchRecommendedMissionAvailability
+                    let response: MissionAvailabilityResponseDTO? = try await client.request(endpoint)
+                    return response?.toDomain ?? .init(isAvailable: nil, maxCount: nil)
+                }
+            },
             fetchSearchedMission: {
                 @Dependency(\.networkClient) var client
 
@@ -128,6 +155,33 @@ public enum MissionRepositoryImpl {
 }
 
 // MARK: - Domain Mapping
+
+private extension MissionEndpoint {
+    static func complete(
+        missionId: Int,
+        missionType: MissionType,
+        request: MissionCompleteRequestDTO
+    ) -> MissionEndpoint {
+        switch missionType {
+        case .daily:
+            .completeDaily(missionId: missionId, request: request)
+        case .recommended:
+            .completeRecommended(missionId: missionId, request: request)
+        case .selected:
+            .completeSelected(missionId: missionId, request: request)
+        }
+    }
+}
+
+private extension MissionRecordPageResponseDTO {
+    func toDomain() -> Mission {
+        Mission(
+            id: id,
+            title: title,
+            description: description
+        )
+    }
+}
 
 private extension MissionCompletionItemDTO {
     func toDomain() throws -> MissionCompletion {

@@ -1,0 +1,12 @@
+{
+  "images" : [
+    {
+      "filename" : "img_camera_with_sparkles.pdf",
+      "idiom" : "universal"
+    }
+  ],
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  }
+}

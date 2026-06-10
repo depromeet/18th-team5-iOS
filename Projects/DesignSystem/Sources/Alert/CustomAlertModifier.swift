@@ -8,11 +8,12 @@
 
 import SwiftUI
 
-struct CustomAlertModifier: ViewModifier {
+struct CustomAlertModifier<ID: Hashable>: ViewModifier {
     let isPresented: Bool
     let icon: Image?
     let message: String
-    let buttons: [CustomAlertButton]
+    let buttons: [CustomAlertButton<ID>]
+    let onAlertButtonTapped: (ID) -> Void
 
     func body(content: Content) -> some View {
         let shouldPresent = isPresented && !buttons.isEmpty
@@ -30,7 +31,8 @@ struct CustomAlertModifier: ViewModifier {
                     CustomAlertView(
                         icon: icon,
                         message: message,
-                        buttons: buttons
+                        buttons: buttons,
+                        onAlertButtonTapped: onAlertButtonTapped
                     )
                 }
                 .transition(.opacity.animation(.easeInOut(duration: 0.2)))
@@ -40,18 +42,20 @@ struct CustomAlertModifier: ViewModifier {
 }
 
 public extension View {
-    func customAlert(
+    func customAlert<ID: Hashable>(
         isPresented: Bool,
         icon: Image? = nil,
         message: String,
-        buttons: [CustomAlertButton]
+        buttons: [CustomAlertButton<ID>],
+        onAlertButtonTapped: @escaping (ID) -> Void
     ) -> some View {
         modifier(
-            CustomAlertModifier(
+            CustomAlertModifier<ID>(
                 isPresented: isPresented,
                 icon: icon,
                 message: message,
-                buttons: buttons
+                buttons: buttons,
+                onAlertButtonTapped: onAlertButtonTapped
             )
         )
     }

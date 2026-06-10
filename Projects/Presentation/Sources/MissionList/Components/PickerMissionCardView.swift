@@ -128,6 +128,7 @@ private extension PickerMissionCardView {
             .font(.body1Semibold)
             .foregroundStyle(missionNameColor)
             .frame(maxWidth: .infinity, alignment: .leading)
+            .multilineTextAlignment(.leading)
     }
 
     var checkMarkView: some View {

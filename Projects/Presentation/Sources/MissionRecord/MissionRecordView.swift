@@ -334,22 +334,17 @@ private extension MissionRecordView {
         }
     }
 
-    var alertButtons: [CustomAlertButton] {
+    var alertButtons: [CustomAlertButton<String>] {
         switch store.alert {
         case .permissionDenied:
             return [
-                CustomAlertButton(title: "취소", style: .secondary) {
-                    store.send(.alertCancelTapped)
-                },
-                CustomAlertButton(title: "확인", style: .primary) {
-                    store.send(.alertOpenSettingsTapped)
-                }
+                CustomAlertButton(id: "permission_cancel", title: "취소", style: .secondary),
+
+                CustomAlertButton(id: "permission_ok", title: "확인", style: .primary)
             ]
         case .submitFailed:
             return [
-                CustomAlertButton(title: "확인", style: .primary) {
-                    store.send(.alertCancelTapped)
-                }
+                CustomAlertButton(id: "submit_failure_cancel", title: "확인", style: .primary)
             ]
         case .none:
             return []
@@ -363,8 +358,7 @@ private extension MissionRecordView {
             initialState: .init(
                 missionId: 0,
                 missionTitle: "나만의 여름 음료 개발",
-                missionType: .daily,
-                solarTermId: 0
+                missionType: .daily
             )
         ) {
             MissionRecordFeature()

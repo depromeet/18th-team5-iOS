@@ -20,14 +20,7 @@ extension CalendarFeature {
     ) -> Effect<Action> {
         // #1. 디테일 화면 데이터
         // TODO: 임시 데이터 -@준영
-        state.topMostDetailCardIndex = 0
-        state.calendarDetail = .init(cards: [
-            .init(name: "card1"),
-            .init(name: "card2"),
-            .init(name: "card3"),
-            .init(name: "card4"),
-            .init(name: "card5")
-        ])
+        state.detail = .init()
 
         // #2. 이전 선택 셀 초기화
         let prevSelectedId = state.selectedDateId
