@@ -204,12 +204,6 @@ private struct ThreePhotoView: View {
     }
 }
 
-private extension Array {
-    subscript(safe index: Int) -> Element? {
-        indices.contains(index) ? self[index] : nil
-    }
-}
-
 #Preview("사진 0개") {
     SeasonRecordSectionView(
         seasonRecord: SeasonRecord(solarTermName: "하지", photoURL: [], recordCount: 0),
