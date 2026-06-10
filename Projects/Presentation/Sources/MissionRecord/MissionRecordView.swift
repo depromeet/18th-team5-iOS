@@ -74,7 +74,6 @@ public struct MissionRecordView: View {
             }
         )
         .presentToast($store.toast)
-        .toastContainer()
         .onChange(of: store.limitedPickerPresentationRequestID) { _, requestID in
             guard requestID != nil else { return }
             presentLimitedLibraryPicker()

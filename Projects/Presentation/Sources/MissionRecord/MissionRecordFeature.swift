@@ -64,6 +64,7 @@ public struct MissionRecordFeature {
         case imageDeleteButtonTapped
         case submitButtonTapped
         case submitResponse(Result<Int, any Error>)
+        case completionToastPresented
         case alertCancelTapped
         case alertOpenSettingsTapped
         case limitedPickerFinished
@@ -192,12 +193,21 @@ public struct MissionRecordFeature {
                     duration: Self.completionToastDuration,
                     bottomInset: 108
                 )
-                return .none
+                return .run { send in
+                    try? await Task.sleep(for: .milliseconds(100))
+                    await send(.completionToastPresented)
+                }
 
             case .submitResponse(.failure):
                 state.isSubmitting = false
                 state.alert = .submitFailed
                 return .none
+
+            case .completionToastPresented:
+                return .send(.delegate(.submitted(
+                    imageData: state.selectedImageData,
+                    memo: state.memo
+                )))
 
             case .alertCancelTapped:
                 state.alert = nil
@@ -246,7 +256,7 @@ public struct MissionRecordFeature {
                 return .run { _ in await dismiss() }
 
             case .delegate(.submitted):
-                return .none
+                return .run { _ in await dismiss() }
             }
         }
     }
