@@ -44,12 +44,6 @@ public struct MissionRecordView: View {
             .background(background)
             .contentShape(.rect)
             .onTapGesture { isMemoFocused = false }
-            .allowsHitTesting(store.completionModal == nil)
-            .accessibilityHidden(store.completionModal != nil)
-
-            if store.completionModal != nil {
-                completionModal
-            }
         }
         .loading(isLoading: store.isSubmitting)
         .navigationBarBackButtonHidden(true)
@@ -79,6 +73,8 @@ public struct MissionRecordView: View {
                 }
             }
         )
+        .presentToast($store.toast)
+        .toastContainer()
         .onChange(of: store.limitedPickerPresentationRequestID) { _, requestID in
             guard requestID != nil else { return }
             presentLimitedLibraryPicker()
@@ -323,42 +319,6 @@ private extension MissionRecordView {
         .disabled(!isSubmitEnabled)
         .padding(.horizontal, 20)
         .padding(.vertical, 16)
-    }
-}
-
-// MARK: - Completion Modal
-
-private extension MissionRecordView {
-    var completionModal: some View {
-        ZStack {
-            Color.black.opacity(0.6)
-                .ignoresSafeArea()
-                .onTapGesture {}
-
-            VStack(spacing: 24) {
-                Text("기록이 저장되었어요")
-                    .font(.body1Medium)
-                    .foregroundStyle(Color.gray900)
-
-                Button {
-                    store.send(.completionModal(.presented(.confirmTapped)))
-                } label: {
-                    Text("확인")
-                        .font(.body1Medium)
-                        .foregroundStyle(Color.monoWhite)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 16)
-                        .background(Color.gray700)
-                        .clipShape(.rect(cornerRadius: .radius12))
-                }
-            }
-            .padding(24)
-            .background(Color.monoWhite)
-            .clipShape(.rect(cornerRadius: .radius12))
-            .padding(.horizontal, 40)
-        }
-        .transition(.opacity)
-        .animation(.easeInOut(duration: 0.2), value: store.completionModal != nil)
     }
 }
 
