@@ -69,7 +69,15 @@ public struct MissionRecordView: View {
             isPresented: store.alert != nil,
             icon: alertIcon,
             message: alertMessage,
-            buttons: alertButtons
+            buttons: alertButtons,
+            onAlertButtonTapped: { buttonID in
+                switch buttonID {
+                case "permission_ok":
+                    store.send(.alertOpenSettingsTapped)
+                default:
+                    store.send(.alertCancelTapped)
+                }
+            }
         )
         .onChange(of: store.limitedPickerPresentationRequestID) { _, requestID in
             guard requestID != nil else { return }

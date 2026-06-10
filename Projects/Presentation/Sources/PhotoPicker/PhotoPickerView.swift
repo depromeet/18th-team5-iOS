@@ -34,7 +34,10 @@ public struct PhotoPickerView: View {
         .customAlert(
             isPresented: store.alert != nil,
             message: alertMessage,
-            buttons: alertButtons
+            buttons: alertButtons,
+            onAlertButtonTapped: { _ in
+                store.send(.alertConfirmTapped)
+            }
         )
         .interactiveDismissDisabled(true)
     }
@@ -52,13 +55,11 @@ private extension PhotoPickerView {
         }
     }
 
-    var alertButtons: [CustomAlertButton] {
+    var alertButtons: [CustomAlertButton<String>] {
         switch store.alert {
         case .imageLoadFailed:
             return [
-                CustomAlertButton(title: "확인", style: .primary) {
-                    store.send(.alertConfirmTapped)
-                }
+                CustomAlertButton(id: "confirm", title: "확인", style: .primary)
             ]
         case .none:
             return []
