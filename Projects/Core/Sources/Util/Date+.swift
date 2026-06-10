@@ -15,19 +15,8 @@ public extension Date {
     }
 }
 
-// MARK: - Date Format
-
-public enum DateFormat: String {
-    case shortYearMonthDayDot = "yy.MM.dd"
-    case shortMonthDayDot = "MM.dd"
-    case monthDayKorean = "M월 d일"
-}
-
 public extension Date {
-    func string(_ dateFormat: DateFormat) -> String {
-        let dateFormatter = DateFormatter()
-        dateFormatter.locale = Locale.current
-        dateFormatter.dateFormat = dateFormat.rawValue
+    func string(_ dateFormatter: DateFormatter) -> String {
         return dateFormatter.string(from: self)
     }
 
