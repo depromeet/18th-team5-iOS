@@ -84,6 +84,9 @@ public struct MissionRecordView: View {
             presentLimitedLibraryPicker()
             store.send(.limitedPickerFinished)
         }
+        .onAppear {
+            store.send(.onAppear)
+        }
     }
 }
 
@@ -140,14 +143,24 @@ private extension MissionRecordView {
 
 private extension MissionRecordView {
     var missionTitleCard: some View {
-        Text(store.missionTitle)
-            .font(.body1Semibold)
-            .foregroundStyle(Color.gray900)
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 20)
-            .padding(.horizontal, 12)
-            .background(Color.gray200)
-            .clipShape(.rect(cornerRadius: .radius16))
+        VStack(alignment: .leading, spacing: 2) {
+            Text(store.missionTitle)
+                .font(.body1Semibold)
+                .foregroundStyle(Color.gray900)
+                .frame(maxWidth: .infinity, alignment: .leading)
+
+            if let description = store.missionDescription {
+                Text(description)
+                    .font(.body2Regular)
+                    .foregroundStyle(Color.gray700)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 16)
+        .padding(.horizontal, 20)
+        .background(Color.monoWhite)
+        .clipShape(.rect(cornerRadius: .radius16))
     }
 }
 

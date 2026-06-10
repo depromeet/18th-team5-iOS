@@ -37,6 +37,8 @@ public struct MissionRecordFeature {
         let missionId: Int
         let missionType: MissionType
         var missionTitle: String
+        var missionDescription: String?
+        var didRequestMissionRecordPage = false
         var selectedImageData: Data?
         var memo: String = ""
         var isSubmitting: Bool = false
@@ -54,8 +56,10 @@ public struct MissionRecordFeature {
     }
 
     public enum Action: BindableAction {
+        case onAppear
         case binding(BindingAction<State>)
         case delegate(Delegate)
+        case missionRecordPageFetched(Mission?)
         case backButtonTapped
         case cameraButtonTapped
         case galleryButtonTapped
@@ -102,7 +106,26 @@ public struct MissionRecordFeature {
 
         Reduce<State, Action> { state, action in
             switch action {
+            case .onAppear:
+                guard !state.didRequestMissionRecordPage else { return .none }
+                state.didRequestMissionRecordPage = true
+                let missionId = state.missionId
+                return .run { send in
+                    do {
+                        let mission = try await missionRepository.fetchMissionRecordPage(missionId)
+                        await send(.missionRecordPageFetched(mission))
+                    } catch {
+                        await send(.missionRecordPageFetched(nil))
+                    }
+                }
+
             case .binding:
+                return .none
+
+            case let .missionRecordPageFetched(mission):
+                guard let mission else { return .none }
+                state.missionTitle = mission.title
+                state.missionDescription = mission.description
                 return .none
 
             case .backButtonTapped:
