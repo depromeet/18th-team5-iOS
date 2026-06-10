@@ -79,6 +79,7 @@ public struct MissionRecordFeature {
 
     @Dependency(\.date) private var date
     @Dependency(\.missionRepository) private var missionRepository
+    @Dependency(\.imageUploadRepository) private var imageUploadRepository
     @Dependency(\.picturePermissionClient) private var picturePermissionClient
     @Dependency(\.dismiss) private var dismiss
 
@@ -169,7 +170,7 @@ public struct MissionRecordFeature {
                         guard let imageData else {
                             throw DomainError.unknown("이미지가 필요합니다")
                         }
-                        let objectKey = try await missionRepository.uploadImage(
+                        let objectKey = try await imageUploadRepository.uploadImage(
                             imageData,
                             "\(UUID().uuidString).jpg",
                             "image/jpeg"
