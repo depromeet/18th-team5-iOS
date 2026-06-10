@@ -99,16 +99,9 @@ public struct MainFeature {
                 state.path.append(.missionRecord(missionRecord))
                 return .none
 
-            case let .home(.delegate(.navigateToMissionTab(season: season))):
+            case .home(.delegate(.navigateToMissionTab)):
                 state.tab = .mission
-                if let mission = state.mission.searchedMission {
-                    // 이미 선택했으면 추천미션결과
-                    state.mission.searchResult = .init(mission)
-                } else {
-                    // 선택 안했거나 첫 진입이면 바텀 시트
-                    state.mission.search = .init(season: season)
-                }
-                return .none
+                return .send(.mission(.openFromHome))
 
             case let .home(.delegate(.navigateToSolarTermContent(term))):
                 return .run { send in
