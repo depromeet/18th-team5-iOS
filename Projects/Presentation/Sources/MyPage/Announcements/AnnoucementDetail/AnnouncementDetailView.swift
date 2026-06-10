@@ -26,6 +26,8 @@ public struct AnnouncementDetailView: View {
         }
         .navigationBar(title: "공지사항") { store.send(.backButtonTapped) }
         .background(Color.white)
+        .loading(isLoading: store.isLoading)
+        .onAppear { store.send(.onAppear) }
     }
 }
 
@@ -50,7 +52,7 @@ private extension AnnouncementDetailView {
     }
 
     var contentView: some View {
-        Text(store.announcement.content)
+        Text(store.announcement.content ?? "")
             .font(size: 14, weight: .regular, lineHeight: 24)
             .foregroundStyle(Color.gray900)
             .frame(maxWidth: .infinity, alignment: .leading)
