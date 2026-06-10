@@ -30,6 +30,16 @@ struct DailyMissionResponseDTO: Decodable {
     let isCompleted: Bool
 }
 
+struct HomeSeasonRecordResponseDTO: Decodable {
+    let recordCount: Int
+    let recentRecords: [RecentRecordResponseDTO]
+}
+
+struct RecentRecordResponseDTO: Decodable {
+    let completionId: Int
+    let imageUrl: String
+}
+
 // MARK: - Domain Mapping
 
 extension HomeCardDTO {
@@ -37,6 +47,16 @@ extension HomeCardDTO {
         HomeCard(
             solarTerm: solarTerm.toDomain(),
             currentMission: dailyMission?.toDomain()
+        )
+    }
+}
+
+extension HomeSeasonRecordResponseDTO {
+    func toDomain() -> SeasonRecord {
+        SeasonRecord(
+            solarTermName: "",
+            photoURL: recentRecords.compactMap { URL(string: $0.imageUrl) },
+            recordCount: recordCount
         )
     }
 }

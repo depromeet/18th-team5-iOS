@@ -95,11 +95,13 @@ public struct HomeView: View {
                 onTap: { store.send(.onMissionRecommendTap) }
             )
 
-            SeasonRecordSectionView(
-                seasonRecord: store.seasonRecord,
-                season: homeCard.solarTerm.term?.season ?? .summer,
-                onDetailTap: { store.send(.calendarButtonTapped) }
-            )
+            if let seasonRecord = store.seasonRecord {
+                SeasonRecordSectionView(
+                    seasonRecord: seasonRecord,
+                    season: homeCard.solarTerm.term?.season ?? .summer,
+                    onDetailTap: { store.send(.calendarButtonTapped) }
+                )
+            }
         }
     }
 }
