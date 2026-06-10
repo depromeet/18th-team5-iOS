@@ -23,6 +23,7 @@ struct PresentationDemoApp: App {
                     RootFeature()
                         .dependency(\.homeRepository, .previewValue)
                         .dependency(\.solarTermIntroRepository, .previewValue)
+                        .dependency(\.solarTermRepository, .previewValue)
                 }
             )
         }

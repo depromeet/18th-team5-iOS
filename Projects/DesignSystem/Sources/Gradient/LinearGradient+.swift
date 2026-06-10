@@ -17,4 +17,10 @@ public extension LinearGradient {
         startPoint: .top,
         endPoint: .bottom
     )
+
+    static let homeBackground: Self = .init(
+        colors: [Color.green50, Color.gray50],
+        startPoint: .top,
+        endPoint: .bottom
+    )
 }

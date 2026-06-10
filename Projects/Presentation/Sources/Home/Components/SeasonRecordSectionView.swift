@@ -12,91 +12,105 @@ import SwiftUI
 
 struct SeasonRecordSectionView: View {
     let seasonRecord: SeasonRecord
+    let season: Season
     let onDetailTap: () -> Void
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(spacing: 12) {
             // 헤더
             HStack {
-                Text("제철 기록이에요")
-                    .font(.headline2Semibold)
+                Text("\(seasonRecord.solarTermName)에 포착한 기록들이에요")
+                    .font(.body1Semibold)
                     .foregroundStyle(Color.gray900)
 
                 Spacer()
 
                 Button(action: onDetailTap) {
                     HStack(spacing: 0) {
-                        Text("자세히 보기 ")
+                        Text("더보기")
                             .font(.body2Medium)
                             .foregroundStyle(Color.gray600)
                         Image.icArrowRight
+                            .renderingMode(.template)
                             .resizable()
-                            .frame(width: 24, height: 24)
+                            .frame(width: 20, height: 20)
+                            .foregroundStyle(Color.gray600)
                     }
                 }
             }
 
             // 제철 기록 사진
-            PhotoCollageView(photoURLs: seasonRecord.photoURL)
-                .aspectRatio(335.0 / 192.0, contentMode: .fit)
+            VStack(spacing: 0) {
+                switch seasonRecord.photoURL.count {
+                case 0:
+                    EmptyPhotoView()
+                        .padding(.bottom, 20)
+                case 1:
+                    OnePhotoView(photoURLs: seasonRecord.photoURL)
+                        .padding(.bottom, 16)
+                case 2:
+                    TwoPhotoView(photoURLs: seasonRecord.photoURL)
+                        .aspectRatio(335.0 / 176.0, contentMode: .fit)
+                        .padding(.bottom, 40)
+                default:
+                    ThreePhotoView(photoURLs: seasonRecord.photoURL)
+                        .aspectRatio(335.0 / 172.0, contentMode: .fit)
+                        .padding(.bottom, 40)
+                }
+                PhotoCountView(count: seasonRecord.recordCount, season: season)
+            }
+            .frame(maxWidth: .infinity)
+        }
+        .padding(.horizontal, 16)
+        .padding(.top, 16)
+        .padding(.bottom, 20)
+        .background(Color.white)
+        .clipShape(RoundedRectangle(cornerRadius: .radius12))
+    }
+}
 
-            // 기록 횟수 배지
-            HStack(spacing: 4) {
-                Text("이번 절기에")
+// MARK: - 기록 횟수 텍스트
+
+private struct PhotoCountView: View {
+    let count: Int
+    let season: Season
+
+    var body: some View {
+        switch count {
+        case 0:
+            Text("제철 기록을 남기지 않았어요")
+                .font(.body2Regular)
+                .foregroundStyle(Color.gray600)
+                .padding(.top, 20)
+        default:
+            HStack(spacing: 0) {
+                Text("총 ")
                     .font(.body2Regular)
                     .foregroundStyle(Color.gray600)
-                Text("\(seasonRecord.recordCount)번")
-                    .font(.body2Medium)
-                    .foregroundStyle(Color(hex: 0x494949))
-                Text("기록했어요")
+                Text("\(count)번")
+                    .font(.body2Semibold)
+                    .foregroundStyle(season.color(.scale600))
+                Text("의 순간을 포착했어요!")
                     .font(.body2Regular)
                     .foregroundStyle(Color.gray600)
             }
-            .frame(maxWidth: .infinity)
-            .padding(.horizontal, 20)
-            .padding(.vertical, 14)
-            .background(Color.gray100)
-            .clipShape(RoundedRectangle(cornerRadius: .radius12))
         }
     }
 }
 
-private struct PhotoCollageView: View {
-    let photoURLs: [URL]
+// MARK: - 공통 사진 아이템
+
+private struct PhotoItem: View {
+    let url: URL?
+    let size: CGFloat
 
     var body: some View {
-        GeometryReader { geo in
-            let w = geo.size.width
-
-            ZStack {
-                // 왼쪽 큰 사진 (회전 -6°)
-                photoItem(index: 0, size: w * 0.4776)
-                    .rotationEffect(.degrees(-6))
-                    .position(x: w * 0.2625, y: w * 0.2625)
-
-                // 오른쪽 사진 (회전 4°, 오른쪽 정렬)
-                photoItem(index: 1, size: w * 0.4179)
-                    .rotationEffect(.degrees(4))
-                    .position(x: w * 0.7761, y: w * 0.2828)
-
-                // 가운데 사진 (회전 2°)
-                photoItem(index: 2, size: w * 0.3343)
-                    .rotationEffect(.degrees(2))
-                    .position(x: w * 0.5490, y: w * 0.3989)
-            }
-        }
-    }
-
-    private func photoItem(index: Int, size: CGFloat) -> some View {
         Group {
-            if index < photoURLs.count {
-                AsyncImage(url: photoURLs[index]) { image in
-                    image.resizable().scaledToFill()
-                } placeholder: {
-                    photoPlaceholder
-                }
+            if let url {
+                RemoteImage(url: url)
             } else {
-                photoPlaceholder
+                RoundedRectangle(cornerRadius: .radius16)
+                    .fill(Color(hex: 0xDCDEE3))
             }
         }
         .frame(width: size, height: size)
@@ -106,31 +120,132 @@ private struct PhotoCollageView: View {
                 .stroke(Color.white, lineWidth: 2)
         )
     }
+}
 
-    private var photoPlaceholder: some View {
-        RoundedRectangle(cornerRadius: .radius16)
-            .fill(Color(hex: 0xDCDEE3))
+// MARK: - 사진 0장
+
+private struct EmptyPhotoView: View {
+    var body: some View {
+        Image.imgEmptyRecord
+            .resizable()
+            .aspectRatio(contentMode: .fit)
     }
 }
 
-#Preview("사진 있음") {
+// MARK: - 사진 1장
+
+private struct OnePhotoView: View {
+    let photoURLs: [URL]
+
+    var body: some View {
+        GeometryReader { geo in
+            RemoteImage(url: photoURLs.first, contentMode: .fill)
+                .frame(width: geo.size.width, height: geo.size.width * 9 / 16)
+                .clipShape(RoundedRectangle(cornerRadius: .radius16))
+        }
+        .aspectRatio(16.0 / 9.0, contentMode: .fit)
+        .allowsHitTesting(false)
+    }
+}
+
+// MARK: - 사진 2장
+
+private struct TwoPhotoView: View {
+    let photoURLs: [URL]
+
+    var body: some View {
+        GeometryReader { geo in
+            let w = geo.size.width
+            let h = geo.size.height
+
+            ZStack {
+                // 오른쪽 사진 (컨테이너 303x176)
+                PhotoItem(url: photoURLs[safe: 1], size: w * 144 / 303)
+                    .position(x: w * 231 / 303, y: h * 104 / 176)
+
+                // 왼쪽 큰 사진
+                PhotoItem(url: photoURLs[safe: 0], size: w * 160 / 303)
+                    .rotationEffect(.degrees(-6))
+                    .position(x: w * 88 / 303, y: h * 88 / 176)
+            }
+            .padding(.top, 12)
+        }
+    }
+}
+
+// MARK: - 사진 3장 이상
+
+private struct ThreePhotoView: View {
+    let photoURLs: [URL]
+
+    var body: some View {
+        GeometryReader { geo in
+            let w = geo.size.width
+            let h = geo.size.height
+
+            ZStack {
+                // 오른쪽 사진
+                PhotoItem(url: photoURLs[safe: 2], size: w * 126 / 303)
+                    .rotationEffect(.degrees(4))
+                    .position(x: w * 231 / 303, y: h * 82 / 172)
+
+                // 가운데 하단 사진
+                PhotoItem(url: photoURLs[safe: 1], size: w * 100 / 303)
+                    .rotationEffect(.degrees(2))
+                    .position(x: w * 166 / 303, y: h * 122 / 172)
+
+                // 왼쪽 큰 사진
+                PhotoItem(url: photoURLs[safe: 0], size: w * 144 / 303)
+                    .rotationEffect(.degrees(-6))
+                    .position(x: w * 79 / 303, y: h * 79 / 172)
+            }
+            .padding(.top, 12)
+        }
+    }
+}
+
+#Preview("사진 0개") {
     SeasonRecordSectionView(
-        seasonRecord: SeasonRecord(
-            photoURL: [
-                URL(string: "https://picsum.photos/seed/a/300/300")!,
-                URL(string: "https://picsum.photos/seed/b/300/300")!,
-                URL(string: "https://picsum.photos/seed/c/300/300")!
-            ],
-            recordCount: 15
-        ),
+        seasonRecord: SeasonRecord(solarTermName: "하지", photoURL: [], recordCount: 0),
+        season: .summer,
         onDetailTap: {}
     )
     .padding()
 }
 
-#Preview("사진 없음") {
+#Preview("사진 1개") {
     SeasonRecordSectionView(
-        seasonRecord: SeasonRecord(photoURL: [], recordCount: 0),
+        seasonRecord: SeasonRecord(
+            solarTermName: "하지",
+            photoURL: [URL(string: "https://picsum.photos/seed/a/300/300")!],
+            recordCount: 1
+        ),
+        season: .summer,
+        onDetailTap: {}
+    )
+    .padding()
+}
+
+#Preview("사진 2개") {
+    SeasonRecordSectionView(
+        seasonRecord: SeasonRecord(
+            solarTermName: "하지",
+            photoURL: [
+                URL(string: "https://picsum.photos/seed/a/300/300")!,
+                URL(string: "https://picsum.photos/seed/b/300/300")!
+            ],
+            recordCount: 2
+        ),
+        season: .summer,
+        onDetailTap: {}
+    )
+    .padding()
+}
+
+#Preview("사진 3개") {
+    SeasonRecordSectionView(
+        seasonRecord: .mock,
+        season: .summer,
         onDetailTap: {}
     )
     .padding()

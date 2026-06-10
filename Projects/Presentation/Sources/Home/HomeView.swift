@@ -39,7 +39,7 @@ public struct HomeView: View {
             scrollOffset = newValue
         }
         .scrollIndicators(.hidden)
-        .background(background)
+        .background(LinearGradient.homeBackground.ignoresSafeArea())
         .overlay(alignment: .top) {
             HomeHeaderView(
                 showBlur: scrollOffset > 1,
@@ -83,31 +83,24 @@ public struct HomeView: View {
     }
 
     private func loadedView(for homeCard: HomeCard) -> some View {
-        VStack(spacing: 24) {
-            VStack(spacing: 12) {
-                SolarTermCardView(
-                    solarTerm: homeCard.solarTerm,
-                    mission: homeCard.currentMission,
-                    onMissionTap: { store.send(.onMissionTap) },
-                    onDetailTap: { store.send(.onSolarTermDetailTap) }
-                )
+        VStack(spacing: 16) {
+            SolarTermCardView(
+                solarTerm: homeCard.solarTerm,
+                mission: homeCard.currentMission,
+                onMissionTap: { store.send(.onMissionTap) },
+                onDetailTap: { store.send(.onSolarTermDetailTap) }
+            )
 
-                MissionRecommendBannerView(
-                    onTap: { store.send(.onMissionRecommendTap) }
-                )
-            }
+            MissionRecommendBannerView(
+                onTap: { store.send(.onMissionRecommendTap) }
+            )
 
             SeasonRecordSectionView(
                 seasonRecord: store.seasonRecord,
-                // TODO: 계절 기록 자세히보기 이동 페이지 확정 후 연결 - @minkyo
-                onDetailTap: {}
+                season: homeCard.solarTerm.term?.season ?? .summer,
+                onDetailTap: { store.send(.calendarButtonTapped) }
             )
         }
-    }
-
-    private var background: some View {
-        LinearGradient.onboardingBackground
-            .ignoresSafeArea()
     }
 }
 

@@ -30,12 +30,14 @@ public struct HomeFeature {
         case onMissionRecommendTap
         case onSolarTermDetailTap
         case myPageButtonTapped
+        case calendarButtonTapped
         case delegate(Delegate)
 
         public enum Delegate {
             case navigateToMissionCamera(missionId: Int, title: String, missionType: String)
             case navigateToMissionTab
             case navigateToSolarTermContent(SolarTerm)
+            case navigateToCalendar
             case navigateToMyPage
         }
     }
@@ -89,6 +91,9 @@ public struct HomeFeature {
 
             case .myPageButtonTapped:
                 return .send(.delegate(.navigateToMyPage))
+
+            case .calendarButtonTapped:
+                return .send(.delegate(.navigateToCalendar))
 
             case .delegate:
                 return .none
