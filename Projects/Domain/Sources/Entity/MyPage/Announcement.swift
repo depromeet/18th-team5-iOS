@@ -10,15 +10,18 @@ import Core
 import Foundation
 
 public struct Announcement: Equatable {
+    public let id: Int
     public let title: String
-    public let content: String
+    public let content: String?
     public let date: Date
 
     public init(
+        id: Int,
         title: String,
-        content: String,
+        content: String?,
         date: Date
     ) {
+        self.id = id
         self.title = title
         self.content = content
         self.date = date
