@@ -17,6 +17,7 @@ public struct SolarTermIntroFeature {
         var allCards: [SolarTermIntro] = []
         var solarTermInfos: [SolarTermInfo] = []
         var season: Season = .currentSeason
+        var currentTerm: SolarTerm?
         var targetTerm: SolarTerm?
         var currentCardImageURL: URL?
         @Presents var content: SolarTermIntroContentFeature.State?
@@ -89,6 +90,7 @@ public struct SolarTermIntroFeature {
                 if state.targetTerm == nil, state.season == .currentSeason {
                     let now = Date()
                     if let current = infos.first(where: { $0.dateRange.contains(now) }) {
+                        state.currentTerm = current.term
                         state.targetTerm = current.term
                         state.season = current.term.season
                         let term = current.term
@@ -108,6 +110,11 @@ public struct SolarTermIntroFeature {
 
             case let .selectSeason(season):
                 state.season = season
+                if season == state.currentTerm?.season {
+                    state.targetTerm = state.currentTerm
+                } else {
+                    state.targetTerm = state.filteredCards.first?.term
+                }
                 return .none
 
             case let .onCardTap(solarTermIntro):
