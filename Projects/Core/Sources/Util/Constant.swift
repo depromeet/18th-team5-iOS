@@ -11,4 +11,5 @@ import Foundation
 public enum Constant {
     public static let testFlightURL: String = Bundle.value(of: "TestFlightURL") ?? ""
     public static let appStoreURL: String = Bundle.value(of: "AppStoreURL") ?? ""
+    public static let commonDebugToken = "AAAAAAAA-AAAA-AAAA-AAAA-AAAAAAAAAAAA"
 }

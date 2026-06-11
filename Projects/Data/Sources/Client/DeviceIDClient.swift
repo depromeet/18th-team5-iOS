@@ -16,6 +16,7 @@ import os
 struct DeviceIDClient: Sendable {
     var getDeviceID: @Sendable () -> String?
     var createDeviceID: @Sendable () -> String = { UUID().uuidString }
+    var deleteDeviceID: @Sendable () -> Void
 }
 
 // MARK: - DependencyKey
@@ -50,6 +51,14 @@ extension DeviceIDClient: DependencyKey {
                     cached = newID
                 }
                 return newID
+            },
+            deleteDeviceID: {
+                cachedID.withLock { cached in
+                    if !KeychainHelper.delete(forKey: .deviceID) {
+                        logger.error(message: "DeviceID Keychain 삭제 실패")
+                    }
+                    cached = nil
+                }
             }
         )
     }()
