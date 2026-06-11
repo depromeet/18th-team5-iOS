@@ -15,7 +15,6 @@ import SwiftUI
 public struct MissionRecordView: View {
     @Bindable private var store: StoreOf<MissionRecordFeature>
     @FocusState private var isMemoFocused: Bool
-    @State private var photosPickerItem: PhotosPickerItem?
 
     public init(store: StoreOf<MissionRecordFeature>) {
         self.store = store
@@ -59,36 +58,52 @@ public struct MissionRecordView: View {
         ) { cameraStore in
             CameraView(store: cameraStore)
         }
-        .photosPicker(
-            isPresented: $store.isPhotoPickerPresented,
-            selection: $photosPickerItem,
-            matching: .images
-        )
-        .onChange(of: photosPickerItem) { _, newItem in
-            guard let newItem else { return }
-            Task {
-                let data = try? await newItem.loadTransferable(type: Data.self)
-                let jpegData = data.flatMap { UIImage(data: $0)?.jpegData(compressionQuality: 0.9) }
-                store.send(.imageSelected(jpegData))
-            }
+        .sheet(
+            item: $store.scope(state: \.photoPicker, action: \.photoPicker)
+        ) { pickerStore in
+            PhotoPickerView(store: pickerStore)
+                .presentationDetents([.fraction(0.9)])
+                .presentationDragIndicator(.hidden)
         }
         .customAlert(
             isPresented: store.alert != nil,
             icon: alertIcon,
             message: alertMessage,
-            buttons: alertButtons
-        ) { id in
-            switch id {
-            case "permission_cancel":
-                store.send(.alertCancelTapped)
-            case "permission_ok":
-                store.send(.alertOpenSettingsTapped)
-            case "submit_failure_cancel":
-                store.send(.alertCancelTapped)
-            default:
-                break
+            buttons: alertButtons,
+            onAlertButtonTapped: { buttonID in
+                switch buttonID {
+                case "permission_ok":
+                    store.send(.alertOpenSettingsTapped)
+                default:
+                    store.send(.alertCancelTapped)
+                }
             }
+        )
+        .onChange(of: store.limitedPickerPresentationRequestID) { _, requestID in
+            guard requestID != nil else { return }
+            presentLimitedLibraryPicker()
+            store.send(.limitedPickerFinished)
         }
+    }
+}
+
+// MARK: - Limited Library Picker
+
+private extension MissionRecordView {
+    func presentLimitedLibraryPicker() {
+        guard let rootVC = Self.topViewController() else { return }
+        PHPhotoLibrary.shared().presentLimitedLibraryPicker(from: rootVC)
+    }
+
+    static func topViewController() -> UIViewController? {
+        let scenes = UIApplication.shared.connectedScenes
+            .compactMap { $0 as? UIWindowScene }
+        let keyWindow = scenes.flatMap(\.windows).first(where: \.isKeyWindow)
+        var top = keyWindow?.rootViewController
+        while let presented = top?.presentedViewController {
+            top = presented
+        }
+        return top
     }
 }
 

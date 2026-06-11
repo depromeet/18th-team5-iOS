@@ -111,12 +111,7 @@ public struct SolarTermIntroFeature {
                 return .none
 
             case let .onCardTap(solarTermIntro):
-                let dateLabel = state.fullDateLabels[solarTermIntro.term]
-                state.content = SolarTermIntroContentFeature.State(
-                    solarTermIntro: solarTermIntro,
-                    season: state.season,
-                    dateLabel: dateLabel ?? ""
-                )
+                state.content = SolarTermIntroContentFeature.State(term: solarTermIntro.term)
                 return .none
 
             case .content(.presented(.delegate(.dismiss))):
