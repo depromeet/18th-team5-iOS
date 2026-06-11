@@ -29,7 +29,9 @@ extension CalendarFeature {
             await send(.updateCalendarPages(pages))
 
             if let currentTerm = pages.findAnchorTerm(containing: now) {
+                await send(.updateCurrentTermId(currentTerm.id))
                 await send(.updateCalendarHeader(mapToHeader(currentTerm)))
+                await send(.updateAnchoredTermId(currentTerm.id))
                 await send(.updateAnchorRequest(
                     AnchorRequest(
                         itemId: currentTerm.id,

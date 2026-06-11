@@ -31,7 +31,9 @@ public struct CalendarFeature {
         var isAppeared: Bool = false
         var anchoredTermId: SolarTermGroup.ID?
         var isPaging: Bool = false
+        var currentTermId: SolarTermGroup.ID?
         var currentYear: SolarTermYear = .current
+        var presentMoveToCurrentTermButton: MoveToCurrentTermButtonType?
     }
 
     public enum Action: BindableAction {
@@ -40,6 +42,9 @@ public struct CalendarFeature {
         case dateCellTapped(dateId: SolarTermDate.ID, inset: CGFloat)
         case anchoredTermChanged(id: SolarTermGroup.ID)
         case calendarReachToEnd(PageEndDirection)
+        case calendarTermDidDisappear(id: SolarTermGroup.ID)
+        case calendarTermWillAppear(id: SolarTermGroup.ID)
+        case moveToCurrentTermButtonTapped
         case detailViewDisappeared
         case detail(PresentationAction<CalendarDetailFeature.Action>)
         case alert(CustomAlertFeature<Alert>.Action)
@@ -47,9 +52,11 @@ public struct CalendarFeature {
         // Internal actions
         case yearPagesLayoutCompleted
         case calendarDataRequest(TermFetchRequest)
+        case updateCurrentTermId(SolarTermGroup.ID)
         case updateCalendarPages([Page<SolarTermGroup>])
         case updateCalendarHeader(CalendarHeader)
         case updateAnchorRequest(AnchorRequest<SolarTermGroup>)
+        case updateAnchoredTermId(SolarTermGroup.ID)
         case updateRowReloadRequest(RowReloadRequest<SolarTermGroup>)
         case updateTermRecordData(id: String, data: CalendarTermRecordData)
         case binding(BindingAction<State>)
@@ -82,6 +89,47 @@ public struct CalendarFeature {
             case let .calendarReachToEnd(direction):
                 return calendarPagingRequest(&state, direction: direction)
 
+            case let .calendarTermDidDisappear(id):
+                guard let anchoredTermId = state.anchoredTermId,
+                      let currentTermId = state.currentTermId,
+                      currentTermId == id,
+                      state.presentMoveToCurrentTermButton == nil
+                else { return .none }
+
+                let anchoredTermIdOffset = termOffset(
+                    pages: state.calendarState.pages,
+                    id: anchoredTermId
+                )
+                let currentTermIdOffset = termOffset(
+                    pages: state.calendarState.pages,
+                    id: currentTermId
+                )
+
+                let button: MoveToCurrentTermButtonType = (anchoredTermIdOffset < currentTermIdOffset) ? .down : .up
+                state.presentMoveToCurrentTermButton = button
+                return .none
+
+            case let .calendarTermWillAppear(id):
+                if id == state.currentTermId {
+                    state.presentMoveToCurrentTermButton = nil
+                }
+                return .none
+
+            case .moveToCurrentTermButtonTapped:
+                state.presentMoveToCurrentTermButton = nil
+
+                guard let currentTermId = state.currentTermId else { return .none }
+
+                let request = AnchorRequest<SolarTermGroup>(
+                    itemId: currentTermId,
+                    inset: nil,
+                    animated: false
+                )
+                return .concatenate(
+                    .send(.updateAnchorRequest(request)),
+                    .send(.updateAnchoredTermId(currentTermId))
+                )
+
             case let .anchoredTermChanged(termId):
                 return anchoredTermChanged(&state, termGroupId: termId)
 
@@ -103,12 +151,20 @@ public struct CalendarFeature {
                 state.$tabBarVisibility.withLock { $0 = false }
                 return dateCellTapped(&state, dateId: dateId, inset: inset)
 
+            case let .updateCurrentTermId(id):
+                state.currentTermId = id
+                return .none
+
             case let .updateCalendarHeader(header):
                 state.header = header
                 return .none
 
             case let .updateAnchorRequest(request):
                 state.calendarState.anchorRequest = request
+                return .none
+
+            case let .updateAnchoredTermId(id):
+                state.anchoredTermId = id
                 return .none
 
             case let .updateCalendarPages(pages):
@@ -137,6 +193,24 @@ public struct CalendarFeature {
         .ifLet(\.alert, action: \.alert) {
             CustomAlertFeature()
         }
+    }
+}
+
+private extension CalendarFeature {
+    func termOffset(
+        pages: [Page<SolarTermGroup>],
+        id: SolarTermGroup.ID
+    ) -> Int {
+        var offset = 0
+        for page in pages {
+            for item in page.items {
+                if item.id == id {
+                    return offset
+                }
+                offset += 1
+            }
+        }
+        return offset
     }
 }
 

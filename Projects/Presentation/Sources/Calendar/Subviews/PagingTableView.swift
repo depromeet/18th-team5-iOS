@@ -56,6 +56,8 @@ final class PagingTableView<Item: Identifiable & Equatable>: UIView, UITableView
     enum Action {
         case anchoredItemChanged(id: Item.ID)
         case reachedToEnd(direction: PageEndDirection)
+        case cellDidDisappear(id: Item.ID)
+        case cellWillAppear(id: Item.ID)
     }
 
     var action: AnyPublisher<Action, Never> {
@@ -151,6 +153,26 @@ final class PagingTableView<Item: Identifiable & Equatable>: UIView, UITableView
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
         guard let item = itemAt(indexPath: indexPath) else { return 0 }
         return arguments.cellHeightProvider(item)
+    }
+
+    func tableView(
+        _ tableView: UITableView,
+        didEndDisplaying cell: UITableViewCell,
+        forRowAt indexPath: IndexPath
+    ) {
+        guard let item = itemAt(indexPath: indexPath) else { return }
+
+        _action.send(.cellDidDisappear(id: item.id))
+    }
+
+    func tableView(
+        _ tableView: UITableView,
+        willDisplay cell: UITableViewCell,
+        forRowAt indexPath: IndexPath
+    ) {
+        guard let item = itemAt(indexPath: indexPath) else { return }
+
+        _action.send(.cellWillAppear(id: item.id))
     }
 
     // MARK: - UIScrollViewDelegate

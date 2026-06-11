@@ -23,7 +23,8 @@ extension CalendarFeature {
         ) else { return .none }
 
         var effects: [Effect<Action>] = [
-            .send(.updateCalendarHeader(mapToHeader(currentTerm)))
+            .send(.updateCalendarHeader(mapToHeader(currentTerm))),
+            .send(.updateAnchoredTermId(termGroupId))
         ]
 
         let info = currentTerm.solarTermInfo

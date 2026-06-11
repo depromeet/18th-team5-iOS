@@ -52,8 +52,10 @@ extension CalendarFeature {
                 inset: inset,
                 animated: true
             )
-            state.anchoredTermId = term.id
-            return .send(.updateAnchorRequest(request))
+            return .concatenate(
+                .send(.updateAnchoredTermId(term.id)),
+                .send(.updateAnchorRequest(request))
+            )
         }
         return .none
     }
