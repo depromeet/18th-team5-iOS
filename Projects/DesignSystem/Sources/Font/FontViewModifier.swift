@@ -10,16 +10,32 @@ import SwiftUI
 
 struct FontViewModifier: ViewModifier {
     private let family: FontFamily
-    private let typography: Typography
+    private let size: CGFloat
+    private let weight: FontWeight
+    private let lineHeight: CGFloat
 
     init(family: FontFamily, typography: Typography) {
         self.family = family
-        self.typography = typography
+        self.size = typography.style.size
+        self.weight = typography.weight
+        self.lineHeight = typography.style.lineHeight
+    }
+
+    init(
+        family: FontFamily,
+        size: CGFloat,
+        weight: FontWeight,
+        lineHeight: CGFloat
+    ) {
+        self.family = family
+        self.size = size
+        self.weight = weight
+        self.lineHeight = lineHeight
     }
 
     func body(content: Content) -> some View {
         content
-            .font(family.swiftUIFont(typography))
+            .font(family.swiftUIFont(size, weight))
             .lineSpacing(lineSpacing)
             .padding(.vertical, lineSpacing / 2)
     }
@@ -27,19 +43,22 @@ struct FontViewModifier: ViewModifier {
 
 private extension FontViewModifier {
     var lineSpacing: CGFloat {
-        let defaultLineHeight = family.uiFont(typography).lineHeight
-        return typography.style.lineHeight - defaultLineHeight
-    }
-}
-
-public extension Text {
-    func font(_ typography: Typography) -> some View {
-        modifier(FontViewModifier(family: .pretendard, typography: typography))
+        let defaultLineHeight = family.uiFont(size, weight).lineHeight
+        return lineHeight - defaultLineHeight
     }
 }
 
 public extension View {
     func font(_ typography: Typography) -> some View {
         modifier(FontViewModifier(family: .pretendard, typography: typography))
+    }
+
+    func font(size: CGFloat, weight: FontWeight, lineHeight: CGFloat) -> some View {
+        modifier(FontViewModifier(
+            family: .pretendard,
+            size: size,
+            weight: weight,
+            lineHeight: lineHeight
+        ))
     }
 }

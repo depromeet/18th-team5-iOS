@@ -76,6 +76,9 @@ public struct MyPageFeature {
                 case .notificationSettings:
                     state.path = .notificationSettings(.init(state.season))
                     return .none
+                case .announcements:
+                    state.path = .announcements(.init())
+                    return .none
                 case .termsOfService:
                     state.path = .termsOfService(.init(state.termsOfService))
                     guard state.termsOfService?.isEmpty == true else { return .none }
