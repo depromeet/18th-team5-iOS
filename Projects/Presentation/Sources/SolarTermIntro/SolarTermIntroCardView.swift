@@ -18,22 +18,10 @@ struct SolarTermIntroCardView: View {
     let dateLabel: String?
     let onTap: () -> Void
 
-    private var cardImage: Image {
-        switch solarTermIntro.term {
-        case .ibha: .imgIbhaSolarTermCard
-        case .soman: .imgSomanSolarTermCard
-        case .mangjong: .imgMangjongSolarTermCard
-        case .haji: .imgHajiSolarTermCard
-        case .soseo: .imgSoseoSolarTermCard
-        case .daeseo: .imgDaeseoSolarTermCard
-        default: .imgSolarTermCardDefault
-        }
-    }
-
     var body: some View {
         Button(action: onTap) {
             ZStack(alignment: .topLeading) {
-                cardImage
+                solarTermIntro.term.solarTermCardImage
                     .resizable()
                     .scaledToFill()
 
