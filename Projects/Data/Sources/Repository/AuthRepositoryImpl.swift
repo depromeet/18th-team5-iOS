@@ -6,6 +6,7 @@
 //  Copyright © 2026 Orange. All rights reserved.
 //
 
+import Core
 import Dependencies
 import Domain
 import Foundation
@@ -25,7 +26,14 @@ enum AuthRepositoryImpl {
         @Dependency(\.tokenClient) var tokenClient
         return AuthRepository(
             isSignin: {
-                tokenClient.getRefreshToken() != nil
+                let deviceID = deviceIDClient.getDeviceID()
+                if deviceID == Constant.commonDebugToken {
+                    deviceIDClient.deleteDeviceID()
+                    tokenClient.clearTokens()
+                    return false
+                }
+
+                return tokenClient.getRefreshToken() != nil
             },
             login: {
                 do {

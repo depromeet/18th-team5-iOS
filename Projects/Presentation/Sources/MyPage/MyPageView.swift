@@ -24,8 +24,7 @@ public struct MyPageView: View {
                 MenuListView { menu in
                     switch menu {
                     case .contactUs:
-                        guard let url = store.contactUsURL else { return }
-                        openURL(url)
+                        if let url = store.contactUsURL { openURL(url) }
                     default:
                         store.send(.menuTapped(menu))
                     }
@@ -55,12 +54,13 @@ private extension MyPageView {
                 .foregroundStyle(Color.gray900)
                 .frame(maxWidth: .infinity, alignment: .leading)
 
-            Text(store.version)
+            Text(store.currentVersion.string)
                 .font(.body2Regular)
                 .foregroundStyle(Color.gray600)
+                .renderedIf(store.hasFetchedConfig)
 
             Button {
-                store.send(.updateButtonTapped)
+                if let url = store.storeURL { openURL(url) }
             } label: {
                 Text("업데이트")
                     .font(.body2Medium)
@@ -70,6 +70,7 @@ private extension MyPageView {
                     .background(Color.gray700)
                     .clipShape(RoundedRectangle(cornerRadius: .radius8))
             }
+            .renderedIf(store.canUpdate)
         }
         .padding(.horizontal, 16)
         .frame(height: 68)

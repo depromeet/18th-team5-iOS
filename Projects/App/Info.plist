@@ -2,6 +2,10 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>TestFlightURL</key>
+	<string>$(TEST_FLIGHT_URL)</string>
+	<key>AppStoreURL</key>
+	<string>$(APP_STORE_URL)</string>
 	<key>BaseURL</key>
 	<string>$(BASE_URL)</string>
 	<key>CFBundleDevelopmentRegion</key>

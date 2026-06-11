@@ -22,6 +22,13 @@ enum MyPageRepositoryImpl {
         let storage = Storage.storage()
         let maxSize: Int64 = 64 * 1024 // max 64KB
 
+        let remoteConfigSettings = RemoteConfigSettings()
+        remoteConfigSettings.minimumFetchInterval = 0
+        remoteConfigSettings.fetchTimeout = 10
+
+        let remoteConfig = RemoteConfig.remoteConfig()
+        remoteConfig.configSettings = remoteConfigSettings
+
         return MyPageRepository(
             fetchAnnouncements: {
                 let endpoint = AnnouncementEndpoint.fetchAnnouncements
@@ -45,17 +52,15 @@ enum MyPageRepositoryImpl {
                 let response = try JSONDecoder().decode([DocumentResponseDTO].self, from: data)
                 return response.compactMap(\.toDomain)
             },
-            fetchContactUsURL: {
-                let settings = RemoteConfigSettings()
-                settings.minimumFetchInterval = 0
-                settings.fetchTimeout = 10
-
-                let remoteConfig = RemoteConfig.remoteConfig()
-                remoteConfig.configSettings = settings
-
+            fetchMyPageConfig: {
                 try await remoteConfig.fetchAndActivate()
-                let url = remoteConfig["contactUsURL"].stringValue
-                return url.isEmpty ? nil : url
+                let contactUsURL = remoteConfig["contactUsURL"].stringValue
+                let versionString = remoteConfig["latestAppVersion"].stringValue
+
+                return .init(
+                    contactUsURL: URL(string: contactUsURL),
+                    latestAppVersion: AppVersion(version: versionString)
+                )
             }
         )
     }

@@ -7,6 +7,7 @@
 //
 
 import ComposableArchitecture
+import Core
 import Domain
 import Foundation
 
@@ -29,7 +30,10 @@ public struct MyPageFeature {
         var privacyPolicies: [DocumentInfo]?
         var termsOfService: [DocumentInfo]?
         var contactUsURL: URL?
-        var version: String = "1.3.2" // TODO: 추후 수정 예정 - @정원
+        let currentVersion: AppVersion = .current
+        var latestVersion: AppVersion?
+        var hasFetchedConfig: Bool = false
+
         @Presents var path: Path.State?
 
         public init(_ solarTerm: SolarTerm) {
@@ -39,6 +43,22 @@ public struct MyPageFeature {
         var season: Season {
             solarTerm.season
         }
+
+        var canUpdate: Bool {
+            guard let latestVersion else { return false }
+            return currentVersion < latestVersion
+        }
+
+        var storeURL: URL? {
+            guard let latestVersion else { return nil }
+
+            let urlString = switch latestVersion.major {
+            case 1...: Constant.appStoreURL
+            default: Constant.testFlightURL
+            }
+
+            return URL(string: urlString)
+        }
     }
 
     public enum Action {
@@ -46,11 +66,10 @@ public struct MyPageFeature {
         case fetchAll
         case backButtonTapped
         case menuTapped(Menu)
-        case updateButtonTapped
         case deleteButtonTapped
-        case contactUsURLFetched(URL?)
         case privacyPolicyFetched([DocumentInfo])
         case termsOfServiceFetched([DocumentInfo])
+        case myPageConfigFetched(MyPageConfig?)
         case path(PresentationAction<Path.Action>)
         case delegate(Delegate)
     }
@@ -66,6 +85,7 @@ public struct MyPageFeature {
             case .onAppear:
                 return .send(.fetchAll)
             case .fetchAll:
+                if state.hasFetchedConfig { return .none }
                 return .run { [state] send in
                     await fetchAll(state, send)
                 }
@@ -99,12 +119,7 @@ public struct MyPageFeature {
                     return .send(.delegate(.syncNotificationSettings(settings)))
                 default: return .none
                 }
-            case .updateButtonTapped:
-                return .none
             case .deleteButtonTapped:
-                return .none
-            case let .contactUsURLFetched(url):
-                state.contactUsURL = url
                 return .none
             case let .privacyPolicyFetched(policies):
                 state.privacyPolicies = policies
@@ -118,6 +133,12 @@ public struct MyPageFeature {
                 return .send(.path(.presented(
                     .termsOfService(.termsOfServiceFetched(terms))
                 )))
+            case let .myPageConfigFetched(config):
+                state.hasFetchedConfig = true
+                guard let config else { return .none }
+                state.contactUsURL = config.contactUsURL
+                state.latestVersion = config.latestAppVersion
+                return .none
             case .path: return .none
             case .delegate: return .none
             }
@@ -128,10 +149,11 @@ public struct MyPageFeature {
 
 private extension MyPageFeature {
     func fetchAll(_ state: State, _ send: Send<Action>) async {
-        async let privacyPolicy = fetchPrivacyPolicy(state, send)
-        async let termsOfService = fetchTermsOfService(state, send)
-        async let contactUsURL = fetchContactUsURL(state, send)
-        _ = await (privacyPolicy, termsOfService, contactUsURL)
+        await withTaskGroup { group in
+            group.addTask { await fetchPrivacyPolicy(state, send) }
+            group.addTask { await fetchTermsOfService(state, send) }
+            group.addTask { await fetchMyPageConfig(state, send) }
+        }
     }
 
     func fetchPrivacyPolicy(_ state: State, _ send: Send<Action>) async {
@@ -146,12 +168,8 @@ private extension MyPageFeature {
         await send(.termsOfServiceFetched(terms ?? []))
     }
 
-    func fetchContactUsURL(_ state: State, _ send: Send<Action>) async {
-        guard state.contactUsURL == nil else { return }
-        let urlString = try? await myPageRepository.fetchContactUsURL()
-
-        if let urlString {
-            await send(.contactUsURLFetched(URL(string: urlString)))
-        }
+    func fetchMyPageConfig(_ state: State, _ send: Send<Action>) async {
+        let config = try? await myPageRepository.fetchMyPageConfig()
+        await send(.myPageConfigFetched(config))
     }
 }
