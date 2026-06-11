@@ -15,8 +15,7 @@ public struct MyPageRepository: Sendable {
     public var fetchAnnouncement: @Sendable (Int) async throws -> Announcement?
     public var fetchPrivacyPolicy: @Sendable () async throws -> [DocumentInfo]
     public var fetchTermsOfService: @Sendable () async throws -> [DocumentInfo]
-    public var fetchContactUsURL: @Sendable () async throws -> String?
-    public var fetchLatestAppVersion: @Sendable () async throws -> AppVersion?
+    public var fetchMyPageConfig: @Sendable () async throws -> MyPageConfig
 }
 
 extension MyPageRepository: TestDependencyKey {

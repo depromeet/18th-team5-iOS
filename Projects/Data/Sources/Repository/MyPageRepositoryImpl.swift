@@ -52,15 +52,15 @@ enum MyPageRepositoryImpl {
                 let response = try JSONDecoder().decode([DocumentResponseDTO].self, from: data)
                 return response.compactMap(\.toDomain)
             },
-            fetchContactUsURL: {
+            fetchMyPageConfig: {
                 try await remoteConfig.fetchAndActivate()
-                let url = remoteConfig["contactUsURL"].stringValue
-                return url.isEmpty ? nil : url
-            },
-            fetchLatestAppVersion: {
-                try await remoteConfig.fetchAndActivate()
-                let version = remoteConfig["latestAppVersion"].stringValue
-                return AppVersion(version: version)
+                let contactUsURL = remoteConfig["contactUsURL"].stringValue
+                let versionString = remoteConfig["latestAppVersion"].stringValue
+
+                return .init(
+                    contactUsURL: URL(string: contactUsURL),
+                    latestAppVersion: AppVersion(version: versionString)
+                )
             }
         )
     }

@@ -32,6 +32,7 @@ public struct MyPageFeature {
         var contactUsURL: URL?
         let currentVersion: AppVersion = .current
         var latestVersion: AppVersion?
+        var hasFetchedConfig: Bool = false
 
         @Presents var path: Path.State?
 
@@ -66,10 +67,9 @@ public struct MyPageFeature {
         case backButtonTapped
         case menuTapped(Menu)
         case deleteButtonTapped
-        case contactUsURLFetched(URL?)
         case privacyPolicyFetched([DocumentInfo])
         case termsOfServiceFetched([DocumentInfo])
-        case latestAppVersionFetched(AppVersion?)
+        case myPageConfigFetched(MyPageConfig?)
         case path(PresentationAction<Path.Action>)
         case delegate(Delegate)
     }
@@ -85,6 +85,7 @@ public struct MyPageFeature {
             case .onAppear:
                 return .send(.fetchAll)
             case .fetchAll:
+                if state.hasFetchedConfig { return .none }
                 return .run { [state] send in
                     await fetchAll(state, send)
                 }
@@ -120,9 +121,6 @@ public struct MyPageFeature {
                 }
             case .deleteButtonTapped:
                 return .none
-            case let .contactUsURLFetched(url):
-                state.contactUsURL = url
-                return .none
             case let .privacyPolicyFetched(policies):
                 state.privacyPolicies = policies
                 guard case .privacyPolicy = state.path else { return .none }
@@ -135,8 +133,11 @@ public struct MyPageFeature {
                 return .send(.path(.presented(
                     .termsOfService(.termsOfServiceFetched(terms))
                 )))
-            case let .latestAppVersionFetched(latestVersion):
-                state.latestVersion = latestVersion
+            case let .myPageConfigFetched(config):
+                state.hasFetchedConfig = true
+                guard let config else { return .none }
+                state.contactUsURL = config.contactUsURL
+                state.latestVersion = config.latestAppVersion
                 return .none
             case .path: return .none
             case .delegate: return .none
@@ -151,8 +152,7 @@ private extension MyPageFeature {
         await withTaskGroup { group in
             group.addTask { await fetchPrivacyPolicy(state, send) }
             group.addTask { await fetchTermsOfService(state, send) }
-            group.addTask { await fetchContactUsURL(state, send) }
-            group.addTask { await fetchLatestAppVersion(send) }
+            group.addTask { await fetchMyPageConfig(state, send) }
         }
     }
 
@@ -168,17 +168,8 @@ private extension MyPageFeature {
         await send(.termsOfServiceFetched(terms ?? []))
     }
 
-    func fetchContactUsURL(_ state: State, _ send: Send<Action>) async {
-        guard state.contactUsURL == nil else { return }
-        let urlString = try? await myPageRepository.fetchContactUsURL()
-
-        if let urlString {
-            await send(.contactUsURLFetched(URL(string: urlString)))
-        }
-    }
-
-    func fetchLatestAppVersion(_ send: Send<Action>) async {
-        let latestVersion = try? await myPageRepository.fetchLatestAppVersion()
-        await send(.latestAppVersionFetched(latestVersion))
+    func fetchMyPageConfig(_ state: State, _ send: Send<Action>) async {
+        let config = try? await myPageRepository.fetchMyPageConfig()
+        await send(.myPageConfigFetched(config))
     }
 }
