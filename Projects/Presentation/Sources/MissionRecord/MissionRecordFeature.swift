@@ -40,10 +40,11 @@ public struct MissionRecordFeature {
         var selectedImageData: Data?
         var memo: String = ""
         var isSubmitting: Bool = false
-        var isPhotoPickerPresented: Bool = false
         var alert: RecordAlert?
+        var limitedPickerPresentationRequestID: UUID?
         @Presents var completionModal: CompletionModal.State?
         @Presents var camera: CameraFeature.State?
+        @Presents var photoPicker: PhotoPickerFeature.State?
 
         public init(missionId: Int, missionTitle: String, missionType: MissionType) {
             self.missionId = missionId
@@ -67,8 +68,10 @@ public struct MissionRecordFeature {
         case submitResponse(Result<Int, any Error>)
         case alertCancelTapped
         case alertOpenSettingsTapped
+        case limitedPickerFinished
         case completionModal(PresentationAction<CompletionModal.Action>)
         case camera(PresentationAction<CameraFeature.Action>)
+        case photoPicker(PresentationAction<PhotoPickerFeature.Action>)
     }
 
     public enum Delegate {
@@ -85,6 +88,17 @@ public struct MissionRecordFeature {
 
     public var body: some ReducerOf<Self> {
         BindingReducer()
+
+        EmptyReducer()
+            .ifLet(\.$completionModal, action: \.completionModal) {
+                CompletionModal()
+            }
+            .ifLet(\.$camera, action: \.camera) {
+                CameraFeature()
+            }
+            .ifLet(\.$photoPicker, action: \.photoPicker) {
+                PhotoPickerFeature()
+            }
 
         Reduce<State, Action> { state, action in
             switch action {
@@ -108,7 +122,7 @@ public struct MissionRecordFeature {
                 return .none
 
             case .openPhotoPicker:
-                state.isPhotoPickerPresented = true
+                state.photoPicker = PhotoPickerFeature.State()
                 return .none
 
             case let .permissionResolved(kind, granted):
@@ -176,6 +190,11 @@ public struct MissionRecordFeature {
                     await picturePermissionClient.openSettings()
                 }
 
+            case .limitedPickerFinished:
+                state.limitedPickerPresentationRequestID = nil
+                guard state.photoPicker != nil else { return .none }
+                return .send(.photoPicker(.presented(.libraryDidChange)))
+
             case .completionModal(.presented(.confirmTapped)):
                 state.completionModal = nil
                 return .send(.delegate(.submitted(
@@ -198,15 +217,25 @@ public struct MissionRecordFeature {
             case .camera:
                 return .none
 
+            case let .photoPicker(.presented(.delegate(.didConfirm(data)))):
+                state.selectedImageData = data
+                state.photoPicker = nil
+                return .none
+
+            case .photoPicker(.presented(.delegate(.didCancel))):
+                state.photoPicker = nil
+                return .none
+
+            case .photoPicker(.presented(.delegate(.manageLimitedRequested))):
+                state.limitedPickerPresentationRequestID = UUID()
+                return .none
+
+            case .photoPicker:
+                return .none
+
             case .delegate:
                 return .run { _ in await dismiss() }
             }
-        }
-        .ifLet(\.$completionModal, action: \.completionModal) {
-            CompletionModal()
-        }
-        .ifLet(\.$camera, action: \.camera) {
-            CameraFeature()
         }
     }
 
