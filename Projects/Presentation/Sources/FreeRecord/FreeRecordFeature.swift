@@ -12,7 +12,7 @@ import Foundation
 
 @Reducer
 public struct FreeRecordFeature {
-    static let maxMemoLength = 200
+    static let maxMemoLength = 48
     static let completionToastDuration: TimeInterval = 1.5
 
     public enum RecordAlert: Equatable {

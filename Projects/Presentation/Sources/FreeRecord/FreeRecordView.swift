@@ -18,32 +18,30 @@ public struct FreeRecordView: View {
     }
 
     public var body: some View {
-        ZStack {
-            VStack(spacing: 0) {
-                navigationBar
-
-                ScrollView {
-                    VStack(alignment: .leading, spacing: 24) {
-                        dateSection
-                        photoArea
-                        memoSection
-                    }
-                    .padding(.horizontal, 20)
-                    .padding(.top, 24)
-                    .padding(.bottom, 120)
+        VStack(spacing: 0) {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 24) {
+                    dateSection
+                    photoArea
+                    memoSection
                 }
-                .scrollDismissesKeyboard(.interactively)
-
-                Spacer()
-
-                submitButton
+                .padding(.horizontal, 20)
+                .padding(.top, 24)
+                .padding(.bottom, 120)
             }
-            .background(background)
-            .contentShape(.rect)
-            .onTapGesture { isMemoFocused = false }
+            .scrollDismissesKeyboard(.interactively)
+
+            Spacer()
+
+            submitButton
         }
+        .contentShape(.rect)
+        .onTapGesture { isMemoFocused = false }
+        .navigationBar(title: "기록하기") {
+            store.send(.backButtonTapped)
+        }
+        .background(background)
         .loading(isLoading: store.isSubmitting)
-        .navigationBarBackButtonHidden(true)
         .customAlert(
             isPresented: store.alert != nil,
             icon: nil,
@@ -59,35 +57,6 @@ public struct FreeRecordView: View {
     var background: some View {
         LinearGradient.missionRecordBackground
             .ignoresSafeArea()
-    }
-}
-
-// MARK: - Navigation Bar
-
-private extension FreeRecordView {
-    var navigationBar: some View {
-        ZStack {
-            Text("기록하기")
-                .font(.body1Medium)
-                .foregroundStyle(Color.gray900)
-
-            HStack {
-                backButton
-                Spacer()
-            }
-            .padding(.leading, 20)
-        }
-        .frame(height: 56)
-    }
-
-    var backButton: some View {
-        Button {
-            store.send(.backButtonTapped)
-        } label: {
-            Image.icArrowLeft
-                .resizable()
-                .frame(width: 24, height: 24)
-        }
     }
 }
 
@@ -149,37 +118,12 @@ private extension FreeRecordView {
 
 private extension FreeRecordView {
     var memoSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("한줄 메모 남기기")
-                .font(.body1Semibold)
-                .foregroundStyle(Color.gray800)
-
-            memoInputField
-
-            if store.isMemoLimitExceeded {
-                Text("\(FreeRecordFeature.maxMemoLength)자까지 메모할 수 있어요.")
-                    .font(.caption1Regular)
-                    .foregroundStyle(Color.systemRed)
-            }
-        }
-    }
-
-    var memoInputField: some View {
-        TextField("", text: $store.memo, axis: .vertical)
-            .font(.body2Regular)
-            .foregroundStyle(Color.gray900)
-            .focused($isMemoFocused)
-            .overlay(alignment: .leading) {
-                if store.memo.isEmpty {
-                    Text("함께 남기고 싶은 메모를 입력해주세요")
-                        .font(.body2Regular)
-                        .foregroundStyle(Color.gray500)
-                        .allowsHitTesting(false)
-                }
-            }
-            .padding(EdgeInsets(top: 16, leading: 12, bottom: 16, trailing: 16))
-            .background(Color.monoWhite)
-            .clipShape(.rect(cornerRadius: .radius16))
+        RecordMemoSection(
+            memo: $store.memo,
+            isMemoFocused: $isMemoFocused,
+            isLimitExceeded: store.isMemoLimitExceeded,
+            maxMemoLength: FreeRecordFeature.maxMemoLength
+        )
     }
 }
 
