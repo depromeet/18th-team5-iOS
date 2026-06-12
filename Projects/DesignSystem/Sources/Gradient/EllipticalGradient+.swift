@@ -8,7 +8,7 @@
 
 import SwiftUI
 
-extension EllipticalGradient {
+public extension EllipticalGradient {
     static let buttonBackground: Self = .init(
         stops: [
             .init(color: .gray800, location: 0.0),

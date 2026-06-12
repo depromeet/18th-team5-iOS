@@ -38,12 +38,14 @@ public struct CalendarFeature {
         case onAppear
         case detailOkButtonTapped
         case headerBackButtonTapped
+        case floatingRecordButtonTapped
         case dateCellTapped(dateId: SolarTermDate.ID, inset: CGFloat)
         case anchoredTermChanged(id: SolarTermGroup.ID)
         case calendarReachToEnd(PageEndDirection)
         case detailViewDisappeared
         case detail(PresentationAction<CalendarDetailFeature.Action>)
         case alert(CustomAlertFeature<Alert>.Action)
+        case delegate(Delegate)
 
         // Internal actions
         case yearPagesLayoutCompleted
@@ -54,6 +56,10 @@ public struct CalendarFeature {
         case updateRowReloadRequest(RowReloadRequest<SolarTermGroup>)
         case updateTermRecordData(id: String, data: CalendarTermRecordData)
         case binding(BindingAction<State>)
+    }
+
+    public enum Delegate {
+        case navigateToFreeRecord
     }
 
     @Dependency(\.logger) var logger
@@ -89,6 +95,9 @@ public struct CalendarFeature {
                 // TODO: 동작 및 액션 수정 -@준영
                 state.detail = nil
                 return .none
+
+            case .floatingRecordButtonTapped:
+                return .send(.delegate(.navigateToFreeRecord))
 
             case let .detail(.presented(.delegate(.showAlert(alert)))):
                 state.alert = .init(.detail(alert))

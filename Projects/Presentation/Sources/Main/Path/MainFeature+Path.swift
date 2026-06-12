@@ -14,6 +14,7 @@ extension MainFeature {
         case myPage(MyPageFeature)
         case solarTermIntroContent(SolarTermIntroContentFeature)
         case missionRecord(MissionRecordFeature)
+        case freeRecord(FreeRecordFeature)
     }
 }
 
