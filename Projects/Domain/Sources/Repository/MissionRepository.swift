@@ -23,12 +23,6 @@ public struct MissionRepository: Sendable {
 
     public var fetchCompletions: @Sendable (_ missionId: Int) async throws -> [MissionCompletion]
 
-    public var uploadImage: @Sendable (
-        _ imageData: Data,
-        _ fileName: String,
-        _ contentType: String
-    ) async throws -> String
-
     public var fetchRecommendedMissions: @Sendable () async throws -> RecommendedMission?
     public var fetchRecommendedMissionAvailability: @Sendable () async throws -> MissionAvailability
     public var fetchSearchedMission: @Sendable () async throws -> Mission?

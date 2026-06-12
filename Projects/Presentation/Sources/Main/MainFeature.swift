@@ -153,6 +153,10 @@ public struct MainFeature {
                 state.alert = .init(.mission(alert))
                 return .none
 
+            case .calendar(.delegate(.navigateToFreeRecord)):
+                state.path.append(.freeRecord(.init(recordDate: Date.now)))
+                return .none
+
             case .alert(.primaryButtonTapped):
                 state.alert = nil
                 return .none

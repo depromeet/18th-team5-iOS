@@ -1,8 +1,7 @@
 //
-//  MissionRecordFeature.swift
+//  FreeRecordFeature.swift
 //  Presentation
 //
-//  Created by 진준호 on 5/8/26.
 //  Copyright © 2026 Orange. All rights reserved.
 //
 
@@ -12,44 +11,36 @@ import Domain
 import Foundation
 
 @Reducer
-public struct MissionRecordFeature {
+public struct FreeRecordFeature {
     static let maxMemoLength = 48
     static let completionToastDuration: TimeInterval = 1.5
 
     public enum RecordAlert: Equatable {
         case submitFailed
+        case freeRecordLimitExceeded
     }
 
     @ObservableState
     public struct State: Equatable {
-        let missionId: Int
-        let missionType: MissionType
-        var missionTitle: String
-        var missionDescription: String?
-        var didRequestMissionRecordPage = false
+        var recordDate: Date
         var memo: String = ""
         var isSubmitting: Bool = false
         var alert: RecordAlert?
         var toast: ToastModel?
         var photo: RecordPhotoFeature.State
 
-        public init(missionId: Int, missionTitle: String, missionType: MissionType) {
-            self.missionId = missionId
-            self.missionTitle = missionTitle
-            self.missionType = missionType
-            self.photo = RecordPhotoFeature.State(cameraOverlayLabel: missionTitle)
+        public init(recordDate: Date) {
+            self.recordDate = recordDate
+            self.photo = RecordPhotoFeature.State(cameraOverlayLabel: "기록하기")
         }
 
         var isMemoLimitExceeded: Bool {
-            memo.count > MissionRecordFeature.maxMemoLength
+            memo.count > FreeRecordFeature.maxMemoLength
         }
     }
 
     public enum Action: BindableAction {
-        case onAppear
         case binding(BindingAction<State>)
-        case delegate(Delegate)
-        case missionRecordPageFetched(Mission?)
         case backButtonTapped
         case submitButtonTapped
         case submitResponse(Result<Int, any Error>)
@@ -58,12 +49,7 @@ public struct MissionRecordFeature {
         case photo(RecordPhotoFeature.Action)
     }
 
-    public enum Delegate {
-        case dismiss
-        case submitted(imageData: Data?, memo: String)
-    }
-
-    @Dependency(\.missionRepository) private var missionRepository
+    @Dependency(\.calendarRecordRepository) private var calendarRecordRepository
     @Dependency(\.imageUploadRepository) private var imageUploadRepository
     @Dependency(\.dismiss) private var dismiss
 
@@ -78,40 +64,20 @@ public struct MissionRecordFeature {
 
         Reduce<State, Action> { state, action in
             switch action {
-            case .onAppear:
-                guard !state.didRequestMissionRecordPage else { return .none }
-                state.didRequestMissionRecordPage = true
-                let missionId = state.missionId
-                return .run { send in
-                    do {
-                        let mission = try await missionRepository.fetchMissionRecordPage(missionId)
-                        await send(.missionRecordPageFetched(mission))
-                    } catch {
-                        await send(.missionRecordPageFetched(nil))
-                    }
-                }
-
             case .binding:
                 return .none
 
-            case let .missionRecordPageFetched(mission):
-                guard let mission else { return .none }
-                state.missionTitle = mission.title
-                state.missionDescription = mission.description
-                state.photo.cameraOverlayLabel = mission.title
-                return .none
-
             case .backButtonTapped:
-                return .send(.delegate(.dismiss))
+                return .run { _ in await dismiss() }
 
             case .submitButtonTapped:
                 guard !state.isSubmitting,
                       !state.isMemoLimitExceeded
                 else { return .none }
+
                 state.isSubmitting = true
-                let missionId = state.missionId
-                let missionType = state.missionType
                 let imageData = state.photo.selectedImageData
+                let recordDate = Self.recordDateFormatter.string(from: state.recordDate)
                 let memo = state.memo.trimmingCharacters(in: .whitespacesAndNewlines)
 
                 return .run { send in
@@ -124,13 +90,12 @@ public struct MissionRecordFeature {
                             "\(UUID().uuidString).jpg",
                             "image/jpeg"
                         )
-                        let completionId = try await missionRepository.completeMission(
-                            missionId,
-                            missionType,
+                        let recordId = try await calendarRecordRepository.completeFreeRecord(
+                            recordDate,
                             objectKey,
                             memo.isEmpty ? nil : memo
                         )
-                        await send(.submitResponse(.success(completionId)))
+                        await send(.submitResponse(.success(recordId)))
                     } catch {
                         await send(.submitResponse(.failure(error)))
                     }
@@ -148,16 +113,13 @@ public struct MissionRecordFeature {
                     await send(.completionToastPresented)
                 }
 
-            case .submitResponse(.failure):
+            case let .submitResponse(.failure(error)):
                 state.isSubmitting = false
-                state.alert = .submitFailed
+                state.alert = Self.recordAlert(from: error)
                 return .none
 
             case .completionToastPresented:
-                return .send(.delegate(.submitted(
-                    imageData: state.photo.selectedImageData,
-                    memo: state.memo
-                )))
+                return .run { _ in await dismiss() }
 
             case .alertCancelTapped:
                 state.alert = nil
@@ -165,13 +127,23 @@ public struct MissionRecordFeature {
 
             case .photo:
                 return .none
-
-            case .delegate(.dismiss):
-                return .run { _ in await dismiss() }
-
-            case .delegate(.submitted):
-                return .run { _ in await dismiss() }
             }
         }
+    }
+
+    private static let recordDateFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        return formatter
+    }()
+
+    private static func recordAlert(from error: any Error) -> RecordAlert {
+        guard let domainError = error as? DomainError,
+              case let .unknown(message) = domainError,
+              message.contains("RECORD_409_FREE")
+        else { return .submitFailed }
+
+        return .freeRecordLimitExceeded
     }
 }

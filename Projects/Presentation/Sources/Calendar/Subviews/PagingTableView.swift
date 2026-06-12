@@ -55,6 +55,7 @@ final class PagingTableView<Item: Identifiable & Equatable>: UIView, UITableView
     enum Action {
         case anchoredItemChanged(id: Item.ID)
         case reachedToEnd(direction: PageEndDirection)
+        case didScroll
     }
 
     var action: AnyPublisher<Action, Never> {
@@ -163,6 +164,10 @@ final class PagingTableView<Item: Identifiable & Equatable>: UIView, UITableView
         if !isPageUpdating, let direction = pagingDirectionNeeded() {
             _action.send(.reachedToEnd(direction: direction))
         }
+    }
+
+    func scrollViewWillBeginDragging(_ scrollView: UIScrollView) {
+        _action.send(.didScroll)
     }
 }
 

@@ -15,6 +15,7 @@ struct CalendarView: View {
     @Bindable var store: StoreOf<CalendarFeature>
 
     @State var sheetHeight: CGFloat = .zero
+    @State var isFloatingRecordButtonExpanded: Bool = true
 
     var body: some View {
         GeometryReader { geo in
@@ -29,6 +30,11 @@ struct CalendarView: View {
                             store.send(.anchoredTermChanged(id: id))
                         case let .reachedToEnd(direction):
                             store.send(.calendarReachToEnd(direction))
+                        case .didScroll:
+                            guard isFloatingRecordButtonExpanded else { return }
+                            withAnimation(.spring(response: 0.28, dampingFraction: 0.86)) {
+                                isFloatingRecordButtonExpanded = false
+                            }
                         }
                     },
                     arguments: .init(
@@ -65,11 +71,55 @@ struct CalendarView: View {
                 }
                 .animation(.easeInOut, value: store.detail != nil)
             }
+            .overlay(alignment: .bottomTrailing) {
+                if store.detail == nil {
+                    floatingRecordButton
+                        .padding(.trailing, Constants.floatingButtonTrailingPadding)
+                        .padding(.bottom, Constants.floatingButtonBottomPadding)
+                        .transition(.scale.combined(with: .opacity))
+                }
+            }
         }
         .onAppear {
+            isFloatingRecordButtonExpanded = true
             store.send(.onAppear)
         }
         .customAlert(store.scope(state: \.alert, action: \.alert))
+    }
+}
+
+// MARK: Floating Record Button
+
+private extension CalendarView {
+    var floatingRecordButton: some View {
+        Button {
+            store.send(.floatingRecordButtonTapped)
+        } label: {
+            HStack(spacing: 4) {
+                Image.icPlus
+                    .resizable()
+                    .renderingMode(.template)
+                    .foregroundStyle(Color.monoWhite)
+                    .frame(width: 24, height: 24)
+
+                if isFloatingRecordButtonExpanded {
+                    Text("기록하기")
+                        .font(.body1Semibold)
+                        .foregroundStyle(Color.monoWhite)
+                        .transition(.move(edge: .trailing).combined(with: .opacity))
+                }
+            }
+            .padding(.horizontal, isFloatingRecordButtonExpanded ? 20 : 16)
+            .frame(height: Constants.floatingButtonSize)
+            .frame(minWidth: Constants.floatingButtonSize)
+            .background {
+                EllipticalGradient.buttonBackground
+                    .background(Color.gray700)
+            }
+            .clipShape(Capsule())
+            .contentShape(Capsule())
+        }
+        .buttonStyle(.plain)
     }
 }
 
@@ -234,6 +284,9 @@ private enum Constants {
 
     static let dateCellHorizontalSpacing: CGFloat = 7
     static let dateCellAnchorOffset: CGFloat = 11
+    static let floatingButtonSize: CGFloat = 56
+    static let floatingButtonTrailingPadding: CGFloat = 20
+    static let floatingButtonBottomPadding: CGFloat = 84
 
     static var detailViewTopPadding: CGFloat {
         CalendarDateCell.Constants.cellHeight + 12

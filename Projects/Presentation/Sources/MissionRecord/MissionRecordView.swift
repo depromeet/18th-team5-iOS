@@ -8,8 +8,6 @@
 
 import ComposableArchitecture
 import DesignSystem
-import Domain
-import PhotosUI
 import SwiftUI
 
 public struct MissionRecordView: View {
@@ -21,64 +19,40 @@ public struct MissionRecordView: View {
     }
 
     public var body: some View {
-        ZStack {
-            VStack(spacing: 0) {
-                navigationBar
-
-                ScrollView {
-                    VStack(spacing: 24) {
-                        missionTitleCard
-                        photoArea
-                        memoSection
-                    }
-                    .padding(.horizontal, 20)
-                    .padding(.top, 24)
-                    .padding(.bottom, 120)
+        VStack(spacing: 0) {
+            ScrollView {
+                VStack(spacing: 24) {
+                    missionTitleCard
+                    photoArea
+                    memoSection
                 }
-                .scrollDismissesKeyboard(.interactively)
-
-                Spacer()
-
-                submitButton
+                .padding(.horizontal, 20)
+                .padding(.top, 24)
+                .padding(.bottom, 120)
             }
-            .background(background)
-            .contentShape(.rect)
-            .onTapGesture { isMemoFocused = false }
+            .scrollDismissesKeyboard(.interactively)
+
+            Spacer()
+
+            submitButton
         }
+        .contentShape(.rect)
+        .onTapGesture { isMemoFocused = false }
+        .navigationBar(title: "미션 기록하기") {
+            store.send(.backButtonTapped)
+        }
+        .background(background)
         .loading(isLoading: store.isSubmitting)
-        .navigationBarBackButtonHidden(true)
-        .fullScreenCover(
-            item: $store.scope(state: \.camera, action: \.camera)
-        ) { cameraStore in
-            CameraView(store: cameraStore)
-        }
-        .sheet(
-            item: $store.scope(state: \.photoPicker, action: \.photoPicker)
-        ) { pickerStore in
-            PhotoPickerView(store: pickerStore)
-                .presentationDetents([.fraction(0.9)])
-                .presentationDragIndicator(.hidden)
-        }
         .customAlert(
             isPresented: store.alert != nil,
-            icon: alertIcon,
+            icon: nil,
             message: alertMessage,
             buttons: alertButtons,
-            onAlertButtonTapped: { buttonID in
-                switch buttonID {
-                case "permission_ok":
-                    store.send(.alertOpenSettingsTapped)
-                default:
-                    store.send(.alertCancelTapped)
-                }
+            onAlertButtonTapped: { _ in
+                store.send(.alertCancelTapped)
             }
         )
         .presentToast($store.toast)
-        .onChange(of: store.limitedPickerPresentationRequestID) { _, requestID in
-            guard requestID != nil else { return }
-            presentLimitedLibraryPicker()
-            store.send(.limitedPickerFinished)
-        }
         .onAppear {
             store.send(.onAppear)
         }
@@ -87,55 +61,6 @@ public struct MissionRecordView: View {
     var background: some View {
         LinearGradient.missionRecordBackground
             .ignoresSafeArea()
-    }
-}
-
-// MARK: - Limited Library Picker
-
-private extension MissionRecordView {
-    func presentLimitedLibraryPicker() {
-        guard let rootVC = Self.topViewController() else { return }
-        PHPhotoLibrary.shared().presentLimitedLibraryPicker(from: rootVC)
-    }
-
-    static func topViewController() -> UIViewController? {
-        let scenes = UIApplication.shared.connectedScenes
-            .compactMap { $0 as? UIWindowScene }
-        let keyWindow = scenes.flatMap(\.windows).first(where: \.isKeyWindow)
-        var top = keyWindow?.rootViewController
-        while let presented = top?.presentedViewController {
-            top = presented
-        }
-        return top
-    }
-}
-
-// MARK: - Navigation Bar
-
-private extension MissionRecordView {
-    var navigationBar: some View {
-        ZStack {
-            Text("미션 기록하기")
-                .font(.body1Medium)
-                .foregroundStyle(Color.gray900)
-
-            HStack {
-                backButton
-                Spacer()
-            }
-            .padding(.leading, 20)
-        }
-        .frame(height: 56)
-    }
-
-    var backButton: some View {
-        Button {
-            store.send(.backButtonTapped)
-        } label: {
-            Image.icArrowLeft
-                .resizable()
-                .frame(width: 24, height: 24)
-        }
     }
 }
 
@@ -168,83 +93,9 @@ private extension MissionRecordView {
 
 private extension MissionRecordView {
     var photoArea: some View {
-        ZStack {
-            RoundedRectangle(cornerRadius: .radius16)
-                .fill(Color.gray800)
-
-            if let imageData = store.selectedImageData,
-               let uiImage = UIImage(data: imageData) {
-                Color.clear
-                    .overlay {
-                        Image(uiImage: uiImage)
-                            .resizable()
-                            .scaledToFill()
-                    }
-                    .clipShape(.rect(cornerRadius: .radius16))
-                    .overlay(alignment: .topTrailing) {
-                        Button {
-                            store.send(.imageDeleteButtonTapped)
-                        } label: {
-                            Image(systemName: "xmark")
-                                .font(.system(size: 14, weight: .bold))
-                                .foregroundStyle(Color.monoWhite)
-                                .frame(width: 32, height: 32)
-                                .background(Color.gray700)
-                                .clipShape(Circle())
-                        }
-                        .padding(12)
-                        .accessibilityLabel("사진 삭제")
-                    }
-            } else {
-                photoPlaceholder
-            }
-        }
-        .frame(height: UIScreen.width - 40)
-    }
-
-    var photoPlaceholder: some View {
-        VStack(spacing: 20) {
-            Text("사진으로 미션을 기록해주세요")
-                .font(.body2Regular)
-                .foregroundStyle(Color.gray400)
-
-            HStack(spacing: 30) {
-                cameraButton
-                galleryButton
-            }
-        }
-    }
-
-    var cameraButton: some View {
-        Button {
-            store.send(.cameraButtonTapped)
-        } label: {
-            ZStack {
-                Circle()
-                    .fill(Color.whiteAlpha600)
-                    .frame(width: 56, height: 56)
-
-                Image(systemName: "camera")
-                    .font(.system(size: 20))
-                    .foregroundStyle(Color.gray800)
-            }
-        }
-    }
-
-    var galleryButton: some View {
-        Button {
-            store.send(.galleryButtonTapped)
-        } label: {
-            ZStack {
-                Circle()
-                    .fill(Color.whiteAlpha600)
-                    .frame(width: 56, height: 56)
-
-                Image(systemName: "photo")
-                    .font(.system(size: 20))
-                    .foregroundStyle(Color.gray800)
-            }
-        }
+        RecordPhotoView(
+            store: store.scope(state: \.photo, action: \.photo)
+        )
     }
 }
 
@@ -252,37 +103,12 @@ private extension MissionRecordView {
 
 private extension MissionRecordView {
     var memoSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("한줄 메모 남기기")
-                .font(.body1Semibold)
-                .foregroundStyle(Color.gray800)
-
-            memoInputField
-
-            if store.isMemoLimitExceeded {
-                Text("\(MissionRecordFeature.maxMemoLength)자까지 메모할 수 있어요.")
-                    .font(.caption1Regular)
-                    .foregroundStyle(Color.systemRed)
-            }
-        }
-    }
-
-    var memoInputField: some View {
-        TextField("", text: $store.memo, axis: .vertical)
-            .font(.body2Regular)
-            .foregroundStyle(Color.gray900)
-            .focused($isMemoFocused)
-            .overlay(alignment: .leading) {
-                if store.memo.isEmpty {
-                    Text("함께 남기고 싶은 메모를 입력해주세요")
-                        .font(.body2Regular)
-                        .foregroundStyle(Color.gray500)
-                        .allowsHitTesting(false)
-                }
-            }
-            .padding(EdgeInsets(top: 16, leading: 12, bottom: 16, trailing: 16))
-            .background(Color.monoWhite)
-            .clipShape(.rect(cornerRadius: .radius16))
+        RecordMemoSection(
+            memo: $store.memo,
+            isMemoFocused: $isMemoFocused,
+            isLimitExceeded: store.isMemoLimitExceeded,
+            maxMemoLength: MissionRecordFeature.maxMemoLength
+        )
     }
 }
 
@@ -290,25 +116,10 @@ private extension MissionRecordView {
 
 private extension MissionRecordView {
     var isSubmitEnabled: Bool {
-        store.selectedImageData != nil && !store.isSubmitting
-            && !store.memo.trimmingCharacters(in: .whitespaces).isEmpty
+        store.photo.selectedImageData != nil
+            && !store.isSubmitting
+            && !store.memo.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
             && !store.isMemoLimitExceeded
-    }
-
-    @ViewBuilder
-    var buttonBackground: some View {
-        if isSubmitEnabled {
-            Color.gray400
-        } else {
-            EllipticalGradient(
-                stops: [
-                    .init(color: .gray800, location: 0.0),
-                    .init(color: .clear, location: 1.0)
-                ],
-                center: .center
-            )
-            .background(Color.gray700)
-        }
     }
 
     var submitButton: some View {
@@ -324,20 +135,8 @@ private extension MissionRecordView {
 // MARK: - Custom Alert Mapping
 
 private extension MissionRecordView {
-    var alertIcon: Image? {
-        switch store.alert {
-        case .permissionDenied(.camera): .icCamera
-        case .permissionDenied(.photoLibrary): .icPhoto
-        case .submitFailed, .none: nil
-        }
-    }
-
     var alertMessage: String {
         switch store.alert {
-        case .permissionDenied(.camera):
-            "미션 기록 사진을 찍기 위해서\n카메라 접근 권한이 필요해요."
-        case .permissionDenied(.photoLibrary):
-            "미션 기록 사진을 남기기 위해서\n사진 접근 권한이 필요해요."
         case .submitFailed:
             "기록 저장에 실패했어요.\n잠시 후 다시 시도해주세요."
         case .none:
@@ -347,12 +146,6 @@ private extension MissionRecordView {
 
     var alertButtons: [CustomAlertButton<String>] {
         switch store.alert {
-        case .permissionDenied:
-            return [
-                CustomAlertButton(id: "permission_cancel", title: "취소", style: .secondary),
-
-                CustomAlertButton(id: "permission_ok", title: "확인", style: .primary)
-            ]
         case .submitFailed:
             return [
                 CustomAlertButton(id: "submit_failure_cancel", title: "확인", style: .primary)
