@@ -17,6 +17,7 @@ public struct FreeRecordFeature {
 
     public enum RecordAlert: Equatable {
         case submitFailed
+        case freeRecordLimitExceeded
     }
 
     @ObservableState
@@ -112,9 +113,9 @@ public struct FreeRecordFeature {
                     await send(.completionToastPresented)
                 }
 
-            case .submitResponse(.failure):
+            case let .submitResponse(.failure(error)):
                 state.isSubmitting = false
-                state.alert = .submitFailed
+                state.alert = Self.recordAlert(from: error)
                 return .none
 
             case .completionToastPresented:
@@ -136,4 +137,13 @@ public struct FreeRecordFeature {
         formatter.locale = Locale(identifier: "en_US_POSIX")
         return formatter
     }()
+
+    private static func recordAlert(from error: any Error) -> RecordAlert {
+        guard let domainError = error as? DomainError,
+              case let .unknown(message) = domainError,
+              message.contains("RECORD_409_FREE")
+        else { return .submitFailed }
+
+        return .freeRecordLimitExceeded
+    }
 }

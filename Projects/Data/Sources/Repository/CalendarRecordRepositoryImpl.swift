@@ -43,13 +43,17 @@ public enum CalendarRecordRepositoryImpl {
                     objectKey: objectKey,
                     memo: memo
                 )
-                let response: CalendarFreeRecordResponseDTO? = try await client.request(
-                    CalendarEndpoint.completeFreeRecord(request)
-                )
-                guard let response else {
-                    throw DomainError.unknown("데이터 획득 실패")
+                do {
+                    let response: CalendarFreeRecordResponseDTO? = try await client.request(
+                        CalendarEndpoint.completeFreeRecord(request)
+                    )
+                    guard let response else {
+                        throw DomainError.unknown("데이터 획득 실패")
+                    }
+                    return response.recordId
+                } catch {
+                    throw mapToDomainError(error)
                 }
-                return response.recordId
             }
         )
     }

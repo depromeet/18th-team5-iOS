@@ -189,6 +189,7 @@ private extension FreeRecordView {
     var isSubmitEnabled: Bool {
         store.photo.selectedImageData != nil
             && !store.isSubmitting
+            && !store.memo.trimmingCharacters(in: .whitespaces).isEmpty
             && !store.isMemoLimitExceeded
     }
 
@@ -209,6 +210,8 @@ private extension FreeRecordView {
         switch store.alert {
         case .submitFailed:
             "기록 저장에 실패했어요.\n잠시 후 다시 시도해주세요."
+        case .freeRecordLimitExceeded:
+            "선택한 날짜의 기록을 이미 채웠어요\n다른 날의 제철 일상을 남겨볼까요?"
         case .none:
             ""
         }
@@ -216,7 +219,7 @@ private extension FreeRecordView {
 
     var alertButtons: [CustomAlertButton<String>] {
         switch store.alert {
-        case .submitFailed:
+        case .submitFailed, .freeRecordLimitExceeded:
             return [
                 CustomAlertButton(id: "submit_failure_cancel", title: "확인", style: .primary)
             ]
