@@ -218,6 +218,8 @@ private extension MainFeature {
 
     func handleNotificationTapEvent(_ state: State) -> Effect<Action> {
         let notificationType = notificationRepository.fetchPendingNotificationType()
+        notificationRepository.clearPendingNotificationType()
+
         guard let notificationType else { return .none }
 
         return .run { [state] send in
