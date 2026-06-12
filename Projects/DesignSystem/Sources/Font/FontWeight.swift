@@ -6,7 +6,7 @@
 //  Copyright © 2026 Orange. All rights reserved.
 //
 
-enum FontWeight {
+public enum FontWeight {
     case bold
     case semibold
     case medium

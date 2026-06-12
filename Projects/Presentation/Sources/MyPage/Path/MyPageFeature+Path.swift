@@ -12,6 +12,7 @@ extension MyPageFeature {
     @Reducer
     public enum Path {
         case notificationSettings(NotificationSettingsFeature)
+        case announcements(AnnouncementListFeature)
         case privacyPolicy(PrivacyPolicyFeature)
         case termsOfService(TermsOfServiceFeature)
     }

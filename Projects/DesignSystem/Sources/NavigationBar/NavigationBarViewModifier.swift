@@ -10,10 +10,16 @@ import SwiftUI
 
 struct NavigationBarViewModifier: ViewModifier {
     private let title: String
+    private let shouldBlur: Bool
     private let action: () -> Void
 
-    init(title: String, action: @escaping () -> Void) {
+    init(
+        title: String,
+        shouldBlur: Bool,
+        action: @escaping () -> Void
+    ) {
         self.title = title
+        self.shouldBlur = shouldBlur
         self.action = action
     }
 
@@ -40,6 +46,13 @@ private extension NavigationBarViewModifier {
             .padding(.horizontal, 20)
         }
         .frame(height: 56)
+        .background {
+            if shouldBlur {
+                Rectangle()
+                    .fill(.ultraThinMaterial)
+                    .ignoresSafeArea()
+            }
+        }
     }
 
     var backButton: some View {
@@ -56,9 +69,12 @@ private extension NavigationBarViewModifier {
 public extension View {
     func navigationBar(
         title: String,
+        shouldBlur: Bool = false,
         action: @escaping () -> Void
     ) -> some View {
-        modifier(NavigationBarViewModifier(title: title, action: action))
-            .navigationBarBackButtonHidden()
+        modifier(NavigationBarViewModifier(
+            title: title, shouldBlur: shouldBlur, action: action
+        ))
+        .navigationBarBackButtonHidden()
     }
 }
