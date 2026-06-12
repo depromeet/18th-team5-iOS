@@ -57,7 +57,6 @@ private extension MyPageView {
             Text(store.currentVersion.string)
                 .font(.body2Regular)
                 .foregroundStyle(Color.gray600)
-                .renderedIf(store.hasFetchedConfig)
 
             Button {
                 if let url = store.storeURL { openURL(url) }

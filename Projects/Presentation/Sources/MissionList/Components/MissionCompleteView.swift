@@ -68,7 +68,7 @@ private extension MissionCompleteView {
 
             let title = """
             오늘 \(maxCount)번 기록을 완료했어요!
-            이 공간의 미션은 내일 다시 열려요.
+            이 공간의 미션은 내일 다시 열려요
             """
             Text(title)
                 .font(.headline1Semibold)

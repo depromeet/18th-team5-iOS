@@ -29,6 +29,7 @@ public struct MainFeature {
 
         var path: StackState<Path.State> = .init()
         var solarTerm: SolarTerm?
+        var myPageConfig: MyPageConfig?
         var alert: CustomAlertFeature<Alert>.State?
 
         public init() {
@@ -57,6 +58,7 @@ public struct MainFeature {
     @Dependency(\.logger) private var logger
     @Dependency(\.solarTermRepository) private var solarTermRepository
     @Dependency(\.notificationRepository) private var notificationRepository
+    @Dependency(\.myPageRepository) private var myPageRepository
 
     public init() {}
 
@@ -87,7 +89,8 @@ public struct MainFeature {
                         .run { send in await fetchTodaysSolarTerm(send) },
                         .send(.handleNotificationTapEvent)
                     ]),
-                    .send(.observePushNotificationTapEvent)
+                    .send(.observePushNotificationTapEvent),
+                    .run { send in await fetchMyPageConfig(send) }
                 ])
 
             case .observePushNotificationTapEvent:
@@ -129,7 +132,7 @@ public struct MainFeature {
 
             case .home(.delegate(.navigateToMyPage)):
                 guard let solarTerm = state.solarTerm else { return .none }
-                state.path.append(.myPage(.init(solarTerm)))
+                state.path.append(.myPage(.init(solarTerm, state.myPageConfig)))
                 return .none
 
             case .home(.delegate(.navigateToCalendar)):
@@ -252,6 +255,11 @@ private extension MainFeature {
         }
 
         return nil
+    }
+
+    func fetchMyPageConfig(_ send: Send<Action>) async {
+        let config = try? await myPageRepository.fetchMyPageConfig()
+        await send(.set(\.myPageConfig, config))
     }
 }
 

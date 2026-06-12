@@ -10,12 +10,13 @@ import SwiftUI
 
 public struct CircularWheelPicker<Item: Hashable, Content: View>: View {
     @State private var scrollID: Item?
+    @State private var isInitialScrollPositionApplied = false
     @State private var hasScrolledAwayFromTop = false
-    @State private var isUserInteractionDisabled = false
     @State private var interactionLockID = 0
     @State private var interactionTask: Task<Void, Never>?
     @Binding private var selection: Item
 
+    private let initialSelection: Item
     private let items: [Item]
     private let content: (Item) -> Content
     private let configuration: CircularWheelPickerConfiguration
@@ -32,6 +33,7 @@ public struct CircularWheelPicker<Item: Hashable, Content: View>: View {
     ) {
         self.items = items
         self._selection = selection
+        self.initialSelection = selection.wrappedValue
         self.configuration = configuration
         self.content = content
     }
@@ -51,17 +53,18 @@ private extension CircularWheelPicker {
             scrollContent(proxy: proxy)
         }
         .scrollOffsetCoordinateSpace()
-        .allowsHitTesting(!isUserInteractionDisabled)
+        .allowsHitTesting(!isInteractionLocked)
         .safeAreaPadding(.vertical, safeAreaPadding(for: height))
         .scrollTargetBehavior(.viewAligned(limitBehavior: .always))
         .scrollPosition(id: $scrollID, anchor: .center)
+        .opacity(isInitialScrollPositionApplied ? 1 : 0)
         .sensoryFeedback(
             .impact(weight: .heavy),
             trigger: scrollID
         ) { old, _ in
             old != nil
         }
-        .task { await setInitialScrollPosition() }
+        .task { await setInitialScrollPosition(to: initialSelection) }
         .onChange(of: scrollID) { _, newValue in
             updateSelection(to: newValue)
         }
@@ -71,7 +74,6 @@ private extension CircularWheelPicker {
         .onDisappear {
             interactionTask?.cancel()
             interactionTask = nil
-            isUserInteractionDisabled = false
         }
     }
 
@@ -132,23 +134,42 @@ private extension CircularWheelPicker {
         containerHeight * (1 - scrollIntensity) / 2
     }
 
-    func setInitialScrollPosition() async {
-        try? await Task.sleep(for: .milliseconds(50))
-        scrollID = selection
+    var isInteractionLocked: Bool {
+        interactionTask != nil
+    }
+
+    func setInitialScrollPosition(to item: Item) async {
+        guard !isInitialScrollPositionApplied else { return }
+        await Task.yield()
+
+        var transaction = Transaction()
+        transaction.disablesAnimations = true
+        withTransaction(transaction) {
+            selection = item
+            scrollID = item
+        }
+
+        await Task.yield()
+        withTransaction(transaction) {
+            isInitialScrollPositionApplied = true
+        }
     }
 
     func updateSelection(to item: Item?) {
+        guard isInitialScrollPositionApplied else { return }
         guard let item else { return }
         selection = item
     }
 
     func scrollToSelectionIfNeeded(_ item: Item) {
+        guard isInitialScrollPositionApplied else { return }
         guard scrollID != item else { return }
         scrollTo(item)
     }
 
     func handleScrollOffset(_ offset: CGPoint) {
-        guard !isUserInteractionDisabled else { return }
+        guard isInitialScrollPositionApplied else { return }
+        guard !isInteractionLocked else { return }
 
         guard offset.y < topOffsetThreshold else {
             hasScrolledAwayFromTop = true
@@ -169,7 +190,6 @@ private extension CircularWheelPicker {
     func scrollTo(_ item: Item) {
         interactionLockID += 1
         let lockID = interactionLockID
-        isUserInteractionDisabled = true
 
         withAnimation(scrollAnimation) {
             scrollID = item
@@ -182,7 +202,6 @@ private extension CircularWheelPicker {
 
             await MainActor.run {
                 guard interactionLockID == lockID else { return }
-                isUserInteractionDisabled = false
                 interactionTask = nil
             }
         }
