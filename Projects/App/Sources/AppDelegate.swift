@@ -6,6 +6,8 @@
 //  Copyright © 2026 Orange. All rights reserved.
 //
 
+import Core
+import Data
 import Dependencies
 import Domain
 import FirebaseCore
@@ -47,6 +49,13 @@ extension AppDelegate: UNUserNotificationCenterDelegate {
     ) {
         completionHandler([.banner, .sound, .badge, .list])
     }
+
+    func userNotificationCenter(
+        _ center: UNUserNotificationCenter,
+        didReceive response: UNNotificationResponse
+    ) async {
+        handleNotification(response)
+    }
 }
 
 extension AppDelegate: MessagingDelegate {
@@ -73,5 +82,16 @@ private extension AppDelegate {
                 // TODO: 에러 처리 - @ 정원
             }
         }
+    }
+
+    func handleNotification(_ response: UNNotificationResponse) {
+        @Dependency(\.notificationRepository) var notificationRepository
+        let userInfo = response.notification.request.content.userInfo as? [String: Any]
+        let typeString = userInfo?["type"] as? String
+        let type = NotificationType(typeString)
+
+        guard let type else { return }
+        notificationRepository.setPendingNotificationType(type)
+        NotificationCenter.default.post(name: .pushNotificationTapped, object: nil)
     }
 }

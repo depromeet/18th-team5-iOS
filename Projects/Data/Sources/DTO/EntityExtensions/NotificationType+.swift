@@ -16,4 +16,14 @@ extension NotificationType {
         case .solarTermStart: "solar_term_start"
         }
     }
+
+    public init?(_ typeString: String?) {
+        guard let typeString else { return nil }
+        let type = NotificationType.allCases.first {
+            $0.topic == typeString.lowercased()
+        }
+
+        guard let type else { return nil }
+        self = type
+    }
 }
