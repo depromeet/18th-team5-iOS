@@ -21,6 +21,7 @@ public struct MissionSearchView: View {
     public var body: some View {
         VStack(spacing: 0) {
             headerView
+
             ScrollView {
                 VStack(spacing: 24) {
                     titleView
@@ -32,10 +33,12 @@ public struct MissionSearchView: View {
                 .padding(.vertical, 16)
                 .frame(height: 390)
             }
+
             bottomButton
+            noticeView
         }
         .background(Color.white)
-        .presentationDetents([.height(555)])
+        .presentationDetents([.height(593)])
     }
 }
 
@@ -95,10 +98,17 @@ private extension MissionSearchView {
                 .foregroundStyle(Color.gray900)
                 .frame(maxWidth: .infinity, alignment: .leading)
 
-            Text("원하는 조건을 기반으로 제철 활동을 추천해드려요!")
-                .font(.body2Regular)
-                .foregroundStyle(Color.gray600)
-                .frame(maxWidth: .infinity, alignment: .leading)
+            ZStack(alignment: .leading) {
+                Color.gray100
+                    .frame(width: 142, height: 20)
+                    .clipShape(RoundedRectangle(cornerRadius: 3))
+                    .padding(.leading, 135)
+
+                Text("조건에 맞는 제철 활동을  하루 한 번 추천해드려요!")
+                    .font(.body2Regular)
+                    .foregroundStyle(Color.gray600)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
         }
     }
 
@@ -142,6 +152,13 @@ private extension MissionSearchView {
         .disabled(!store.isBottomButtonEnabled)
         .padding(.horizontal, 20)
         .padding(.vertical, 16)
+    }
+
+    var noticeView: some View {
+        Text("미션 생성은 하루에 한 번만 가능해요")
+            .font(.body2Medium)
+            .foregroundStyle(Color.gray600)
+            .padding(.bottom, 16)
     }
 }
 
