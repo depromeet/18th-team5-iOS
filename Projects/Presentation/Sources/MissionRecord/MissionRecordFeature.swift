@@ -55,6 +55,7 @@ public struct MissionRecordFeature {
         case submitResponse(Result<Int, any Error>)
         case completionToastPresented
         case alertCancelTapped
+        case dismissAll
         case photo(RecordPhotoFeature.Action)
     }
 
@@ -161,6 +162,11 @@ public struct MissionRecordFeature {
 
             case .alertCancelTapped:
                 state.alert = nil
+                return .none
+
+            case .dismissAll:
+                state.photo.camera = nil
+                state.photo.photoPicker = nil
                 return .none
 
             case .photo:
