@@ -8,24 +8,14 @@
 
 import Camera
 import ComposableArchitecture
+import DesignSystem
 import Domain
 import Foundation
 
 @Reducer
 public struct MissionRecordFeature {
-    @Reducer
-    public struct CompletionModal {
-        @ObservableState
-        public struct State: Equatable {}
-
-        public enum Action {
-            case confirmTapped
-        }
-
-        public var body: some ReducerOf<Self> {
-            EmptyReducer()
-        }
-    }
+    static let maxMemoLength = 48
+    static let completionToastDuration: TimeInterval = 1.5
 
     public enum RecordAlert: Equatable {
         case permissionDenied(PicturePermissionKind)
@@ -37,12 +27,14 @@ public struct MissionRecordFeature {
         let missionId: Int
         let missionType: MissionType
         var missionTitle: String
+        var missionDescription: String?
+        var didRequestMissionRecordPage = false
         var selectedImageData: Data?
         var memo: String = ""
         var isSubmitting: Bool = false
         var alert: RecordAlert?
+        var toast: ToastModel?
         var limitedPickerPresentationRequestID: UUID?
-        @Presents var completionModal: CompletionModal.State?
         @Presents var camera: CameraFeature.State?
         @Presents var photoPicker: PhotoPickerFeature.State?
 
@@ -51,11 +43,17 @@ public struct MissionRecordFeature {
             self.missionTitle = missionTitle
             self.missionType = missionType
         }
+
+        var isMemoLimitExceeded: Bool {
+            memo.count > MissionRecordFeature.maxMemoLength
+        }
     }
 
     public enum Action: BindableAction {
+        case onAppear
         case binding(BindingAction<State>)
         case delegate(Delegate)
+        case missionRecordPageFetched(Mission?)
         case backButtonTapped
         case cameraButtonTapped
         case galleryButtonTapped
@@ -66,10 +64,10 @@ public struct MissionRecordFeature {
         case imageDeleteButtonTapped
         case submitButtonTapped
         case submitResponse(Result<Int, any Error>)
+        case completionToastPresented
         case alertCancelTapped
         case alertOpenSettingsTapped
         case limitedPickerFinished
-        case completionModal(PresentationAction<CompletionModal.Action>)
         case camera(PresentationAction<CameraFeature.Action>)
         case photoPicker(PresentationAction<PhotoPickerFeature.Action>)
         case dismissAll
@@ -91,9 +89,6 @@ public struct MissionRecordFeature {
         BindingReducer()
 
         EmptyReducer()
-            .ifLet(\.$completionModal, action: \.completionModal) {
-                CompletionModal()
-            }
             .ifLet(\.$camera, action: \.camera) {
                 CameraFeature()
             }
@@ -103,7 +98,26 @@ public struct MissionRecordFeature {
 
         Reduce<State, Action> { state, action in
             switch action {
+            case .onAppear:
+                guard !state.didRequestMissionRecordPage else { return .none }
+                state.didRequestMissionRecordPage = true
+                let missionId = state.missionId
+                return .run { send in
+                    do {
+                        let mission = try await missionRepository.fetchMissionRecordPage(missionId)
+                        await send(.missionRecordPageFetched(mission))
+                    } catch {
+                        await send(.missionRecordPageFetched(nil))
+                    }
+                }
+
             case .binding:
+                return .none
+
+            case let .missionRecordPageFetched(mission):
+                guard let mission else { return .none }
+                state.missionTitle = mission.title
+                state.missionDescription = mission.description
                 return .none
 
             case .backButtonTapped:
@@ -142,7 +156,9 @@ public struct MissionRecordFeature {
                 return .none
 
             case .submitButtonTapped:
-                guard !state.isSubmitting else { return .none }
+                guard !state.isSubmitting,
+                      !state.isMemoLimitExceeded
+                else { return .none }
                 state.isSubmitting = true
                 let missionId = state.missionId
                 let missionType = state.missionType
@@ -173,13 +189,26 @@ public struct MissionRecordFeature {
 
             case .submitResponse(.success):
                 state.isSubmitting = false
-                state.completionModal = CompletionModal.State()
-                return .none
+                state.toast = ToastModel(
+                    title: "기록이 완료되었어요!",
+                    duration: Self.completionToastDuration,
+                    bottomInset: 108
+                )
+                return .run { send in
+                    try? await Task.sleep(for: .milliseconds(100))
+                    await send(.completionToastPresented)
+                }
 
             case .submitResponse(.failure):
                 state.isSubmitting = false
                 state.alert = .submitFailed
                 return .none
+
+            case .completionToastPresented:
+                return .send(.delegate(.submitted(
+                    imageData: state.selectedImageData,
+                    memo: state.memo
+                )))
 
             case .alertCancelTapped:
                 state.alert = nil
@@ -195,16 +224,6 @@ public struct MissionRecordFeature {
                 state.limitedPickerPresentationRequestID = nil
                 guard state.photoPicker != nil else { return .none }
                 return .send(.photoPicker(.presented(.libraryDidChange)))
-
-            case .completionModal(.presented(.confirmTapped)):
-                state.completionModal = nil
-                return .send(.delegate(.submitted(
-                    imageData: state.selectedImageData,
-                    memo: state.memo
-                )))
-
-            case .completionModal:
-                return .none
 
             case let .camera(.presented(.delegate(.didCapture(result)))):
                 state.selectedImageData = result.imageData
@@ -239,7 +258,10 @@ public struct MissionRecordFeature {
             case .photoPicker:
                 return .none
 
-            case .delegate:
+            case .delegate(.dismiss):
+                return .run { _ in await dismiss() }
+
+            case .delegate(.submitted):
                 return .run { _ in await dismiss() }
             }
         }

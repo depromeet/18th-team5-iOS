@@ -32,7 +32,7 @@ public struct MissionRecordView: View {
                         memoSection
                     }
                     .padding(.horizontal, 20)
-                    .padding(.top, 16)
+                    .padding(.top, 24)
                     .padding(.bottom, 120)
                 }
                 .scrollDismissesKeyboard(.interactively)
@@ -41,15 +41,9 @@ public struct MissionRecordView: View {
 
                 submitButton
             }
-            .background(Color.gray50)
+            .background(background)
             .contentShape(.rect)
             .onTapGesture { isMemoFocused = false }
-            .allowsHitTesting(store.completionModal == nil)
-            .accessibilityHidden(store.completionModal != nil)
-
-            if store.completionModal != nil {
-                completionModal
-            }
         }
         .loading(isLoading: store.isSubmitting)
         .navigationBarBackButtonHidden(true)
@@ -79,11 +73,20 @@ public struct MissionRecordView: View {
                 }
             }
         )
+        .presentToast($store.toast)
         .onChange(of: store.limitedPickerPresentationRequestID) { _, requestID in
             guard requestID != nil else { return }
             presentLimitedLibraryPicker()
             store.send(.limitedPickerFinished)
         }
+        .onAppear {
+            store.send(.onAppear)
+        }
+    }
+
+    var background: some View {
+        LinearGradient.missionRecordBackground
+            .ignoresSafeArea()
     }
 }
 
@@ -140,14 +143,24 @@ private extension MissionRecordView {
 
 private extension MissionRecordView {
     var missionTitleCard: some View {
-        Text(store.missionTitle)
-            .font(.body1Semibold)
-            .foregroundStyle(Color.gray900)
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 20)
-            .padding(.horizontal, 12)
-            .background(Color.gray200)
-            .clipShape(.rect(cornerRadius: .radius16))
+        VStack(alignment: .leading, spacing: 2) {
+            Text(store.missionTitle)
+                .font(.body1Semibold)
+                .foregroundStyle(Color.gray900)
+                .frame(maxWidth: .infinity, alignment: .leading)
+
+            if let description = store.missionDescription {
+                Text(description)
+                    .font(.body2Regular)
+                    .foregroundStyle(Color.gray700)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 16)
+        .padding(.horizontal, 20)
+        .background(Color.monoWhite)
+        .clipShape(.rect(cornerRadius: .radius16))
     }
 }
 
@@ -244,15 +257,32 @@ private extension MissionRecordView {
                 .font(.body1Semibold)
                 .foregroundStyle(Color.gray800)
 
-            TextField("함께 남기고 싶은 메모를 입력해주세요", text: $store.memo)
-                .font(.body2Regular)
-                .foregroundStyle(Color.gray600)
-                .padding(.horizontal, 12)
-                .padding(.vertical, 16)
-                .background(Color.monoWhite)
-                .clipShape(RoundedRectangle(cornerRadius: .radius16))
-                .focused($isMemoFocused)
+            memoInputField
+
+            if store.isMemoLimitExceeded {
+                Text("\(MissionRecordFeature.maxMemoLength)자까지 메모할 수 있어요.")
+                    .font(.caption1Regular)
+                    .foregroundStyle(Color.systemRed)
+            }
         }
+    }
+
+    var memoInputField: some View {
+        TextField("", text: $store.memo, axis: .vertical)
+            .font(.body2Regular)
+            .foregroundStyle(Color.gray900)
+            .focused($isMemoFocused)
+            .overlay(alignment: .leading) {
+                if store.memo.isEmpty {
+                    Text("함께 남기고 싶은 메모를 입력해주세요")
+                        .font(.body2Regular)
+                        .foregroundStyle(Color.gray500)
+                        .allowsHitTesting(false)
+                }
+            }
+            .padding(EdgeInsets(top: 16, leading: 12, bottom: 16, trailing: 16))
+            .background(Color.monoWhite)
+            .clipShape(.rect(cornerRadius: .radius16))
     }
 }
 
@@ -262,59 +292,32 @@ private extension MissionRecordView {
     var isSubmitEnabled: Bool {
         store.selectedImageData != nil && !store.isSubmitting
             && !store.memo.trimmingCharacters(in: .whitespaces).isEmpty
+            && !store.isMemoLimitExceeded
+    }
+
+    @ViewBuilder
+    var buttonBackground: some View {
+        if isSubmitEnabled {
+            Color.gray400
+        } else {
+            EllipticalGradient(
+                stops: [
+                    .init(color: .gray800, location: 0.0),
+                    .init(color: .clear, location: 1.0)
+                ],
+                center: .center
+            )
+            .background(Color.gray700)
+        }
     }
 
     var submitButton: some View {
-        Button {
+        BottomButton(title: "확인") {
             store.send(.submitButtonTapped)
-        } label: {
-            Text("기록 완료하기")
-                .font(.body1Medium)
-                .foregroundStyle(Color.monoWhite)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 16)
-                .background(isSubmitEnabled ? Color.gray700 : Color.gray400)
-                .clipShape(RoundedRectangle(cornerRadius: .radius12))
         }
         .disabled(!isSubmitEnabled)
         .padding(.horizontal, 20)
-        .padding(.bottom, 36)
-    }
-}
-
-// MARK: - Completion Modal
-
-private extension MissionRecordView {
-    var completionModal: some View {
-        ZStack {
-            Color.black.opacity(0.6)
-                .ignoresSafeArea()
-                .onTapGesture {}
-
-            VStack(spacing: 24) {
-                Text("기록이 저장되었어요")
-                    .font(.body1Medium)
-                    .foregroundStyle(Color.gray900)
-
-                Button {
-                    store.send(.completionModal(.presented(.confirmTapped)))
-                } label: {
-                    Text("확인")
-                        .font(.body1Medium)
-                        .foregroundStyle(Color.monoWhite)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 16)
-                        .background(Color.gray700)
-                        .clipShape(.rect(cornerRadius: .radius12))
-                }
-            }
-            .padding(24)
-            .background(Color.monoWhite)
-            .clipShape(.rect(cornerRadius: .radius12))
-            .padding(.horizontal, 40)
-        }
-        .transition(.opacity)
-        .animation(.easeInOut(duration: 0.2), value: store.completionModal != nil)
+        .padding(.vertical, 16)
     }
 }
 
