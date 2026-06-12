@@ -32,12 +32,13 @@ public struct MyPageFeature {
         var contactUsURL: URL?
         let currentVersion: AppVersion = .current
         var latestVersion: AppVersion?
-        var hasFetchedConfig: Bool = false
 
         @Presents var path: Path.State?
 
-        public init(_ solarTerm: SolarTerm) {
+        public init(_ solarTerm: SolarTerm, _ config: MyPageConfig?) {
             self.solarTerm = solarTerm
+            self.contactUsURL = config?.contactUsURL
+            self.latestVersion = config?.latestAppVersion
         }
 
         var season: Season {
@@ -69,7 +70,6 @@ public struct MyPageFeature {
         case deleteButtonTapped
         case privacyPolicyFetched([DocumentInfo])
         case termsOfServiceFetched([DocumentInfo])
-        case myPageConfigFetched(MyPageConfig?)
         case path(PresentationAction<Path.Action>)
         case delegate(Delegate)
     }
@@ -85,7 +85,6 @@ public struct MyPageFeature {
             case .onAppear:
                 return .send(.fetchAll)
             case .fetchAll:
-                if state.hasFetchedConfig { return .none }
                 return .run { [state] send in
                     await fetchAll(state, send)
                 }
@@ -133,12 +132,6 @@ public struct MyPageFeature {
                 return .send(.path(.presented(
                     .termsOfService(.termsOfServiceFetched(terms))
                 )))
-            case let .myPageConfigFetched(config):
-                state.hasFetchedConfig = true
-                guard let config else { return .none }
-                state.contactUsURL = config.contactUsURL
-                state.latestVersion = config.latestAppVersion
-                return .none
             case .path: return .none
             case .delegate: return .none
             }
@@ -152,7 +145,6 @@ private extension MyPageFeature {
         await withTaskGroup { group in
             group.addTask { await fetchPrivacyPolicy(state, send) }
             group.addTask { await fetchTermsOfService(state, send) }
-            group.addTask { await fetchMyPageConfig(state, send) }
         }
     }
 
@@ -166,10 +158,5 @@ private extension MyPageFeature {
         if state.termsOfService?.isEmpty == false { return }
         let terms = try? await myPageRepository.fetchTermsOfService()
         await send(.termsOfServiceFetched(terms ?? []))
-    }
-
-    func fetchMyPageConfig(_ state: State, _ send: Send<Action>) async {
-        let config = try? await myPageRepository.fetchMyPageConfig()
-        await send(.myPageConfigFetched(config))
     }
 }
