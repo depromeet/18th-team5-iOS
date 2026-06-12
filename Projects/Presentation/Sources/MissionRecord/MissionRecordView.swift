@@ -118,7 +118,7 @@ private extension MissionRecordView {
     var isSubmitEnabled: Bool {
         store.photo.selectedImageData != nil
             && !store.isSubmitting
-            && !store.memo.trimmingCharacters(in: .whitespaces).isEmpty
+            && !store.memo.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
             && !store.isMemoLimitExceeded
     }
 

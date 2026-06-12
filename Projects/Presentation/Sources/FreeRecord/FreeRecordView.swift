@@ -12,6 +12,8 @@ import SwiftUI
 public struct FreeRecordView: View {
     @Bindable private var store: StoreOf<FreeRecordFeature>
     @FocusState private var isMemoFocused: Bool
+    @State private var isDateSelectionSheetPresented = false
+    @State private var draftRecordDate = Date()
 
     public init(store: StoreOf<FreeRecordFeature>) {
         self.store = store
@@ -52,6 +54,21 @@ public struct FreeRecordView: View {
             }
         )
         .presentToast($store.toast)
+        .sheet(isPresented: $isDateSelectionSheetPresented) {
+            FreeRecordDateSelectionSheet(
+                selectedDate: $draftRecordDate,
+                confirmedDate: store.recordDate,
+                onClose: {
+                    isDateSelectionSheetPresented = false
+                },
+                onConfirm: {
+                    store.recordDate = draftRecordDate
+                    isDateSelectionSheetPresented = false
+                }
+            )
+            .presentationDetents([.height(309)])
+            .presentationDragIndicator(.hidden)
+        }
     }
 
     var background: some View {
@@ -74,32 +91,28 @@ private extension FreeRecordView {
     }
 
     var datePickerField: some View {
-        HStack {
-            Text(Self.displayDateFormatter.string(from: store.recordDate))
-                .font(.body2Regular)
-                .foregroundStyle(Color.gray900)
+        Button {
+            isMemoFocused = false
+            draftRecordDate = store.recordDate
+            isDateSelectionSheetPresented = true
+        } label: {
+            HStack {
+                Text(Self.displayDateFormatter.string(from: store.recordDate))
+                    .font(.body2Regular)
+                    .foregroundStyle(Color.gray900)
 
-            Spacer()
+                Spacer()
 
-            Image(systemName: "chevron.down")
-                .font(.system(size: 14, weight: .medium))
-                .foregroundStyle(Color.gray500)
+                Image(systemName: "chevron.down")
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundStyle(Color.gray500)
+            }
+            .padding(.vertical, 16)
+            .padding(.horizontal, 16)
+            .background(Color.monoWhite)
+            .clipShape(.rect(cornerRadius: .radius16))
         }
-        .padding(.vertical, 16)
-        .padding(.horizontal, 16)
-        .background(Color.monoWhite)
-        .clipShape(.rect(cornerRadius: .radius16))
-        .overlay {
-            DatePicker(
-                "",
-                selection: $store.recordDate,
-                displayedComponents: .date
-            )
-            .labelsHidden()
-            .datePickerStyle(.compact)
-            .opacity(0.02)
-            .frame(maxWidth: .infinity, alignment: .trailing)
-        }
+        .buttonStyle(.plain)
     }
 }
 
@@ -133,7 +146,7 @@ private extension FreeRecordView {
     var isSubmitEnabled: Bool {
         store.photo.selectedImageData != nil
             && !store.isSubmitting
-            && !store.memo.trimmingCharacters(in: .whitespaces).isEmpty
+            && !store.memo.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
             && !store.isMemoLimitExceeded
     }
 
