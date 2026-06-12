@@ -72,6 +72,7 @@ public struct MissionRecordFeature {
         case completionModal(PresentationAction<CompletionModal.Action>)
         case camera(PresentationAction<CameraFeature.Action>)
         case photoPicker(PresentationAction<PhotoPickerFeature.Action>)
+        case dismissAll
     }
 
     public enum Delegate {
@@ -228,6 +229,11 @@ public struct MissionRecordFeature {
 
             case .photoPicker(.presented(.delegate(.manageLimitedRequested))):
                 state.limitedPickerPresentationRequestID = UUID()
+                return .none
+
+            case .dismissAll:
+                state.photoPicker = nil
+                state.camera = nil
                 return .none
 
             case .photoPicker:

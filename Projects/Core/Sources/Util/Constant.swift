@@ -13,3 +13,9 @@ public enum Constant {
     public static let appStoreURL: String = Bundle.value(of: "AppStoreURL") ?? ""
     public static let commonDebugToken = "AAAAAAAA-AAAA-AAAA-AAAA-AAAAAAAAAAAA"
 }
+
+public extension Constant {
+    enum Key {
+        public static let pendingNotificationType = "pendingNotificationType"
+    }
+}

@@ -74,6 +74,7 @@ public struct MissionListFeature {
         case search(PresentationAction<MissionSearchFeature.Action>)
         case searchResult(PresentationAction<MissionSearchResultFeature.Action>)
         case delegate(Delegate)
+        case dismissAll
     }
 
     public enum Delegate {
@@ -171,6 +172,10 @@ public struct MissionListFeature {
                     try await Task.sleep(for: .seconds(0.3))
                     await send(.set(\.isCompleteViewPresented, true))
                 }
+            case .dismissAll:
+                state.search = nil
+                state.searchResult = nil
+                return .none
             case .binding: return .none
             case .search: return .none
             case .searchResult: return .none
