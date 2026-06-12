@@ -27,6 +27,17 @@ struct DailyMissionResponseDTO: Decodable {
     let title: String
     let participantCount: Int
     let missionType: String
+    let isCompleted: Bool
+}
+
+struct HomeSeasonRecordResponseDTO: Decodable {
+    let recordCount: Int
+    let recentRecords: [RecentRecordResponseDTO]
+}
+
+struct RecentRecordResponseDTO: Decodable {
+    let completionId: Int
+    let imageUrl: String
 }
 
 // MARK: - Domain Mapping
@@ -36,6 +47,16 @@ extension HomeCardDTO {
         HomeCard(
             solarTerm: solarTerm.toDomain(),
             currentMission: dailyMission?.toDomain()
+        )
+    }
+}
+
+extension HomeSeasonRecordResponseDTO {
+    func toDomain() -> SeasonRecord {
+        SeasonRecord(
+            solarTermName: "",
+            photoURL: recentRecords.compactMap { URL(string: $0.imageUrl) },
+            recordCount: recordCount
         )
     }
 }
@@ -66,7 +87,8 @@ extension DailyMissionResponseDTO {
             id: id,
             title: title,
             participantCount: participantCount,
-            missionType: missionType
+            missionType: missionType,
+            isCompleted: isCompleted
         )
     }
 }

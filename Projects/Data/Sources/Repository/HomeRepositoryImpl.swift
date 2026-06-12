@@ -30,6 +30,20 @@ public enum HomeRepositoryImpl {
                 } catch {
                     throw mapToDomainError(error)
                 }
+            },
+            fetchSeasonalRecords: {
+                @Dependency(\.networkClient) var networkClient
+                do {
+                    let response: HomeSeasonRecordResponseDTO? = try await networkClient.request(
+                        HomeEndpoint.seasonalRecords
+                    )
+                    guard let response else {
+                        throw DomainError.unknown("데이터 수신 실패")
+                    }
+                    return response.toDomain()
+                } catch {
+                    throw mapToDomainError(error)
+                }
             }
         )
     }

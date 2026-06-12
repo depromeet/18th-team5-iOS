@@ -6,11 +6,8 @@
 //
 
 import ComposableArchitecture
+import Core
 import Domain
-
-private enum Constants {
-    static let commonDebugToken = "AAAAAAAA-AAAA-AAAA-AAAA-AAAAAAAAAAAA"
-}
 
 @Reducer
 public struct DebugTokenSettingFeature {
@@ -42,7 +39,7 @@ public struct DebugTokenSettingFeature {
         Reduce { state, action in
             switch action {
             case .useCommonTokenButtonTapped:
-                state.tokenText = Constants.commonDebugToken
+                state.tokenText = Constant.commonDebugToken
                 return .none
 
             case .confirmButtonTapped:

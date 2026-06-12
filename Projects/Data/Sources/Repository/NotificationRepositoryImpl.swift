@@ -6,6 +6,7 @@
 //  Copyright © 2026 Orange. All rights reserved.
 //
 
+import Core
 import Dependencies
 import Domain
 import FirebaseMessaging
@@ -18,6 +19,8 @@ extension NotificationRepository: @retroactive DependencyKey {
 }
 
 enum NotificationRepositoryImpl {
+    private static let pendingNotificationType = Constant.Key.pendingNotificationType
+
     static func live() -> NotificationRepository {
         NotificationRepository(
             fetchNotificationSettings: {
@@ -50,6 +53,16 @@ enum NotificationRepositoryImpl {
 
                     try await group.waitForAll()
                 }
+            },
+            setPendingNotificationType: { type in
+                UserDefaults.standard.set(type.topic, forKey: pendingNotificationType)
+            },
+            fetchPendingNotificationType: {
+                let typeString = UserDefaults.standard.string(forKey: pendingNotificationType)
+                return NotificationType(typeString)
+            },
+            clearPendingNotificationType: {
+                UserDefaults.standard.removeObject(forKey: pendingNotificationType)
             }
         )
     }
