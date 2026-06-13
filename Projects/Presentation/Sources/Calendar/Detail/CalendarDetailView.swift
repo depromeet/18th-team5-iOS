@@ -38,6 +38,7 @@ struct CalendarDetailView: View {
                     .padding(.top, 16)
                     Spacer()
                 }
+                .clipped()
 
                 bottomButtonContainer
             }
