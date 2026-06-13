@@ -18,11 +18,43 @@ public struct DevModeView: View {
     }
 
     public var body: some View {
-        ScrollView {}
-            .navigationBar(
-                title: "개발자 모드",
-                dismissType: .close,
-                action: { store.send(.closeButtonTapped) }
-            )
+        ScrollView {
+            VStack(spacing: 0) {
+                itemListView
+            }
+            .padding(.horizontal, 20)
+            .padding(.top, 16)
+        }
+        .navigationBar(
+            title: "개발자 모드",
+            dismissType: .close,
+            action: { store.send(.closeButtonTapped) }
+        )
+        .background(Color.gray100)
+    }
+}
+
+private extension DevModeView {
+    var itemListView: some View {
+        VStack(spacing: 0) {
+            itemView(title: "User ID", content: store.userID ?? "")
+        }
+        .padding(.horizontal, 16)
+        .background(Color.white)
+        .clipShape(RoundedRectangle(cornerRadius: .radius12))
+    }
+
+    func itemView(title: String, content: String) -> some View {
+        HStack(spacing: 12) {
+            Text(title)
+                .font(.body1Medium)
+                .foregroundStyle(Color.gray900)
+                .frame(maxWidth: .infinity, alignment: .leading)
+
+            Text(content)
+                .font(.body2Regular)
+                .foregroundStyle(Color.gray600)
+        }
+        .padding(.vertical, 18)
     }
 }

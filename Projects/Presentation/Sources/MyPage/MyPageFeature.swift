@@ -36,6 +36,7 @@ public struct MyPageFeature {
         var contactUsURL: URL?
         let currentVersion: AppVersion = .current
         var latestVersion: AppVersion?
+        var userID: Int?
 
         @Presents var path: Path.State?
         @Presents var devMode: DevModeFeature.State?
@@ -76,6 +77,7 @@ public struct MyPageFeature {
         case deleteButtonTapped
         case privacyPolicyFetched([DocumentInfo])
         case termsOfServiceFetched([DocumentInfo])
+        case userIDFetched(Int?)
         case path(PresentationAction<Path.Action>)
         case devMode(PresentationAction<DevModeFeature.Action>)
         case deviceShaked
@@ -148,8 +150,11 @@ public struct MyPageFeature {
                 return .send(.path(.presented(
                     .termsOfService(.termsOfServiceFetched(terms))
                 )))
+            case let .userIDFetched(userID):
+                state.userID = userID
+                return .none
             case .deviceShaked:
-                state.devMode = .init()
+                state.devMode = .init(state.userID)
                 return .none
             case .devMode: return .none
             case .path: return .none
@@ -171,6 +176,7 @@ private extension MyPageFeature {
         await withTaskGroup { group in
             group.addTask { await fetchPrivacyPolicy(state, send) }
             group.addTask { await fetchTermsOfService(state, send) }
+            group.addTask { await fetchUserInfo(send) }
         }
     }
 
@@ -184,5 +190,10 @@ private extension MyPageFeature {
         if state.termsOfService?.isEmpty == false { return }
         let terms = try? await myPageRepository.fetchTermsOfService()
         await send(.termsOfServiceFetched(terms ?? []))
+    }
+
+    func fetchUserInfo(_ send: Send<Action>) async {
+        let userID = try? await myPageRepository.fetchUserID()
+        await send(.userIDFetched(userID))
     }
 }

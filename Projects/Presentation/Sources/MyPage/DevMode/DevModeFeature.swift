@@ -14,7 +14,11 @@ public struct DevModeFeature {
 
     @ObservableState
     public struct State: Equatable {
-        public init() {}
+        var userID: String?
+
+        public init(_ userID: Int?) {
+            self.userID = userID.map { String($0) }
+        }
     }
 
     public enum Action {

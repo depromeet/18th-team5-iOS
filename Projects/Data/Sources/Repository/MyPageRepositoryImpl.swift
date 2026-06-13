@@ -61,6 +61,11 @@ enum MyPageRepositoryImpl {
                     contactUsURL: URL(string: contactUsURL),
                     latestAppVersion: AppVersion(version: versionString)
                 )
+            },
+            fetchUserID: {
+                let endpoint = UserEndpoint.fetchUserInfo
+                let response: UserInfoResponseDTO? = try await networkClient.request(endpoint)
+                return response?.userId
             }
         )
     }
