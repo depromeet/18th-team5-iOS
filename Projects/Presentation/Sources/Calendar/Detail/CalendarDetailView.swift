@@ -22,7 +22,8 @@ struct CalendarDetailView: View {
                     of: { $0.size }
                 ) { screenSize = $0 }
 
-            if !store.dateRecordCards.isEmpty {
+            switch store.displayType {
+            case .cards:
                 VStack {
                     CardStackView(
                         topCardIndex: $store.frontCardIndex,
@@ -39,9 +40,17 @@ struct CalendarDetailView: View {
                 }
                 .clipped()
                 .transition(.opacity)
-            }
 
-            bottomButtonContainer
+                bottomButtonContainer
+            case .emptyRecord:
+                currentTermNoRecordView {
+                    // TODO: 기록하기 버튼 클릭 -@진준호
+                }
+            case .passedTerm:
+                passedTermNoRecordView
+            case .notDetermined:
+                EmptyView()
+            }
         }
         .animation(.easeInOut, value: store.isLoading)
         .presentToast($store.toast)

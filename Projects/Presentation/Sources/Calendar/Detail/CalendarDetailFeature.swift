@@ -16,6 +16,7 @@ public struct CalendarDetailFeature {
     @ObservableState
     public struct State: Equatable {
         let date: Date
+        var displayType: CardDetailDisplayType = .notDetermined
         var frontCardIndex: Int = 0
         var dateRecordCards: [DateRecordCard] = []
         var isLoading: Bool = true
@@ -36,6 +37,7 @@ public struct CalendarDetailFeature {
 
         // Internel actions
         case fetchRecordCards
+        case updateDetailDisplayType(CardDetailDisplayType)
         case updateRecordCards([DateRecordCard])
         case updateLoadingState(Bool)
 
@@ -62,6 +64,7 @@ public struct CalendarDetailFeature {
         case fetchRecordFailure
     }
 
+    @Dependency(\.solarTermRepository) var solarTermRepository
     @Dependency(\.calendarRecordRepository) var calendarRecordRepository
 
     public init() {}
@@ -80,7 +83,22 @@ public struct CalendarDetailFeature {
                     .run { send in
                         do {
                             let cards = try await calendarRecordRepository.fetchDateRecords(currentDate)
-                            await send(.updateRecordCards(cards))
+
+                            if cards.isEmpty {
+                                let terms = try await solarTermRepository.fetchSolarTerms(.current)
+                                let currentTerm = terms.first { info in
+                                    (info.startDate ... info.endDate).contains(.now)
+                                }
+                                let detailTerm = terms.first { info in
+                                    (info.startDate ... info.endDate).contains(currentDate)
+                                }
+                                let isCurrentTerm = (currentTerm == detailTerm)
+                                let displayType: CardDetailDisplayType = isCurrentTerm ? .emptyRecord : .passedTerm
+                                await send(.updateDetailDisplayType(displayType))
+                            } else {
+                                await send(.updateRecordCards(cards))
+                                await send(.updateDetailDisplayType(.cards))
+                            }
                             await send(.updateLoadingState(false))
                         } catch {
                             await send(.delegate(.showAlert(.fetchRecordFailure)))
@@ -94,6 +112,10 @@ public struct CalendarDetailFeature {
 
             case let .updateLoadingState(isLoading):
                 state.isLoading = isLoading
+                return .none
+
+            case let .updateDetailDisplayType(type):
+                state.displayType = type
                 return .none
 
             // Alert
