@@ -204,6 +204,13 @@ public struct CameraRepresentableView: UIViewRepresentable {
                     logger.warning(message: "초점/노출 설정 실패: \(error)")
                 }
 
+            case let .setExposureBiasAdjustment(adjustment):
+                do {
+                    try cameraController.setExposureBiasAdjustment(adjustment)
+                } catch {
+                    logger.warning(message: "노출 보정 실패: \(error)")
+                }
+
             case .resetFocusAndExposure:
                 cameraController.resetFocusAndExposure()
             }

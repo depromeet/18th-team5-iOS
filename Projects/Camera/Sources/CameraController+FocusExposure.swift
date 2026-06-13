@@ -16,6 +16,10 @@ extension CameraController {
         try focusAndExposeOnDevice(at: devicePoint)
     }
 
+    public func setExposureBiasAdjustment(_ adjustment: Float) throws {
+        try setExposureBiasAdjustmentOnDevice(adjustment)
+    }
+
     public func resetFocusAndExposure() {
         do {
             try resetFocusAndExposureOnDevice()
@@ -52,6 +56,31 @@ extension CameraController {
             } else if device.isExposureModeSupported(.autoExpose) {
                 device.exposureMode = .autoExpose
             }
+
+            let neutralBias = min(max(Float.zero, device.minExposureTargetBias), device.maxExposureTargetBias)
+            device.setExposureTargetBias(neutralBias)
+
+            mutableState.withLock {
+                $0.exposureTargetBiasBase = neutralBias
+            }
+        }
+    }
+
+    nonisolated func setExposureBiasAdjustmentOnDevice(_ adjustment: Float) throws {
+        try sessionQueue.sync {
+            guard let device = currentDevice() else {
+                throw CameraError.deviceNotAvailable
+            }
+
+            try device.lockForConfiguration()
+            defer { device.unlockForConfiguration() }
+
+            let base = mutableState.withLock { $0.exposureTargetBiasBase }
+            let targetBias = min(
+                max(base + adjustment, device.minExposureTargetBias),
+                device.maxExposureTargetBias
+            )
+            device.setExposureTargetBias(targetBias)
         }
     }
 
@@ -74,6 +103,10 @@ extension CameraController {
 
             let neutralBias = min(max(Float.zero, device.minExposureTargetBias), device.maxExposureTargetBias)
             device.setExposureTargetBias(neutralBias)
+
+            mutableState.withLock {
+                $0.exposureTargetBiasBase = neutralBias
+            }
         }
     }
 }

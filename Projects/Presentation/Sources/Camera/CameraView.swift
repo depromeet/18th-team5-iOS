@@ -24,8 +24,13 @@ public struct CameraView: View {
     @State private var switchCameraButtonFeedbackTask: Task<Void, Never>?
     @State private var focusExposurePoint: CGPoint?
     @State private var focusExposureScale: CGFloat = 1
+    @State private var exposureOffset: CGFloat = 0
+    @State private var exposureDragBaseOffset: CGFloat = 0
+    @State private var isExposureDragging = false
+    @State private var isExposureGuideVisible = false
     @State private var focusExposureDismissTask: Task<Void, Never>?
     @State private var focusExposureAnimationTask: Task<Void, Never>?
+    @State private var exposureGuideDismissTask: Task<Void, Never>?
 
     public init(store: StoreOf<CameraFeature>) {
         self.store = store
@@ -150,10 +155,15 @@ private extension CameraView {
             FocusExposureIndicator(
                 point: focusExposurePoint,
                 scale: focusExposureScale,
+                exposureOffset: exposureOffset,
+                isExposureGuideVisible: isExposureGuideVisible,
                 previewSize: previewSize
-            )
+            ) { translationY in
+                updateExposureFeedback(with: translationY)
+            } onExposureDragEnded: {
+                scheduleExposureGuideDismiss()
+            }
             .transition(.opacity)
-            .allowsHitTesting(false)
         }
     }
 
@@ -176,6 +186,10 @@ private extension CameraView {
         withTransaction(transaction) {
             focusExposurePoint = nil
             focusExposureScale = 1.16
+            exposureOffset = 0
+            exposureDragBaseOffset = 0
+            isExposureDragging = false
+            isExposureGuideVisible = false
         }
 
         withTransaction(transaction) {
@@ -195,6 +209,42 @@ private extension CameraView {
         }
 
         proxy.send(.focusAndExpose(at: location))
+        proxy.send(.setExposureBiasAdjustment(0))
+    }
+
+    func updateExposureFeedback(with translationY: CGFloat) {
+        focusExposureDismissTask?.cancel()
+        exposureGuideDismissTask?.cancel()
+        isExposureGuideVisible = true
+
+        if !isExposureDragging {
+            exposureDragBaseOffset = exposureOffset
+            isExposureDragging = true
+        }
+
+        let visualOffset = exposureDragBaseOffset + translationY * 0.08
+        exposureOffset = max(min(visualOffset, 86), -86)
+
+        let adjustment = Float(-exposureOffset / 86 * 4)
+        proxy.send(.setExposureBiasAdjustment(adjustment))
+    }
+
+    func scheduleExposureGuideDismiss() {
+        exposureGuideDismissTask?.cancel()
+        isExposureDragging = false
+        exposureDragBaseOffset = exposureOffset
+        scheduleFocusExposureFeedbackDismiss()
+        exposureGuideDismissTask = Task {
+            try? await Task.sleep(for: .seconds(0.45))
+            guard !Task.isCancelled else { return }
+
+            await MainActor.run {
+                withAnimation(.easeInOut(duration: 0.12)) {
+                    isExposureGuideVisible = false
+                }
+                exposureGuideDismissTask = nil
+            }
+        }
     }
 
     func scheduleFocusExposureFeedbackDismiss() {
@@ -215,10 +265,16 @@ private extension CameraView {
     func clearFocusExposureFeedback() {
         focusExposureDismissTask?.cancel()
         focusExposureAnimationTask?.cancel()
+        exposureGuideDismissTask?.cancel()
         focusExposureDismissTask = nil
         focusExposureAnimationTask = nil
+        exposureGuideDismissTask = nil
         focusExposurePoint = nil
         focusExposureScale = 1
+        exposureOffset = 0
+        exposureDragBaseOffset = 0
+        isExposureDragging = false
+        isExposureGuideVisible = false
         proxy.send(.resetFocusAndExposure)
     }
 
@@ -423,23 +479,38 @@ private enum CameraControlFeedbackTarget {
 private struct FocusExposureIndicator: View {
     let point: CGPoint
     let scale: CGFloat
+    let exposureOffset: CGFloat
+    let isExposureGuideVisible: Bool
     let previewSize: CGFloat
+    let onExposureDragChanged: (CGFloat) -> Void
+    let onExposureDragEnded: () -> Void
 
     private let accentColor = Color.yellow
     private let reticleSize: CGFloat = 68
     private let lineWidth: CGFloat = 1.1
     private let tickLength: CGFloat = 10
+    private let sunSize: CGFloat = 22
+    private let sunSpacing: CGFloat = 25
+    private let exposureGuideHeight: CGFloat = 172
 
     var body: some View {
         ZStack(alignment: .topLeading) {
-            Rectangle()
-                .stroke(accentColor, lineWidth: lineWidth)
-                .frame(width: reticleSize, height: reticleSize)
-                .overlay(reticleTicks)
-                .scaleEffect(scale)
-                .position(point)
+            reticle
+                .allowsHitTesting(false)
+
+            exposureControl
         }
         .frame(width: previewSize, height: previewSize)
+        .clipped()
+    }
+
+    private var reticle: some View {
+        Rectangle()
+            .stroke(accentColor, lineWidth: lineWidth)
+            .frame(width: reticleSize, height: reticleSize)
+            .overlay(reticleTicks)
+            .scaleEffect(scale)
+            .position(point)
     }
 
     private var reticleTicks: some View {
@@ -464,5 +535,55 @@ private struct FocusExposureIndicator: View {
                 .frame(width: tickLength, height: lineWidth)
                 .frame(maxWidth: .infinity, alignment: .trailing)
         }
+    }
+
+    private var exposureControl: some View {
+        let x = exposureControlX
+        let centerY = exposureControlCenterY
+        let sunY = min(
+            max(centerY + exposureOffset, centerY - exposureGuideHeight / 2),
+            centerY + exposureGuideHeight / 2
+        )
+
+        return ZStack {
+            if isExposureGuideVisible {
+                Rectangle()
+                    .fill(accentColor)
+                    .frame(width: lineWidth, height: exposureGuideHeight)
+                    .position(x: x, y: centerY)
+                    .transition(.opacity)
+                    .allowsHitTesting(false)
+            }
+
+            Image(systemName: "sun.max.fill")
+                .font(.system(size: sunSize, weight: .regular))
+                .foregroundStyle(accentColor)
+                .frame(width: 42, height: 42)
+                .contentShape(.rect)
+                .position(x: x, y: sunY)
+                .gesture(
+                    DragGesture(minimumDistance: 0, coordinateSpace: .local)
+                        .onChanged { value in
+                            onExposureDragChanged(value.translation.height)
+                        }
+                        .onEnded { _ in
+                            onExposureDragEnded()
+                        }
+                )
+        }
+    }
+
+    private var exposureControlX: CGFloat {
+        let rightSpace = previewSize - (point.x + reticleSize / 2)
+        let leftSpace = point.x - reticleSize / 2
+        let x = rightSpace >= leftSpace
+            ? point.x + reticleSize / 2 + sunSpacing
+            : point.x - reticleSize / 2 - sunSpacing
+
+        return min(max(x, 21), previewSize - 21)
+    }
+
+    private var exposureControlCenterY: CGFloat {
+        point.y
     }
 }

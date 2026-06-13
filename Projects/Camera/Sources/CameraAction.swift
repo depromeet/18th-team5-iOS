@@ -22,6 +22,7 @@ public enum CameraAction {
     case endPinchZoom
     case toggleSelfieZoom
     case focusAndExpose(at: CGPoint)
+    case setExposureBiasAdjustment(Float)
     case resetFocusAndExposure
 }
 
