@@ -28,9 +28,9 @@ public struct CardStackView<Item, CardView: View>: View {
     @State private var cardOpacities: [Int: CGFloat] = [:]
     @State private var dismissingCardItemIndices: Set<Int> = []
 
-    // Draging card state
-    @State private var currentDragableCardOffsetY: CGFloat = 0
-    @State private var currentDragableCardOpacity: CGFloat = 1.0
+    // Dragging card state
+    @State private var currentDraggableCardOffsetY: CGFloat = 0
+    @State private var currentDraggableCardOpacity: CGFloat = 1.0
 
     // Card UI
     @State private var cardSize: CGSize = .zero
@@ -141,7 +141,7 @@ private extension CardStackView {
         // #2. 현재 드래그 가능한 카드인지 확인
         let isTopCard = (entry.itemIndex == innerTopCardItemIndex)
         if isTopCard {
-            return currentDragableCardOffsetY
+            return currentDraggableCardOffsetY
         }
 
         // #3. 일반 카드
@@ -158,7 +158,7 @@ private extension CardStackView {
         // #2. 현재 드래그 가능한 카드인지 확인
         let isTopCard = (entry.itemIndex == innerTopCardItemIndex)
         if isTopCard {
-            return currentDragableCardOpacity
+            return currentDraggableCardOpacity
         }
 
         // #3. 일반 카드
@@ -199,13 +199,13 @@ private extension CardStackView {
                 prevDragOffset = state.location
 
                 // 드래그 카드 오프셋
-                currentDragableCardOffsetY += (dY * 0.65)
+                currentDraggableCardOffsetY += (dY * 0.65)
 
                 // 드래그 퍼센트(0~1)
                 dragPercent = max(0, min(1, abs(state.translation.height) * 0.25 / dragThreshold))
 
                 // 드래그 카드 투명도
-                currentDragableCardOpacity = 1 - dragPercent
+                currentDraggableCardOpacity = 1 - dragPercent
             }
             .onEnded { state in
                 let dragDirection = DragDirection(
@@ -242,8 +242,8 @@ private extension CardStackView {
     func snapToIdentity() {
         prevDragOffset = nil
         withAnimation {
-            currentDragableCardOpacity = 1.0
-            currentDragableCardOffsetY = .zero
+            currentDraggableCardOpacity = 1.0
+            currentDraggableCardOffsetY = .zero
             dragPercent = 0
         }
     }
@@ -252,15 +252,15 @@ private extension CardStackView {
         prevDragOffset = nil
 
         let dismissIdx = innerTopCardItemIndex
-        let startOffsetY = currentDragableCardOffsetY
-        let startOpacity = currentDragableCardOpacity
+        let startOffsetY = currentDraggableCardOffsetY
+        let startOpacity = currentDraggableCardOpacity
 
         cardOffsets[dismissIdx] = startOffsetY
         cardOpacities[dismissIdx] = startOpacity
 
         dismissingCardItemIndices.insert(dismissIdx)
-        currentDragableCardOffsetY = 0
-        currentDragableCardOpacity = 1.0
+        currentDraggableCardOffsetY = 0
+        currentDraggableCardOpacity = 1.0
 
         let dismissYPos = switch direction {
         case .top: -cardSize.height

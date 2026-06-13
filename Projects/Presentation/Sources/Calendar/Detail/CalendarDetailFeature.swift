@@ -39,7 +39,7 @@ public struct CalendarDetailFeature {
         case removeCardConfirmed
         case alert(AlertAction)
 
-        // Internel actions
+        // Internal actions
         case fetchRecordCards
         case updateDetailDisplayType(CardDetailDisplayType)
         case updateRecordCards([DateRecordCard])
