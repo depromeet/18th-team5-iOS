@@ -14,6 +14,7 @@ extension MyPageView {
     func pathView(_ store: StoreOf<MyPageFeature.Path>) -> some View {
         switch store.case {
         case let .notificationSettings(store): NotificationSettingsView(store: store)
+        case let .announcements(store): AnnouncementListView(store: store)
         case let .privacyPolicy(store): PrivacyPolicyView(store: store)
         case let .termsOfService(store): TermsOfServiceView(store: store)
         }

@@ -16,6 +16,7 @@ extension MainView {
         case let .myPage(store): MyPageView(store: store)
         case let .solarTermIntroContent(store): SolarTermIntroContentView(store: store)
         case let .missionRecord(store): MissionRecordView(store: store)
+        case let .freeRecord(store): FreeRecordView(store: store)
         }
     }
 }

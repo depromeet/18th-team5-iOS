@@ -90,20 +90,6 @@ public enum MissionRepositoryImpl {
                     throw mapToDomainError(error)
                 }
             },
-            uploadImage: { imageData, fileName, contentType in
-                @Dependency(\.s3Client) var s3Client
-
-                do {
-                    let (presignedUrl, objectKey) = try await s3Client.fetchPresignedUrl(
-                        fileName,
-                        contentType
-                    )
-                    try await s3Client.uploadImage(presignedUrl, imageData, contentType)
-                    return objectKey
-                } catch {
-                    throw mapToDomainError(error)
-                }
-            },
             fetchRecommendedMissions: {
                 @Dependency(\.networkClient) var client
 

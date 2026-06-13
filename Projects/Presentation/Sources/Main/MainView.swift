@@ -36,6 +36,7 @@ public struct MainView: View {
         } destination: { store in
             pathView(store: store)
         }
+        .toastContainer()
         .onAppear { store.send(.onAppear) }
     }
 }

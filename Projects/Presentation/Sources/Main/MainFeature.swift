@@ -29,6 +29,7 @@ public struct MainFeature {
 
         var path: StackState<Path.State> = .init()
         var solarTerm: SolarTerm?
+        var myPageConfig: MyPageConfig?
         var alert: CustomAlertFeature<Alert>.State?
 
         public init() {
@@ -41,6 +42,8 @@ public struct MainFeature {
 
     public enum Action: BindableAction {
         case onAppear
+        case observePushNotificationTapEvent
+        case handleNotificationTapEvent
         case binding(BindingAction<State>)
         case home(HomeFeature.Action)
         case mission(MissionListFeature.Action)
@@ -48,11 +51,14 @@ public struct MainFeature {
         case solarTermIntro(SolarTermIntroFeature.Action)
         case path(StackActionOf<Path>)
         case alert(CustomAlertFeature<Alert>.Action)
+        case push(Path.State)
+        case popToRoot
     }
 
     @Dependency(\.logger) private var logger
     @Dependency(\.solarTermRepository) private var solarTermRepository
     @Dependency(\.notificationRepository) private var notificationRepository
+    @Dependency(\.myPageRepository) private var myPageRepository
 
     public init() {}
 
@@ -78,9 +84,28 @@ public struct MainFeature {
         Reduce { state, action in
             switch action {
             case .onAppear:
+                return .merge([
+                    .concatenate([
+                        .run { send in await fetchTodaysSolarTerm(send) },
+                        .send(.handleNotificationTapEvent)
+                    ]),
+                    .send(.observePushNotificationTapEvent),
+                    .run { send in await fetchMyPageConfig(send) }
+                ])
+
+            case .observePushNotificationTapEvent:
+                let stream = NotificationCenter.default
+                    .publisher(for: .pushNotificationTapped)
+                    .values
+
                 return .run { send in
-                    await fetchTodaysSolarTerm(send)
+                    for await _ in stream {
+                        await send(.handleNotificationTapEvent)
+                    }
                 }
+
+            case .handleNotificationTapEvent:
+                return handleNotificationTapEvent(state)
 
             case let .home(.delegate(.navigateToMissionCamera(missionId, title, missionTypeRaw))):
                 let missionType = MissionType(rawValue: missionTypeRaw) ?? {
@@ -107,7 +132,7 @@ public struct MainFeature {
 
             case .home(.delegate(.navigateToMyPage)):
                 guard let solarTerm = state.solarTerm else { return .none }
-                state.path.append(.myPage(.init(solarTerm)))
+                state.path.append(.myPage(.init(solarTerm, state.myPageConfig)))
                 return .none
 
             case .home(.delegate(.navigateToCalendar)):
@@ -126,6 +151,10 @@ public struct MainFeature {
 
             case let .mission(.delegate(.showAlert(alert))):
                 state.alert = .init(.mission(alert))
+                return .none
+
+            case .calendar(.delegate(.navigateToFreeRecord)):
+                state.path.append(.freeRecord(.init(recordDate: Date.now)))
                 return .none
 
             case .alert(.primaryButtonTapped):
@@ -150,6 +179,14 @@ public struct MainFeature {
                 return .run { _ in
                     await syncNotificationSettings(settings)
                 }
+
+            case let .push(destination):
+                state.path.append(destination)
+                return .none
+
+            case .popToRoot:
+                state.path.removeAll()
+                return .none
 
             case .alert: return .none
 
@@ -184,6 +221,49 @@ private extension MainFeature {
 
     func syncNotificationSettings(_ settings: [NotificationType: Bool]) async {
         try? await notificationRepository.syncNotificationSettings(settings)
+    }
+
+    func handleNotificationTapEvent(_ state: State) -> Effect<Action> {
+        let notificationType = notificationRepository.fetchPendingNotificationType()
+        notificationRepository.clearPendingNotificationType()
+
+        guard let notificationType else { return .none }
+
+        return .run { [state] send in
+            if let dismissCoverAction = dismissCoverAction(state) {
+                await send(dismissCoverAction)
+            }
+
+            switch notificationType {
+            case .dailyMission:
+                await send(.set(\.tab, .home))
+                await send(.popToRoot)
+            case .solarTermEnd:
+                await send(.set(\.tab, .calendar))
+                await send(.popToRoot)
+            case .solarTermStart:
+                guard let solarTerm = state.solarTerm else { return }
+                await send(.push(.solarTermIntroContent(.init(term: solarTerm))))
+            }
+        }
+    }
+
+    func dismissCoverAction(_ state: State) -> Action? {
+        if state.path.last.is(\.missionRecord),
+           let id = state.path.ids.last {
+            return .path(.element(id: id, action: .missionRecord(.dismissAll)))
+        }
+
+        if state.tab == .mission {
+            return .mission(.dismissAll)
+        }
+
+        return nil
+    }
+
+    func fetchMyPageConfig(_ send: Send<Action>) async {
+        let config = try? await myPageRepository.fetchMyPageConfig()
+        await send(.set(\.myPageConfig, config))
     }
 }
 

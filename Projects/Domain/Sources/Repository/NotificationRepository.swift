@@ -15,6 +15,9 @@ public struct NotificationRepository: Sendable {
     public var fetchNotificationSettings: @Sendable () async throws -> [NotificationType: Bool]?
     public var setNotificationSettings: @Sendable ([NotificationType: Bool]) async throws -> [NotificationType: Bool]?
     public var syncNotificationSettings: @Sendable ([NotificationType: Bool]) async throws -> Void
+    public var setPendingNotificationType: @Sendable (NotificationType) -> Void
+    public var fetchPendingNotificationType: @Sendable () -> NotificationType?
+    public var clearPendingNotificationType: @Sendable () -> Void
 }
 
 extension NotificationRepository: TestDependencyKey {

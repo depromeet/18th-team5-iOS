@@ -42,13 +42,7 @@ private extension BottomButton {
     }
 
     var primaryGradient: some View {
-        EllipticalGradient(
-            stops: [
-                .init(color: .gray800, location: 0.0),
-                .init(color: .clear, location: 1.0)
-            ],
-            center: .center
-        )
-        .background(Color.gray700)
+        EllipticalGradient.buttonBackground
+            .background(Color.gray700)
     }
 }

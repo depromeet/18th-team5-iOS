@@ -33,15 +33,15 @@ public struct SolarTermInfo: Equatable {
 
     public var formattedDateRange: String {
         let lastDay = endDate.previousDay
-        let start = DateFormatter.monthDay.string(from: startDate)
-        let end = DateFormatter.monthDay.string(from: lastDay)
+        let start = startDate.string(.shortMonthDayDot)
+        let end = lastDay.string(.shortMonthDayDot)
         return "\(start) - \(end)"
     }
 
     public var formattedFullDateRange: String {
         let lastDay = endDate.previousDay
-        let start = DateFormatter.monthDayKorean.string(from: startDate)
-        let end = DateFormatter.monthDayKorean.string(from: lastDay)
+        let start = startDate.string(.monthDayKorean)
+        let end = lastDay.string(.monthDayKorean)
 
         if startDate.year == lastDay.year {
             return "\(startDate.year)년 \(start) - \(end)"

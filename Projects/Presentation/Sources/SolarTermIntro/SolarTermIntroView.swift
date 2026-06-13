@@ -27,7 +27,7 @@ struct SolarTermIntroView: View {
         }
         .navigationBarTitleDisplayMode(.inline)
         .onAppear { store.send(.onAppear) }
-        .fullScreenCover(
+        .navigationDestination(
             item: $store.scope(state: \.content, action: \.content)
         ) { contentStore in
             SolarTermIntroContentView(store: contentStore)
