@@ -69,7 +69,7 @@ extension CalendarDetailView {
 
 #Preview {
     CalendarDetailView(
-        store: .init(initialState: .init()) {
+        store: .init(initialState: .init(date: .now)) {
             CalendarDetailFeature()
         }
     )
@@ -78,7 +78,7 @@ extension CalendarDetailView {
 
 #Preview {
     CalendarDetailView(
-        store: .init(initialState: .init()) {
+        store: .init(initialState: .init(date: .now)) {
             CalendarDetailFeature()
         }
     )

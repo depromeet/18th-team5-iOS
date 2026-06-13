@@ -6,6 +6,8 @@
 //  Copyright © 2026 Orange. All rights reserved.
 //
 
+import Domain
+import Kingfisher
 import SwiftUI
 
 extension CalendarDetailView {
@@ -39,12 +41,14 @@ extension CalendarDetailView {
         max(screenSize.width - Constants.cardHorizontalPadding * 2, 0)
     }
 
-    @ViewBuilder
-    func cardView(index: Int) -> some View {
-        let orderIndex = index - frontCardIndex
+    func cardView(
+        cardIndex: Int,
+        orderIndex: Int,
+        card: DateRecordCard
+    ) -> some View {
         Group {
             if orderIndex == 0 {
-                contentsCardView(index: index)
+                contentsCardView(index: cardIndex, card: card)
             } else {
                 RoundedRectangle(cornerRadius: Constants.cardCornerRadius)
                     .foregroundStyle(
@@ -67,12 +71,12 @@ extension CalendarDetailView {
         )
     }
 
-    private func contentsCardView(index: Int) -> some View {
+    private func contentsCardView(index: Int, card: DateRecordCard) -> some View {
         ZStack {
             cardBackground(cardWidth)
 
             VStack {
-                cardImageView
+                cardImageView(card.imageURL)
                     .aspectRatio(1.0, contentMode: .fit)
                     .padding(.horizontal, 48)
                     .padding(.top, 43.5)
@@ -83,13 +87,11 @@ extension CalendarDetailView {
             VStack(spacing: 12) {
                 Spacer()
 
-                // 모델링 대상
-                Text("나만의 여름 음료 개발하기")
+                Text(card.missionTitle ?? "-")
                     .font(.headline1Semibold)
                     .foregroundStyle(.white)
 
-                // 모델링 대상
-                Text("이번 입하에는 여름 음료를 만들어 먹었다. 너무 맛있어")
+                Text(card.memo ?? "-")
                     .font(.body2Medium)
                     .foregroundStyle(.white)
                     .underline(true, pattern: .solid, color: .white)
@@ -102,8 +104,24 @@ extension CalendarDetailView {
         }
     }
 
-    private var cardImageView: some View {
-        RoundedRectangle(cornerRadius: 12)
+    private var cardImagePlaceholder: some View {
+        Rectangle().fill(Color.gray300)
+    }
+
+    private func cardImageView(_ url: URL?) -> some View {
+        cardImagePlaceholder
+            .aspectRatio(1.0, contentMode: .fit)
+            .overlay {
+                if let url {
+                    KFImage(url)
+                        .placeholder { cardImagePlaceholder }
+                        .cacheOriginalImage()
+                        .scaleFactor(UIScreen.main.scale)
+                        .fade(duration: 0.2)
+                        .resizable()
+                        .scaledToFill()
+                }
+            }
             .clipShape(RoundedRectangle(cornerRadius: 12))
             .overlay {
                 RoundedRectangle(cornerRadius: 12)
@@ -117,7 +135,6 @@ extension CalendarDetailView {
                         Spacer()
                         imageVerSticker
                     }
-
                     HStack {
                         imageHorSticker
                         Spacer()
@@ -147,7 +164,10 @@ extension CalendarDetailView {
     private func cardToolbarView(_ cardIndex: Int) -> some View {
         VStack(spacing: 12) {
             HStack {
-                CardCountBadge(current: cardIndex + 1, total: cards.count)
+                CardCountBadge(
+                    current: cardIndex + 1,
+                    total: store.dateRecordCards.count
+                )
 
                 Spacer()
 

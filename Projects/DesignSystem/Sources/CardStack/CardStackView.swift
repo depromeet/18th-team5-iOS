@@ -18,8 +18,10 @@ enum Constants {
 
 public struct CardStackView<Item, CardView: View>: View {
     private let items: [Item]
+    private let originalCardCount: Int
 
-    @Binding private var topCardItemIndex: Int
+    @Binding private var outerTopCardItemIndex: Int
+    @State private var innerTopCardItemIndex: Int
     @State private var prevDragOffset: CGPoint?
     @State private var dragPercent: CGFloat = 0
     @State private var cardOffsets: [Int: CGFloat] = [:]
@@ -32,14 +34,16 @@ public struct CardStackView<Item, CardView: View>: View {
 
     // Card UI
     @State private var cardSize: CGSize = .zero
-    private var cardView: (Int, Item) -> CardView
+    private var cardView: (Int, Int, Item) -> CardView
 
     public init(
         topCardIndex: Binding<Int>,
         items: [Item],
-        @ViewBuilder cardView: @escaping (Int, Item) -> CardView
+        @ViewBuilder cardView: @escaping (Int, Int, Item) -> CardView
     ) {
-        self._topCardItemIndex = topCardIndex
+        self._outerTopCardItemIndex = topCardIndex
+        self.innerTopCardItemIndex = topCardIndex.wrappedValue
+        self.originalCardCount = items.count
         self.items = {
             var populatedItems: [Item] = items
             while populatedItems.count <= Constants.maxDisplayCardCount * 2 {
@@ -54,7 +58,8 @@ public struct CardStackView<Item, CardView: View>: View {
         ZStack {
             ForEach(renderedEntries, id: \.itemIndex) { entry in
                 let scale = scale(for: entry)
-                cardView(entry.itemIndex, entry.item)
+                let cardIndex = (entry.itemIndex % originalCardCount)
+                cardView(cardIndex, entry.olderIndex, entry.item)
                     .onGeometryChange(
                         for: CGSize.self,
                         of: { $0.size }
@@ -66,6 +71,9 @@ public struct CardStackView<Item, CardView: View>: View {
         }
         .gesture(dragGesture)
         .padding(.top, stackTopPadding)
+        .onChange(of: innerTopCardItemIndex) { _, newValue in
+            outerTopCardItemIndex = (newValue % originalCardCount)
+        }
     }
 }
 
@@ -93,7 +101,7 @@ private extension CardStackView {
 
     var renderedEntries: [RenderEntry] {
         let idleCardStack: [RenderEntry] = itemIndices(
-            startIndex: topCardItemIndex,
+            startIndex: innerTopCardItemIndex,
             endIndex: items.endIndex
         )
         .enumerated()
@@ -130,7 +138,7 @@ private extension CardStackView {
         }
 
         // #2. 현재 드래그 가능한 카드인지 확인
-        let isTopCard = entry.itemIndex == topCardItemIndex
+        let isTopCard = (entry.itemIndex == innerTopCardItemIndex)
         if isTopCard {
             return currentDragableCardOffsetY
         }
@@ -147,7 +155,7 @@ private extension CardStackView {
         }
 
         // #2. 현재 드래그 가능한 카드인지 확인
-        let isTopCard = entry.itemIndex == topCardItemIndex
+        let isTopCard = (entry.itemIndex == innerTopCardItemIndex)
         if isTopCard {
             return currentDragableCardOpacity
         }
@@ -242,7 +250,7 @@ private extension CardStackView {
     func snapToDismiss(direction: DragDirection, verticalVelocity: CGFloat) {
         prevDragOffset = nil
 
-        let dismissIdx = topCardItemIndex
+        let dismissIdx = innerTopCardItemIndex
         let startOffsetY = currentDragableCardOffsetY
         let startOpacity = currentDragableCardOpacity
 
@@ -265,7 +273,7 @@ private extension CardStackView {
 
         withAnimation(.easeInOut) {
             dragPercent = 0
-            topCardItemIndex = (topCardItemIndex + 1) % items.endIndex
+            innerTopCardItemIndex = (innerTopCardItemIndex + 1) % items.endIndex
         }
 
         withAnimation(.interpolatingSpring(stiffness: 120, damping: 18, initialVelocity: initialVelocity)) {
@@ -301,7 +309,7 @@ extension Color {
     CardStackView(
         topCardIndex: $topCardIndex,
         items: (0 ..< 10).map { _ in CardModel() }
-    ) { _, item in
+    ) { _, _, item in
         ZStack {
             RoundedRectangle(cornerRadius: 15)
                 .foregroundStyle(item.color)
@@ -317,7 +325,7 @@ extension Color {
     CardStackView(
         topCardIndex: $topCardIndex,
         items: [CardModel()]
-    ) { _, item in
+    ) { _, _, item in
         ZStack {
             RoundedRectangle(cornerRadius: 15)
                 .foregroundStyle(item.color)

@@ -77,6 +77,13 @@ public struct CalendarFeature {
             case .headerBackButtonTapped:
                 state.detail = nil
                 state.calendarState.scrollEnabled = true
+                if let id = state.selectedDateId {
+                    editDateCell(&state, id: id) {
+                        var newDate = $0
+                        newDate.isSelected = false
+                        return newDate
+                    }
+                }
                 return .none
 
             case let .calendarDataRequest(request):
@@ -133,17 +140,40 @@ public struct CalendarFeature {
             case let .anchoredTermChanged(termId):
                 return anchoredTermChanged(&state, termGroupId: termId)
 
-            case let .detail(.presented(.delegate(.showAlert(alert)))):
-                state.alert = .init(.detail(alert))
+            // Detail
+
+            case let .detail(.presented(.delegate(daction))):
+                switch daction {
+                case let .showAlert(alert):
+                    state.alert = .init(.detail(alert))
+                case .dismissAlert:
+                    state.alert = nil
+                case .dismiss:
+                    state.detail = nil
+                }
                 return .none
+
+            // Alert
 
             case .alert(.primaryButtonTapped):
-                state.alert = nil
-                return .send(.detail(.presented(.removeCardConfirmed)))
+                switch state.alert {
+                case .init(.detail(.removeCard)):
+                    return .send(.detail(.presented(.alert(.removeCardConfirmed))))
+                case .init(.detail(.fetchRecordFailure)):
+                    return .send(.detail(.presented(.alert(.retryFetchConfirmed))))
+                default:
+                    return .none
+                }
 
             case .alert(.secondaryButtonTapped):
-                state.alert = nil
-                return .none
+                switch state.alert {
+                case .init(.detail(.removeCard)):
+                    return .send(.detail(.presented(.alert(.removeCardCancelled))))
+                case .init(.detail(.fetchRecordFailure)):
+                    return .send(.detail(.presented(.alert(.retryFetchCancelled))))
+                default:
+                    return .none
+                }
 
             // MARK: Internal actions
 

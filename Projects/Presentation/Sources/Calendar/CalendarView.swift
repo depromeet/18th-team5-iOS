@@ -79,6 +79,7 @@ struct CalendarView: View {
                             .onDisappear {
                                 store.send(.detailViewDisappeared)
                             }
+                            .id(detailStore.id)
                     }
                 }
                 .animation(.easeInOut, value: store.detail != nil)
