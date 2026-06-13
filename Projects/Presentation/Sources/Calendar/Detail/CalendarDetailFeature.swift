@@ -40,6 +40,7 @@ public struct CalendarDetailFeature {
         case updateDetailDisplayType(CardDetailDisplayType)
         case updateRecordCards([DateRecordCard])
         case updateLoadingState(Bool)
+        case deleteCardFailed
 
         case delegate(Delegate)
         case binding(BindingAction<State>)
@@ -120,12 +121,37 @@ public struct CalendarDetailFeature {
 
             // Alert
             case .removeCardButtonTapped:
-                // TODO: 카드 식별 및 실제 삭제 처리 연결 -@준영
                 return .send(.delegate(.showAlert(.removeCard)))
 
             case .removeCardConfirmed:
+                // 낙관적 업데이트: 현재 가장 위에 있는 카드를 즉시 제거
+                guard state.dateRecordCards.indices.contains(state.frontCardIndex) else {
+                    return .none
+                }
+                let removedCard = state.dateRecordCards.remove(at: state.frontCardIndex)
+                state.frontCardIndex = 0
                 state.toast = .init(
                     title: "기록이 삭제되었어요",
+                    duration: 1.5,
+                    bottomInset: 108,
+                    action: nil
+                )
+                return .run { send in
+                    do {
+                        switch removedCard.cardType {
+                        case .free:
+                            try await calendarRecordRepository.deleteFreeRecord(removedCard.id)
+                        case .daily, .recommended, .selected:
+                            try await calendarRecordRepository.deleteMissionCompletion(removedCard.id)
+                        }
+                    } catch {
+                        await send(.deleteCardFailed)
+                    }
+                }
+
+            case .deleteCardFailed:
+                state.toast = .init(
+                    title: "카드 삭제에 실패했어요",
                     duration: 1.5,
                     bottomInset: 108,
                     action: nil
@@ -136,8 +162,8 @@ public struct CalendarDetailFeature {
                 switch alertAction {
                 case .removeCardConfirmed:
                     return .concatenate(
-                        // TODO: 실제 카드 삭제
-                        .send(.fetchRecordCards)
+                        .send(.delegate(.dismissAlert)),
+                        .send(.removeCardConfirmed)
                     )
                 case .removeCardCancelled:
                     return .send(.delegate(.dismissAlert))
