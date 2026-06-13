@@ -16,12 +16,12 @@ enum FontFamily {
 }
 
 extension FontFamily {
-    func uiFont(_ typography: Typography) -> UIFont {
-        font(typography.weight).font(size: typography.style.size)
+    func uiFont(_ size: CGFloat, _ weight: FontWeight) -> UIFont {
+        font(weight).font(size: size)
     }
 
-    func swiftUIFont(_ typography: Typography) -> SwiftUI.Font {
-        font(typography.weight).swiftUIFont(size: typography.style.size)
+    func swiftUIFont(_ size: CGFloat, _ weight: FontWeight) -> SwiftUI.Font {
+        font(weight).swiftUIFont(size: size)
     }
 }
 

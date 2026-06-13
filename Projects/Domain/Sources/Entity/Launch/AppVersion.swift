@@ -20,7 +20,9 @@ public struct AppVersion: Comparable {
         self.patch = patch
     }
 
-    public init?(version: String) {
+    public init?(version: String?) {
+        guard let version else { return nil }
+
         let splited = version.split(separator: ".")
             .compactMap { Int($0) }
         guard let major = splited[safe: 0],
@@ -31,6 +33,10 @@ public struct AppVersion: Comparable {
         self.major = major
         self.minor = minor
         self.patch = patch
+    }
+
+    public var string: String {
+        "\(major).\(minor).\(patch)"
     }
 }
 

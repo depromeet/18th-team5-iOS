@@ -36,6 +36,7 @@ public struct MissionListFeature {
         var isTooltipPresented: Bool = false
         var isIndicatorEnabled: Bool = false
         var isCompleteViewPresented: Bool = false
+        var pendingOpenFromHome: Bool = false
 
         public init() {}
 
@@ -66,11 +67,14 @@ public struct MissionListFeature {
         case missionCardTapped(Mission)
         case recommendedMissionsFetched(RecommendedMission?)
         case searchResultFetched(Mission?)
+        case openFromHome
+        case resolveFromHomePending
         case showCompleteAnimation
         case binding(BindingAction<State>)
         case search(PresentationAction<MissionSearchFeature.Action>)
         case searchResult(PresentationAction<MissionSearchResultFeature.Action>)
         case delegate(Delegate)
+        case dismissAll
     }
 
     public enum Delegate {
@@ -88,6 +92,7 @@ public struct MissionListFeature {
                 handleTooltip(&state)
                 return .run { [state] send in
                     await fetchAll(state, send)
+                    await send(.resolveFromHomePending)
                 }
             case let .themeTapped(theme):
                 let mission = state.missions.first { $0.theme == theme }
@@ -97,6 +102,24 @@ public struct MissionListFeature {
             case let .indicatorIndexChanged(index):
                 guard state.missions.indices.contains(index) else { return .none }
                 state.selectedMission = state.missions[index]
+                return .none
+            case .openFromHome:
+                if let mission = state.searchedMission {
+                    state.searchResult = .init(mission)
+                } else if let season = state.season {
+                    state.search = .init(season: season)
+                } else {
+                    state.pendingOpenFromHome = true
+                }
+                return .none
+            case .resolveFromHomePending:
+                guard state.pendingOpenFromHome else { return .none }
+                state.pendingOpenFromHome = false
+                if let mission = state.searchedMission {
+                    state.searchResult = .init(mission)
+                } else if let season = state.season {
+                    state.search = .init(season: season)
+                }
                 return .none
             case .searchMissionButtonTapped:
                 if let mission = state.searchedMission {
@@ -149,6 +172,10 @@ public struct MissionListFeature {
                     try await Task.sleep(for: .seconds(0.3))
                     await send(.set(\.isCompleteViewPresented, true))
                 }
+            case .dismissAll:
+                state.search = nil
+                state.searchResult = nil
+                return .none
             case .binding: return .none
             case .search: return .none
             case .searchResult: return .none

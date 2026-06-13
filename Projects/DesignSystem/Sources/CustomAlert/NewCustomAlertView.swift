@@ -93,19 +93,9 @@ private extension NewCustomAlertView {
                 .lineLimit(1)
                 .frame(maxWidth: .infinity)
                 .frame(height: 48)
-                .background { gradient }
+                .background { EllipticalGradient.buttonBackground }
                 .background(Color.gray700)
                 .clipShape(RoundedRectangle(cornerRadius: .radius12))
         }
-    }
-
-    var gradient: some View {
-        EllipticalGradient(
-            stops: [
-                .init(color: .gray800, location: 0.0),
-                .init(color: .clear, location: 1.0)
-            ],
-            center: .center
-        )
     }
 }

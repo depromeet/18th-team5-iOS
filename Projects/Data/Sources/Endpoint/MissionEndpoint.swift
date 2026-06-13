@@ -70,13 +70,4 @@ enum MissionEndpoint: APIEndpoint {
         default: nil
         }
     }
-
-    var requiresAuth: Bool {
-        switch self {
-        case .fetchRecordPage:
-            false
-        default:
-            true
-        }
-    }
 }

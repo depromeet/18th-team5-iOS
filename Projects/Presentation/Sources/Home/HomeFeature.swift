@@ -7,6 +7,7 @@
 //
 
 import ComposableArchitecture
+import DesignSystem
 import Domain
 
 @Reducer
@@ -14,8 +15,7 @@ public struct HomeFeature {
     @ObservableState
     public struct State: Equatable {
         var homeCard: HomeCard?
-        // TODO: 추후 API 연동시 대체 - @minkyo
-        var seasonRecord: SeasonRecord = .mock
+        var seasonRecord: SeasonRecord?
         var isLoading: Bool = false
         var hasError: Bool = false
 
@@ -26,16 +26,19 @@ public struct HomeFeature {
         case onAppear
         case onRetryTap
         case homeLoad(Result<HomeCard, Error>)
+        case seasonRecordLoad(Result<SeasonRecord, Error>)
         case onMissionTap
         case onMissionRecommendTap
         case onSolarTermDetailTap
         case myPageButtonTapped
+        case calendarButtonTapped
         case delegate(Delegate)
 
         public enum Delegate {
             case navigateToMissionCamera(missionId: Int, title: String, missionType: String)
             case navigateToMissionTab
             case navigateToSolarTermContent(SolarTerm)
+            case navigateToCalendar
             case navigateToMyPage
         }
     }
@@ -62,13 +65,29 @@ public struct HomeFeature {
             case let .homeLoad(.success(data)):
                 state.isLoading = false
                 state.homeCard = data
-                return .none
+                return .run { send in
+                    do {
+                        var record = try await homeRepository.fetchSeasonalRecords()
+                        record.solarTermName = data.solarTerm.name
+                        await send(.seasonRecordLoad(.success(record)))
+                    } catch {
+                        await send(.seasonRecordLoad(.failure(error)))
+                    }
+                }
 
             case let .homeLoad(.failure(error)):
                 state.isLoading = false
                 state.hasError = true
-                // TODO: 디버그용 로그 - 확인 후 제거
                 print("HomeFeature fetchHome 실패: \(error)")
+                return .none
+
+            case let .seasonRecordLoad(.success(record)):
+                state.seasonRecord = record
+                ImagePrefetchService.prefetch(record.photoURL)
+                return .none
+
+            case let .seasonRecordLoad(.failure(error)):
+                print("HomeFeature fetchSeasonalRecords 실패: \(error)")
                 return .none
 
             case .onMissionTap:
@@ -89,6 +108,9 @@ public struct HomeFeature {
 
             case .myPageButtonTapped:
                 return .send(.delegate(.navigateToMyPage))
+
+            case .calendarButtonTapped:
+                return .send(.delegate(.navigateToCalendar))
 
             case .delegate:
                 return .none

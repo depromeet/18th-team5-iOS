@@ -9,6 +9,13 @@
 import Kingfisher
 import SwiftUI
 
+public enum ImagePrefetchService {
+    public static func prefetch(_ urls: [URL]) {
+        guard !urls.isEmpty else { return }
+        ImagePrefetcher(urls: urls).start()
+    }
+}
+
 public struct RemoteImage: View {
     private let url: URL?
     private let contentMode: SwiftUI.ContentMode
@@ -19,12 +26,18 @@ public struct RemoteImage: View {
     }
 
     public var body: some View {
-        KFImage(url)
-            .placeholder {
-                Color.gray100
-            }
-            .fade(duration: 0.25)
-            .resizable()
-            .aspectRatio(contentMode: contentMode)
+        GeometryReader { proxy in
+            KFImage(url)
+                .setProcessor(
+                    DownsamplingImageProcessor(size: proxy.size)
+                )
+                .scaleFactor(UIScreen.main.scale)
+                .placeholder {
+                    Color.gray100
+                }
+                .fade(duration: 0.25)
+                .resizable()
+                .aspectRatio(contentMode: contentMode)
+        }
     }
 }

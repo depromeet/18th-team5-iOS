@@ -27,7 +27,7 @@ struct SolarTermIntroView: View {
         }
         .navigationBarTitleDisplayMode(.inline)
         .onAppear { store.send(.onAppear) }
-        .fullScreenCover(
+        .navigationDestination(
             item: $store.scope(state: \.content, action: \.content)
         ) { contentStore in
             SolarTermIntroContentView(store: contentStore)
@@ -85,7 +85,7 @@ private extension SolarTermIntroView {
             )
         ) { solarTerm in
             Group {
-                if store.targetTerm == solarTerm.term {
+                if store.currentTerm == solarTerm.term {
                     CurrentSolarTermCardView(
                         solarTermIntro: solarTerm,
                         season: store.season,

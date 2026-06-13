@@ -19,6 +19,8 @@ enum CalendarEndpoint: APIEndpoint {
     case deleteMissionCompletion(completionId: Int)
     /// 자유 기록 삭제
     case deleteFreeRecord(recordId: Int)
+    /// 자유 기록 추가
+    case completeFreeRecord(CalendarFreeRecordRequestDTO)
 
     var path: String {
         switch self {
@@ -32,6 +34,8 @@ enum CalendarEndpoint: APIEndpoint {
             "/api/v1/calendar/mission-completions/\(completionId)"
         case let .deleteFreeRecord(recordId):
             "/api/v1/calendar/records/\(recordId)"
+        case .completeFreeRecord:
+            "/api/v1/calendar/records"
         }
     }
 
@@ -41,14 +45,29 @@ enum CalendarEndpoint: APIEndpoint {
             .get
         case .deleteMissionCompletion, .deleteFreeRecord:
             .delete
+        case .completeFreeRecord:
+            .post
+        }
+    }
+
+    var body: Encodable? {
+        switch self {
+        case let .completeFreeRecord(request):
+            request
+        default:
+            nil
         }
     }
 
     var requiresAuth: Bool {
         switch self {
-        case .fetchCurrentSolarTerms, .fetchSolarTerms, .fetchDateRecords,
-             .deleteMissionCompletion, .deleteFreeRecord:
-            true
+        case .fetchCurrentSolarTerms,
+             .fetchSolarTerms,
+             .fetchDateRecords,
+             .deleteMissionCompletion,
+             .deleteFreeRecord,
+             .completeFreeRecord:
+            return true
         }
     }
 }

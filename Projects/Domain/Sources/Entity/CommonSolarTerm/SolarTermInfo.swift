@@ -32,22 +32,21 @@ public struct SolarTermInfo: Equatable {
     }
 
     public var formattedDateRange: String {
-        let start = DateFormatter.monthDay.string(from: startDate)
-        let end = DateFormatter.monthDay.string(from: endDate)
+        let lastDay = endDate.previousDay
+        let start = startDate.string(.shortMonthDayDot)
+        let end = lastDay.string(.shortMonthDayDot)
         return "\(start) - \(end)"
     }
 
     public var formattedFullDateRange: String {
-        let start = DateFormatter.monthDayKorean.string(from: startDate)
-        let end = DateFormatter.monthDayKorean.string(from: endDate)
-        let calendar = Calendar(identifier: .gregorian)
-        let startYear = calendar.component(.year, from: startDate)
-        let endYear = calendar.component(.year, from: endDate)
+        let lastDay = endDate.previousDay
+        let start = startDate.string(.monthDayKorean)
+        let end = lastDay.string(.monthDayKorean)
 
-        if startYear == endYear {
-            return "\(startYear)년 \(start) - \(end)"
+        if startDate.year == lastDay.year {
+            return "\(startDate.year)년 \(start) - \(end)"
         } else {
-            return "\(startYear)년 \(start) - \(endYear)년 \(end)"
+            return "\(startDate.year)년 \(start) - \(lastDay.year)년 \(end)"
         }
     }
 }

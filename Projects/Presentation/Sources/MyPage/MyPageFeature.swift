@@ -7,6 +7,7 @@
 //
 
 import ComposableArchitecture
+import Core
 import Domain
 import Foundation
 
@@ -23,21 +24,51 @@ public struct MyPageFeature {
         case privacyPolicy
     }
 
+    public enum Alert {
+        case delete
+    }
+
     @ObservableState
     public struct State: Equatable {
         let solarTerm: SolarTerm
         var privacyPolicies: [DocumentInfo]?
         var termsOfService: [DocumentInfo]?
         var contactUsURL: URL?
-        var version: String = "1.3.2" // TODO: 추후 수정 예정 - @정원
-        @Presents var path: Path.State?
+        let currentVersion: AppVersion = .current
+        var latestVersion: AppVersion?
 
-        public init(_ solarTerm: SolarTerm) {
+        var isDevModeEnabled: Bool
+        var userID: Int?
+
+        @Presents var path: Path.State?
+        @Presents var devMode: DevModeFeature.State?
+        var alert: CustomAlertFeature<Alert>.State?
+
+        public init(_ solarTerm: SolarTerm, _ config: MyPageConfig?) {
             self.solarTerm = solarTerm
+            self.contactUsURL = config?.contactUsURL
+            self.latestVersion = config?.latestAppVersion
+            self.isDevModeEnabled = config?.isDevModeEnabled ?? false
         }
 
         var season: Season {
             solarTerm.season
+        }
+
+        var canUpdate: Bool {
+            guard let latestVersion else { return false }
+            return currentVersion < latestVersion
+        }
+
+        var storeURL: URL? {
+            guard let latestVersion else { return nil }
+
+            let urlString = switch latestVersion.major {
+            case 1...: Constant.appStoreURL
+            default: Constant.testFlightURL
+            }
+
+            return URL(string: urlString)
         }
     }
 
@@ -46,13 +77,15 @@ public struct MyPageFeature {
         case fetchAll
         case backButtonTapped
         case menuTapped(Menu)
-        case updateButtonTapped
         case deleteButtonTapped
-        case contactUsURLFetched(URL?)
         case privacyPolicyFetched([DocumentInfo])
         case termsOfServiceFetched([DocumentInfo])
+        case userIDFetched(Int?)
         case path(PresentationAction<Path.Action>)
+        case devMode(PresentationAction<DevModeFeature.Action>)
+        case deviceShaked
         case delegate(Delegate)
+        case alert(CustomAlertFeature<Alert>.Action)
     }
 
     public enum Delegate {
@@ -76,6 +109,9 @@ public struct MyPageFeature {
                 case .notificationSettings:
                     state.path = .notificationSettings(.init(state.season))
                     return .none
+                case .announcements:
+                    state.path = .announcements(.init())
+                    return .none
                 case .termsOfService:
                     state.path = .termsOfService(.init(state.termsOfService))
                     guard state.termsOfService?.isEmpty == true else { return .none }
@@ -96,12 +132,14 @@ public struct MyPageFeature {
                     return .send(.delegate(.syncNotificationSettings(settings)))
                 default: return .none
                 }
-            case .updateButtonTapped:
-                return .none
             case .deleteButtonTapped:
+                state.alert = .init(.delete)
                 return .none
-            case let .contactUsURLFetched(url):
-                state.contactUsURL = url
+            case .alert(.primaryButtonTapped):
+                // TODO: 초기화 API 호출
+                return .none
+            case .alert(.secondaryButtonTapped):
+                state.alert = nil
                 return .none
             case let .privacyPolicyFetched(policies):
                 state.privacyPolicies = policies
@@ -115,20 +153,35 @@ public struct MyPageFeature {
                 return .send(.path(.presented(
                     .termsOfService(.termsOfServiceFetched(terms))
                 )))
+            case let .userIDFetched(userID):
+                state.userID = userID
+                return .none
+            case .deviceShaked:
+                guard state.isDevModeEnabled else { return .none }
+                state.devMode = .init(state.userID)
+                return .none
+            case .devMode: return .none
             case .path: return .none
             case .delegate: return .none
             }
         }
         .ifLet(\.$path, action: \.path)
+        .ifLet(\.$devMode, action: \.devMode) {
+            DevModeFeature()
+        }
+        .ifLet(\.alert, action: \.alert) {
+            CustomAlertFeature()
+        }
     }
 }
 
 private extension MyPageFeature {
     func fetchAll(_ state: State, _ send: Send<Action>) async {
-        async let privacyPolicy = fetchPrivacyPolicy(state, send)
-        async let termsOfService = fetchTermsOfService(state, send)
-        async let contactUsURL = fetchContactUsURL(state, send)
-        _ = await (privacyPolicy, termsOfService, contactUsURL)
+        await withTaskGroup { group in
+            group.addTask { await fetchPrivacyPolicy(state, send) }
+            group.addTask { await fetchTermsOfService(state, send) }
+            group.addTask { await fetchUserInfo(send) }
+        }
     }
 
     func fetchPrivacyPolicy(_ state: State, _ send: Send<Action>) async {
@@ -143,12 +196,8 @@ private extension MyPageFeature {
         await send(.termsOfServiceFetched(terms ?? []))
     }
 
-    func fetchContactUsURL(_ state: State, _ send: Send<Action>) async {
-        guard state.contactUsURL == nil else { return }
-        let urlString = try? await myPageRepository.fetchContactUsURL()
-
-        if let urlString {
-            await send(.contactUsURLFetched(URL(string: urlString)))
-        }
+    func fetchUserInfo(_ send: Send<Action>) async {
+        let userID = try? await myPageRepository.fetchUserID()
+        await send(.userIDFetched(userID))
     }
 }

@@ -24,8 +24,7 @@ public struct MyPageView: View {
                 MenuListView { menu in
                     switch menu {
                     case .contactUs:
-                        guard let url = store.contactUsURL else { return }
-                        openURL(url)
+                        if let url = store.contactUsURL { openURL(url) }
                     default:
                         store.send(.menuTapped(menu))
                     }
@@ -40,10 +39,16 @@ public struct MyPageView: View {
         .navigationBar(title: "마이페이지") { store.send(.backButtonTapped) }
         .background { backgroundView }
         .onAppear { store.send(.onAppear) }
+        .customAlert(store.scope(state: \.alert, action: \.alert))
         .navigationDestination(
             item: $store.scope(state: \.path, action: \.path),
             destination: pathView
         )
+        .fullScreenCover(
+            item: $store.scope(state: \.devMode, action: \.devMode),
+            content: DevModeView.init
+        )
+        .onShake { store.send(.deviceShaked) }
     }
 }
 
@@ -55,12 +60,12 @@ private extension MyPageView {
                 .foregroundStyle(Color.gray900)
                 .frame(maxWidth: .infinity, alignment: .leading)
 
-            Text(store.version)
+            Text(store.currentVersion.string)
                 .font(.body2Regular)
                 .foregroundStyle(Color.gray600)
 
             Button {
-                store.send(.updateButtonTapped)
+                if let url = store.storeURL { openURL(url) }
             } label: {
                 Text("업데이트")
                     .font(.body2Medium)
@@ -70,6 +75,7 @@ private extension MyPageView {
                     .background(Color.gray700)
                     .clipShape(RoundedRectangle(cornerRadius: .radius8))
             }
+            .renderedIf(store.canUpdate)
         }
         .padding(.horizontal, 16)
         .frame(height: 68)
@@ -107,5 +113,22 @@ private extension MyPageView {
             endPoint: .bottom
         )
         .ignoresSafeArea()
+    }
+}
+
+extension MyPageFeature.Alert: AlertPresentable {
+    public var alertInfo: AlertInfo {
+        switch self {
+        case .delete:
+            .init(
+                icon: .icWarning,
+                title: """
+                내 정보를 초기화할까요?
+                저장된 기록이 모두 삭제돼요.
+                """,
+                primaryButtonTitle: "삭제하기",
+                secondaryButtonTitle: "닫기"
+            )
+        }
     }
 }

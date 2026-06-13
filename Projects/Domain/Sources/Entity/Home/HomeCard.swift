@@ -35,7 +35,8 @@ public extension HomeCard {
             id: 7,
             title: "시원한 계곡물에 발 담그기",
             participantCount: 100,
-            missionType: "DAILY"
+            missionType: "DAILY",
+            isCompleted: false
         )
     )
 }

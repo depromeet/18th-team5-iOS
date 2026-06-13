@@ -60,6 +60,25 @@ public enum CalendarRecordRepositoryImpl {
                 try await client.requestEmpty(
                     CalendarEndpoint.deleteFreeRecord(recordId: recordId)
                 )
+            },
+            completeFreeRecord: { recordDate, objectKey, memo in
+                @Dependency(\.networkClient) var client
+                let request = CalendarFreeRecordRequestDTO(
+                    recordDate: recordDate,
+                    objectKey: objectKey,
+                    memo: memo
+                )
+                do {
+                    let response: CalendarFreeRecordResponseDTO? = try await client.request(
+                        CalendarEndpoint.completeFreeRecord(request)
+                    )
+                    guard let response else {
+                        throw DomainError.unknown("데이터 획득 실패")
+                    }
+                    return response.recordId
+                } catch {
+                    throw mapToDomainError(error)
+                }
             }
         )
     }
