@@ -73,6 +73,7 @@ public struct CardStackView<Item, CardView: View>: View {
         .gesture(dragGesture)
         .padding(.top, stackTopPadding)
         .onChange(of: innerTopCardItemIndex) { _, newValue in
+            guard originalCardCount > 0 else { return }
             outerTopCardItemIndex = (newValue % originalCardCount)
         }
     }
@@ -249,6 +250,10 @@ private extension CardStackView {
     }
 
     func snapToDismiss(direction: DragDirection, verticalVelocity: CGFloat) {
+        guard !items.isEmpty else {
+            snapToIdentity()
+            return
+        }
         prevDragOffset = nil
 
         let dismissIdx = innerTopCardItemIndex

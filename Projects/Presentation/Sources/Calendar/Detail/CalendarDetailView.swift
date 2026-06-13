@@ -65,6 +65,7 @@ struct CalendarDetailView: View {
         }
         .task(id: store.date.description) {
             try? await Task.sleep(for: .seconds(0.5))
+            guard !Task.isCancelled else { return }
             store.send(.viewDidLoad)
         }
     }

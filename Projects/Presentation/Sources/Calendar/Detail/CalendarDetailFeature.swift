@@ -44,7 +44,7 @@ public struct CalendarDetailFeature {
         case updateDetailDisplayType(CardDetailDisplayType)
         case updateRecordCards([DateRecordCard])
         case updateLoadingState(Bool)
-        case deleteCardFailed
+        case deleteCardFailed(card: DateRecordCard, index: Int)
 
         case delegate(Delegate)
         case binding(BindingAction<State>)
@@ -106,6 +106,7 @@ public struct CalendarDetailFeature {
                             }
                             await send(.updateLoadingState(false))
                         } catch {
+                            await send(.updateLoadingState(false))
                             await send(.delegate(.showAlert(.fetchRecordFailure)))
                         }
                     }
@@ -152,7 +153,8 @@ public struct CalendarDetailFeature {
                 guard state.dateRecordCards.indices.contains(state.frontCardIndex) else {
                     return .none
                 }
-                let removedCard = state.dateRecordCards.remove(at: state.frontCardIndex)
+                let removedIndex = state.frontCardIndex
+                let removedCard = state.dateRecordCards.remove(at: removedIndex)
                 state.frontCardIndex = 0
                 state.toast = .init(
                     title: "기록이 삭제되었어요",
@@ -169,11 +171,15 @@ public struct CalendarDetailFeature {
                             try await calendarRecordRepository.deleteMissionCompletion(removedCard.id)
                         }
                     } catch {
-                        await send(.deleteCardFailed)
+                        await send(.deleteCardFailed(card: removedCard, index: removedIndex))
                     }
                 }
 
-            case .deleteCardFailed:
+            case let .deleteCardFailed(card, index):
+                // 낙관적 삭제 롤백: 제거했던 카드를 원래 위치로 복원
+                let insertIndex = min(index, state.dateRecordCards.count)
+                state.dateRecordCards.insert(card, at: insertIndex)
+                state.frontCardIndex = insertIndex
                 state.toast = .init(
                     title: "카드 삭제에 실패했어요",
                     duration: 1.5,

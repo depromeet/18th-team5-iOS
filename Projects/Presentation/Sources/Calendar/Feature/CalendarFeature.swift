@@ -110,14 +110,15 @@ public struct CalendarFeature {
                       state.presentMoveToCurrentTermButton == nil
                 else { return .none }
 
-                let anchoredTermIdOffset = termOffset(
+                guard let anchoredTermIdOffset = termOffset(
                     pages: state.calendarState.pages,
                     id: anchoredTermId
-                )
-                let currentTermIdOffset = termOffset(
-                    pages: state.calendarState.pages,
-                    id: currentTermId
-                )
+                ),
+                    let currentTermIdOffset = termOffset(
+                        pages: state.calendarState.pages,
+                        id: currentTermId
+                    )
+                else { return .none }
 
                 let button: MoveToCurrentTermButtonType = (anchoredTermIdOffset < currentTermIdOffset) ? .down : .up
                 state.presentMoveToCurrentTermButton = button
@@ -157,6 +158,15 @@ public struct CalendarFeature {
                     state.alert = nil
                 case .dismiss:
                     state.detail = nil
+                    state.calendarState.scrollEnabled = true
+                    if let id = state.selectedDateId {
+                        state.selectedDateId = nil
+                        editDateCell(&state, id: id) {
+                            var newDate = $0
+                            newDate.isSelected = false
+                            return newDate
+                        }
+                    }
                 }
                 return .none
 
@@ -240,7 +250,7 @@ private extension CalendarFeature {
     func termOffset(
         pages: [Page<SolarTermGroup>],
         id: SolarTermGroup.ID
-    ) -> Int {
+    ) -> Int? {
         var offset = 0
         for page in pages {
             for item in page.items {
@@ -250,7 +260,7 @@ private extension CalendarFeature {
                 offset += 1
             }
         }
-        return offset
+        return nil
     }
 }
 
