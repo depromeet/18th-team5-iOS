@@ -7,6 +7,7 @@
 //
 
 import ComposableArchitecture
+import DesignSystem
 import Domain
 
 @Reducer
@@ -82,6 +83,7 @@ public struct HomeFeature {
 
             case let .seasonRecordLoad(.success(record)):
                 state.seasonRecord = record
+                ImagePrefetchService.prefetch(record.photoURL)
                 return .none
 
             case let .seasonRecordLoad(.failure(error)):
