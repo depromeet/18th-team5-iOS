@@ -39,6 +39,7 @@ public struct MyPageView: View {
         .navigationBar(title: "마이페이지") { store.send(.backButtonTapped) }
         .background { backgroundView }
         .onAppear { store.send(.onAppear) }
+        .customAlert(store.scope(state: \.alert, action: \.alert))
         .navigationDestination(
             item: $store.scope(state: \.path, action: \.path),
             destination: pathView
@@ -107,5 +108,22 @@ private extension MyPageView {
             endPoint: .bottom
         )
         .ignoresSafeArea()
+    }
+}
+
+extension MyPageFeature.Alert: AlertPresentable {
+    public var alertInfo: AlertInfo {
+        switch self {
+        case .delete:
+            .init(
+                icon: .icWarning,
+                title: """
+                내 정보를 초기화할까요?
+                저장된 기록이 모두 삭제돼요.
+                """,
+                primaryButtonTitle: "삭제하기",
+                secondaryButtonTitle: "닫기"
+            )
+        }
     }
 }

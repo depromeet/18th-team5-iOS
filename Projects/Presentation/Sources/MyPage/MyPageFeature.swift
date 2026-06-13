@@ -24,6 +24,10 @@ public struct MyPageFeature {
         case privacyPolicy
     }
 
+    public enum Alert {
+        case delete
+    }
+
     @ObservableState
     public struct State: Equatable {
         let solarTerm: SolarTerm
@@ -34,6 +38,7 @@ public struct MyPageFeature {
         var latestVersion: AppVersion?
 
         @Presents var path: Path.State?
+        var alert: CustomAlertFeature<Alert>.State?
 
         public init(_ solarTerm: SolarTerm, _ config: MyPageConfig?) {
             self.solarTerm = solarTerm
@@ -72,6 +77,7 @@ public struct MyPageFeature {
         case termsOfServiceFetched([DocumentInfo])
         case path(PresentationAction<Path.Action>)
         case delegate(Delegate)
+        case alert(CustomAlertFeature<Alert>.Action)
     }
 
     public enum Delegate {
@@ -119,6 +125,13 @@ public struct MyPageFeature {
                 default: return .none
                 }
             case .deleteButtonTapped:
+                state.alert = .init(.delete)
+                return .none
+            case .alert(.primaryButtonTapped):
+                // TODO: 초기화 API 호출
+                return .none
+            case .alert(.secondaryButtonTapped):
+                state.alert = nil
                 return .none
             case let .privacyPolicyFetched(policies):
                 state.privacyPolicies = policies
@@ -137,6 +150,9 @@ public struct MyPageFeature {
             }
         }
         .ifLet(\.$path, action: \.path)
+        .ifLet(\.alert, action: \.alert) {
+            CustomAlertFeature()
+        }
     }
 }
 
