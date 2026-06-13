@@ -78,6 +78,7 @@ public struct CalendarFeature {
                 state.detail = nil
                 state.calendarState.scrollEnabled = true
                 if let id = state.selectedDateId {
+                    state.selectedDateId = nil
                     editDateCell(&state, id: id) {
                         var newDate = $0
                         newDate.isSelected = false
