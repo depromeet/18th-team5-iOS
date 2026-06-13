@@ -18,6 +18,10 @@ public struct CameraView: View {
     @State private var proxy = CameraProxy()
     @State private var cameraState = CameraStateSnapshot.initial
     @State private var cameraError: CameraError?
+    @State private var isFlashButtonFeedbackVisible = false
+    @State private var isSwitchCameraButtonFeedbackVisible = false
+    @State private var flashButtonFeedbackTask: Task<Void, Never>?
+    @State private var switchCameraButtonFeedbackTask: Task<Void, Never>?
 
     public init(store: StoreOf<CameraFeature>) {
         self.store = store
@@ -45,7 +49,10 @@ public struct CameraView: View {
             }
         }
         .onAppear { proxy.send(.startSession) }
-        .onDisappear { proxy.send(.stopSession) }
+        .onDisappear {
+            proxy.send(.stopSession)
+            clearControlFeedback()
+        }
         .alert(
             "오류",
             isPresented: Binding(
@@ -141,6 +148,8 @@ private extension CameraView {
             proxy.send(.toggleSelfieZoom)
         } label: {
             icon
+                .resizable()
+                .frame(width: 24, height: 24)
                 .padding(6)
                 .background(Color.whiteAlpha600)
                 .clipShape(.circle)
@@ -171,7 +180,7 @@ private extension CameraView {
                 }
             }
         }
-        .frame(height: 32)
+        .frame(height: 36)
     }
 
     func zoomButton(for level: ZoomLevel) -> some View {
@@ -181,11 +190,11 @@ private extension CameraView {
             proxy.send(.setZoom(factor: level.rawValue, animated: true))
         } label: {
             Text(text)
-                .font(.system(size: 14, weight: .semibold))
-                .foregroundStyle(isActive ? .black : .gray500)
-                .frame(width: 32, height: 32)
-                .background(isActive ? Color.gray200 : Color.clear)
-                .clipShape(Circle())
+                .font(.body2Regular)
+                .foregroundStyle(isActive ? Color.gray900 : Color.gray50)
+                .frame(width: 36, height: 36)
+                .background(isActive ? Color.whiteAlpha600 : Color.clear)
+                .clipShape(.circle)
         }
     }
 }
@@ -206,14 +215,16 @@ private extension CameraView {
 
     var flashButton: some View {
         let icon: Image = cameraState.isFlashOn ? .icFlash : .icFlashOff
+        let foregroundColor: Color = isFlashButtonFeedbackVisible ? .green600 : .gray800
 
         return Button {
             proxy.send(.toggleFlash)
+            showControlFeedback(.flash)
         } label: {
             icon
                 .resizable()
                 .renderingMode(.template)
-                .foregroundStyle(Color.gray800)
+                .foregroundStyle(foregroundColor)
                 .frame(width: 20, height: 20)
                 .padding(12)
                 .background(Color.whiteAlpha600)
@@ -252,13 +263,16 @@ private extension CameraView {
     }
 
     var switchCameraButton: some View {
-        Button {
+        let foregroundColor: Color = isSwitchCameraButtonFeedbackVisible ? .green600 : .gray800
+
+        return Button {
             proxy.send(.switchCamera)
+            showControlFeedback(.switchCamera)
         } label: {
             Image.icCameraFlip
                 .resizable()
                 .renderingMode(.template)
-                .foregroundStyle(Color.gray800)
+                .foregroundStyle(foregroundColor)
                 .frame(width: 20, height: 20)
                 .padding(12)
                 .background(Color.whiteAlpha600)
@@ -266,4 +280,48 @@ private extension CameraView {
         }
         .disabled(cameraState.isSwitchingCamera)
     }
+
+    func showControlFeedback(_ target: CameraControlFeedbackTarget) {
+        switch target {
+        case .flash:
+            flashButtonFeedbackTask?.cancel()
+            isFlashButtonFeedbackVisible = true
+            flashButtonFeedbackTask = Task {
+                try? await Task.sleep(for: .seconds(1))
+                guard !Task.isCancelled else { return }
+
+                await MainActor.run {
+                    isFlashButtonFeedbackVisible = false
+                    flashButtonFeedbackTask = nil
+                }
+            }
+
+        case .switchCamera:
+            switchCameraButtonFeedbackTask?.cancel()
+            isSwitchCameraButtonFeedbackVisible = true
+            switchCameraButtonFeedbackTask = Task {
+                try? await Task.sleep(for: .seconds(1))
+                guard !Task.isCancelled else { return }
+
+                await MainActor.run {
+                    isSwitchCameraButtonFeedbackVisible = false
+                    switchCameraButtonFeedbackTask = nil
+                }
+            }
+        }
+    }
+
+    func clearControlFeedback() {
+        flashButtonFeedbackTask?.cancel()
+        switchCameraButtonFeedbackTask?.cancel()
+        flashButtonFeedbackTask = nil
+        switchCameraButtonFeedbackTask = nil
+        isFlashButtonFeedbackVisible = false
+        isSwitchCameraButtonFeedbackVisible = false
+    }
+}
+
+private enum CameraControlFeedbackTarget {
+    case flash
+    case switchCamera
 }
