@@ -12,37 +12,61 @@ import SwiftUI
 
 struct CalendarDetailView: View {
     @Bindable var store: StoreOf<CalendarDetailFeature>
-    @State var frontCardIndex: Int = 0
     @State var screenSize: CGSize = .zero
 
-    var cards: [DateCard] {
-        store.cards
-    }
-
     var body: some View {
-        GeometryReader { _ in
-            ZStack {
-                backgroundView
-                    .onGeometryChange(
-                        for: CGSize.self,
-                        of: { $0.size }
-                    ) { screenSize = $0 }
+        ZStack {
+            backgroundView
+                .onGeometryChange(
+                    for: CGSize.self,
+                    of: { $0.size }
+                ) { screenSize = $0 }
 
+            switch store.displayType {
+            case .cards:
                 VStack {
                     CardStackView(
-                        topCardIndex: $frontCardIndex,
-                        items: cards
-                    ) { index, _ in
-                        cardView(index: index)
+                        topCardIndex: $store.frontCardIndex,
+                        items: store.dateRecordCards
+                    ) { cardIndex, orderIndex, item in
+                        cardView(
+                            cardIndex: cardIndex,
+                            orderIndex: orderIndex,
+                            card: item
+                        )
                     }
                     .padding(.top, 16)
                     Spacer()
                 }
+                .clipped()
+                .transition(.opacity)
 
                 bottomButtonContainer
+            case .emptyRecord:
+                currentTermNoRecordView {
+                    store.send(.createRecordButtonTapped)
+                }
+            case .passedTerm:
+                passedTermNoRecordView
+            case .notDetermined:
+                EmptyView()
             }
-            .presentToast($store.toast)
-            .toastContainer()
+        }
+        .animation(.easeInOut, value: store.isLoading)
+        .presentToast($store.toast)
+        .toastContainer()
+        .overlay {
+            if store.isLoading {
+                ZStack {
+                    Color.gray200.opacity(0.3)
+                    ProgressView()
+                }
+            }
+        }
+        .task(id: store.date.description) {
+            try? await Task.sleep(for: .seconds(0.5))
+            guard !Task.isCancelled else { return }
+            store.send(.viewDidLoad)
         }
     }
 }
@@ -78,14 +102,14 @@ private extension CalendarDetailView {
             Spacer()
             HStack(spacing: 8) {
                 Button {
-                    // TODO: 액션
+                    store.send(.saveImageButtonTapped)
                 } label: {
                     Text("이미지 저장")
                 }
                 .buttonStyle(.master(.large))
 
                 Button {
-                    // TODO: 액션
+                    store.send(.shareImageButtonTapped)
                 } label: {
                     Text("이미지 공유")
                 }
@@ -106,14 +130,13 @@ extension CalendarDetailFeature.Alert: AlertPresentable {
                 primaryButtonTitle: "확인",
                 secondaryButtonTitle: "닫기"
             )
+
+        case .fetchRecordFailure:
+            return AlertInfo(
+                title: "기록 획득에 실패했어요",
+                primaryButtonTitle: "재시도 하기",
+                secondaryButtonTitle: "닫기"
+            )
         }
     }
-}
-
-#Preview {
-    CalendarDetailView(
-        store: .init(initialState: .init()) {
-            CalendarDetailFeature()
-        }
-    )
 }

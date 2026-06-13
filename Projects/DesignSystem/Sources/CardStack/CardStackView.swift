@@ -18,26 +18,34 @@ enum Constants {
 
 public struct CardStackView<Item, CardView: View>: View {
     private let items: [Item]
+    private let originalCardCount: Int
 
-    @Binding private var topCardItemIndex: Int
-    @State private var currentDragableCardOffsetY: CGFloat = 0
+    @Binding private var outerTopCardItemIndex: Int
+    @State private var innerTopCardItemIndex: Int
     @State private var prevDragOffset: CGPoint?
     @State private var dragPercent: CGFloat = 0
     @State private var cardOffsets: [Int: CGFloat] = [:]
     @State private var cardOpacities: [Int: CGFloat] = [:]
     @State private var dismissingCardItemIndices: Set<Int> = []
 
+    // Dragging card state
+    @State private var currentDraggableCardOffsetY: CGFloat = 0
+    @State private var currentDraggableCardOpacity: CGFloat = 1.0
+
     // Card UI
     @State private var cardSize: CGSize = .zero
-    private var cardView: (Int, Item) -> CardView
+    private var cardView: (Int, Int, Item) -> CardView
 
     public init(
         topCardIndex: Binding<Int>,
         items: [Item],
-        @ViewBuilder cardView: @escaping (Int, Item) -> CardView
+        @ViewBuilder cardView: @escaping (Int, Int, Item) -> CardView
     ) {
-        self._topCardItemIndex = topCardIndex
+        self._outerTopCardItemIndex = topCardIndex
+        self.innerTopCardItemIndex = topCardIndex.wrappedValue
+        self.originalCardCount = items.count
         self.items = {
+            guard !items.isEmpty else { return [] }
             var populatedItems: [Item] = items
             while populatedItems.count <= Constants.maxDisplayCardCount * 2 {
                 populatedItems.append(contentsOf: items)
@@ -51,18 +59,23 @@ public struct CardStackView<Item, CardView: View>: View {
         ZStack {
             ForEach(renderedEntries, id: \.itemIndex) { entry in
                 let scale = scale(for: entry)
-                cardView(entry.itemIndex, entry.item)
+                let cardIndex = (entry.itemIndex % originalCardCount)
+                cardView(cardIndex, entry.olderIndex, entry.item)
                     .onGeometryChange(
                         for: CGSize.self,
                         of: { $0.size }
                     ) { cardSize = $0 }
                     .scaleEffect(x: scale, y: scale, anchor: .top)
                     .offset(x: 0, y: offsetY(for: entry))
-                    .opacity(cardOpacities[entry.itemIndex] ?? 1)
+                    .opacity(opacity(for: entry))
             }
         }
         .gesture(dragGesture)
         .padding(.top, stackTopPadding)
+        .onChange(of: innerTopCardItemIndex) { _, newValue in
+            guard originalCardCount > 0 else { return }
+            outerTopCardItemIndex = (newValue % originalCardCount)
+        }
     }
 }
 
@@ -90,7 +103,7 @@ private extension CardStackView {
 
     var renderedEntries: [RenderEntry] {
         let idleCardStack: [RenderEntry] = itemIndices(
-            startIndex: topCardItemIndex,
+            startIndex: innerTopCardItemIndex,
             endIndex: items.endIndex
         )
         .enumerated()
@@ -121,12 +134,36 @@ private extension CardStackView {
 
 private extension CardStackView {
     func offsetY(for entry: RenderEntry) -> CGFloat {
-        if entry.isDismissing { return cardOffsets[entry.itemIndex] ?? 0 }
-        if entry.itemIndex == topCardItemIndex {
-            return currentDragableCardOffsetY
+        // #1. 사라지는 중인 카드 여부
+        if entry.isDismissing {
+            return cardOffsets[entry.itemIndex] ?? 0
         }
+
+        // #2. 현재 드래그 가능한 카드인지 확인
+        let isTopCard = (entry.itemIndex == innerTopCardItemIndex)
+        if isTopCard {
+            return currentDraggableCardOffsetY
+        }
+
+        // #3. 일반 카드
         let chunk = Constants.cardOffsetYGap
         return chunk * (dragPercent - CGFloat(entry.olderIndex))
+    }
+
+    func opacity(for entry: RenderEntry) -> CGFloat {
+        // #1. 사라지는 중인 카드 여부
+        if entry.isDismissing {
+            return cardOpacities[entry.itemIndex] ?? 0
+        }
+
+        // #2. 현재 드래그 가능한 카드인지 확인
+        let isTopCard = (entry.itemIndex == innerTopCardItemIndex)
+        if isTopCard {
+            return currentDraggableCardOpacity
+        }
+
+        // #3. 일반 카드
+        return 1.0
     }
 
     func scale(for entry: RenderEntry) -> CGFloat {
@@ -162,8 +199,14 @@ private extension CardStackView {
                 let dY = state.location.y - prev.y
                 prevDragOffset = state.location
 
-                currentDragableCardOffsetY += (dY * 0.65)
-                dragPercent = max(0, min(1, state.translation.height * 0.25 / dragThreshold))
+                // 드래그 카드 오프셋
+                currentDraggableCardOffsetY += (dY * 0.65)
+
+                // 드래그 퍼센트(0~1)
+                dragPercent = max(0, min(1, abs(state.translation.height) * 0.25 / dragThreshold))
+
+                // 드래그 카드 투명도
+                currentDraggableCardOpacity = 1 - dragPercent
             }
             .onEnded { state in
                 let dragDirection = DragDirection(
@@ -200,20 +243,29 @@ private extension CardStackView {
     func snapToIdentity() {
         prevDragOffset = nil
         withAnimation {
-            currentDragableCardOffsetY = .zero
+            currentDraggableCardOpacity = 1.0
+            currentDraggableCardOffsetY = .zero
             dragPercent = 0
         }
     }
 
     func snapToDismiss(direction: DragDirection, verticalVelocity: CGFloat) {
+        guard !items.isEmpty else {
+            snapToIdentity()
+            return
+        }
         prevDragOffset = nil
 
-        let dismissIdx = topCardItemIndex
-        let startOffsetY = currentDragableCardOffsetY
+        let dismissIdx = innerTopCardItemIndex
+        let startOffsetY = currentDraggableCardOffsetY
+        let startOpacity = currentDraggableCardOpacity
 
         cardOffsets[dismissIdx] = startOffsetY
+        cardOpacities[dismissIdx] = startOpacity
+
         dismissingCardItemIndices.insert(dismissIdx)
-        currentDragableCardOffsetY = 0
+        currentDraggableCardOffsetY = 0
+        currentDraggableCardOpacity = 1.0
 
         let dismissYPos = switch direction {
         case .top: -cardSize.height
@@ -227,7 +279,7 @@ private extension CardStackView {
 
         withAnimation(.easeInOut) {
             dragPercent = 0
-            topCardItemIndex = (topCardItemIndex + 1) % items.endIndex
+            innerTopCardItemIndex = (innerTopCardItemIndex + 1) % items.endIndex
         }
 
         withAnimation(.interpolatingSpring(stiffness: 120, damping: 18, initialVelocity: initialVelocity)) {
@@ -263,7 +315,7 @@ extension Color {
     CardStackView(
         topCardIndex: $topCardIndex,
         items: (0 ..< 10).map { _ in CardModel() }
-    ) { _, item in
+    ) { _, _, item in
         ZStack {
             RoundedRectangle(cornerRadius: 15)
                 .foregroundStyle(item.color)
@@ -279,7 +331,7 @@ extension Color {
     CardStackView(
         topCardIndex: $topCardIndex,
         items: [CardModel()]
-    ) { _, item in
+    ) { _, _, item in
         ZStack {
             RoundedRectangle(cornerRadius: 15)
                 .foregroundStyle(item.color)

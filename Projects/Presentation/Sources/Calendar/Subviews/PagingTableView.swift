@@ -35,6 +35,7 @@ public struct RowReloadRequest<Item: Identifiable & Equatable>: Equatable {
 public struct PagingTableViewState<Item: Identifiable & Equatable>: Equatable {
     public var anchorRequest: AnchorRequest<Item>?
     public var rowReloadRequest: RowReloadRequest<Item>?
+    public var scrollEnabled: Bool = true
     public var pages: [Page<Item>]
 }
 
@@ -55,7 +56,9 @@ final class PagingTableView<Item: Identifiable & Equatable>: UIView, UITableView
     enum Action {
         case anchoredItemChanged(id: Item.ID)
         case reachedToEnd(direction: PageEndDirection)
-        case didScroll
+        case cellDidDisappear(id: Item.ID)
+        case cellWillAppear(id: Item.ID)
+        case willBeginDragging
     }
 
     var action: AnyPublisher<Action, Never> {
@@ -116,6 +119,13 @@ final class PagingTableView<Item: Identifiable & Equatable>: UIView, UITableView
                 self?.update(request: request)
             }
             .store(in: &store)
+
+        state
+            .map(\.scrollEnabled)
+            .sink { [weak self] scrollEnabled in
+                self?.tableView.isScrollEnabled = scrollEnabled
+            }
+            .store(in: &store)
     }
 
     // MARK: - UITableViewDataSource
@@ -146,6 +156,26 @@ final class PagingTableView<Item: Identifiable & Equatable>: UIView, UITableView
         return arguments.cellHeightProvider(item)
     }
 
+    func tableView(
+        _ tableView: UITableView,
+        didEndDisplaying cell: UITableViewCell,
+        forRowAt indexPath: IndexPath
+    ) {
+        guard let item = itemAt(indexPath: indexPath) else { return }
+
+        _action.send(.cellDidDisappear(id: item.id))
+    }
+
+    func tableView(
+        _ tableView: UITableView,
+        willDisplay cell: UITableViewCell,
+        forRowAt indexPath: IndexPath
+    ) {
+        guard let item = itemAt(indexPath: indexPath) else { return }
+
+        _action.send(.cellWillAppear(id: item.id))
+    }
+
     // MARK: - UIScrollViewDelegate
 
     func scrollViewDidScroll(_ scrollView: UIScrollView) {
@@ -167,7 +197,7 @@ final class PagingTableView<Item: Identifiable & Equatable>: UIView, UITableView
     }
 
     func scrollViewWillBeginDragging(_ scrollView: UIScrollView) {
-        _action.send(.didScroll)
+        _action.send(.willBeginDragging)
     }
 }
 
