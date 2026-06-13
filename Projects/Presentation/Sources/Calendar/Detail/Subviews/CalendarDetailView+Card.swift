@@ -27,9 +27,11 @@ extension CalendarDetailView {
                     cardIndex: cardIndex,
                     totalCount: store.dateRecordCards.count,
                     cardWidth: cardWidth,
-                    onDeleteTapped: { store.send(.removeCardButtonTapped) },
+                    onDeleteTapped: {
+                        store.send(.removeCardButtonTapped)
+                    },
                     onEditTapped: {
-                        // TODO: 수정 액션 전송, 현재 절기인 경우만 노출 -@준영
+                        store.send(.editRecordButtonTapped)
                     }
                 )
                 .equatable()

@@ -44,7 +44,7 @@ struct CalendarDetailView: View {
                 bottomButtonContainer
             case .emptyRecord:
                 currentTermNoRecordView {
-                    // TODO: 기록하기 버튼 클릭 -@진준호
+                    store.send(.createRecordButtonTapped)
                 }
             case .passedTerm:
                 passedTermNoRecordView
@@ -101,14 +101,14 @@ private extension CalendarDetailView {
             Spacer()
             HStack(spacing: 8) {
                 Button {
-                    // TODO: 액션
+                    store.send(.saveImageButtonTapped)
                 } label: {
                     Text("이미지 저장")
                 }
                 .buttonStyle(.master(.large))
 
                 Button {
-                    // TODO: 액션
+                    store.send(.shareImageButtonTapped)
                 } label: {
                     Text("이미지 공유")
                 }

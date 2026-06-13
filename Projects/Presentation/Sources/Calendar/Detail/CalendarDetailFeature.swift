@@ -30,6 +30,10 @@ public struct CalendarDetailFeature {
     public enum Action: BindableAction {
         case viewDidLoad
         case removeCardButtonTapped
+        case editRecordButtonTapped
+        case saveImageButtonTapped
+        case shareImageButtonTapped
+        case createRecordButtonTapped
 
         // Alert
         case removeCardConfirmed
@@ -106,6 +110,26 @@ public struct CalendarDetailFeature {
                         }
                     }
                 )
+
+            case .editRecordButtonTapped:
+                // TODO: 기능 구현 필요
+                state.toast = .init(title: "준비중입니다.", duration: 1.0, bottomInset: 108)
+                return .none
+
+            case .saveImageButtonTapped:
+                // TODO: 기능 구현 필요
+                state.toast = .init(title: "준비중입니다.", duration: 1.0, bottomInset: 108)
+                return .none
+
+            case .shareImageButtonTapped:
+                // TODO: 기능 구현 필요
+                state.toast = .init(title: "준비중입니다.", duration: 1.0, bottomInset: 108)
+                return .none
+
+            case .createRecordButtonTapped:
+                // TODO: 기능 구현 필요
+                state.toast = .init(title: "준비중입니다.", duration: 1.0, bottomInset: 108)
+                return .none
 
             case let .updateRecordCards(cards):
                 state.dateRecordCards = cards
