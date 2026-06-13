@@ -45,6 +45,7 @@ public struct CardStackView<Item, CardView: View>: View {
         self.innerTopCardItemIndex = topCardIndex.wrappedValue
         self.originalCardCount = items.count
         self.items = {
+            guard !items.isEmpty else { return [] }
             var populatedItems: [Item] = items
             while populatedItems.count <= Constants.maxDisplayCardCount * 2 {
                 populatedItems.append(contentsOf: items)
