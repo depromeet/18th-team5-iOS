@@ -38,6 +38,7 @@ public struct MyPageFeature {
         var latestVersion: AppVersion?
 
         @Presents var path: Path.State?
+        @Presents var devMode: DevModeFeature.State?
         var alert: CustomAlertFeature<Alert>.State?
 
         public init(_ solarTerm: SolarTerm, _ config: MyPageConfig?) {
@@ -76,6 +77,8 @@ public struct MyPageFeature {
         case privacyPolicyFetched([DocumentInfo])
         case termsOfServiceFetched([DocumentInfo])
         case path(PresentationAction<Path.Action>)
+        case devMode(PresentationAction<DevModeFeature.Action>)
+        case deviceShaked
         case delegate(Delegate)
         case alert(CustomAlertFeature<Alert>.Action)
     }
@@ -145,11 +148,18 @@ public struct MyPageFeature {
                 return .send(.path(.presented(
                     .termsOfService(.termsOfServiceFetched(terms))
                 )))
+            case .deviceShaked:
+                state.devMode = .init()
+                return .none
+            case .devMode: return .none
             case .path: return .none
             case .delegate: return .none
             }
         }
         .ifLet(\.$path, action: \.path)
+        .ifLet(\.$devMode, action: \.devMode) {
+            DevModeFeature()
+        }
         .ifLet(\.alert, action: \.alert) {
             CustomAlertFeature()
         }

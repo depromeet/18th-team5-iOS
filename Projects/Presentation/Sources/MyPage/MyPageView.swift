@@ -44,6 +44,11 @@ public struct MyPageView: View {
             item: $store.scope(state: \.path, action: \.path),
             destination: pathView
         )
+        .fullScreenCover(
+            item: $store.scope(state: \.devMode, action: \.devMode),
+            content: DevModeView.init
+        )
+        .onShake { store.send(.deviceShaked) }
     }
 }
 
