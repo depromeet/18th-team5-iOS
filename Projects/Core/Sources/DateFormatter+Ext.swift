@@ -8,6 +8,12 @@
 
 import Foundation
 
+public extension Date {
+    var previousDay: Date {
+        Calendar.current.date(byAdding: .day, value: -1, to: self) ?? self
+    }
+}
+
 public extension DateFormatter {
     static let monthDay: DateFormatter = {
         let formatter = DateFormatter()
