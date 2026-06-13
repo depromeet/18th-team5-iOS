@@ -17,7 +17,7 @@ public extension LinearGradient {
         startPoint: .top,
         endPoint: .bottom
     )
-  
+
     static let missionRecordBackground: Self = .init(
         stops: [
             .init(color: Color.green50, location: 0.0),

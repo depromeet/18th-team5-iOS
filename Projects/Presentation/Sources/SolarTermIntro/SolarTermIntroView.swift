@@ -85,7 +85,7 @@ private extension SolarTermIntroView {
             )
         ) { solarTerm in
             Group {
-                if store.targetTerm == solarTerm.term {
+                if store.currentTerm == solarTerm.term {
                     CurrentSolarTermCardView(
                         solarTermIntro: solarTerm,
                         season: store.season,

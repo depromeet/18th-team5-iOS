@@ -18,50 +18,38 @@ struct SolarTermIntroCardView: View {
     let dateLabel: String?
     let onTap: () -> Void
 
-    private var cardImage: Image {
-        switch solarTermIntro.term {
-        case .ibha: .imgIbhaSolarTermCard
-        case .soman: .imgSomanSolarTermCard
-        case .mangjong: .imgMangjongSolarTermCard
-        case .haji: .imgHajiSolarTermCard
-        case .soseo: .imgSoseoSolarTermCard
-        case .daeseo: .imgDaeseoSolarTermCard
-        default: .imgSolarTermCardDefault
-        }
-    }
-
     var body: some View {
         Button(action: onTap) {
-            ZStack(alignment: .topLeading) {
-                cardImage
+            VStack(alignment: .leading) {
+                HStack(spacing: 4) {
+                    chipView(text: solarTermIntro.term.koreanName)
+                    if let dateLabel {
+                        chipView(text: dateLabel)
+                    }
+                }
+                .padding(.top, 18)
+                .padding(.leading, 20)
+
+                Spacer()
+
+                VStack(alignment: .leading, spacing: 8) {
+                    Text(solarTermIntro.introTitle)
+                        .font(.title2Bold)
+                        .foregroundStyle(season.color(.scale700))
+                        .lineLimit(3)
+
+                    Text(solarTermIntro.introSubtitle)
+                        .font(.body2Semibold)
+                        .foregroundStyle(season.color(.scale500))
+                }
+                .padding(.horizontal, 20)
+                .padding(.bottom, 23)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background {
+                solarTermIntro.term.solarTermCardImage
                     .resizable()
                     .scaledToFill()
-
-                VStack(alignment: .leading) {
-                    HStack(spacing: 4) {
-                        chipView(text: solarTermIntro.term.koreanName)
-                        if let dateLabel {
-                            chipView(text: dateLabel)
-                        }
-                    }
-                    .padding(.top, 18)
-                    .padding(.leading, 20)
-
-                    Spacer()
-
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text(solarTermIntro.introTitle)
-                            .font(.title2Bold)
-                            .foregroundStyle(season.color(.scale700))
-                            .lineLimit(3)
-
-                        Text(solarTermIntro.introSubtitle)
-                            .font(.body2Semibold)
-                            .foregroundStyle(season.color(.scale500))
-                    }
-                    .padding(.horizontal, 20)
-                    .padding(.bottom, 23)
-                }
             }
             .clipShape(RoundedRectangle(cornerRadius: .radius20))
         }
@@ -70,17 +58,18 @@ struct SolarTermIntroCardView: View {
 
     private func chipView(text: String) -> some View {
         Text(text)
-            .font(.caption1Semibold)
+            .font(.body2Medium)
             .foregroundStyle(.white)
-            .padding(.horizontal, 8)
-            .padding(.vertical, 4)
-            .background(Color.black.opacity(0.15))
-            .clipShape(Capsule())
+            .padding(.horizontal, 12)
+            .padding(.vertical, 5)
             .background {
-                Color.black.opacity(0.15)
-                    .blur(radius: 10)
+                Capsule()
+                    .fill(Color.blackAlpha300)
             }
-            .clipShape(Capsule())
+            .background {
+                CustomBackdropBlurView(radius: 10)
+                    .clipShape(Capsule())
+            }
     }
 }
 
@@ -153,15 +142,18 @@ struct CurrentSolarTermCardView: View {
 
     private func chipView(text: String) -> some View {
         Text(text)
-            .font(.caption1Semibold)
+            .font(.body2Medium)
             .foregroundStyle(.white)
-            .padding(.horizontal, 8)
-            .padding(.vertical, 4)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 5)
             .background {
-                Color.black.opacity(0.15)
-                    .blur(radius: 10)
+                Capsule()
+                    .fill(Color.blackAlpha300)
             }
-            .clipShape(Capsule())
+            .background {
+                CustomBackdropBlurView(radius: 10)
+                    .clipShape(Capsule())
+            }
     }
 }
 

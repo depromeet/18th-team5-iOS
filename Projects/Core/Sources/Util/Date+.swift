@@ -13,6 +13,10 @@ public extension Date {
         let calendar = Calendar.current
         return calendar.component(.year, from: self)
     }
+
+    var previousDay: Date {
+        Calendar.current.date(byAdding: .day, value: -1, to: self) ?? self
+    }
 }
 
 public extension Date {
