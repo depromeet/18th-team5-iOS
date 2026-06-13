@@ -15,6 +15,12 @@ public struct CalendarRecordRepository: Sendable {
     public var fetchCurrentSolarTerms: @Sendable () async throws -> CalendarTermRecordsResponse
     /// 절기 캘린더 조회 (페이지네이션, 시작 절기 ID 기준 2개)
     public var fetchSolarTerms: @Sendable (_ solarTermId: Int) async throws -> CalendarTermRecordsResponse
+    /// 날짜별 기록 조회 (해당 날짜의 모든 기록 카드)
+    public var fetchDateRecords: @Sendable (_ date: Date) async throws -> [DateRecordCard]
+    /// 미션 기록 삭제 (모든 절기 삭제 가능)
+    public var deleteMissionCompletion: @Sendable (_ completionId: Int) async throws -> Void
+    /// 자유 기록 삭제 (모든 절기 삭제 가능)
+    public var deleteFreeRecord: @Sendable (_ recordId: Int) async throws -> Void
 }
 
 extension CalendarRecordRepository: TestDependencyKey {
@@ -43,6 +49,9 @@ public extension CalendarRecordRepository {
                 prevTermEmptyRecord: nil,
                 nextTermEmptyRecord: nil
             )
-        }
+        },
+        fetchDateRecords: { _ in [] },
+        deleteMissionCompletion: { _ in },
+        deleteFreeRecord: { _ in }
     )
 }

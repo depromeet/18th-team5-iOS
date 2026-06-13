@@ -13,6 +13,12 @@ enum CalendarEndpoint: APIEndpoint {
     case fetchCurrentSolarTerms
     /// 절기 캘린더 조회 (페이지네이션, 시작 절기 ID 기준)
     case fetchSolarTerms(solarTermId: Int)
+    /// 날짜별 기록 조회 (date: yyyy-MM-dd)
+    case fetchDateRecords(date: String)
+    /// 미션 기록 삭제
+    case deleteMissionCompletion(completionId: Int)
+    /// 자유 기록 삭제
+    case deleteFreeRecord(recordId: Int)
 
     var path: String {
         switch self {
@@ -20,19 +26,28 @@ enum CalendarEndpoint: APIEndpoint {
             "/api/v1/calendar/solar-terms"
         case let .fetchSolarTerms(solarTermId):
             "/api/v1/calendar/solar-terms/\(solarTermId)"
+        case let .fetchDateRecords(date):
+            "/api/v1/calendar/records/\(date)"
+        case let .deleteMissionCompletion(completionId):
+            "/api/v1/calendar/mission-completions/\(completionId)"
+        case let .deleteFreeRecord(recordId):
+            "/api/v1/calendar/records/\(recordId)"
         }
     }
 
     var method: HTTPMethod {
         switch self {
-        case .fetchCurrentSolarTerms, .fetchSolarTerms:
+        case .fetchCurrentSolarTerms, .fetchSolarTerms, .fetchDateRecords:
             .get
+        case .deleteMissionCompletion, .deleteFreeRecord:
+            .delete
         }
     }
 
     var requiresAuth: Bool {
         switch self {
-        case .fetchCurrentSolarTerms, .fetchSolarTerms:
+        case .fetchCurrentSolarTerms, .fetchSolarTerms, .fetchDateRecords,
+             .deleteMissionCompletion, .deleteFreeRecord:
             true
         }
     }

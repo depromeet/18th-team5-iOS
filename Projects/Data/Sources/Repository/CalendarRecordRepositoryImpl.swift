@@ -35,7 +35,49 @@ public enum CalendarRecordRepositoryImpl {
                     throw DomainError.unknown("데이터 획득 실패")
                 }
                 return response.toDomain()
+            },
+            fetchDateRecords: { date in
+                @Dependency(\.networkClient) var client
+                let dateString = DateFormatter.yyyyMMdd.string(from: date)
+                let response: [DateRecordResponseDTO]? = try await client.request(
+                    CalendarEndpoint.fetchDateRecords(date: dateString)
+                )
+                guard let response else {
+                    throw DomainError.unknown("데이터 획득 실패")
+                }
+                return response
+                    .compactMap { $0.toDomain() }
+                    .sorted { $0.cardType.calendarOrder < $1.cardType.calendarOrder }
+            },
+            deleteMissionCompletion: { completionId in
+                @Dependency(\.networkClient) var client
+                try await client.requestEmpty(
+                    CalendarEndpoint.deleteMissionCompletion(completionId: completionId)
+                )
+            },
+            deleteFreeRecord: { recordId in
+                @Dependency(\.networkClient) var client
+                try await client.requestEmpty(
+                    CalendarEndpoint.deleteFreeRecord(recordId: recordId)
+                )
             }
+        )
+    }
+}
+
+// MARK: - 날짜별 기록 Domain Mapping
+
+private extension DateRecordResponseDTO {
+    /// 알 수 없는 `cardType`은 매핑하지 않고 nil을 반환합니다.
+    func toDomain() -> DateRecordCard? {
+        guard let cardType = RecordCardType(cardType) else { return nil }
+        return DateRecordCard(
+            id: id,
+            cardType: cardType,
+            missionTitle: missionTitle,
+            imageURL: presignedImageUrl.flatMap { URL(string: $0) },
+            memo: memo,
+            recordedAt: DateFormatter.recordedAt.date(from: recordedAt) ?? Date()
         )
     }
 }
@@ -156,6 +198,15 @@ private extension DateFormatter {
         let f = DateFormatter()
         f.dateFormat = "yyyy-MM-dd"
         f.locale = Locale(identifier: "en_US_POSIX")
+        return f
+    }()
+
+    /// 기록 시각 (ISO 8601, 타임존 표기 없음 — 예: 2026-05-26T12:30:00)
+    static let recordedAt: DateFormatter = {
+        let f = DateFormatter()
+        f.dateFormat = "yyyy-MM-dd'T'HH:mm:ss"
+        f.locale = Locale(identifier: "en_US_POSIX")
+        f.timeZone = TimeZone(identifier: "Asia/Seoul")
         return f
     }()
 }
