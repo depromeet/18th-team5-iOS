@@ -25,6 +25,12 @@ extension SolarTerm {
 
     var solarTermCardImage: Image {
         switch self {
+        case .ipchun: .imgIpchunSolarTermCard
+        case .usu: .imgUsuSolarTermCard
+        case .gyeongchip: .imgGyeongchipSolarTermCard
+        case .chunbun: .imgChunbunSolarTermCard
+        case .cheongmyeong: .imgCheongmyeongSolarTermCard
+        case .gogu: .imgGoguSolarTermCard
         case .ibha: .imgIbhaSolarTermCard
         case .soman: .imgSomanSolarTermCard
         case .mangjong: .imgMangjongSolarTermCard
@@ -43,7 +49,6 @@ extension SolarTerm {
         case .dongji: .imgDongjiSolarTermCard
         case .sohan: .imgSohanSolarTermCard
         case .daehan: .imgDaehanSolarTermCard
-        default: .imgIbhaSolarTermCard
         }
     }
 }
