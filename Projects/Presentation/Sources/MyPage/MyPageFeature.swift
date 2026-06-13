@@ -36,6 +36,8 @@ public struct MyPageFeature {
         var contactUsURL: URL?
         let currentVersion: AppVersion = .current
         var latestVersion: AppVersion?
+
+        var isDevModeEnabled: Bool
         var userID: Int?
 
         @Presents var path: Path.State?
@@ -46,6 +48,7 @@ public struct MyPageFeature {
             self.solarTerm = solarTerm
             self.contactUsURL = config?.contactUsURL
             self.latestVersion = config?.latestAppVersion
+            self.isDevModeEnabled = config?.isDevModeEnabled ?? false
         }
 
         var season: Season {
@@ -154,6 +157,7 @@ public struct MyPageFeature {
                 state.userID = userID
                 return .none
             case .deviceShaked:
+                guard state.isDevModeEnabled else { return .none }
                 state.devMode = .init(state.userID)
                 return .none
             case .devMode: return .none
