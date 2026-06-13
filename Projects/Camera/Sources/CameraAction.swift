@@ -6,6 +6,7 @@
 //  Copyright © 2026 Orange. All rights reserved.
 //
 
+import CoreGraphics
 import Foundation
 
 // MARK: - Presentation → Camera 명령
@@ -20,6 +21,8 @@ public enum CameraAction {
     case setZoomFromPinch(magnification: CGFloat)
     case endPinchZoom
     case toggleSelfieZoom
+    case focusAndExpose(at: CGPoint)
+    case resetFocusAndExposure
 }
 
 // MARK: - Camera → Presentation 상태 전달

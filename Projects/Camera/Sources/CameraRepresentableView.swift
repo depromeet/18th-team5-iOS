@@ -40,6 +40,7 @@ public struct CameraRepresentableView: UIViewRepresentable {
         let view = PreviewUIView()
         view.previewLayer.session = coordinator.cameraController.captureSession
         view.previewLayer.videoGravity = .resizeAspectFill
+        coordinator.previewView = view
 
         coordinator.onStateChanged = onStateChanged
         coordinator.onCapture = onCapture
@@ -67,6 +68,7 @@ public struct CameraRepresentableView: UIViewRepresentable {
         let cameraController = CameraController()
         private let logger = Logger(handlers: [DebugLogHandler()])
 
+        weak var previewView: PreviewUIView?
         var onStateChanged: ((CameraStateSnapshot) -> Void)?
         var onCapture: ((CapturedResult) -> Void)?
         var onError: ((CameraError) -> Void)?
@@ -89,8 +91,10 @@ public struct CameraRepresentableView: UIViewRepresentable {
                 object: nil,
                 queue: .main
             ) { [weak self] _ in
-                guard let self, cameraController.isSessionRunning else { return }
-                handleAction(.stopSession)
+                Task { @MainActor [weak self] in
+                    guard let self, cameraController.isSessionRunning else { return }
+                    handleAction(.stopSession)
+                }
             }
 
             foregroundObserver = NotificationCenter.default.addObserver(
@@ -98,7 +102,9 @@ public struct CameraRepresentableView: UIViewRepresentable {
                 object: nil,
                 queue: .main
             ) { [weak self] _ in
-                self?.handleAction(.startSession)
+                Task { @MainActor [weak self] in
+                    self?.handleAction(.startSession)
+                }
             }
         }
 
@@ -188,6 +194,18 @@ public struct CameraRepresentableView: UIViewRepresentable {
             case .toggleSelfieZoom:
                 cameraController.toggleSelfieZoom()
                 notifyStateChanged()
+
+            case let .focusAndExpose(layerPoint):
+                guard let previewView else { return }
+                let devicePoint = previewView.previewLayer.captureDevicePointConverted(fromLayerPoint: layerPoint)
+                do {
+                    try cameraController.focusAndExpose(at: devicePoint)
+                } catch {
+                    logger.warning(message: "초점/노출 설정 실패: \(error)")
+                }
+
+            case .resetFocusAndExposure:
+                cameraController.resetFocusAndExposure()
             }
         }
 

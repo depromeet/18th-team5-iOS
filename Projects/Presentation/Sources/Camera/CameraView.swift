@@ -22,6 +22,10 @@ public struct CameraView: View {
     @State private var isSwitchCameraButtonFeedbackVisible = false
     @State private var flashButtonFeedbackTask: Task<Void, Never>?
     @State private var switchCameraButtonFeedbackTask: Task<Void, Never>?
+    @State private var focusExposurePoint: CGPoint?
+    @State private var focusExposureScale: CGFloat = 1
+    @State private var focusExposureDismissTask: Task<Void, Never>?
+    @State private var focusExposureAnimationTask: Task<Void, Never>?
 
     public init(store: StoreOf<CameraFeature>) {
         self.store = store
@@ -52,6 +56,7 @@ public struct CameraView: View {
         .onDisappear {
             proxy.send(.stopSession)
             clearControlFeedback()
+            clearFocusExposureFeedback()
         }
         .alert(
             "오류",
@@ -102,6 +107,8 @@ private extension CameraView {
 
             overlayBadges
                 .padding(16)
+
+            focusExposureOverlay(previewSize: size)
         }
         .frame(width: size, height: size)
         .contentShape(.rect)
@@ -114,6 +121,7 @@ private extension CameraView {
                     proxy.send(.endPinchZoom)
                 }
         )
+        .simultaneousGesture(focusExposureGesture(previewSize: size))
     }
 
     var overlayBadges: some View {
@@ -134,6 +142,91 @@ private extension CameraView {
                 .background(Color.blackAlpha300)
                 .clipShape(.capsule)
         }
+    }
+
+    @ViewBuilder
+    func focusExposureOverlay(previewSize: CGFloat) -> some View {
+        if let focusExposurePoint {
+            FocusExposureIndicator(
+                point: focusExposurePoint,
+                scale: focusExposureScale,
+                previewSize: previewSize
+            )
+            .transition(.opacity)
+            .allowsHitTesting(false)
+        }
+    }
+
+    func focusExposureGesture(previewSize: CGFloat) -> some Gesture {
+        SpatialTapGesture(coordinateSpace: .local)
+            .onEnded { value in
+                let location = clampedPoint(value.location, in: previewSize)
+                showFocusExposureFeedback(at: location)
+                scheduleFocusExposureFeedbackDismiss()
+            }
+    }
+
+    func showFocusExposureFeedback(at location: CGPoint) {
+        focusExposureDismissTask?.cancel()
+        focusExposureAnimationTask?.cancel()
+
+        var transaction = Transaction()
+        transaction.disablesAnimations = true
+
+        withTransaction(transaction) {
+            focusExposurePoint = nil
+            focusExposureScale = 1.16
+        }
+
+        withTransaction(transaction) {
+            focusExposurePoint = location
+        }
+
+        focusExposureAnimationTask = Task {
+            await Task.yield()
+            guard !Task.isCancelled else { return }
+
+            await MainActor.run {
+                withAnimation(.easeOut(duration: 0.24)) {
+                    focusExposureScale = 1
+                }
+                focusExposureAnimationTask = nil
+            }
+        }
+
+        proxy.send(.focusAndExpose(at: location))
+    }
+
+    func scheduleFocusExposureFeedbackDismiss() {
+        focusExposureDismissTask?.cancel()
+        focusExposureDismissTask = Task {
+            try? await Task.sleep(for: .seconds(2))
+            guard !Task.isCancelled else { return }
+
+            await MainActor.run {
+                withAnimation(.easeInOut(duration: 0.18)) {
+                    focusExposurePoint = nil
+                }
+                focusExposureDismissTask = nil
+            }
+        }
+    }
+
+    func clearFocusExposureFeedback() {
+        focusExposureDismissTask?.cancel()
+        focusExposureAnimationTask?.cancel()
+        focusExposureDismissTask = nil
+        focusExposureAnimationTask = nil
+        focusExposurePoint = nil
+        focusExposureScale = 1
+        proxy.send(.resetFocusAndExposure)
+    }
+
+    func clampedPoint(_ point: CGPoint, in size: CGFloat) -> CGPoint {
+        CGPoint(
+            x: min(max(point.x, 0), size),
+            y: min(max(point.y, 0), size)
+        )
     }
 }
 
@@ -266,6 +359,7 @@ private extension CameraView {
         let foregroundColor: Color = isSwitchCameraButtonFeedbackVisible ? .green600 : .gray800
 
         return Button {
+            clearFocusExposureFeedback()
             proxy.send(.switchCamera)
             showControlFeedback(.switchCamera)
         } label: {
@@ -324,4 +418,51 @@ private extension CameraView {
 private enum CameraControlFeedbackTarget {
     case flash
     case switchCamera
+}
+
+private struct FocusExposureIndicator: View {
+    let point: CGPoint
+    let scale: CGFloat
+    let previewSize: CGFloat
+
+    private let accentColor = Color.yellow
+    private let reticleSize: CGFloat = 68
+    private let lineWidth: CGFloat = 1.1
+    private let tickLength: CGFloat = 10
+
+    var body: some View {
+        ZStack(alignment: .topLeading) {
+            Rectangle()
+                .stroke(accentColor, lineWidth: lineWidth)
+                .frame(width: reticleSize, height: reticleSize)
+                .overlay(reticleTicks)
+                .scaleEffect(scale)
+                .position(point)
+        }
+        .frame(width: previewSize, height: previewSize)
+    }
+
+    private var reticleTicks: some View {
+        ZStack {
+            Rectangle()
+                .fill(accentColor)
+                .frame(width: lineWidth, height: tickLength)
+                .frame(maxHeight: .infinity, alignment: .top)
+
+            Rectangle()
+                .fill(accentColor)
+                .frame(width: lineWidth, height: tickLength)
+                .frame(maxHeight: .infinity, alignment: .bottom)
+
+            Rectangle()
+                .fill(accentColor)
+                .frame(width: tickLength, height: lineWidth)
+                .frame(maxWidth: .infinity, alignment: .leading)
+
+            Rectangle()
+                .fill(accentColor)
+                .frame(width: tickLength, height: lineWidth)
+                .frame(maxWidth: .infinity, alignment: .trailing)
+        }
+    }
 }
