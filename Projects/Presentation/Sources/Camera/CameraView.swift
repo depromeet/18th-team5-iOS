@@ -10,6 +10,7 @@ import Camera
 import ComposableArchitecture
 import Core
 import DesignSystem
+import Domain
 import SwiftUI
 
 public struct CameraView: View {
@@ -27,7 +28,7 @@ public struct CameraView: View {
             Color.black
                 .ignoresSafeArea()
 
-            VStack(spacing: 0) {
+            VStack(spacing: 24) {
                 closeButton
                 previewSection
 
@@ -37,10 +38,10 @@ public struct CameraView: View {
                     zoomSelector
                 }
 
-                Spacer()
-
                 bottomControls
-                    .padding(.bottom, 98)
+                    .padding(.top, 12)
+
+                Spacer()
             }
         }
         .onAppear { proxy.send(.startSession) }
@@ -67,12 +68,12 @@ private extension CameraView {
             proxy.send(.stopSession)
             store.send(.cameraCancelled)
         } label: {
-            Image(systemName: "xmark")
-                .font(.system(size: 20))
-                .foregroundStyle(.black)
-                .frame(width: 44, height: 44)
-                .background(Color.gray300)
-                .clipShape(Circle())
+            Image.icClose
+                .resizable()
+                .frame(width: 20, height: 20)
+                .padding(12)
+                .background(Color.whiteAlpha600)
+                .clipShape(.circle)
         }
         .padding(.trailing, 20)
         .padding(.vertical, 16)
@@ -80,65 +81,51 @@ private extension CameraView {
     }
 
     var previewSection: some View {
-        GeometryReader { geometry in
-            let size = geometry.size.width
+        let size = UIScreen.width
 
-            ZStack {
-                CameraRepresentableView(
-                    proxy: proxy,
-                    onStateChanged: { cameraState = $0 },
-                    onCapture: { store.send(.photoCaptured($0)) },
-                    onError: { cameraError = $0 }
-                )
-                .frame(width: size, height: size)
-                .clipShape(RoundedRectangle(cornerRadius: 34))
-
-                VStack {
-                    HStack {
-                        overlayBadges
-                        Spacer()
-                    }
-                    .padding(.top, 16)
-                    .padding(.leading, 16)
-
-                    Spacer()
-                }
-                .frame(width: size, height: size)
-            }
-            .frame(width: size, height: size)
-            .frame(maxWidth: .infinity)
-            .contentShape(Rectangle())
-            .gesture(
-                MagnifyGesture()
-                    .onChanged { value in
-                        proxy.send(.setZoomFromPinch(magnification: value.magnification))
-                    }
-                    .onEnded { _ in
-                        proxy.send(.endPinchZoom)
-                    }
+        return ZStack(alignment: .topLeading) {
+            CameraRepresentableView(
+                proxy: proxy,
+                onStateChanged: { cameraState = $0 },
+                onCapture: { store.send(.photoCaptured($0)) },
+                onError: { cameraError = $0 }
             )
+            .frame(width: size, height: size)
+            .clipShape(.rect(cornerRadius: 34))
+
+            overlayBadges
+                .padding(16)
         }
-        .aspectRatio(1, contentMode: .fit)
-        .padding(.top, 20)
+        .frame(width: size, height: size)
+        .contentShape(.rect)
+        .gesture(
+            MagnifyGesture()
+                .onChanged { value in
+                    proxy.send(.setZoomFromPinch(magnification: value.magnification))
+                }
+                .onEnded { _ in
+                    proxy.send(.endPinchZoom)
+                }
+        )
     }
 
     var overlayBadges: some View {
         HStack(spacing: 6) {
             Text(store.overlayDate)
-                .font(.system(size: 13, weight: .semibold))
+                .font(.caption1Semibold)
                 .foregroundStyle(.white)
-                .padding(.horizontal, 12)
-                .padding(.vertical, 6)
-                .background(.black.opacity(0.5))
-                .clipShape(Capsule())
+                .padding(.horizontal, 10)
+                .padding(.vertical, 4)
+                .background(Color.blackAlpha300)
+                .clipShape(.capsule)
 
             Text(store.overlayLabel)
-                .font(.system(size: 13, weight: .semibold))
+                .font(.caption1Semibold)
                 .foregroundStyle(.white)
-                .padding(.horizontal, 12)
-                .padding(.vertical, 6)
-                .background(.ultraThinMaterial)
-                .clipShape(Capsule())
+                .padding(.horizontal, 10)
+                .padding(.vertical, 4)
+                .background(Color.blackAlpha300)
+                .clipShape(.capsule)
         }
     }
 }
@@ -148,22 +135,16 @@ private extension CameraView {
 private extension CameraView {
     var selfieZoomToggle: some View {
         let isWide = cameraState.currentZoomFactor <= 1.0
+        let icon: Image = isWide ? .icShrink : .icExpand
+
         return Button {
             proxy.send(.toggleSelfieZoom)
         } label: {
-            Image(
-                systemName: isWide
-                    ? "arrow.down.right.and.arrow.up.left"
-                    : "arrow.up.left.and.arrow.down.right"
-            )
-            .font(.system(size: 14, weight: .semibold))
-            .foregroundStyle(.white)
-            .frame(width: 32, height: 32)
-            .background(Color.gray500.opacity(0.5))
-            .clipShape(Circle())
+            icon
+                .padding(6)
+                .background(Color.whiteAlpha600)
+                .clipShape(.circle)
         }
-        .frame(height: 32)
-        .padding(.top, 24)
     }
 
     var zoomSelector: some View {
@@ -191,7 +172,6 @@ private extension CameraView {
             }
         }
         .frame(height: 32)
-        .padding(.top, 24)
     }
 
     func zoomButton(for level: ZoomLevel) -> some View {
@@ -214,42 +194,60 @@ private extension CameraView {
 
 private extension CameraView {
     var bottomControls: some View {
-        HStack {
+        HStack(spacing: 48) {
+            Spacer()
             flashButton
-            Spacer()
             captureButton
-            Spacer()
             switchCameraButton
+            Spacer()
         }
-        .padding(.horizontal, 53)
-        .padding(.vertical, 10)
+        .padding(.vertical, 12)
     }
 
     var flashButton: some View {
-        Button {
+        let icon: Image = cameraState.isFlashOn ? .icFlash : .icFlashOff
+
+        return Button {
             proxy.send(.toggleFlash)
         } label: {
-            Image(systemName: cameraState.isFlashOn ? "bolt.fill" : "bolt.slash.fill")
-                .font(.system(size: 20))
-                .foregroundStyle(.black)
-                .frame(width: 44, height: 44)
-                .background(Color.gray300)
-                .clipShape(Circle())
+            icon
+                .resizable()
+                .renderingMode(.template)
+                .foregroundStyle(Color.gray800)
+                .frame(width: 20, height: 20)
+                .padding(12)
+                .background(Color.whiteAlpha600)
+                .clipShape(.circle)
         }
     }
 
     var captureButton: some View {
-        Button {
+        var image: Image {
+            switch Season.currentSeason {
+            case .spring:
+                return .imgCameraButtonSpring
+            case .summer:
+                return .imgCameraButtonSummer
+            case .autumn:
+                return .imgCameraButtonAutumn
+            case .winter:
+                return .imgCameraButtonWinter
+            }
+        }
+
+        return Button {
             proxy.send(.capturePhoto)
         } label: {
-            Circle()
-                .fill(.white)
-                .frame(width: 80, height: 80)
-                .overlay(
-                    Circle()
-                        .stroke(Color.blue, lineWidth: 4)
-                        .frame(width: 80, height: 80)
-                )
+            image
+                .resizable()
+                .frame(width: 70, height: 70)
+                .clipShape(.circle)
+                .padding(1)
+                .background(Color.black)
+                .clipShape(.circle)
+                .padding(4)
+                .background(Color.whiteAlpha300)
+                .clipShape(.circle)
         }
     }
 
@@ -257,12 +255,14 @@ private extension CameraView {
         Button {
             proxy.send(.switchCamera)
         } label: {
-            Image(systemName: "arrow.triangle.2.circlepath")
-                .font(.system(size: 20))
-                .foregroundStyle(.black)
-                .frame(width: 44, height: 44)
-                .background(Color.gray300)
-                .clipShape(Circle())
+            Image.icCameraFlip
+                .resizable()
+                .renderingMode(.template)
+                .foregroundStyle(Color.gray800)
+                .frame(width: 20, height: 20)
+                .padding(12)
+                .background(Color.whiteAlpha600)
+                .clipShape(.circle)
         }
         .disabled(cameraState.isSwitchingCamera)
     }
