@@ -37,13 +37,18 @@ public struct MyPageFeature {
         let currentVersion: AppVersion = .current
         var latestVersion: AppVersion?
 
+        var isDevModeEnabled: Bool
+        var userID: Int?
+
         @Presents var path: Path.State?
+        @Presents var devMode: DevModeFeature.State?
         var alert: CustomAlertFeature<Alert>.State?
 
         public init(_ solarTerm: SolarTerm, _ config: MyPageConfig?) {
             self.solarTerm = solarTerm
             self.contactUsURL = config?.contactUsURL
             self.latestVersion = config?.latestAppVersion
+            self.isDevModeEnabled = config?.isDevModeEnabled ?? false
         }
 
         var season: Season {
@@ -75,7 +80,10 @@ public struct MyPageFeature {
         case deleteButtonTapped
         case privacyPolicyFetched([DocumentInfo])
         case termsOfServiceFetched([DocumentInfo])
+        case userIDFetched(Int?)
         case path(PresentationAction<Path.Action>)
+        case devMode(PresentationAction<DevModeFeature.Action>)
+        case deviceShaked
         case delegate(Delegate)
         case alert(CustomAlertFeature<Alert>.Action)
     }
@@ -145,11 +153,22 @@ public struct MyPageFeature {
                 return .send(.path(.presented(
                     .termsOfService(.termsOfServiceFetched(terms))
                 )))
+            case let .userIDFetched(userID):
+                state.userID = userID
+                return .none
+            case .deviceShaked:
+                guard state.isDevModeEnabled else { return .none }
+                state.devMode = .init(state.userID)
+                return .none
+            case .devMode: return .none
             case .path: return .none
             case .delegate: return .none
             }
         }
         .ifLet(\.$path, action: \.path)
+        .ifLet(\.$devMode, action: \.devMode) {
+            DevModeFeature()
+        }
         .ifLet(\.alert, action: \.alert) {
             CustomAlertFeature()
         }
@@ -161,6 +180,7 @@ private extension MyPageFeature {
         await withTaskGroup { group in
             group.addTask { await fetchPrivacyPolicy(state, send) }
             group.addTask { await fetchTermsOfService(state, send) }
+            group.addTask { await fetchUserInfo(send) }
         }
     }
 
@@ -174,5 +194,10 @@ private extension MyPageFeature {
         if state.termsOfService?.isEmpty == false { return }
         let terms = try? await myPageRepository.fetchTermsOfService()
         await send(.termsOfServiceFetched(terms ?? []))
+    }
+
+    func fetchUserInfo(_ send: Send<Action>) async {
+        let userID = try? await myPageRepository.fetchUserID()
+        await send(.userIDFetched(userID))
     }
 }

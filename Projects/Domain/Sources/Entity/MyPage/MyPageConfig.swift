@@ -11,9 +11,15 @@ import Foundation
 public struct MyPageConfig: Equatable {
     public let contactUsURL: URL?
     public let latestAppVersion: AppVersion?
+    public let isDevModeEnabled: Bool
 
-    public init(contactUsURL: URL?, latestAppVersion: AppVersion?) {
+    public init(
+        contactUsURL: URL?,
+        latestAppVersion: AppVersion?,
+        isDevModeEnabled: Bool
+    ) {
         self.contactUsURL = contactUsURL
         self.latestAppVersion = latestAppVersion
+        self.isDevModeEnabled = isDevModeEnabled
     }
 }

@@ -10,4 +10,5 @@ import Foundation
 
 public extension Notification.Name {
     static let pushNotificationTapped = Notification.Name("pushNotificationTapped")
+    static let deviceShaked = Notification.Name("deviceShaked")
 }

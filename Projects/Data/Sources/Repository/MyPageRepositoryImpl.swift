@@ -56,11 +56,18 @@ enum MyPageRepositoryImpl {
                 try await remoteConfig.fetchAndActivate()
                 let contactUsURL = remoteConfig["contactUsURL"].stringValue
                 let versionString = remoteConfig["latestAppVersion"].stringValue
+                let isDevModeEnabled = remoteConfig["isDevModeEnabled"].boolValue
 
                 return .init(
                     contactUsURL: URL(string: contactUsURL),
-                    latestAppVersion: AppVersion(version: versionString)
+                    latestAppVersion: AppVersion(version: versionString),
+                    isDevModeEnabled: isDevModeEnabled
                 )
+            },
+            fetchUserID: {
+                let endpoint = UserEndpoint.fetchUserInfo
+                let response: UserInfoResponseDTO? = try await networkClient.request(endpoint)
+                return response?.userId
             }
         )
     }
