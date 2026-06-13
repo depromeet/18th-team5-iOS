@@ -29,6 +29,10 @@ struct CalendarView: View {
                             store.send(.anchoredTermChanged(id: id))
                         case let .reachedToEnd(direction):
                             store.send(.calendarReachToEnd(direction))
+                        case let .cellDidDisappear(id):
+                            store.send(.calendarTermDidDisappear(id: id))
+                        case let .cellWillAppear(id):
+                            store.send(.calendarTermWillAppear(id: id))
                         }
                     },
                     arguments: .init(
@@ -53,6 +57,20 @@ struct CalendarView: View {
                     sheetHeight = height - cellHeight - 12
                 }
                 .ignoresSafeArea(.container, edges: [.bottom])
+                .overlay(alignment: .top) {
+                    if let presents = store.presentMoveToCurrentTermButton {
+                        let style: WeakFloatingButton.Style = switch presents {
+                        case .up: .up
+                        case .down: .down
+                        }
+                        WeakFloatingButton(style: style) {
+                            store.send(.moveToCurrentTermButtonTapped)
+                        }
+                        .padding(.top, 16)
+                        .transition(.opacity)
+                    }
+                }
+                .animation(.easeInOut, value: store.presentMoveToCurrentTermButton)
                 .overlay {
                     if let detailStore = store.scope(state: \.detail, action: \.detail.presented) {
                         CalendarDetailView(store: detailStore)
@@ -97,7 +115,7 @@ extension CalendarView {
 
                     Text(store.header?.termRangeText ?? "-")
                         .font(.caption1Medium)
-                        .foregroundStyle(Color.gray400)
+                        .foregroundStyle(Color.gray600)
 
                     Spacer()
                 }
