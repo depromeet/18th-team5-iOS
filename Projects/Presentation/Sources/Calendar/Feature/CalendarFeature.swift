@@ -79,7 +79,7 @@ public struct CalendarFeature {
     }
 
     public enum Delegate {
-        case navigateToFreeRecord
+        case navigateToFreeRecord(Date)
         case navigateToEditRecord(DateRecordCard, date: Date)
     }
 
@@ -207,13 +207,25 @@ public struct CalendarFeature {
                         }
                     }
                     return .send(.delegate(.navigateToEditRecord(card, date: date)))
+                case let .createRecord(date):
+                    state.detail = nil
+                    state.calendarState.scrollEnabled = true
+                    if let id = state.selectedDateId {
+                        state.selectedDateId = nil
+                        editDateCell(&state, id: id) {
+                            var newDate = $0
+                            newDate.isSelected = false
+                            return newDate
+                        }
+                    }
+                    return .send(.delegate(.navigateToFreeRecord(date)))
                 case .refreshAnchoredTermData:
                     return refreshAnchoredTermData(state)
                 }
                 return .none
 
             case .floatingRecordButtonTapped:
-                return .send(.delegate(.navigateToFreeRecord))
+                return .send(.delegate(.navigateToFreeRecord(Date.now)))
 
             // Alert
 
