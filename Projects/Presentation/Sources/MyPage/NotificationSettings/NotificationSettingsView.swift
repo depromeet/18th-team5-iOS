@@ -114,6 +114,12 @@ extension NotificationSettingsFeature.Alert: AlertPresentable {
                 primaryButtonTitle: "새로고침",
                 secondaryButtonTitle: "닫기"
             )
+        case .updateFailed:
+            AlertInfo(
+                icon: .icWarning,
+                title: "알림 설정을 업데이트하지 못했어요.",
+                buttonTitle: "확인"
+            )
         }
     }
 }

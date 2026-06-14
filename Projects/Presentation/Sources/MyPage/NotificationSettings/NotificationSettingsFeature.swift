@@ -50,6 +50,7 @@ public struct NotificationSettingsFeature {
 
     public enum Alert {
         case fetchFailed
+        case updateFailed
     }
 
     public enum Delegate {
@@ -89,18 +90,22 @@ public struct NotificationSettingsFeature {
                 }
             case let .showAlert(alert):
                 state.isLoading = false
-                state.alert = .init(.fetchFailed)
+                state.alert = .init(alert)
                 return .none
             case let .alert(.primaryButtonTapped(alert)):
                 switch alert {
                 case .fetchFailed:
                     state.alert = nil
                     return .send(.onAppear)
+                case .updateFailed:
+                    state.alert = nil
+                    return .none
                 }
             case let .alert(.secondaryButtonTapped(alert)):
                 switch alert {
                 case .fetchFailed:
                     return .send(.backButtonTapped)
+                case .updateFailed: return .none
                 }
             case .binding: return .none
             case .delegate: return .none
@@ -150,9 +155,9 @@ private extension NotificationSettingsFeature {
             await send(.set(\.settings, newSettings))
             await send(.set(\.isLoading, false))
         } catch {
-            // TODO: Alert 처리 - @정원
             await send(.set(\.settings, oldValue))
             await send(.set(\.isLoading, false))
+            await send(.showAlert(.updateFailed))
         }
     }
 }
