@@ -58,7 +58,8 @@ extension CameraController: AVCapturePhotoCaptureDelegate {
     }
 
     nonisolated func cropToSquare(_ image: UIImage) -> UIImage {
-        guard let cgImage = image.cgImage else { return image }
+        let normalizedImage = imageByApplyingOrientation(image)
+        guard let cgImage = normalizedImage.cgImage else { return normalizedImage }
 
         let size = min(cgImage.width, cgImage.height)
         let x = (cgImage.width - size) / 2
@@ -66,6 +67,20 @@ extension CameraController: AVCapturePhotoCaptureDelegate {
         let cropRect = CGRect(x: x, y: y, width: size, height: size)
 
         guard let cropped = cgImage.cropping(to: cropRect) else { return image }
-        return UIImage(cgImage: cropped, scale: image.scale, orientation: image.imageOrientation)
+        return UIImage(cgImage: cropped, scale: normalizedImage.scale, orientation: .up)
+    }
+
+    nonisolated func imageByApplyingOrientation(_ image: UIImage) -> UIImage {
+        guard image.imageOrientation != .up else { return image }
+
+        let size = image.size
+        guard size.width > 0, size.height > 0 else { return image }
+
+        let format = UIGraphicsImageRendererFormat.default()
+        format.scale = image.scale
+
+        return UIGraphicsImageRenderer(size: size, format: format).image { _ in
+            image.draw(in: CGRect(origin: .zero, size: size))
+        }
     }
 }
