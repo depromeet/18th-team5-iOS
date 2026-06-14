@@ -53,6 +53,11 @@ public struct MainFeature {
         case alert(CustomAlertFeature<Alert>.Action)
         case push(Path.State)
         case popToRoot
+        case delegate(Delegate)
+    }
+
+    public enum Delegate {
+        case navigateToSplash
     }
 
     @Dependency(\.logger) private var logger
@@ -180,6 +185,12 @@ public struct MainFeature {
                     await syncNotificationSettings(settings)
                 }
 
+            case .path(.element(
+                id: _,
+                action: .myPage(.delegate(.navigateToSplash))
+            )):
+                return .send(.delegate(.navigateToSplash))
+
             case let .push(destination):
                 state.path.append(destination)
                 return .none
@@ -201,6 +212,8 @@ public struct MainFeature {
             case .path: return .none
 
             case .binding: return .none
+
+            case .delegate: return .none
             }
         }
         .forEach(\.path, action: \.path)

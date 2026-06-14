@@ -140,6 +140,10 @@ public struct RootFeature {
                 guard let path = state.initialPath else { return .none }
                 return .send(.navigation(path))
 
+            case .path(.main(.delegate(.navigateToSplash))):
+                state = .init()
+                return .send(.onAppear)
+
             case let .initialPathDetermined(path):
                 state.initialPath = path
                 guard state.splashDone else { return .none }

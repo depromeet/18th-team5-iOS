@@ -15,6 +15,8 @@ import Foundation
 public struct MyPageFeature {
     @Dependency(\.dismiss) private var dismiss
     @Dependency(\.myPageRepository) private var myPageRepository
+    @Dependency(\.notificationRepository) private var notificationRepository
+    @Dependency(\.authRepository) private var authRepository
 
     public enum Menu {
         case notificationSettings
@@ -43,6 +45,7 @@ public struct MyPageFeature {
         @Presents var path: Path.State?
         @Presents var devMode: DevModeFeature.State?
         var alert: CustomAlertFeature<Alert>.State?
+        var isLoading: Bool = false
 
         public init(_ solarTerm: SolarTerm, _ config: MyPageConfig?) {
             self.solarTerm = solarTerm
@@ -81,6 +84,7 @@ public struct MyPageFeature {
         case privacyPolicyFetched([DocumentInfo])
         case termsOfServiceFetched([DocumentInfo])
         case userIDFetched(Int?)
+        case userDataResetCompleted
         case path(PresentationAction<Path.Action>)
         case devMode(PresentationAction<DevModeFeature.Action>)
         case deviceShaked
@@ -90,6 +94,7 @@ public struct MyPageFeature {
 
     public enum Delegate {
         case syncNotificationSettings([NotificationType: Bool])
+        case navigateToSplash
     }
 
     public init() {}
@@ -136,8 +141,11 @@ public struct MyPageFeature {
                 state.alert = .init(.delete)
                 return .none
             case .alert(.primaryButtonTapped):
-                // TODO: 초기화 API 호출
-                return .none
+                state.alert = nil
+                state.isLoading = true
+                return .run { send in
+                    await resetUserData(send)
+                }
             case .alert(.secondaryButtonTapped):
                 state.alert = nil
                 return .none
@@ -156,6 +164,8 @@ public struct MyPageFeature {
             case let .userIDFetched(userID):
                 state.userID = userID
                 return .none
+            case .userDataResetCompleted:
+                return .send(.delegate(.navigateToSplash))
             case .deviceShaked:
                 guard state.isDevModeEnabled else { return .none }
                 state.devMode = .init(state.userID)
@@ -199,5 +209,22 @@ private extension MyPageFeature {
     func fetchUserInfo(_ send: Send<Action>) async {
         let userID = try? await myPageRepository.fetchUserID()
         await send(.userIDFetched(userID))
+    }
+
+    func resetUserData(_ send: Send<Action>) async {
+        do {
+            let settings: [NotificationType: Bool] = [
+                .dailyMission: false,
+                .solarTermStart: false,
+                .solarTermEnd: false
+            ]
+
+            try await notificationRepository.syncNotificationSettings(settings)
+            try await myPageRepository.resetUserData()
+            try await authRepository.signOut()
+            await send(.userDataResetCompleted)
+        } catch {
+            // TODO: 예외처리 - @정원
+        }
     }
 }
