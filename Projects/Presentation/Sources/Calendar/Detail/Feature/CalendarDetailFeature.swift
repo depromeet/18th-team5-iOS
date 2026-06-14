@@ -60,6 +60,7 @@ public struct CalendarDetailFeature {
             case dismissAlert
             case dismiss
             case editRecord(DateRecordCard, date: Date)
+            case createRecord(date: Date)
             case refreshAnchoredTermData
         }
 
@@ -104,9 +105,7 @@ public struct CalendarDetailFeature {
                 return .send(.delegate(.editRecord(card, date: state.date)))
 
             case .createRecordButtonTapped:
-                // TODO: 라우팅 연결 필요 -@진준호
-                state.toast = .init(title: "준비중입니다.", duration: 1.0, bottomInset: 108)
-                return .none
+                return .send(.delegate(.createRecord(date: state.date)))
 
             case .saveImageButtonTapped:
                 return saveImage(&state)

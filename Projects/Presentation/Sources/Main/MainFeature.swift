@@ -170,8 +170,8 @@ public struct MainFeature {
                 state.alert = .init(.mission(alert))
                 return .none
 
-            case .calendar(.delegate(.navigateToFreeRecord)):
-                state.path.append(.freeRecord(.init(recordDate: Date.now)))
+            case let .calendar(.delegate(.navigateToFreeRecord(date))):
+                state.path.append(.freeRecord(.init(recordDate: date)))
                 return .none
 
             case let .calendar(.delegate(.navigateToEditRecord(card, date: date))):
