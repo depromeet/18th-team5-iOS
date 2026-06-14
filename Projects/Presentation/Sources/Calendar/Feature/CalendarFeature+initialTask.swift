@@ -10,7 +10,7 @@ import ComposableArchitecture
 import Domain
 import Foundation
 
-// MARK: - OnAppear
+// MARK: - InitialTask
 
 extension CalendarFeature {
     func initialTask(_ state: inout State) -> Effect<Action> {
