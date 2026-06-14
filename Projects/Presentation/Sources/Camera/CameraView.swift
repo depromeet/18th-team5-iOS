@@ -319,6 +319,7 @@ private extension CameraView {
                     }
                     .padding(.horizontal, sidePadding)
                 }
+                .scrollDisabled(true)
                 .onAppear {
                     scrollProxy.scrollTo(cameraState.activePreset, anchor: .center)
                 }

@@ -26,6 +26,9 @@ public struct MissionRecordFeature {
         let missionType: MissionType
         var missionTitle: String
         var missionDescription: String?
+        var editingCompletionId: Int?
+        var originalImageURL: URL?
+        var originalMemo: String?
         var didRequestMissionRecordPage = false
         var memo: String = ""
         var isSubmitting: Bool = false
@@ -40,8 +43,43 @@ public struct MissionRecordFeature {
             self.photo = RecordPhotoFeature.State(cameraOverlayLabel: missionTitle)
         }
 
+        public init(
+            editingCompletionId: Int,
+            missionTitle: String,
+            missionType: MissionType,
+            imageURL: URL?,
+            memo: String?
+        ) {
+            self.missionId = 0
+            self.missionType = missionType
+            self.missionTitle = missionTitle
+            self.editingCompletionId = editingCompletionId
+            self.originalImageURL = imageURL
+            self.originalMemo = memo
+            self.didRequestMissionRecordPage = true
+            self.memo = memo ?? ""
+            self.photo = RecordPhotoFeature.State(
+                cameraOverlayLabel: missionTitle,
+                existingImageURL: imageURL
+            )
+        }
+
         var isMemoLimitExceeded: Bool {
             memo.count > MissionRecordFeature.maxMemoLength
+        }
+
+        var isEditing: Bool {
+            editingCompletionId != nil
+        }
+
+        var hasEditedContent: Bool {
+            photo.selectedImageData != nil
+                || photo.existingImageURL != originalImageURL
+                || memo != (originalMemo ?? "")
+        }
+
+        var hasRecordImage: Bool {
+            photo.selectedImageData != nil || photo.existingImageURL != nil
         }
     }
 
@@ -65,6 +103,7 @@ public struct MissionRecordFeature {
     }
 
     @Dependency(\.missionRepository) private var missionRepository
+    @Dependency(\.calendarRecordRepository) private var calendarRecordRepository
     @Dependency(\.imageUploadRepository) private var imageUploadRepository
     @Dependency(\.dismiss) private var dismiss
 
@@ -107,30 +146,49 @@ public struct MissionRecordFeature {
 
             case .submitButtonTapped:
                 guard !state.isSubmitting,
-                      !state.isMemoLimitExceeded
+                      !state.isMemoLimitExceeded,
+                      state.hasRecordImage,
+                      !state.isEditing || state.hasEditedContent
                 else { return .none }
                 state.isSubmitting = true
                 let missionId = state.missionId
                 let missionType = state.missionType
                 let imageData = state.photo.selectedImageData
                 let memo = state.memo.trimmingCharacters(in: .whitespacesAndNewlines)
+                let editingCompletionId = state.editingCompletionId
 
                 return .run { send in
                     do {
-                        guard let imageData else {
-                            throw DomainError.unknown("이미지가 필요합니다")
+                        let objectKey: String?
+                        if let imageData {
+                            objectKey = try await imageUploadRepository.uploadImage(
+                                imageData,
+                                "\(UUID().uuidString).jpg",
+                                "image/jpeg"
+                            )
+                        } else {
+                            objectKey = nil
                         }
-                        let objectKey = try await imageUploadRepository.uploadImage(
-                            imageData,
-                            "\(UUID().uuidString).jpg",
-                            "image/jpeg"
-                        )
-                        let completionId = try await missionRepository.completeMission(
-                            missionId,
-                            missionType,
-                            objectKey,
-                            memo.isEmpty ? nil : memo
-                        )
+
+                        let completionId: Int
+                        if let editingCompletionId {
+                            try await calendarRecordRepository.updateMissionCompletion(
+                                editingCompletionId,
+                                objectKey,
+                                memo.isEmpty ? nil : memo
+                            )
+                            completionId = editingCompletionId
+                        } else {
+                            guard let objectKey else {
+                                throw DomainError.unknown("이미지가 필요합니다")
+                            }
+                            completionId = try await missionRepository.completeMission(
+                                missionId,
+                                missionType,
+                                objectKey,
+                                memo.isEmpty ? nil : memo
+                            )
+                        }
                         await send(.submitResponse(.success(completionId)))
                     } catch {
                         await send(.submitResponse(.failure(error)))

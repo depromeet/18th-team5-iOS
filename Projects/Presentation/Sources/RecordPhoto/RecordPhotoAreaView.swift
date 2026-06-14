@@ -9,6 +9,7 @@ import Camera
 import ComposableArchitecture
 import DesignSystem
 import Domain
+import Kingfisher
 import PhotosUI
 import SwiftUI
 
@@ -68,32 +69,56 @@ private extension RecordPhotoView {
 
             if let imageData = store.selectedImageData,
                let uiImage = UIImage(data: imageData) {
-                Color.clear
-                    .overlay {
-                        Image(uiImage: uiImage)
-                            .resizable()
-                            .scaledToFill()
-                    }
-                    .clipShape(.rect(cornerRadius: .radius16))
-                    .overlay(alignment: .topTrailing) {
-                        Button {
-                            store.send(.imageDeleteButtonTapped)
-                        } label: {
-                            Image(systemName: "xmark")
-                                .font(.system(size: 14, weight: .bold))
-                                .foregroundStyle(Color.monoWhite)
-                                .frame(width: 32, height: 32)
-                                .background(Color.gray700)
-                                .clipShape(Circle())
-                        }
-                        .padding(12)
-                        .accessibilityLabel("사진 삭제")
-                    }
+                selectedImageView(uiImage)
+            } else if let existingImageURL = store.existingImageURL {
+                existingImageView(existingImageURL)
             } else {
                 photoPlaceholder
             }
         }
         .frame(height: UIScreen.width - 40)
+    }
+
+    func selectedImageView(_ image: UIImage) -> some View {
+        imageContainer {
+            Image(uiImage: image)
+                .resizable()
+                .scaledToFill()
+        }
+    }
+
+    func existingImageView(_ url: URL) -> some View {
+        imageContainer {
+            KFImage(url)
+                .placeholder {
+                    Color.gray100
+                }
+                .fade(duration: 0.25)
+                .resizable()
+                .scaledToFill()
+        }
+    }
+
+    func imageContainer<Content: View>(@ViewBuilder content: () -> Content) -> some View {
+        Color.clear
+            .overlay {
+                content()
+            }
+            .clipShape(.rect(cornerRadius: .radius16))
+            .overlay(alignment: .topTrailing) {
+                Button {
+                    store.send(.imageDeleteButtonTapped)
+                } label: {
+                    Image(systemName: "xmark")
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundStyle(Color.monoWhite)
+                        .frame(width: 32, height: 32)
+                        .background(Color.gray700)
+                        .clipShape(.circle)
+                }
+                .padding(12)
+                .accessibilityLabel("사진 삭제")
+            }
     }
 
     var photoPlaceholder: some View {
@@ -110,7 +135,7 @@ private extension RecordPhotoView {
                 }
             }
 
-            HStack(spacing: 30) {
+            HStack(spacing: 24) {
                 cameraButton
                 galleryButton
             }
@@ -121,15 +146,12 @@ private extension RecordPhotoView {
         Button {
             store.send(.cameraButtonTapped)
         } label: {
-            ZStack {
-                Circle()
-                    .fill(Color.whiteAlpha600)
-                    .frame(width: 56, height: 56)
-
-                Image(systemName: "camera")
-                    .font(.system(size: 20))
-                    .foregroundStyle(Color.gray800)
-            }
+            Image.icCamera
+                .resizable()
+                .frame(width: 20, height: 20)
+                .padding(12)
+                .background(Color.whiteAlpha600)
+                .clipShape(.circle)
         }
     }
 
@@ -137,15 +159,12 @@ private extension RecordPhotoView {
         Button {
             store.send(.galleryButtonTapped)
         } label: {
-            ZStack {
-                Circle()
-                    .fill(Color.whiteAlpha600)
-                    .frame(width: 56, height: 56)
-
-                Image(systemName: "photo")
-                    .font(.system(size: 20))
-                    .foregroundStyle(Color.gray800)
-            }
+            Image.icPhoto
+                .resizable()
+                .frame(width: 20, height: 20)
+                .padding(12)
+                .background(Color.whiteAlpha600)
+                .clipShape(.circle)
         }
     }
 }
@@ -153,8 +172,8 @@ private extension RecordPhotoView {
 private extension RecordPhotoView {
     var alertIcon: Image? {
         switch store.alert {
-        case .permissionDenied(.camera): .icCamera
-        case .permissionDenied(.photoLibrary): .icPhoto
+        case .permissionDenied(.camera): .ic2dCamera
+        case .permissionDenied(.photoLibrary): .ic2dPhoto
         case .none: nil
         }
     }

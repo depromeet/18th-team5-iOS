@@ -162,6 +162,27 @@ public struct MainFeature {
                 state.path.append(.freeRecord(.init(recordDate: Date.now)))
                 return .none
 
+            case let .calendar(.delegate(.navigateToEditRecord(card, date: date))):
+                switch card.cardType {
+                case .free:
+                    state.path.append(.freeRecord(.init(
+                        editingRecordId: card.id,
+                        recordDate: date,
+                        imageURL: card.imageURL,
+                        memo: card.memo
+                    )))
+
+                case .daily, .recommended, .selected:
+                    state.path.append(.missionRecord(.init(
+                        editingCompletionId: card.id,
+                        missionTitle: card.missionTitle ?? "미션 기록",
+                        missionType: card.cardType.missionType,
+                        imageURL: card.imageURL,
+                        memo: card.memo
+                    )))
+                }
+                return .none
+
             case .alert(.primaryButtonTapped):
                 state.alert = nil
                 return .none
@@ -286,5 +307,21 @@ public extension MainFeature {
         case mission
         case calendar
         case solarTerm
+    }
+}
+
+private extension RecordCardType {
+    var missionType: MissionType {
+        switch self {
+        case .daily:
+            return MissionType.daily
+        case .recommended:
+            return MissionType.recommended
+        case .selected:
+            return MissionType.selected
+        case .free:
+            assertionFailure("자유 기록에는 MissionType이 없습니다.")
+            return MissionType.daily
+        }
     }
 }

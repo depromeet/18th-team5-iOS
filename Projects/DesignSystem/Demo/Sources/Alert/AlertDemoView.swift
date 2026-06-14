@@ -17,7 +17,7 @@ struct AlertDemoView: View {
 
             NewCustomAlertView(
                 alertInfo: .init(
-                    icon: .icCamera,
+                    icon: .ic2dCamera,
                     title: "타이틀 예시입니다",
                     primaryButtonTitle: "확인",
                     secondaryButtonTitle: "닫기"

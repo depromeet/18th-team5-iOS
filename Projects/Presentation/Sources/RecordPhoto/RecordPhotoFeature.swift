@@ -20,14 +20,16 @@ public struct RecordPhotoFeature {
     @ObservableState
     public struct State: Equatable {
         var cameraOverlayLabel: String
+        var existingImageURL: URL?
         var selectedImageData: Data?
         var alert: Alert?
         var limitedPickerPresentationRequestID: UUID?
         @Presents var camera: CameraFeature.State?
         @Presents var photoPicker: PhotoPickerFeature.State?
 
-        public init(cameraOverlayLabel: String) {
+        public init(cameraOverlayLabel: String, existingImageURL: URL? = nil) {
             self.cameraOverlayLabel = cameraOverlayLabel
+            self.existingImageURL = existingImageURL
         }
     }
 
@@ -87,6 +89,7 @@ public struct RecordPhotoFeature {
 
             case .imageDeleteButtonTapped:
                 state.selectedImageData = nil
+                state.existingImageURL = nil
                 return .none
 
             case .alertCancelTapped:
