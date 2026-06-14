@@ -14,6 +14,7 @@ struct SeasonRecordSectionView: View {
     let seasonRecord: SeasonRecord
     let season: Season
     let onDetailTap: () -> Void
+    let onPhotoTap: (String) -> Void
 
     var body: some View {
         VStack(spacing: 12) {
@@ -46,14 +47,14 @@ struct SeasonRecordSectionView: View {
                     EmptyPhotoView()
                         .padding(.bottom, 20)
                 case 1:
-                    OnePhotoView(photoURLs: seasonRecord.photoURL)
+                    OnePhotoView(records: seasonRecord.recentRecords, onPhotoTap: onPhotoTap)
                         .padding(.bottom, 16)
                 case 2:
-                    TwoPhotoView(photoURLs: seasonRecord.photoURL)
+                    TwoPhotoView(records: seasonRecord.recentRecords, onPhotoTap: onPhotoTap)
                         .aspectRatio(335.0 / 176.0, contentMode: .fit)
                         .padding(.bottom, 40)
                 default:
-                    ThreePhotoView(photoURLs: seasonRecord.photoURL)
+                    ThreePhotoView(records: seasonRecord.recentRecords, onPhotoTap: onPhotoTap)
                         .aspectRatio(335.0 / 172.0, contentMode: .fit)
                         .padding(.bottom, 40)
                 }
@@ -135,23 +136,25 @@ private struct EmptyPhotoView: View {
 // MARK: - 사진 1장
 
 private struct OnePhotoView: View {
-    let photoURLs: [URL]
+    let records: [RecentRecord]
+    let onPhotoTap: (String) -> Void
 
     var body: some View {
         GeometryReader { geo in
-            RemoteImage(url: photoURLs.first, contentMode: .fill)
+            RemoteImage(url: records[safe: 0]?.imageURL, contentMode: .fill)
                 .frame(width: geo.size.width, height: geo.size.width * 9 / 16)
                 .clipShape(RoundedRectangle(cornerRadius: .radius16))
+                .onTapGesture { onPhotoTap(records[safe: 0]?.recordedAt ?? "") }
         }
         .aspectRatio(16.0 / 9.0, contentMode: .fit)
-        .allowsHitTesting(false)
     }
 }
 
 // MARK: - 사진 2장
 
 private struct TwoPhotoView: View {
-    let photoURLs: [URL]
+    let records: [RecentRecord]
+    let onPhotoTap: (String) -> Void
 
     var body: some View {
         GeometryReader { geo in
@@ -160,13 +163,15 @@ private struct TwoPhotoView: View {
 
             ZStack {
                 // 오른쪽 사진 (컨테이너 303x176)
-                PhotoItem(url: photoURLs[safe: 1], size: w * 144 / 303)
+                PhotoItem(url: records[safe: 1]?.imageURL, size: w * 144 / 303)
                     .position(x: w * 231 / 303, y: h * 104 / 176)
+                    .onTapGesture { onPhotoTap(records[safe: 1]?.recordedAt ?? "") }
 
                 // 왼쪽 큰 사진
-                PhotoItem(url: photoURLs[safe: 0], size: w * 160 / 303)
+                PhotoItem(url: records[safe: 0]?.imageURL, size: w * 160 / 303)
                     .rotationEffect(.degrees(-6))
                     .position(x: w * 88 / 303, y: h * 88 / 176)
+                    .onTapGesture { onPhotoTap(records[safe: 0]?.recordedAt ?? "") }
             }
             .padding(.top, 12)
         }
@@ -176,7 +181,8 @@ private struct TwoPhotoView: View {
 // MARK: - 사진 3장 이상
 
 private struct ThreePhotoView: View {
-    let photoURLs: [URL]
+    let records: [RecentRecord]
+    let onPhotoTap: (String) -> Void
 
     var body: some View {
         GeometryReader { geo in
@@ -185,19 +191,22 @@ private struct ThreePhotoView: View {
 
             ZStack {
                 // 오른쪽 사진
-                PhotoItem(url: photoURLs[safe: 2], size: w * 126 / 303)
+                PhotoItem(url: records[safe: 2]?.imageURL, size: w * 126 / 303)
                     .rotationEffect(.degrees(4))
                     .position(x: w * 231 / 303, y: h * 82 / 172)
+                    .onTapGesture { onPhotoTap(records[safe: 2]?.recordedAt ?? "") }
 
                 // 가운데 하단 사진
-                PhotoItem(url: photoURLs[safe: 1], size: w * 100 / 303)
+                PhotoItem(url: records[safe: 1]?.imageURL, size: w * 100 / 303)
                     .rotationEffect(.degrees(2))
                     .position(x: w * 166 / 303, y: h * 122 / 172)
+                    .onTapGesture { onPhotoTap(records[safe: 1]?.recordedAt ?? "") }
 
                 // 왼쪽 큰 사진
-                PhotoItem(url: photoURLs[safe: 0], size: w * 144 / 303)
+                PhotoItem(url: records[safe: 0]?.imageURL, size: w * 144 / 303)
                     .rotationEffect(.degrees(-6))
                     .position(x: w * 79 / 303, y: h * 79 / 172)
+                    .onTapGesture { onPhotoTap(records[safe: 0]?.recordedAt ?? "") }
             }
             .padding(.top, 12)
         }
@@ -206,9 +215,10 @@ private struct ThreePhotoView: View {
 
 #Preview("사진 0개") {
     SeasonRecordSectionView(
-        seasonRecord: SeasonRecord(solarTermName: "하지", photoURL: [], recordCount: 0),
+        seasonRecord: SeasonRecord(solarTermName: "하지", recentRecords: [], recordCount: 0),
         season: .summer,
-        onDetailTap: {}
+        onDetailTap: {},
+        onPhotoTap: { _ in }
     )
     .padding()
 }
@@ -217,11 +227,14 @@ private struct ThreePhotoView: View {
     SeasonRecordSectionView(
         seasonRecord: SeasonRecord(
             solarTermName: "하지",
-            photoURL: [URL(string: "https://picsum.photos/seed/a/300/300")!],
+            recentRecords: [
+                RecentRecord(imageURL: URL(string: "https://picsum.photos/seed/a/300/300")!, recordedAt: "2026-06-14")
+            ],
             recordCount: 1
         ),
         season: .summer,
-        onDetailTap: {}
+        onDetailTap: {},
+        onPhotoTap: { _ in }
     )
     .padding()
 }
@@ -230,14 +243,15 @@ private struct ThreePhotoView: View {
     SeasonRecordSectionView(
         seasonRecord: SeasonRecord(
             solarTermName: "하지",
-            photoURL: [
-                URL(string: "https://picsum.photos/seed/a/300/300")!,
-                URL(string: "https://picsum.photos/seed/b/300/300")!
+            recentRecords: [
+                RecentRecord(imageURL: URL(string: "https://picsum.photos/seed/a/300/300")!, recordedAt: "2026-06-14"),
+                RecentRecord(imageURL: URL(string: "https://picsum.photos/seed/b/300/300")!, recordedAt: "2026-06-13")
             ],
             recordCount: 2
         ),
         season: .summer,
-        onDetailTap: {}
+        onDetailTap: {},
+        onPhotoTap: { _ in }
     )
     .padding()
 }
@@ -246,7 +260,8 @@ private struct ThreePhotoView: View {
     SeasonRecordSectionView(
         seasonRecord: .mock,
         season: .summer,
-        onDetailTap: {}
+        onDetailTap: {},
+        onPhotoTap: { _ in }
     )
     .padding()
 }
