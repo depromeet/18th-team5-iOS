@@ -19,38 +19,42 @@ struct SolarTermCardView: View {
     var body: some View {
         VStack(spacing: 0) {
             // 상단 텍스트 영역
-            VStack(alignment: .leading, spacing: 12) {
-                Text("\(solarTerm.startDate) - \(solarTerm.endDate)")
-                    .font(.caption1Semibold)
-                    .foregroundStyle(.white)
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 4)
-                    .background(Color.blackAlpha300)
-                    .clipShape(Capsule())
+            VStack(alignment: .leading, spacing: 0) {
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("\(solarTerm.startDate) - \(solarTerm.endDate)")
+                        .font(.caption1Semibold)
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 4)
+                        .background(Color.blackAlpha300)
+                        .clipShape(Capsule())
 
-                VStack(alignment: .leading, spacing: 0) {
-                    ForEach(descriptionLines(solarTerm.description), id: \.self) { line in
-                        Text(line)
-                            .font(.title2Bold)
-                            .foregroundStyle(.white)
+                    VStack(alignment: .leading, spacing: 0) {
+                        ForEach(descriptionLines(solarTerm.description), id: \.self) { line in
+                            Text(line)
+                                .font(.title2Bold)
+                                .foregroundStyle(.white)
+                        }
+                    }
+
+                    Button(action: onDetailTap) {
+                        HStack(spacing: 0) {
+                            Text("더보기")
+                                .foregroundStyle(Color.white)
+                                .font(.body2Medium)
+                            Image.icArrowRight
+                                .renderingMode(.template)
+                                .resizable()
+                                .frame(width: 20, height: 20)
+                                .foregroundStyle(Color.white)
+                        }
                     }
                 }
-
-                Button(action: onDetailTap) {
-                    HStack(spacing: 0) {
-                        Text("더보기")
-                            .foregroundStyle(Color.white)
-                            .font(.body2Medium)
-                        Image.icArrowRight
-                            .renderingMode(.template)
-                            .resizable()
-                            .frame(width: 20, height: 20)
-                            .foregroundStyle(Color.white)
-                    }
-                }
+                .padding(.vertical, 24)
+                .padding(.horizontal, 20)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(LinearGradient.homeCardBackground(solarTerm.term?.season ?? .summer))
             }
-            .padding(.horizontal, 20)
-            .padding(.top, 24)
             .frame(maxWidth: .infinity, alignment: .leading)
 
             Spacer()
@@ -78,7 +82,7 @@ struct SolarTermCardView: View {
 
 extension SolarTermCardView {
     func descriptionLines(_ description: String) -> [String] {
-        let replace = description.replacingOccurrences(of: ", ", with: ",\n")
+        let replace = description.replacingOccurrences(of: ",", with: ",\n")
         return replace.split(separator: "\n").map { String($0) }
     }
 }

@@ -99,7 +99,8 @@ public struct HomeView: View {
                 SeasonRecordSectionView(
                     seasonRecord: seasonRecord,
                     season: homeCard.solarTerm.term?.season ?? .summer,
-                    onDetailTap: { store.send(.calendarButtonTapped) }
+                    onDetailTap: { store.send(.calendarButtonTapped) },
+                    onPhotoTap: { dateString in store.send(.onRecordPhotoTap(dateString)) }
                 )
             }
         }
