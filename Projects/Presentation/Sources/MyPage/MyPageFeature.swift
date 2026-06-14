@@ -224,7 +224,7 @@ private extension MyPageFeature {
             try await authRepository.signOut()
             await send(.userDataResetCompleted)
         } catch {
-            print("@@ \(error)")
+            // TODO: 예외처리 - @정원
         }
     }
 }
