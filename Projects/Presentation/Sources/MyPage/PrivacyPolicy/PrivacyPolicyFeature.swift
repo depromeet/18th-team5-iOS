@@ -64,7 +64,8 @@ public struct PrivacyPolicyFeature {
                 state.alert = nil
                 state.isLoading = true
                 return .send(.delegate(.refresh))
-            case .alert: return .none
+            case .alert(.secondaryButtonTapped):
+                return .send(.backButtonTapped)
             case .delegate: return .none
             }
         }

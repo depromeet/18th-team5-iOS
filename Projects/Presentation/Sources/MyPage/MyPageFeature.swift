@@ -146,6 +146,10 @@ public struct MyPageFeature {
                 return .run { [state] send in
                     await fetchPrivacyPolicy(state, send)
                 }
+            case .path(.presented(.termsOfService(.delegate(.refresh)))):
+                return .run { [state] send in
+                    await fetchTermsOfService(state, send)
+                }
             case .deleteButtonTapped:
                 state.alert = .init(.delete)
                 return .none
@@ -227,13 +231,23 @@ private extension MyPageFeature {
     func fetchPrivacyPolicy(_ state: State, _ send: Send<Action>) async {
         if state.privacyPolicies?.isEmpty == false { return }
         let policies = try? await myPageRepository.fetchPrivacyPolicy()
-        await send(.privacyPolicyFetched(policies ?? []))
+
+        if [true, false].randomElement()! {
+            await send(.privacyPolicyFetched(policies ?? []))
+        } else {
+            await send(.privacyPolicyFetched([]))
+        }
     }
 
     func fetchTermsOfService(_ state: State, _ send: Send<Action>) async {
         if state.termsOfService?.isEmpty == false { return }
         let terms = try? await myPageRepository.fetchTermsOfService()
-        await send(.termsOfServiceFetched(terms ?? []))
+
+        if [true, false].randomElement()! {
+            await send(.termsOfServiceFetched(terms ?? []))
+        } else {
+            await send(.termsOfServiceFetched([]))
+        }
     }
 
     func fetchUserInfo(_ send: Send<Action>) async {

@@ -65,7 +65,7 @@ extension PrivacyPolicyFeature.Alert: AlertPresentable {
         case .fetchFailed:
             AlertInfo(
                 icon: .icWarning,
-                title: "개인정보 처리방침을 불러오지 못했어요.\n 다시 시도해 주세요.",
+                title: "개인정보처리방침을 불러오지 못했어요.\n 다시 시도해 주세요.",
                 primaryButtonTitle: "새로고침",
                 secondaryButtonTitle: "닫기"
             )
