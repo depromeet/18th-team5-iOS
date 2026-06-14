@@ -61,6 +61,13 @@ struct CalendarDetailView: View {
                 ActivityView(activityItems: [image]) { completed in
                     store.send(.shareCompleted(completed))
                 }
+            } else {
+                // 이미지 디코딩 실패 시 빈 시트가 남지 않도록 즉시 닫고 사용자에게 알린다.
+                Color.clear
+                    .onAppear {
+                        store.send(.shareCompleted(false))
+                        store.send(.updateToast(.init(title: "이미지 공유에 실패했어요", duration: 1.5, bottomInset: 108)))
+                    }
             }
         }
         .overlay {

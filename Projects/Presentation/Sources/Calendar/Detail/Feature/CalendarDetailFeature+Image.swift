@@ -32,6 +32,7 @@ extension CalendarDetailFeature {
 
             guard granted else {
                 await send(.updateToast(.init(title: "사진 접근 권한이 필요해요", duration: 2.0, bottomInset: 108)))
+                await send(.updateLoadingState(false))
                 return
             }
 
