@@ -64,7 +64,7 @@ struct CalendarView: View {
                 }
                 .ignoresSafeArea(.container, edges: [.bottom])
                 .overlay(alignment: .top) {
-                    if let presents = store.presentMoveToCurrentTermButton {
+                    if let presents = store.presentMoveToCurrentTermButton, !store.isDetailViewPresenting {
                         let style: WeakFloatingButton.Style = switch presents {
                         case .up: .up
                         case .down: .down
@@ -91,7 +91,7 @@ struct CalendarView: View {
                 .animation(.easeInOut, value: store.detail != nil)
             }
             .overlay(alignment: .bottomTrailing) {
-                if store.detail == nil {
+                if !store.isDetailViewPresenting {
                     floatingRecordButton
                         .padding(.trailing, Constants.floatingButtonTrailingPadding)
                         .padding(.bottom, Constants.floatingButtonBottomPadding)
@@ -99,6 +99,8 @@ struct CalendarView: View {
                 }
             }
         }
+        .sensoryFeedback(.impact(weight: .light), trigger: store.anchorHapticTrigger)
+        .task { store.send(.viewDidLoad) }
         .onAppear {
             isFloatingRecordButtonExpanded = true
             store.send(.onAppear)

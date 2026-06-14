@@ -1,5 +1,5 @@
 //
-//  CalendarFeature+OnAppear.swift
+//  CalendarFeature+initialTask.swift
 //  Presentation
 //
 //  Created by choijunios on 5/17/26.
@@ -10,10 +10,10 @@ import ComposableArchitecture
 import Domain
 import Foundation
 
-// MARK: - OnAppear
+// MARK: - InitialTask
 
 extension CalendarFeature {
-    func onAppear(_ state: inout State) -> Effect<Action> {
+    func initialTask(_ state: inout State) -> Effect<Action> {
         guard !state.isAppeared else { return .none }
         state.isAppeared = true
 

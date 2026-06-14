@@ -22,6 +22,9 @@ extension CalendarFeature {
             termGroupId: termGroupId
         ) else { return .none }
 
+        let nextTrigger = state.anchorHapticTrigger + 1
+        state.anchorHapticTrigger = nextTrigger % 2
+
         var effects: [Effect<Action>] = [
             .send(.updateCalendarHeader(mapToHeader(currentTerm))),
             .send(.updateAnchoredTermId(termGroupId))

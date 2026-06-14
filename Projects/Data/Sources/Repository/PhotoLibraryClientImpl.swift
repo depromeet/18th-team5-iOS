@@ -31,6 +31,9 @@ public enum PhotoLibraryClientImpl {
             },
             observeChanges: {
                 store.changeStream()
+            },
+            saveImage: { data in
+                try await store.saveImage(data)
             }
         )
     }
@@ -101,6 +104,13 @@ private final class PhotoLibraryStore: NSObject, PHPhotoLibraryChangeObserver, @
                 }
                 continuation.resume(returning: Self.jpegData(from: data, compressionQuality: 0.9))
             }
+        }
+    }
+
+    func saveImage(_ data: Data) async throws {
+        try await PHPhotoLibrary.shared().performChanges {
+            let request = PHAssetCreationRequest.forAsset()
+            request.addResource(with: .photo, data: data, options: nil)
         }
     }
 

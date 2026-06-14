@@ -74,6 +74,20 @@ extension CalendarFeature {
         .cancellable(id: request, cancelInFlight: true)
     }
 
+    func refreshAnchoredTermData(_ state: State) -> Effect<Action> {
+        if let anchorId = state.anchoredTermId,
+           let anchoredTerm = findTermGroup(pages: state.calendarState.pages, termGroupId: anchorId) {
+            let info = anchoredTerm.solarTermInfo
+            let fetchId = Self.termRecordKey(info.year, info.term)
+
+            if let pending = state.termRecordData[fetchId] {
+                let request = TermFetchRequest.specific(id: pending.requestId)
+                return .send(.calendarDataRequest(request))
+            }
+        }
+        return .none
+    }
+
     static func termRecordKey(
         _ year: SolarTermYear,
         _ term: SolarTerm
