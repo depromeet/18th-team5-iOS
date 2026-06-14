@@ -145,6 +145,8 @@ public struct CalendarDetailFeature {
                 }
                 let removedIndex = state.frontCardIndex
                 let removedCard = state.dateRecordCards.remove(at: removedIndex)
+                let cardCount = state.dateRecordCards.count
+
                 state.frontCardIndex = 0
                 state.toast = .init(
                     title: "기록이 삭제되었어요",
@@ -152,7 +154,13 @@ public struct CalendarDetailFeature {
                     bottomInset: 108,
                     action: nil
                 )
+                let currentDate = state.date
                 return .run { send in
+                    if cardCount == 0 {
+                        let displayType = try await displayType(currentDate, 0)
+                        await send(.updateDetailDisplayType(displayType))
+                    }
+
                     do {
                         switch removedCard.cardType {
                         case .free:

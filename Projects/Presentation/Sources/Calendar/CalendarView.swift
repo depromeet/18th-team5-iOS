@@ -106,6 +106,7 @@ struct CalendarView: View {
             store.send(.onAppear)
         }
         .customAlert(store.scope(state: \.alert, action: \.alert))
+        .toastContainer()
     }
 }
 

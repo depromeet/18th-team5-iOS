@@ -55,7 +55,6 @@ struct CalendarDetailView: View {
         }
         .animation(.easeInOut, value: store.isLoading)
         .presentToast($store.toast)
-        .toastContainer()
         .sheet(item: $store.shareImageItem) { item in
             if let image = UIImage(data: item.imageData) {
                 ActivityView(activityItems: [image]) { completed in

@@ -7,6 +7,7 @@
 //
 
 import ComposableArchitecture
+import Foundation
 
 extension CalendarDetailFeature {
     func fetchDateRecord(_ state: State) -> Effect<Action> {
@@ -16,22 +17,10 @@ extension CalendarDetailFeature {
             .run { send in
                 do {
                     let cards = try await calendarRecordRepository.fetchDateRecords(currentDate)
+                    let displayType = try await displayType(currentDate, cards.count)
 
-                    if cards.isEmpty {
-                        let terms = try await solarTermRepository.fetchSolarTerms(.current)
-                        let currentTerm = terms.first { info in
-                            (info.startDate ... info.endDate).contains(.now)
-                        }
-                        let detailTerm = terms.first { info in
-                            (info.startDate ... info.endDate).contains(currentDate)
-                        }
-                        let isCurrentTerm = (currentTerm == detailTerm)
-                        let displayType: CardDetailDisplayType = isCurrentTerm ? .emptyRecord : .passedTerm
-                        await send(.updateDetailDisplayType(displayType))
-                    } else {
-                        await send(.updateRecordCards(cards))
-                        await send(.updateDetailDisplayType(.cards))
-                    }
+                    await send(.updateRecordCards(cards))
+                    await send(.updateDetailDisplayType(displayType))
                     await send(.updateLoadingState(false))
                 } catch {
                     await send(.updateLoadingState(false))
@@ -39,5 +28,21 @@ extension CalendarDetailFeature {
                 }
             }
         )
+    }
+
+    func displayType(_ currentDate: Date, _ cardCount: Int) async throws -> CardDetailDisplayType {
+        if cardCount == 0 {
+            let terms = try await solarTermRepository.fetchSolarTerms(.current)
+            let currentTerm = terms.first { info in
+                (info.startDate ... info.endDate).contains(.now)
+            }
+            let detailTerm = terms.first { info in
+                (info.startDate ... info.endDate).contains(currentDate)
+            }
+            let isCurrentTerm = (currentTerm == detailTerm)
+            return isCurrentTerm ? .emptyRecord : .passedTerm
+        } else {
+            return .cards
+        }
     }
 }
