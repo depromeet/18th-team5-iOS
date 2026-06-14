@@ -38,6 +38,7 @@ struct HomeSeasonRecordResponseDTO: Decodable {
 struct RecentRecordResponseDTO: Decodable {
     let completionId: Int
     let imageUrl: String
+    let recordedAt: String?
 }
 
 // MARK: - Domain Mapping
@@ -55,7 +56,10 @@ extension HomeSeasonRecordResponseDTO {
     func toDomain() -> SeasonRecord {
         SeasonRecord(
             solarTermName: "",
-            photoURL: recentRecords.compactMap { URL(string: $0.imageUrl) },
+            recentRecords: recentRecords.compactMap { record in
+                guard let url = URL(string: record.imageUrl) else { return nil }
+                return RecentRecord(imageURL: url, recordedAt: record.recordedAt ?? "")
+            },
             recordCount: recordCount
         )
     }

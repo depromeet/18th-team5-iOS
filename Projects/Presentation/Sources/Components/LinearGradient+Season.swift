@@ -21,4 +21,15 @@ extension LinearGradient {
             endPoint: .bottom
         )
     }
+
+    static func homeCardBackground(_ season: Season) -> Self {
+        .init(
+            stops: [
+                .init(color: season.color(.scale300), location: 0.0),
+                .init(color: season.color(.scale400).opacity(0), location: 1.0)
+            ],
+            startPoint: .top,
+            endPoint: .bottom
+        )
+    }
 }

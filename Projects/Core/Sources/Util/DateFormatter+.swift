@@ -9,6 +9,7 @@
 import Foundation
 
 extension DateFormatter {
+    public static let yearMonthDayDash = makeFormatter("yyyy-MM-dd")
     public static let shortYearMonthDayDot = makeFormatter("yy.MM.dd")
     public static let shortMonthDayDot = makeFormatter("MM.dd")
     public static let monthDayKorean = makeFormatter("M월 d일")

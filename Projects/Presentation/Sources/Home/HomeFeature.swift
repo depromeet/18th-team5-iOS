@@ -7,8 +7,10 @@
 //
 
 import ComposableArchitecture
+import Core
 import DesignSystem
 import Domain
+import Foundation
 
 @Reducer
 public struct HomeFeature {
@@ -32,6 +34,7 @@ public struct HomeFeature {
         case onSolarTermDetailTap
         case myPageButtonTapped
         case calendarButtonTapped
+        case onRecordPhotoTap(String)
         case delegate(Delegate)
 
         public enum Delegate {
@@ -39,11 +42,13 @@ public struct HomeFeature {
             case navigateToMissionTab
             case navigateToSolarTermContent(SolarTerm)
             case navigateToCalendar
+            case navigateToCalendarRecord(Date)
             case navigateToMyPage
         }
     }
 
     @Dependency(\.homeRepository) var homeRepository
+    @Dependency(\.missionRepository) var missionRepository
 
     public init() {}
 
@@ -111,6 +116,11 @@ public struct HomeFeature {
 
             case .calendarButtonTapped:
                 return .send(.delegate(.navigateToCalendar))
+
+            case let .onRecordPhotoTap(dateString):
+                guard let date = DateFormatter.yearMonthDayDash.date(from: dateString)
+                else { return .none }
+                return .send(.delegate(.navigateToCalendarRecord(date)))
 
             case .delegate:
                 return .none

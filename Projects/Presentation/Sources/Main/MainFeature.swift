@@ -59,6 +59,7 @@ public struct MainFeature {
     @Dependency(\.solarTermRepository) private var solarTermRepository
     @Dependency(\.notificationRepository) private var notificationRepository
     @Dependency(\.myPageRepository) private var myPageRepository
+    @Dependency(\.missionRepository) private var missionRepository
 
     public init() {}
 
@@ -123,8 +124,15 @@ public struct MainFeature {
                 return .none
 
             case .home(.delegate(.navigateToMissionTab)):
-                state.tab = .mission
-                return .send(.mission(.openFromHome))
+                return .run { send in
+                    let mission = try? await missionRepository.fetchSearchedMission()
+                    if mission?.isCompleted == true {
+                        await send(.mission(.delegate(.showAlert(.missionUnavailable))))
+                    } else {
+                        await send(.set(\.tab, .mission))
+                        await send(.mission(.openFromHome))
+                    }
+                }
 
             case let .home(.delegate(.navigateToSolarTermContent(term))):
                 state.path.append(.solarTermIntroContent(.init(term: term)))
@@ -133,6 +141,12 @@ public struct MainFeature {
             case .home(.delegate(.navigateToMyPage)):
                 guard let solarTerm = state.solarTerm else { return .none }
                 state.path.append(.myPage(.init(solarTerm, state.myPageConfig)))
+                return .none
+
+            // TODO: 캘린더 탭 이동 + 해당 날짜 기록 상세 열기 - @준영
+            case let .home(.delegate(.navigateToCalendarRecord(date))):
+                state.tab = .calendar
+                // TODO: calendar에 navigateToDate(date) 액션 전달
                 return .none
 
             case .home(.delegate(.navigateToCalendar)):

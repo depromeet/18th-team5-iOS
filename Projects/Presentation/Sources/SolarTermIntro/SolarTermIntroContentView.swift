@@ -219,7 +219,7 @@ private extension SolarTermIntroContentView {
                 .font(.body2Regular)
                 .foregroundStyle(Color.gray600)
         }
-        .frame(maxWidth: .infinity)
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
 
