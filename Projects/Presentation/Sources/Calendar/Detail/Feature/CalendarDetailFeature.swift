@@ -21,6 +21,7 @@ public struct CalendarDetailFeature {
         var dateRecordCards: [DateRecordCard] = []
         var isLoading: Bool = true
         var toast: ToastModel?
+        var shareImageItem: ShareImageItem?
 
         public init(date: Date) {
             self.date = date
@@ -46,6 +47,8 @@ public struct CalendarDetailFeature {
         case updateLoadingState(Bool)
         case deleteCardFailed(card: DateRecordCard, index: Int)
         case updateToast(ToastModel)
+        case updateShareImageItem(ShareImageItem?)
+        case shareCompleted(Bool)
 
         case delegate(Delegate)
         case binding(BindingAction<State>)
@@ -86,41 +89,13 @@ public struct CalendarDetailFeature {
                 return .send(.fetchRecordCards)
 
             case .fetchRecordCards:
-                let currentDate = state.date
-                return .concatenate(
-                    .send(.updateLoadingState(true)),
-                    .run { send in
-                        do {
-                            let cards = try await calendarRecordRepository.fetchDateRecords(currentDate)
-
-                            if cards.isEmpty {
-                                let terms = try await solarTermRepository.fetchSolarTerms(.current)
-                                let currentTerm = terms.first { info in
-                                    (info.startDate ... info.endDate).contains(.now)
-                                }
-                                let detailTerm = terms.first { info in
-                                    (info.startDate ... info.endDate).contains(currentDate)
-                                }
-                                let isCurrentTerm = (currentTerm == detailTerm)
-                                let displayType: CardDetailDisplayType = isCurrentTerm ? .emptyRecord : .passedTerm
-                                await send(.updateDetailDisplayType(displayType))
-                            } else {
-                                await send(.updateRecordCards(cards))
-                                await send(.updateDetailDisplayType(.cards))
-                            }
-                            await send(.updateLoadingState(false))
-                        } catch {
-                            await send(.updateLoadingState(false))
-                            await send(.delegate(.showAlert(.fetchRecordFailure)))
-                        }
-                    }
-                )
+                return fetchDateRecord(state)
 
             case .editRecordButtonTapped:
                 // TODO: 기능 구현 필요
                 state.toast = .init(title: "준비중입니다.", duration: 1.0, bottomInset: 108)
                 return .none
-                
+
             case .createRecordButtonTapped:
                 // TODO: 기능 구현 필요
                 state.toast = .init(title: "준비중입니다.", duration: 1.0, bottomInset: 108)
@@ -128,14 +103,23 @@ public struct CalendarDetailFeature {
 
             case .saveImageButtonTapped:
                 return saveImage(&state)
-                
+
             case let .updateToast(model):
                 state.toast = model
                 return .none
 
             case .shareImageButtonTapped:
-                // TODO: 기능 구현 필요
-                state.toast = .init(title: "준비중입니다.", duration: 1.0, bottomInset: 108)
+                return shareImage(&state)
+
+            case let .updateShareImageItem(item):
+                state.shareImageItem = item
+                return .none
+
+            case let .shareCompleted(completed):
+                state.shareImageItem = nil
+                if completed {
+                    state.toast = .init(title: "이미지가 공유되었어요", duration: 1.5, bottomInset: 108)
+                }
                 return .none
 
             case let .updateRecordCards(cards):

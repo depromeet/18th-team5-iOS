@@ -38,9 +38,28 @@ extension CalendarDetailFeature {
             do {
                 let data = try await cardImageRenderer.render(card)
                 try await photoLibraryClient.saveImage(data)
-                await send(.updateToast(.init(title: "이미지를 저장했어요", duration: 1.5, bottomInset: 108)))
+                await send(.updateToast(.init(title: "이미지가 저장되었어요", duration: 1.5, bottomInset: 108)))
             } catch {
                 await send(.updateToast(.init(title: "이미지 저장에 실패했어요", duration: 1.5, bottomInset: 108)))
+            }
+            await send(.updateLoadingState(false))
+        }
+    }
+
+    func shareImage(_ state: inout State) -> Effect<Action> {
+        guard state.dateRecordCards.indices.contains(state.frontCardIndex) else {
+            return .none
+        }
+        let card = state.dateRecordCards[state.frontCardIndex]
+
+        state.isLoading = true
+
+        return .run { send in
+            do {
+                let data = try await cardImageRenderer.render(card)
+                await send(.updateShareImageItem(ShareImageItem(imageData: data)))
+            } catch {
+                await send(.updateToast(.init(title: "이미지 공유에 실패했어요", duration: 1.5, bottomInset: 108)))
             }
             await send(.updateLoadingState(false))
         }

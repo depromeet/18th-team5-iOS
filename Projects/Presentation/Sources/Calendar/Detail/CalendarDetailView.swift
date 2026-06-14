@@ -9,6 +9,7 @@
 import ComposableArchitecture
 import DesignSystem
 import SwiftUI
+import UIKit
 
 struct CalendarDetailView: View {
     @Bindable var store: StoreOf<CalendarDetailFeature>
@@ -55,6 +56,13 @@ struct CalendarDetailView: View {
         .animation(.easeInOut, value: store.isLoading)
         .presentToast($store.toast)
         .toastContainer()
+        .sheet(item: $store.shareImageItem) { item in
+            if let image = UIImage(data: item.imageData) {
+                ActivityView(activityItems: [image]) { completed in
+                    store.send(.shareCompleted(completed))
+                }
+            }
+        }
         .overlay {
             if store.isLoading {
                 ZStack {
