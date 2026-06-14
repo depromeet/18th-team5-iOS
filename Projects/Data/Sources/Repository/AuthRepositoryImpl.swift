@@ -53,6 +53,9 @@ enum AuthRepositoryImpl {
                 } catch {
                     throw mapToDomainError(error)
                 }
+            },
+            signOut: {
+                tokenClient.clearTokens()
             }
         )
     }
