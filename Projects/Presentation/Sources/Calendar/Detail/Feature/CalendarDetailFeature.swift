@@ -45,6 +45,7 @@ public struct CalendarDetailFeature {
         case updateRecordCards([DateRecordCard])
         case updateLoadingState(Bool)
         case deleteCardFailed(card: DateRecordCard, index: Int)
+        case updateToast(ToastModel)
 
         case delegate(Delegate)
         case binding(BindingAction<State>)
@@ -71,6 +72,9 @@ public struct CalendarDetailFeature {
 
     @Dependency(\.solarTermRepository) var solarTermRepository
     @Dependency(\.calendarRecordRepository) var calendarRecordRepository
+    @Dependency(\.picturePermissionClient) var picturePermissionClient
+    @Dependency(\.photoLibraryClient) var photoLibraryClient
+    @Dependency(\.cardImageRenderer) var cardImageRenderer
 
     public init() {}
 
@@ -116,18 +120,20 @@ public struct CalendarDetailFeature {
                 // TODO: 기능 구현 필요
                 state.toast = .init(title: "준비중입니다.", duration: 1.0, bottomInset: 108)
                 return .none
-
-            case .saveImageButtonTapped:
+                
+            case .createRecordButtonTapped:
                 // TODO: 기능 구현 필요
                 state.toast = .init(title: "준비중입니다.", duration: 1.0, bottomInset: 108)
+                return .none
+
+            case .saveImageButtonTapped:
+                return saveImage(&state)
+                
+            case let .updateToast(model):
+                state.toast = model
                 return .none
 
             case .shareImageButtonTapped:
-                // TODO: 기능 구현 필요
-                state.toast = .init(title: "준비중입니다.", duration: 1.0, bottomInset: 108)
-                return .none
-
-            case .createRecordButtonTapped:
                 // TODO: 기능 구현 필요
                 state.toast = .init(title: "준비중입니다.", duration: 1.0, bottomInset: 108)
                 return .none

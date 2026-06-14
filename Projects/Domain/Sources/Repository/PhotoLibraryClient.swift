@@ -27,6 +27,8 @@ public struct PhotoLibraryClient: Sendable {
     public var loadThumbnail: @Sendable (_ id: String, _ size: CGSize) async -> Data?
     public var loadFullImage: @Sendable (_ id: String) async -> Data?
     public var observeChanges: @Sendable () -> AsyncStream<Void> = { .finished }
+    /// 이미지 데이터를 사진 라이브러리에 새 항목으로 저장한다.
+    public var saveImage: @Sendable (_ data: Data) async throws -> Void
 }
 
 // MARK: - TestDependencyKey
