@@ -17,6 +17,8 @@ public struct MissionListFeature {
 
     public enum Alert: Equatable {
         case missionUnavailable
+        case fetchFailed
+        case searchFailed
     }
 
     @ObservableState
@@ -39,11 +41,6 @@ public struct MissionListFeature {
         var pendingOpenFromHome: Bool = false
 
         public init() {}
-
-        var isSearchMissionButtonEnabled: Bool {
-            // TODO: 추후 로직 구현
-            true
-        }
 
         var season: Season? {
             solarTerm?.season
@@ -205,29 +202,27 @@ private extension MissionListFeature {
 
     func fetchAll(_ state: State, _ send: Send<Action>) async {
         await send(.set(\.isLoading, true))
-        async let recommended = fetchRecommendedMissions(send)
-        async let searched = fetchSearchedMission(state, send)
-        async let availability = fetchRecommendedMisisonAvailability(state, send)
-        _ = await (recommended, searched, availability)
-        await send(.set(\.isLoading, false))
-    }
 
-    func fetchRecommendedMissions(_ send: Send<Action>) async {
         do {
-            let info = try await missionRepository.fetchRecommendedMissions()
-            await send(.recommendedMissionsFetched(info))
+            async let recommended = fetchRecommendedMissions(send)
+            async let searched = fetchSearchedMission(state, send)
+            async let availability = fetchRecommendedMisisonAvailability(state, send)
+            _ = try await (recommended, searched, availability)
+            await send(.set(\.isLoading, false))
         } catch {
-            // TODO: 에러처리 - 정원
+            await send(.set(\.isLoading, false))
+            await send(.delegate(.showAlert(.fetchFailed)))
         }
     }
 
-    func fetchSearchedMission(_ state: State, _ send: Send<Action>) async {
-        do {
-            let mission = try await missionRepository.fetchSearchedMission()
-            await send(.set(\.searchedMission, mission))
-        } catch {
-            // TODO: 에러처리 - 정원
-        }
+    func fetchRecommendedMissions(_ send: Send<Action>) async throws {
+        let info = try await missionRepository.fetchRecommendedMissions()
+        await send(.recommendedMissionsFetched(info))
+    }
+
+    func fetchSearchedMission(_ state: State, _ send: Send<Action>) async throws {
+        let mission = try await missionRepository.fetchSearchedMission()
+        await send(.set(\.searchedMission, mission))
     }
 
     func searchMission(
@@ -238,25 +233,22 @@ private extension MissionListFeature {
             let mission = try await missionRepository.searchMission(attribute)
             await send(.searchResultFetched(mission))
         } catch {
-            // TODO: 에러처리 - 정원
+            await send(.set(\.isLoading, false))
+            await send(.delegate(.showAlert(.searchFailed)))
         }
     }
 
     func fetchRecommendedMisisonAvailability(
         _ state: State,
         _ send: Send<Action>
-    ) async {
-        do {
-            let availability = try await missionRepository.fetchRecommendedMissionAvailability()
-            await send(.set(\.isAvailable, availability.isAvailable))
-            await send(.set(\.maxCount, availability.maxCount))
+    ) async throws {
+        let availability = try await missionRepository.fetchRecommendedMissionAvailability()
+        await send(.set(\.isAvailable, availability.isAvailable))
+        await send(.set(\.maxCount, availability.maxCount))
 
-            if state.isAvailable == true,
-               availability.isAvailable == false {
-                await send(.showCompleteAnimation)
-            }
-        } catch {
-            // TODO: 에러처리 - 정원
+        if state.isAvailable == true,
+           availability.isAvailable == false {
+            await send(.showCompleteAnimation)
         }
     }
 }

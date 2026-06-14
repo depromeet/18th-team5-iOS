@@ -11,10 +11,11 @@ import Alamofire
 enum UserEndpoint: APIEndpoint {
     case fetchUserInfo
     case submitOnboardingInfo(OnboardingRequestDTO)
+    case resetUserData
 
     var path: String {
         switch self {
-        case .fetchUserInfo: "/api/v1/users/me"
+        case .fetchUserInfo, .resetUserData: "/api/v1/users/me"
         case .submitOnboardingInfo: "/api/v1/users/onboarding"
         }
     }
@@ -23,6 +24,7 @@ enum UserEndpoint: APIEndpoint {
         switch self {
         case .fetchUserInfo: .get
         case .submitOnboardingInfo: .post
+        case .resetUserData: .delete
         }
     }
 
@@ -30,6 +32,7 @@ enum UserEndpoint: APIEndpoint {
         switch self {
         case .fetchUserInfo: nil
         case let .submitOnboardingInfo(body): body
+        case .resetUserData: nil
         }
     }
 }

@@ -53,6 +53,11 @@ public struct MainFeature {
         case alert(CustomAlertFeature<Alert>.Action)
         case push(Path.State)
         case popToRoot
+        case delegate(Delegate)
+    }
+
+    public enum Delegate {
+        case navigateToSplash
     }
 
     @Dependency(\.logger) private var logger
@@ -170,7 +175,36 @@ public struct MainFeature {
                 state.path.append(.freeRecord(.init(recordDate: Date.now)))
                 return .none
 
-            case .alert(.primaryButtonTapped):
+            case let .calendar(.delegate(.navigateToEditRecord(card, date: date))):
+                switch card.cardType {
+                case .free:
+                    state.path.append(.freeRecord(.init(
+                        editingRecordId: card.id,
+                        recordDate: date,
+                        imageURL: card.imageURL,
+                        memo: card.memo
+                    )))
+
+                case .daily, .recommended, .selected:
+                    state.path.append(.missionRecord(.init(
+                        editingCompletionId: card.id,
+                        missionTitle: card.missionTitle ?? "미션 기록",
+                        missionType: card.cardType.missionType,
+                        imageURL: card.imageURL,
+                        memo: card.memo
+                    )))
+                }
+                return .none
+
+            case let .alert(.primaryButtonTapped(alert)):
+                state.alert = nil
+                switch alert {
+                case .mission(.fetchFailed):
+                    return .send(.mission(.onAppear))
+                default: return .none
+                }
+
+            case .alert(.secondaryButtonTapped):
                 state.alert = nil
                 return .none
 
@@ -193,6 +227,12 @@ public struct MainFeature {
                     await syncNotificationSettings(settings)
                 }
 
+            case .path(.element(
+                id: _,
+                action: .myPage(.delegate(.navigateToSplash))
+            )):
+                return .send(.delegate(.navigateToSplash))
+
             case let .push(destination):
                 state.path.append(destination)
                 return .none
@@ -214,6 +254,8 @@ public struct MainFeature {
             case .path: return .none
 
             case .binding: return .none
+
+            case .delegate: return .none
             }
         }
         .forEach(\.path, action: \.path)
@@ -286,5 +328,21 @@ public extension MainFeature {
         case mission
         case calendar
         case solarTerm
+    }
+}
+
+private extension RecordCardType {
+    var missionType: MissionType {
+        switch self {
+        case .daily:
+            return MissionType.daily
+        case .recommended:
+            return MissionType.recommended
+        case .selected:
+            return MissionType.selected
+        case .free:
+            assertionFailure("자유 기록에는 MissionType이 없습니다.")
+            return MissionType.daily
+        }
     }
 }

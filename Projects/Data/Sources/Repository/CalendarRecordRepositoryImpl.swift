@@ -79,6 +79,40 @@ public enum CalendarRecordRepositoryImpl {
                 } catch {
                     throw mapToDomainError(error)
                 }
+            },
+            updateMissionCompletion: { completionId, objectKey, memo in
+                @Dependency(\.networkClient) var client
+                let request = CalendarRecordUpdateRequestDTO(
+                    objectKey: objectKey,
+                    memo: memo
+                )
+                do {
+                    try await client.requestEmpty(
+                        CalendarEndpoint.updateMissionCompletion(
+                            completionId: completionId,
+                            request: request
+                        )
+                    )
+                } catch {
+                    throw mapToDomainError(error)
+                }
+            },
+            updateFreeRecord: { recordId, objectKey, memo in
+                @Dependency(\.networkClient) var client
+                let request = CalendarRecordUpdateRequestDTO(
+                    objectKey: objectKey,
+                    memo: memo
+                )
+                do {
+                    try await client.requestEmpty(
+                        CalendarEndpoint.updateFreeRecord(
+                            recordId: recordId,
+                            request: request
+                        )
+                    )
+                } catch {
+                    throw mapToDomainError(error)
+                }
             }
         )
     }

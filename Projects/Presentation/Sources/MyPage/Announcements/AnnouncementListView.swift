@@ -34,6 +34,7 @@ public struct AnnouncementListView: View {
         .background(Color.white)
         .loading(isLoading: store.isLoading)
         .animation(.easeInOut(duration: 0.2), value: shouldBlur)
+        .customAlert(store.scope(state: \.alert, action: \.alert))
         .onAppear { store.send(.onAppear) }
         .navigationDestination(
             item: $store.scope(state: \.detail, action: \.detail),
@@ -143,6 +144,20 @@ private extension AnnouncementListView {
             Image.icMegaphone
                 .resizable()
                 .frame(width: 20, height: 20)
+        }
+    }
+}
+
+extension AnnouncementListFeature.Alert: AlertPresentable {
+    public var alertInfo: AlertInfo {
+        switch self {
+        case .fetchFailed:
+            AlertInfo(
+                icon: .icWarning,
+                title: "공지사항을 불러오지 못했어요.\n 다시 시도해 주세요.",
+                primaryButtonTitle: "새로고침",
+                secondaryButtonTitle: "닫기"
+            )
         }
     }
 }

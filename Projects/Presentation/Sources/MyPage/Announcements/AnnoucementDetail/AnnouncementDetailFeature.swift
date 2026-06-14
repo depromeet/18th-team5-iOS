@@ -18,6 +18,7 @@ public struct AnnouncementDetailFeature {
     public struct State: Equatable {
         var announcement: Announcement
         var isLoading: Bool = false
+        var alert: CustomAlertFeature<Alert>.State?
 
         public init(_ announcement: Announcement) {
             self.announcement = announcement
@@ -28,6 +29,12 @@ public struct AnnouncementDetailFeature {
         case onAppear
         case backButtonTapped
         case announcementFetched(Announcement?)
+        case showAlert(Alert)
+        case alert(CustomAlertFeature<Alert>.Action)
+    }
+
+    public enum Alert {
+        case fetchFailed
     }
 
     public init() {}
@@ -46,7 +53,19 @@ public struct AnnouncementDetailFeature {
                 guard let announcement else { return .none }
                 state.announcement = announcement
                 return .none
+            case let .showAlert(alert):
+                state.isLoading = false
+                state.alert = .init(alert)
+                return .none
+            case .alert(.primaryButtonTapped):
+                state.alert = nil
+                return .send(.onAppear)
+            case .alert(.secondaryButtonTapped):
+                return .send(.backButtonTapped)
             }
+        }
+        .ifLet(\.alert, action: \.alert) {
+            CustomAlertFeature()
         }
     }
 }
@@ -58,7 +77,7 @@ private extension AnnouncementDetailFeature {
             let announcement = try await myPageRepository.fetchAnnouncement(id)
             await send(.announcementFetched(announcement))
         } catch {
-            // TODO: 에러 처리 - @정원
+            await send(.showAlert(.fetchFailed))
         }
     }
 }

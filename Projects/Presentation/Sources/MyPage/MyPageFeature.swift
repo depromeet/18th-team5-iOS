@@ -15,6 +15,8 @@ import Foundation
 public struct MyPageFeature {
     @Dependency(\.dismiss) private var dismiss
     @Dependency(\.myPageRepository) private var myPageRepository
+    @Dependency(\.notificationRepository) private var notificationRepository
+    @Dependency(\.authRepository) private var authRepository
 
     public enum Menu {
         case notificationSettings
@@ -26,7 +28,10 @@ public struct MyPageFeature {
 
     public enum Alert {
         case delete
+        case deleteFailed
     }
+
+    private enum CancelID { case resetData }
 
     @ObservableState
     public struct State: Equatable {
@@ -43,6 +48,7 @@ public struct MyPageFeature {
         @Presents var path: Path.State?
         @Presents var devMode: DevModeFeature.State?
         var alert: CustomAlertFeature<Alert>.State?
+        var isLoading: Bool = false
 
         public init(_ solarTerm: SolarTerm, _ config: MyPageConfig?) {
             self.solarTerm = solarTerm
@@ -81,15 +87,19 @@ public struct MyPageFeature {
         case privacyPolicyFetched([DocumentInfo])
         case termsOfServiceFetched([DocumentInfo])
         case userIDFetched(Int?)
+        case userDataResetCompleted
         case path(PresentationAction<Path.Action>)
         case devMode(PresentationAction<DevModeFeature.Action>)
         case deviceShaked
+        case deleteTimeout
         case delegate(Delegate)
+        case showAlert(Alert)
         case alert(CustomAlertFeature<Alert>.Action)
     }
 
     public enum Delegate {
         case syncNotificationSettings([NotificationType: Bool])
+        case navigateToSplash
     }
 
     public init() {}
@@ -132,12 +142,44 @@ public struct MyPageFeature {
                     return .send(.delegate(.syncNotificationSettings(settings)))
                 default: return .none
                 }
+            case .path(.presented(.privacyPolicy(.delegate(.refresh)))):
+                return .run { [state] send in
+                    await fetchPrivacyPolicy(state, send)
+                }
+            case .path(.presented(.termsOfService(.delegate(.refresh)))):
+                return .run { [state] send in
+                    await fetchTermsOfService(state, send)
+                }
             case .deleteButtonTapped:
                 state.alert = .init(.delete)
                 return .none
-            case .alert(.primaryButtonTapped):
-                // TODO: 초기화 API 호출
+            case .deleteTimeout:
+                state.isLoading = false
+                state.alert = .init(.deleteFailed)
+                return .cancel(id: CancelID.resetData)
+            case let .showAlert(alert):
+                state.isLoading = false
+                state.alert = .init(alert)
                 return .none
+            case let .alert(.primaryButtonTapped(alert)):
+                state.alert = nil
+
+                switch alert {
+                case .delete:
+                    state.isLoading = true
+                    return .merge([
+                        .run { send in
+                            try await Task.sleep(for: .seconds(10))
+                            await send(.deleteTimeout)
+                        },
+                        .run { send in
+                            await resetUserData(send)
+                        }
+                        .cancellable(id: CancelID.resetData)
+                    ])
+                case .deleteFailed:
+                    return .none
+                }
             case .alert(.secondaryButtonTapped):
                 state.alert = nil
                 return .none
@@ -156,6 +198,8 @@ public struct MyPageFeature {
             case let .userIDFetched(userID):
                 state.userID = userID
                 return .none
+            case .userDataResetCompleted:
+                return .send(.delegate(.navigateToSplash))
             case .deviceShaked:
                 guard state.isDevModeEnabled else { return .none }
                 state.devMode = .init(state.userID)
@@ -187,17 +231,44 @@ private extension MyPageFeature {
     func fetchPrivacyPolicy(_ state: State, _ send: Send<Action>) async {
         if state.privacyPolicies?.isEmpty == false { return }
         let policies = try? await myPageRepository.fetchPrivacyPolicy()
-        await send(.privacyPolicyFetched(policies ?? []))
+
+        if [true, false].randomElement()! {
+            await send(.privacyPolicyFetched(policies ?? []))
+        } else {
+            await send(.privacyPolicyFetched([]))
+        }
     }
 
     func fetchTermsOfService(_ state: State, _ send: Send<Action>) async {
         if state.termsOfService?.isEmpty == false { return }
         let terms = try? await myPageRepository.fetchTermsOfService()
-        await send(.termsOfServiceFetched(terms ?? []))
+
+        if [true, false].randomElement()! {
+            await send(.termsOfServiceFetched(terms ?? []))
+        } else {
+            await send(.termsOfServiceFetched([]))
+        }
     }
 
     func fetchUserInfo(_ send: Send<Action>) async {
         let userID = try? await myPageRepository.fetchUserID()
         await send(.userIDFetched(userID))
+    }
+
+    func resetUserData(_ send: Send<Action>) async {
+        do {
+            let settings: [NotificationType: Bool] = [
+                .dailyMission: false,
+                .solarTermStart: false,
+                .solarTermEnd: false
+            ]
+
+            try await notificationRepository.syncNotificationSettings(settings)
+            try await myPageRepository.resetUserData()
+            try await authRepository.signOut()
+            await send(.userDataResetCompleted)
+        } catch {
+            await send(.showAlert(.deleteFailed))
+        }
     }
 }

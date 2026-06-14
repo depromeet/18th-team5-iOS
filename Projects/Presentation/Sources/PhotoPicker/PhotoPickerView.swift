@@ -13,6 +13,7 @@ import SwiftUI
 
 public struct PhotoPickerView: View {
     private let store: StoreOf<PhotoPickerFeature>
+    @Environment(\.scenePhase) private var scenePhase
 
     public init(store: StoreOf<PhotoPickerFeature>) {
         self.store = store
@@ -23,7 +24,7 @@ public struct PhotoPickerView: View {
             header
 
             if store.isLimited {
-                limitedBanner
+                limitedPermissionNotice
             }
 
             grid
@@ -40,6 +41,10 @@ public struct PhotoPickerView: View {
             }
         )
         .interactiveDismissDisabled(true)
+        .onChange(of: scenePhase) { _, phase in
+            guard phase == .active else { return }
+            store.send(.libraryDidChange)
+        }
     }
 }
 
@@ -135,27 +140,28 @@ private extension PhotoPickerView {
     }
 }
 
-// MARK: - Limited Banner
+// MARK: - Limited Permission Notice
 
 private extension PhotoPickerView {
-    var limitedBanner: some View {
-        Button {
-            store.send(.manageLimitedTapped)
-        } label: {
-            HStack(spacing: 8) {
-                Image(systemName: "photo.badge.plus")
-                    .font(.system(size: 14, weight: .semibold))
-                Text("사진 더 선택하기")
-                    .font(.body2Medium)
-                Spacer()
-                Image(systemName: "chevron.right")
-                    .font(.system(size: 12, weight: .semibold))
+    var limitedPermissionNotice: some View {
+        HStack {
+            Text("선택한 일부 사진에만 액세스할 수 있는 권한을\nPeaktime 앱에 부여했습니다.")
+                .font(.caption1Regular)
+                .foregroundStyle(Color.gray700)
+
+            Spacer()
+
+            Button {
+                store.send(.settingsTapped)
+            } label: {
+                Text("설정 변경")
+                    .font(.body2Regular)
+                    .foregroundStyle(Color.gray900)
+                    .padding(.vertical, 8)
+                    .padding(.horizontal, 4)
             }
-            .foregroundStyle(Color.gray700)
-            .padding(.horizontal, 16)
-            .padding(.vertical, 12)
-            .background(Color.gray200)
         }
+        .padding(EdgeInsets(top: 4, leading: 20, bottom: 8, trailing: 16))
     }
 }
 
@@ -165,18 +171,24 @@ private extension PhotoPickerView {
     var grid: some View {
         GeometryReader { geometry in
             let columnCount: CGFloat = 3
-            let cellSide = geometry.size.width / columnCount
+            let cellSize = geometry.size.width / columnCount
             let columns = Array(
-                repeating: GridItem(.fixed(cellSide), spacing: .zero),
+                repeating: GridItem(.fixed(cellSize), spacing: .zero),
                 count: Int(columnCount)
             )
 
             ScrollView {
                 LazyVGrid(columns: columns, spacing: .zero) {
+                    if store.isLimited {
+                        MorePhotosCell(size: cellSize) {
+                            store.send(.manageLimitedTapped)
+                        }
+                    }
+
                     ForEach(store.assets) { asset in
                         PhotoThumbnailCell(
                             assetId: asset.id,
-                            side: cellSide,
+                            side: cellSize,
                             isSelected: store.selectedAssetId == asset.id
                         ) {
                             store.send(.photoTapped(asset.id))
@@ -185,6 +197,33 @@ private extension PhotoPickerView {
                 }
             }
         }
+    }
+}
+
+// MARK: - MorePhotosCell
+
+struct MorePhotosCell: View {
+    let size: CGFloat
+    let onTap: () -> Void
+
+    var body: some View {
+        Button(action: onTap) {
+            VStack(spacing: 14) {
+                Image.icPhoto
+                    .resizable()
+                    .frame(width: 24, height: 24)
+
+                Text("더 많은 사진 선택")
+                    .font(.caption1Medium)
+                    .foregroundStyle(Color.gray800)
+            }
+            .frame(width: size, height: size)
+            .background(Color.gray200)
+            .clipShape(.rect(cornerRadius: .radius16))
+            .contentShape(.rect(cornerRadius: .radius16))
+            .overlay { RoundedRectangle(cornerRadius: .radius16).stroke(Color.whiteAlpha500, lineWidth: 1.5) }
+        }
+        .buttonStyle(.plain)
     }
 }
 

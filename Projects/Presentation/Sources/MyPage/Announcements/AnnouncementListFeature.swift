@@ -19,6 +19,7 @@ public struct AnnouncementListFeature {
     public struct State: Equatable {
         var announcements: [Announcement]?
         var isLoading: Bool = false
+        var alert: CustomAlertFeature<Alert>.State?
         @Presents var detail: AnnouncementDetailFeature.State?
 
         public init() {}
@@ -29,7 +30,13 @@ public struct AnnouncementListFeature {
         case announcementsFetched([Announcement])
         case backButtonTapped
         case announcementTapped(Int)
+        case showAlert(Alert)
+        case alert(CustomAlertFeature<Alert>.Action)
         case detail(PresentationAction<AnnouncementDetailFeature.Action>)
+    }
+
+    public enum Alert {
+        case fetchFailed
     }
 
     public init() {}
@@ -52,11 +59,24 @@ public struct AnnouncementListFeature {
                 guard let announcement else { return .none }
                 state.detail = .init(announcement)
                 return .none
+            case let .showAlert(alert):
+                state.isLoading = false
+                state.alert = .init(alert)
+                return .none
+            case .alert(.primaryButtonTapped):
+                state.alert = nil
+                return .send(.onAppear)
+            case .alert(.secondaryButtonTapped):
+                return .send(.backButtonTapped)
             case .detail: return .none
+            case .alert: return .none
             }
         }
         .ifLet(\.$detail, action: \.detail) {
             AnnouncementDetailFeature()
+        }
+        .ifLet(\.alert, action: \.alert) {
+            CustomAlertFeature()
         }
     }
 }
@@ -67,7 +87,7 @@ private extension AnnouncementListFeature {
             let announcements = try await myPageRepository.fetchAnnouncements()
             await send(.announcementsFetched(announcements))
         } catch {
-            // TODO: 에러 처리 - @정원
+            await send(.showAlert(.fetchFailed))
         }
     }
 }
