@@ -18,7 +18,10 @@ extension CalendarFeature {
     func consumePendingDetailDateIfPossible(_ state: inout State) -> Effect<Action> {
         guard let pendingDate = state.pendingDetailDate else { return .none }
         guard !state.calendarState.pages.isEmpty,
-              let anchor = findDateCellAnchor(state.calendarState.pages, matching: pendingDate)
+              let anchor = findDateCellAnchor(
+                  state.calendarState.pages,
+                  matching: pendingDate
+              )
         else { return .none }
 
         state.pendingDetailDate = nil
@@ -119,7 +122,9 @@ extension CalendarFeature {
         _ pages: [Page<SolarTermGroup>],
         matching date: Date
     ) -> (dateId: SolarTermDate.ID, inset: CGFloat)? {
-        let calendar = Calendar(identifier: .gregorian)
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = .init(identifier: "Asia/Seoul") ?? .current
+
         let cmp = calendar.dateComponents([.year, .month, .day], from: date)
         guard let year = cmp.year, let month = cmp.month, let day = cmp.day else { return nil }
 
