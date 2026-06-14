@@ -22,6 +22,7 @@ public struct SolarTermIntroContentFeature {
         var dateLabel: String = ""
         var imageURL: [String: [URL]] = [:]
         var isLoading: Bool = true
+        var isCurrentTerm: Bool = false
 
         public init(term: SolarTerm) {
             self.term = term
@@ -31,7 +32,7 @@ public struct SolarTermIntroContentFeature {
 
     public enum Action {
         case onAppear
-        case introLoaded(SolarTermIntro, String)
+        case introLoaded(SolarTermIntro, String, Bool)
         case imageURLsLoad([String: [URL]])
         case onTapBack
         case onMissionTap
@@ -59,15 +60,18 @@ public struct SolarTermIntroContentFeature {
                     async let infos = solarTermRepository.fetchSolarTerms(.current)
                     guard let (fetchedCards, fetchedInfos) = try? await (cards, infos),
                           let card = fetchedCards.first(where: { $0.term == term }) else { return }
-                    let dateLabel = fetchedInfos.first { $0.term == term }?.formattedFullDateRange ?? ""
-                    await send(.introLoaded(card, dateLabel))
+                    let info = fetchedInfos.first { $0.term == term }
+                    let dateLabel = info?.formattedFullDateRange ?? ""
+                    let isCurrent = info?.dateRange.contains(Date()) ?? false
+                    await send(.introLoaded(card, dateLabel, isCurrent))
                     let urlDictionary = await solarTermIntroRepository.fetchContentImageURLs(card.contents)
                     await send(.imageURLsLoad(urlDictionary))
                 }
 
-            case let .introLoaded(intro, dateLabel):
+            case let .introLoaded(intro, dateLabel, isCurrent):
                 state.solarTermIntro = intro
                 state.dateLabel = dateLabel
+                state.isCurrentTerm = isCurrent
                 state.isLoading = false
                 return .none
 
