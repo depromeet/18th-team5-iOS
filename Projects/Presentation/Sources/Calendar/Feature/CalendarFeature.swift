@@ -26,10 +26,13 @@ public struct CalendarFeature {
         public var selectedDateId: SolarTermDate.ID?
         @Presents public var detail: CalendarDetailFeature.State?
         public var alert: CustomAlertFeature<Alert>.State?
+        public var isDetailViewPresenting: Bool { detail != nil }
 
         var termRecordData: [String: CalendarTermRecordData] = [:]
         var isAppeared: Bool = false
         var anchoredTermId: SolarTermGroup.ID?
+        /// 스크롤로 상단 절기가 바뀔 때마다 증가하는 햅틱 트리거. 프로그래밍적 앵커 이동에는 반응하지 않는다.
+        var anchorHapticTrigger: Int = 0
         var isPaging: Bool = false
         var currentTermId: SolarTermGroup.ID?
         var currentYear: SolarTermYear = .current
@@ -38,6 +41,7 @@ public struct CalendarFeature {
 
     public enum Action: BindableAction {
         case onAppear
+        case viewDidLoad
         case headerBackButtonTapped
         case floatingRecordButtonTapped
         case dateCellTapped(dateId: SolarTermDate.ID, inset: CGFloat)
@@ -77,8 +81,11 @@ public struct CalendarFeature {
         BindingReducer()
         Reduce { state, action in
             switch action {
+            case .viewDidLoad:
+                return initialTask(&state)
+
             case .onAppear:
-                return onAppear(&state)
+                return refreshAnchoredTermData(state)
 
             case .headerBackButtonTapped:
                 state.detail = nil
