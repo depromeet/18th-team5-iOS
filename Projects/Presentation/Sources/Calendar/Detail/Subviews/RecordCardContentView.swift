@@ -225,6 +225,8 @@ private extension RecordCardContentView {
 
     static let yyyyMMddFormatter = {
         let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "ko_KR")
+        formatter.timeZone = TimeZone(identifier: "Asia/Seoul")
         formatter.dateFormat = "yyyy. M.d"
         return formatter
     }()

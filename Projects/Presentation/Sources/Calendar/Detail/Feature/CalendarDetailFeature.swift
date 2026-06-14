@@ -96,10 +96,11 @@ public struct CalendarDetailFeature {
                 return fetchDateRecord(state)
 
             case .editRecordButtonTapped:
-                guard state.dateRecordCards.indices.contains(state.frontCardIndex) else {
-                    return .none
-                }
-                let card = state.dateRecordCards[state.frontCardIndex]
+                guard let records = state.dateRecordCards,
+                      records.indices.contains(state.frontCardIndex)
+                else { return .none }
+
+                let card = records[state.frontCardIndex]
                 return .send(.delegate(.editRecord(card, date: state.date)))
 
             case .createRecordButtonTapped:
@@ -163,11 +164,6 @@ public struct CalendarDetailFeature {
                 )
                 let currentDate = state.date
                 return .run { send in
-                    if cardCount == 0 {
-                        let displayType = try await displayType(currentDate)
-                        await send(.updateDetailDisplayType(displayType))
-                    }
-
                     do {
                         switch removedCard.cardType {
                         case .free:
@@ -175,9 +171,17 @@ public struct CalendarDetailFeature {
                         case .daily, .recommended, .selected:
                             try await calendarRecordRepository.deleteMissionCompletion(removedCard.id)
                         }
-                        await send(.delegate(.refreshAnchoredTermData))
                     } catch {
                         await send(.deleteCardFailed(card: removedCard, index: removedIndex))
+                        return
+                    }
+
+                    await send(.delegate(.refreshAnchoredTermData))
+
+                    // 마지막 카드 삭제 시 화면 타입을 갱신한다. 삭제는 이미 성공했으므로
+                    // 보조 조회가 실패하더라도 롤백하지 않고 기존 화면 타입을 유지한다.
+                    if cardCount == 0, let displayType = try? await displayType(currentDate) {
+                        await send(.updateDetailDisplayType(displayType))
                     }
                 }
 

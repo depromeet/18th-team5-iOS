@@ -88,8 +88,14 @@ extension CalendarFeature {
     }
 
     func date(from date: SolarTermDate) -> Date? {
+        // 셀 매핑(`findDateCellAnchor`)과 동일하게 KST 기준으로 Date를 생성해
+        // 디바이스 타임존에 따른 off-by-one-day를 방지한다.
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = .init(identifier: "Asia/Seoul") ?? .current
+
         var cmp = DateComponents()
-        cmp.calendar = Calendar(identifier: .gregorian)
+        cmp.calendar = calendar
+        cmp.timeZone = calendar.timeZone
         cmp.year = date.year.rawValue
         cmp.month = date.month
         cmp.day = date.day

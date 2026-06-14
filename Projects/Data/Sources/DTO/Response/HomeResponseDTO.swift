@@ -57,8 +57,11 @@ extension HomeSeasonRecordResponseDTO {
         SeasonRecord(
             solarTermName: "",
             recentRecords: recentRecords.compactMap { record in
-                guard let url = URL(string: record.imageUrl) else { return nil }
-                return RecentRecord(imageURL: url, recordedAt: record.recordedAt ?? "")
+                guard let url = URL(string: record.imageUrl),
+                      let recordedAt = record.recordedAt,
+                      !recordedAt.isEmpty
+                else { return nil }
+                return RecentRecord(imageURL: url, recordedAt: recordedAt)
             },
             recordCount: recordCount
         )

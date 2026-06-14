@@ -83,7 +83,7 @@ struct SolarTermCardView: View {
 extension SolarTermCardView {
     func descriptionLines(_ description: String) -> [String] {
         let replace = description.replacingOccurrences(of: ",", with: ",\n")
-        return replace.split(separator: "\n").map { String($0) }
+        return replace.split(separator: "\n").map { String($0).trimmingCharacters(in: .whitespaces) }
     }
 }
 
