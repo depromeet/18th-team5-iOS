@@ -36,13 +36,13 @@ public struct WeakFloatingButton: View {
             .background {
                 Capsule()
                     .fill(.white)
+                    .shadow(
+                        color: Color.blackAlpha300,
+                        radius: 8,
+                        x: 0,
+                        y: 2
+                    )
             }
-            .shadow(
-                color: Color.blackAlpha300.opacity(0.13),
-                radius: 8,
-                x: 0,
-                y: 2
-            )
         }
     }
 }

@@ -202,12 +202,12 @@ private extension RecordCardContentView {
 private extension RecordCardContentView {
     var tagContainer: some View {
         HStack(spacing: 4) {
-            tag(cardRecordText(card.recordedAt))
-            tag(term.koreanName)
+            tagView(cardRecordText(card.recordedAt) ?? "-")
+            tagView(term.koreanName)
         }
     }
 
-    func tag(_ text: String) -> some View {
+    func tagView(_ text: String) -> some View {
         Text(text)
             .font(.body2Medium)
             .foregroundStyle(.white)
@@ -215,7 +215,7 @@ private extension RecordCardContentView {
             .frame(height: 30, alignment: .center)
             .background {
                 Capsule()
-                    .fill(Color.blackAlpha300.opacity(0.12))
+                    .fill(Color.blackAlpha300)
             }
     }
 
