@@ -81,7 +81,10 @@ private extension SolarTermIntroView {
             shrinkRatio: 280.0 / 400.0,
             scrollPosition: Binding(
                 get: { store.filteredCards.first { $0.term == store.targetTerm } },
-                set: { _ in }
+                set: { (newItem: SolarTermIntro?) in
+                    guard let newItem else { return }
+                    store.send(.scrolledToCard(newItem.term))
+                }
             )
         ) { solarTerm in
             Group {
@@ -103,6 +106,7 @@ private extension SolarTermIntroView {
                 }
             }
         }
+        .id(store.season)
     }
 }
 

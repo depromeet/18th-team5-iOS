@@ -49,6 +49,7 @@ public struct SolarTermIntroFeature {
     public enum Action {
         case onAppear
         case selectSeason(Season)
+        case scrolledToCard(SolarTerm)
         case onCardTap(SolarTermIntro)
         case content(PresentationAction<SolarTermIntroContentFeature.Action>)
         case solarTermsLoad([SolarTermIntro])
@@ -115,6 +116,11 @@ public struct SolarTermIntroFeature {
                 } else {
                     state.targetTerm = state.filteredCards.first?.term
                 }
+                return .none
+
+            case let .scrolledToCard(term):
+                guard term.season == state.season else { return .none }
+                state.targetTerm = term
                 return .none
 
             case let .onCardTap(solarTermIntro):
