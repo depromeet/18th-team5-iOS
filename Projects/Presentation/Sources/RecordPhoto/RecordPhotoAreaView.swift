@@ -109,14 +109,16 @@ private extension RecordPhotoView {
                 Button {
                     store.send(.imageDeleteButtonTapped)
                 } label: {
-                    Image(systemName: "xmark")
-                        .font(.system(size: 14, weight: .bold))
+                    Image.icClose
+                        .resizable()
+                        .renderingMode(.template)
                         .foregroundStyle(Color.monoWhite)
-                        .frame(width: 32, height: 32)
-                        .background(Color.gray700)
+                        .frame(width: 20, height: 20)
+                        .padding(12)
+                        .background(Color.blackAlpha600)
                         .clipShape(.circle)
                 }
-                .padding(12)
+                .padding(20)
                 .accessibilityLabel("사진 삭제")
             }
     }

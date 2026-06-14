@@ -128,7 +128,7 @@ private extension FreeRecordView {
     var photoArea: some View {
         RecordPhotoView(
             store: store.scope(state: \.photo, action: \.photo),
-            subtitle: "하루 1개의 사진을 자유롭게 기록할 수 있어요"
+            subtitle: "현재 절기의 하루 1개의 사진을 자유롭게 기록할 수 있어요"
         )
     }
 }
