@@ -110,7 +110,7 @@ private extension RecordPhotoView {
                 }
             }
 
-            HStack(spacing: 30) {
+            HStack(spacing: 24) {
                 cameraButton
                 galleryButton
             }
@@ -121,15 +121,12 @@ private extension RecordPhotoView {
         Button {
             store.send(.cameraButtonTapped)
         } label: {
-            ZStack {
-                Circle()
-                    .fill(Color.whiteAlpha600)
-                    .frame(width: 56, height: 56)
-
-                Image(systemName: "camera")
-                    .font(.system(size: 20))
-                    .foregroundStyle(Color.gray800)
-            }
+            Image.icCamera
+                .resizable()
+                .frame(width: 20, height: 20)
+                .padding(12)
+                .background(Color.whiteAlpha600)
+                .clipShape(.circle)
         }
     }
 
@@ -137,15 +134,12 @@ private extension RecordPhotoView {
         Button {
             store.send(.galleryButtonTapped)
         } label: {
-            ZStack {
-                Circle()
-                    .fill(Color.whiteAlpha600)
-                    .frame(width: 56, height: 56)
-
-                Image(systemName: "photo")
-                    .font(.system(size: 20))
-                    .foregroundStyle(Color.gray800)
-            }
+            Image.icPhoto
+                .resizable()
+                .frame(width: 20, height: 20)
+                .padding(12)
+                .background(Color.whiteAlpha600)
+                .clipShape(.circle)
         }
     }
 }
@@ -153,8 +147,8 @@ private extension RecordPhotoView {
 private extension RecordPhotoView {
     var alertIcon: Image? {
         switch store.alert {
-        case .permissionDenied(.camera): .icCamera
-        case .permissionDenied(.photoLibrary): .icPhoto
+        case .permissionDenied(.camera): .ic2dCamera
+        case .permissionDenied(.photoLibrary): .ic2dPhoto
         case .none: nil
         }
     }
