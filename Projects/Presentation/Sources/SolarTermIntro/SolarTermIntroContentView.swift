@@ -23,8 +23,10 @@ struct SolarTermIntroContentView: View {
                         introHeaderSection(intro)
                         contentIntroSection(intro)
                         contentListSection(intro)
-                        BottomButton(title: "미션으로 이동") {
-                            store.send(.onMissionTap)
+                        if store.isCurrentTerm {
+                            BottomButton(title: "미션으로 이동") {
+                                store.send(.onMissionTap)
+                            }
                         }
                     }
                 }
