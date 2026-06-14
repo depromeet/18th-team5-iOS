@@ -63,6 +63,8 @@ private extension RecordPhotoView {
             }
         }
         .frame(height: UIScreen.width - 40)
+        .clipped()
+        .contentShape(.rect(cornerRadius: .radius16))
     }
 
     func selectedImageView(_ image: UIImage) -> some View {
@@ -89,8 +91,12 @@ private extension RecordPhotoView {
         Color.clear
             .overlay {
                 content()
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .clipped()
+                    .allowsHitTesting(false)
             }
             .clipShape(.rect(cornerRadius: .radius16))
+            .contentShape(.rect(cornerRadius: .radius16))
             .overlay(alignment: .topTrailing) {
                 Button {
                     store.send(.imageDeleteButtonTapped)
