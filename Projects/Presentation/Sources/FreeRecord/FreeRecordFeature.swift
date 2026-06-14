@@ -117,9 +117,13 @@ public struct FreeRecordFeature {
 
             case let .currentSolarTermDateRangeLoaded(range):
                 state.selectableDateRange = range
-                if let range,
-                   !range.contains(Calendar.current.startOfDay(for: state.recordDate)) {
-                    state.recordDate = range.lowerBound
+                if let range {
+                    let recordDate = Calendar.current.startOfDay(for: state.recordDate)
+                    if recordDate < range.lowerBound {
+                        state.recordDate = range.lowerBound
+                    } else if recordDate > range.upperBound {
+                        state.recordDate = range.upperBound
+                    }
                 }
                 return .none
 
@@ -226,14 +230,14 @@ public struct FreeRecordFeature {
         for year in targetYears {
             guard let solarTerms = try? await solarTermRepository.fetchSolarTerms(year),
                   let currentSolarTerm = solarTerms.first(where: { $0.dateRange.contains(today) }),
-                  let lastSelectableDate = calendar.date(
-                    byAdding: .day,
-                    value: -1,
-                    to: currentSolarTerm.endDate
+                  let lastSolarTermDate = calendar.date(
+                      byAdding: .day,
+                      value: -1,
+                      to: currentSolarTerm.endDate
                   )
             else { continue }
 
-            return currentSolarTerm.startDate ... lastSelectableDate
+            return currentSolarTerm.startDate ... min(lastSolarTermDate, today)
         }
 
         return nil
