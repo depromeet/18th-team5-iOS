@@ -39,20 +39,6 @@ struct RecordPhotoView: View {
                     .presentationDetents([.fraction(0.9)])
                     .presentationDragIndicator(.hidden)
             }
-            .customAlert(
-                isPresented: store.alert != nil,
-                icon: alertIcon,
-                message: alertMessage,
-                buttons: alertButtons,
-                onAlertButtonTapped: { buttonID in
-                    switch buttonID {
-                    case "permission_ok":
-                        store.send(.alertOpenSettingsTapped)
-                    default:
-                        store.send(.alertCancelTapped)
-                    }
-                }
-            )
             .onChange(of: store.limitedPickerPresentationRequestID) { _, requestID in
                 guard requestID != nil else { return }
                 presentLimitedLibraryPicker()
@@ -172,39 +158,6 @@ private extension RecordPhotoView {
 }
 
 private extension RecordPhotoView {
-    var alertIcon: Image? {
-        switch store.alert {
-        case .permissionDenied(.camera): .ic2dCamera
-        case .permissionDenied(.photoLibrary): .ic2dPhoto
-        case .none: nil
-        }
-    }
-
-    var alertMessage: String {
-        switch store.alert {
-        case .permissionDenied(.camera):
-            "기록 사진을 찍기 위해서\n카메라 접근 권한이 필요해요."
-        case .permissionDenied(.photoLibrary):
-            "기록 사진을 남기기 위해서\n사진 접근 권한이 필요해요."
-        case .none:
-            ""
-        }
-    }
-
-    var alertButtons: [CustomAlertButton<String>] {
-        switch store.alert {
-        case .permissionDenied:
-            return [
-                CustomAlertButton(id: "permission_cancel", title: "취소", style: .secondary),
-                CustomAlertButton(id: "permission_ok", title: "확인", style: .primary)
-            ]
-        case .none:
-            return []
-        }
-    }
-}
-
-private extension RecordPhotoView {
     func presentLimitedLibraryPicker() {
         guard let rootVC = Self.topViewController() else { return }
         PHPhotoLibrary.shared().presentLimitedLibraryPicker(from: rootVC)
@@ -219,5 +172,30 @@ private extension RecordPhotoView {
             top = presented
         }
         return top
+    }
+}
+
+extension RecordPhotoFeature.Alert {
+    var customAlertIcon: Image {
+        switch self {
+        case .permissionDenied(.camera): .ic2dCamera
+        case .permissionDenied(.photoLibrary): .ic2dPhoto
+        }
+    }
+
+    var customAlertMessage: String {
+        switch self {
+        case .permissionDenied(.camera):
+            "기록 사진을 찍기 위해서\n카메라 접근 권한이 필요해요."
+        case .permissionDenied(.photoLibrary):
+            "기록 사진을 남기기 위해서\n사진 접근 권한이 필요해요."
+        }
+    }
+
+    var customAlertButtons: [CustomAlertButton<String>] {
+        [
+            CustomAlertButton(id: "permission_cancel", title: "취소", style: .secondary),
+            CustomAlertButton(id: "permission_ok", title: "확인", style: .primary)
+        ]
     }
 }

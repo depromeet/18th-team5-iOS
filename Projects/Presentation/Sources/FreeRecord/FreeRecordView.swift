@@ -53,6 +53,20 @@ public struct FreeRecordView: View {
                 store.send(.alertCancelTapped)
             }
         )
+        .customAlert(
+            isPresented: store.photo.alert != nil,
+            icon: store.photo.alert?.customAlertIcon,
+            message: store.photo.alert?.customAlertMessage ?? "",
+            buttons: store.photo.alert?.customAlertButtons ?? [],
+            onAlertButtonTapped: { buttonID in
+                switch buttonID {
+                case "permission_ok":
+                    store.send(.photo(.alertOpenSettingsTapped))
+                default:
+                    store.send(.photo(.alertCancelTapped))
+                }
+            }
+        )
         .presentToast($store.toast)
         .task {
             await store.send(.task).finish()
