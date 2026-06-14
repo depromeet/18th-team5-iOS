@@ -148,11 +148,9 @@ public struct MainFeature {
                 state.path.append(.myPage(.init(solarTerm, state.myPageConfig)))
                 return .none
 
-            // TODO: 캘린더 탭 이동 + 해당 날짜 기록 상세 열기 - @준영
             case let .home(.delegate(.navigateToCalendarRecord(date))):
                 state.tab = .calendar
-                // TODO: calendar에 navigateToDate(date) 액션 전달
-                return .none
+                return .send(.calendar(.openDetail(date: date)))
 
             case .home(.delegate(.navigateToCalendar)):
                 state.tab = .calendar

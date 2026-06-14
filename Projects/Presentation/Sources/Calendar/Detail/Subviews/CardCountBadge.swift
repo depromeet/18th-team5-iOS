@@ -21,7 +21,7 @@ struct CardCountBadge: View {
             .padding(.horizontal, 12)
             .padding(.vertical, 5)
             .background(.ultraThinMaterial)
-            .background(Color.blackAlpha300.opacity(0.12))
+            .background(Color.blackAlpha300)
             .clipShape(Capsule())
     }
 }

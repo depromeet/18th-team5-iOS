@@ -24,38 +24,48 @@ struct CalendarDetailView: View {
                 ) { screenSize = $0 }
 
             switch store.displayType {
-            case .cards:
-                VStack {
-                    CardStackView(
-                        topCardIndex: $store.frontCardIndex,
-                        items: store.dateRecordCards
-                    ) { cardIndex, orderIndex, item in
-                        cardView(
-                            cardIndex: cardIndex,
-                            orderIndex: orderIndex,
-                            card: item
-                        )
-                    }
-                    .padding(.top, 16)
-                    Spacer()
-                }
-                .clipped()
-                .transition(.opacity)
+            case .currentTerm:
+                if let cards = store.dateRecordCards {
+                    if !cards.isEmpty {
+                        VStack {
+                            CardStackView(
+                                topCardIndex: $store.frontCardIndex,
+                                items: cards
+                            ) { cardIndex, orderIndex, item in
+                                cardView(
+                                    term: store.term,
+                                    cardIndex: cardIndex,
+                                    orderIndex: orderIndex,
+                                    card: item,
+                                    totalCount: cards.count
+                                )
+                            }
+                            .padding(.top, 16)
+                            Spacer()
+                        }
+                        .clipped()
+                        .transition(.opacity)
 
-                bottomButtonContainer
-            case .emptyRecord:
-                currentTermNoRecordView {
-                    store.send(.createRecordButtonTapped)
+                        bottomButtonContainer
+                    } else {
+                        currentTermNoRecordView {
+                            store.send(.createRecordButtonTapped)
+                        }
+                    }
                 }
+
             case .passedTerm:
                 passedTermNoRecordView
+
+            case .futureTerm:
+                futureTermRecordView
+
             case .notDetermined:
                 EmptyView()
             }
         }
         .animation(.easeInOut, value: store.isLoading)
         .presentToast($store.toast)
-        .toastContainer()
         .sheet(item: $store.shareImageItem) { item in
             if let image = UIImage(data: item.imageData) {
                 ActivityView(activityItems: [image]) { completed in

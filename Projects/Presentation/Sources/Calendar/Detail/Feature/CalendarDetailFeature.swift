@@ -16,15 +16,17 @@ public struct CalendarDetailFeature {
     @ObservableState
     public struct State: Equatable {
         let date: Date
+        let term: SolarTerm
         var displayType: CardDetailDisplayType = .notDetermined
         var frontCardIndex: Int = 0
-        var dateRecordCards: [DateRecordCard] = []
+        var dateRecordCards: [DateRecordCard]?
         var isLoading: Bool = true
         var toast: ToastModel?
         var shareImageItem: ShareImageItem?
 
-        public init(date: Date) {
+        public init(date: Date, term: SolarTerm) {
             self.date = date
+            self.term = term
         }
     }
 
@@ -58,6 +60,7 @@ public struct CalendarDetailFeature {
             case dismissAlert
             case dismiss
             case editRecord(DateRecordCard, date: Date)
+            case refreshAnchoredTermData
         }
 
         public enum AlertAction: Equatable {
@@ -93,14 +96,15 @@ public struct CalendarDetailFeature {
                 return fetchDateRecord(state)
 
             case .editRecordButtonTapped:
-                guard state.dateRecordCards.indices.contains(state.frontCardIndex) else {
-                    return .none
-                }
-                let card = state.dateRecordCards[state.frontCardIndex]
+                guard let records = state.dateRecordCards,
+                      records.indices.contains(state.frontCardIndex)
+                else { return .none }
+
+                let card = records[state.frontCardIndex]
                 return .send(.delegate(.editRecord(card, date: state.date)))
 
             case .createRecordButtonTapped:
-                // TODO: 기능 구현 필요
+                // TODO: 라우팅 연결 필요 -@진준호
                 state.toast = .init(title: "준비중입니다.", duration: 1.0, bottomInset: 108)
                 return .none
 
@@ -143,11 +147,14 @@ public struct CalendarDetailFeature {
 
             case .removeCardConfirmed:
                 // 낙관적 업데이트: 현재 가장 위에 있는 카드를 즉시 제거
-                guard state.dateRecordCards.indices.contains(state.frontCardIndex) else {
-                    return .none
-                }
                 let removedIndex = state.frontCardIndex
-                let removedCard = state.dateRecordCards.remove(at: removedIndex)
+
+                guard let records = state.dateRecordCards,
+                      records.indices.contains(state.frontCardIndex),
+                      let removedCard = state.dateRecordCards?.remove(at: removedIndex),
+                      let cardCount = state.dateRecordCards?.count
+                else { return .none }
+
                 state.frontCardIndex = 0
                 state.toast = .init(
                     title: "기록이 삭제되었어요",
@@ -155,6 +162,7 @@ public struct CalendarDetailFeature {
                     bottomInset: 108,
                     action: nil
                 )
+                let currentDate = state.date
                 return .run { send in
                     do {
                         switch removedCard.cardType {
@@ -165,13 +173,25 @@ public struct CalendarDetailFeature {
                         }
                     } catch {
                         await send(.deleteCardFailed(card: removedCard, index: removedIndex))
+                        return
+                    }
+
+                    await send(.delegate(.refreshAnchoredTermData))
+
+                    // 마지막 카드 삭제 시 화면 타입을 갱신한다. 삭제는 이미 성공했으므로
+                    // 보조 조회가 실패하더라도 롤백하지 않고 기존 화면 타입을 유지한다.
+                    if cardCount == 0, let displayType = try? await displayType(currentDate) {
+                        await send(.updateDetailDisplayType(displayType))
                     }
                 }
 
             case let .deleteCardFailed(card, index):
                 // 낙관적 삭제 롤백: 제거했던 카드를 원래 위치로 복원
-                let insertIndex = min(index, state.dateRecordCards.count)
-                state.dateRecordCards.insert(card, at: insertIndex)
+                guard let records = state.dateRecordCards
+                else { return .none }
+
+                let insertIndex = min(index, records.count)
+                state.dateRecordCards?.insert(card, at: insertIndex)
                 state.frontCardIndex = insertIndex
                 state.toast = .init(
                     title: "카드 삭제에 실패했어요",

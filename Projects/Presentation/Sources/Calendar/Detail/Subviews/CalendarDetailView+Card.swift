@@ -15,17 +15,20 @@ extension CalendarDetailView {
     }
 
     func cardView(
+        term: SolarTerm,
         cardIndex: Int,
         orderIndex: Int,
-        card: DateRecordCard
+        card: DateRecordCard,
+        totalCount: Int
     ) -> some View {
         Group {
             if orderIndex == 0 {
                 // 내용 카드는 Equatable 뷰로 분리하여 드래그 중 본문 재빌드를 방지합니다.
                 RecordCardContentView(
+                    term: term,
                     card: card,
                     cardIndex: cardIndex,
-                    totalCount: store.dateRecordCards.count,
+                    totalCount: totalCount,
                     cardWidth: cardWidth,
                     onDeleteTapped: {
                         store.send(.removeCardButtonTapped)

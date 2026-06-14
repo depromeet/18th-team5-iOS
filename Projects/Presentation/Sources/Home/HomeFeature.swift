@@ -118,8 +118,14 @@ public struct HomeFeature {
                 return .send(.delegate(.navigateToCalendar))
 
             case let .onRecordPhotoTap(dateString):
-                guard let date = DateFormatter.yearMonthDayDash.date(from: dateString)
+                let formatter = DateFormatter()
+                formatter.locale = Locale(identifier: "en_US_POSIX")
+                formatter.timeZone = TimeZone(identifier: "Asia/Seoul")
+                formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSSSS"
+
+                guard let date = formatter.date(from: dateString)
                 else { return .none }
+
                 return .send(.delegate(.navigateToCalendarRecord(date)))
 
             case .delegate:
