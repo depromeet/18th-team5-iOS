@@ -28,7 +28,10 @@ public struct MyPageFeature {
 
     public enum Alert {
         case delete
+        case deleteFailed
     }
+
+    private enum CancelID { case resetData }
 
     @ObservableState
     public struct State: Equatable {
@@ -88,7 +91,9 @@ public struct MyPageFeature {
         case path(PresentationAction<Path.Action>)
         case devMode(PresentationAction<DevModeFeature.Action>)
         case deviceShaked
+        case deleteTimeout
         case delegate(Delegate)
+        case showAlert(Alert)
         case alert(CustomAlertFeature<Alert>.Action)
     }
 
@@ -140,11 +145,32 @@ public struct MyPageFeature {
             case .deleteButtonTapped:
                 state.alert = .init(.delete)
                 return .none
-            case .alert(.primaryButtonTapped):
+            case .deleteTimeout:
+                state.isLoading = false
+                state.alert = .init(.deleteFailed)
+                return .cancel(id: CancelID.resetData)
+            case let .showAlert(alert):
+                state.isLoading = false
+                state.alert = .init(alert)
+                return .none
+            case let .alert(.primaryButtonTapped(alert)):
                 state.alert = nil
-                state.isLoading = true
-                return .run { send in
-                    await resetUserData(send)
+
+                switch alert {
+                case .delete:
+                    state.isLoading = true
+                    return .merge([
+                        .run { send in
+                            try await Task.sleep(for: .seconds(10))
+                            await send(.deleteTimeout)
+                        },
+                        .run { send in
+                            await resetUserData(send)
+                        }
+                        .cancellable(id: CancelID.resetData)
+                    ])
+                case .deleteFailed:
+                    return .none
                 }
             case .alert(.secondaryButtonTapped):
                 state.alert = nil
@@ -224,7 +250,7 @@ private extension MyPageFeature {
             try await authRepository.signOut()
             await send(.userDataResetCompleted)
         } catch {
-            // TODO: 예외처리 - @정원
+            await send(.showAlert(.deleteFailed))
         }
     }
 }
