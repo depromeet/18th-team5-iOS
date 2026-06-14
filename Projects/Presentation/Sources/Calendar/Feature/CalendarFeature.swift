@@ -39,6 +39,7 @@ public struct CalendarFeature {
 
     public enum Action: BindableAction {
         case onAppear
+        case viewDidLoad
         case headerBackButtonTapped
         case floatingRecordButtonTapped
         case dateCellTapped(dateId: SolarTermDate.ID, inset: CGFloat)
@@ -78,8 +79,11 @@ public struct CalendarFeature {
         BindingReducer()
         Reduce { state, action in
             switch action {
+            case .viewDidLoad:
+                return initialTask(&state)
+
             case .onAppear:
-                return onAppear(&state)
+                return refreshAnchoredTermData(state)
 
             case .headerBackButtonTapped:
                 state.detail = nil

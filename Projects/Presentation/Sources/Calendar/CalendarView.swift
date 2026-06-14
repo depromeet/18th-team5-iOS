@@ -99,6 +99,7 @@ struct CalendarView: View {
                 }
             }
         }
+        .task { store.send(.viewDidLoad) }
         .onAppear {
             isFloatingRecordButtonExpanded = true
             store.send(.onAppear)
