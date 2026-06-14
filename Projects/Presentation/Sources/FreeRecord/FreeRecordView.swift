@@ -96,6 +96,7 @@ private extension FreeRecordView {
 
     var datePickerField: some View {
         Button {
+            guard store.isRecordDateEditable else { return }
             isMemoFocused = false
             draftRecordDate = store.recordDate
             isDateSelectionSheetPresented = true
@@ -117,6 +118,7 @@ private extension FreeRecordView {
             .clipShape(.rect(cornerRadius: .radius16))
         }
         .buttonStyle(.plain)
+        .disabled(!store.isRecordDateEditable)
     }
 }
 
@@ -148,10 +150,10 @@ private extension FreeRecordView {
 
 private extension FreeRecordView {
     var isSubmitEnabled: Bool {
-        store.photo.selectedImageData != nil
+        store.hasRecordImage
             && !store.isSubmitting
-            && !store.memo.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
             && !store.isMemoLimitExceeded
+            && (!store.isEditing || store.hasEditedContent)
     }
 
     var submitButton: some View {

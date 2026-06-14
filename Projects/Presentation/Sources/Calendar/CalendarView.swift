@@ -15,7 +15,6 @@ struct CalendarView: View {
     @Bindable var store: StoreOf<CalendarFeature>
 
     @State var sheetHeight: CGFloat = .zero
-    @State var isFloatingRecordButtonExpanded: Bool = true
 
     var body: some View {
         GeometryReader { geo in
@@ -35,10 +34,7 @@ struct CalendarView: View {
                         case let .cellWillAppear(id):
                             store.send(.calendarTermWillAppear(id: id))
                         case .willBeginDragging:
-                            guard isFloatingRecordButtonExpanded else { return }
-                            withAnimation(.spring(response: 0.28, dampingFraction: 0.86)) {
-                                isFloatingRecordButtonExpanded = false
-                            }
+                            store.send(.scrollViewWillBeginDragging)
                         }
                     },
                     arguments: .init(
@@ -59,7 +55,7 @@ struct CalendarView: View {
                     for: CGFloat.self,
                     of: { $0.size.height - $0.safeAreaInsets.bottom }
                 ) { height in
-                    let cellHeight = CalendarDateCell.Constants.cellHeight
+                    let cellHeight = CalendarAnchorMetrics.cellHeight
                     sheetHeight = height - cellHeight - 12
                 }
                 .ignoresSafeArea(.container, edges: [.bottom])
@@ -99,13 +95,13 @@ struct CalendarView: View {
                 }
             }
         }
-        .sensoryFeedback(.impact(weight: .light), trigger: store.anchorHapticTrigger)
+        .sensoryFeedback(.impact(weight: .heavy), trigger: store.anchorHapticTrigger)
         .task { store.send(.viewDidLoad) }
         .onAppear {
-            isFloatingRecordButtonExpanded = true
             store.send(.onAppear)
         }
         .customAlert(store.scope(state: \.alert, action: \.alert))
+        .toastContainer()
     }
 }
 
@@ -123,14 +119,13 @@ private extension CalendarView {
                     .foregroundStyle(Color.monoWhite)
                     .frame(width: 24, height: 24)
 
-                if isFloatingRecordButtonExpanded {
+                if store.isFloatingRecordButtonExpanded {
                     Text("기록하기")
                         .font(.body1Semibold)
                         .foregroundStyle(Color.monoWhite)
-                        .transition(.move(edge: .trailing).combined(with: .opacity))
                 }
             }
-            .padding(.horizontal, isFloatingRecordButtonExpanded ? 20 : 16)
+            .padding(.horizontal, store.isFloatingRecordButtonExpanded ? 20 : 16)
             .frame(height: Constants.floatingButtonSize)
             .frame(minWidth: Constants.floatingButtonSize)
             .background {
@@ -195,7 +190,7 @@ extension CalendarView {
         let header = Constants.termSectionHeaderHeight
 
         let weekCount = term.cells.count
-        let weekSectionHeight = CalendarDateCell.Constants.cellHeight
+        let weekSectionHeight = CalendarAnchorMetrics.cellHeight
         let weekSpacing = Constants.weekSectionVerticalSpacing * CGFloat(weekCount - 1)
         let calendar = weekSectionHeight * CGFloat(weekCount) + weekSpacing
 
@@ -280,10 +275,7 @@ extension CalendarView {
     }
 
     func dateCellAnchorPoint(weekIndex: Int) -> CGFloat {
-        let weekHeight = CalendarDateCell.Constants.cellHeight
-        let weekSpacing = Constants.weekSectionVerticalSpacing
-        let weekStartY = (weekHeight + weekSpacing) * CGFloat(weekIndex)
-        return Constants.termSectionHeaderHeight + weekStartY
+        CalendarAnchorMetrics.dateCellAnchorInset(weekIndex: weekIndex)
     }
 }
 
@@ -298,9 +290,9 @@ private extension CalendarView {
 
 private enum Constants {
     static let calendarHorizontalSpacing: CGFloat = 19.5
-    static let termSectionHeaderHeight: CGFloat = 56
+    static let termSectionHeaderHeight: CGFloat = CalendarAnchorMetrics.termSectionHeaderHeight
     static let termSectionBottomPadding: CGFloat = 12
-    static let weekSectionVerticalSpacing: CGFloat = 4
+    static let weekSectionVerticalSpacing: CGFloat = CalendarAnchorMetrics.weekSectionVerticalSpacing
     static let tableBottomPadding: CGFloat = 300
 
     static let dateCellHorizontalSpacing: CGFloat = 7
@@ -310,7 +302,7 @@ private enum Constants {
     static let floatingButtonBottomPadding: CGFloat = 84
 
     static var detailViewTopPadding: CGFloat {
-        CalendarDateCell.Constants.cellHeight + 12
+        CalendarAnchorMetrics.cellHeight + 12
     }
 }
 

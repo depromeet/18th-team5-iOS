@@ -17,20 +17,24 @@ extension CalendarFeature {
         _ state: inout State,
         termGroupId: SolarTermGroup.ID
     ) -> Effect<Action> {
-        guard let currentTerm = findTermGroup(
+        guard let anchoredTerm = findTermGroup(
             pages: state.calendarState.pages,
             termGroupId: termGroupId
         ) else { return .none }
+
+        if termGroupId == state.currentTermId {
+            state.isFloatingRecordButtonExpanded = true
+        }
 
         let nextTrigger = state.anchorHapticTrigger + 1
         state.anchorHapticTrigger = nextTrigger % 2
 
         var effects: [Effect<Action>] = [
-            .send(.updateCalendarHeader(mapToHeader(currentTerm))),
+            .send(.updateCalendarHeader(mapToHeader(anchoredTerm))),
             .send(.updateAnchoredTermId(termGroupId))
         ]
 
-        let info = currentTerm.solarTermInfo
+        let info = anchoredTerm.solarTermInfo
         let recordKey = Self.termRecordKey(info.year, info.term)
         if let termRecordData = state.termRecordData[recordKey],
            termRecordData.data == nil {

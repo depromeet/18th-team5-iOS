@@ -68,6 +68,10 @@ enum MyPageRepositoryImpl {
                 let endpoint = UserEndpoint.fetchUserInfo
                 let response: UserInfoResponseDTO? = try await networkClient.request(endpoint)
                 return response?.userId
+            },
+            resetUserData: {
+                let endpoint = UserEndpoint.resetUserData
+                let response: String? = try await networkClient.request(endpoint)
             }
         )
     }

@@ -34,7 +34,7 @@ public struct CardStackView<Item, CardView: View>: View {
 
     // Card UI
     @State private var cardSize: CGSize = .zero
-    private var cardView: (Int, Int, Item) -> CardView
+    private let cardView: (Int, Int, Item) -> CardView
 
     public init(
         topCardIndex: Binding<Int>,
@@ -59,7 +59,7 @@ public struct CardStackView<Item, CardView: View>: View {
         ZStack {
             ForEach(renderedEntries, id: \.itemIndex) { entry in
                 let scale = scale(for: entry)
-                let cardIndex = (entry.itemIndex % originalCardCount)
+                let cardIndex = originalCardCount > 0 ? (entry.itemIndex % originalCardCount) : 0
                 cardView(cardIndex, entry.olderIndex, entry.item)
                     .onGeometryChange(
                         for: CGSize.self,
@@ -107,10 +107,11 @@ private extension CardStackView {
             endIndex: items.endIndex
         )
         .enumerated()
-        .compactMap { orderIndex, itemIndex in
+        .compactMap { orderIndex, itemIndex -> RenderEntry? in
             guard !dismissingCardItemIndices.contains(itemIndex) else { return nil }
+            guard let item = items[safe: itemIndex] else { return nil }
             return RenderEntry(
-                item: items[itemIndex],
+                item: item,
                 itemIndex: itemIndex,
                 olderIndex: orderIndex,
                 isDismissing: false

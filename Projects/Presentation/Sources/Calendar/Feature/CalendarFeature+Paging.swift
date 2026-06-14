@@ -39,6 +39,7 @@ extension CalendarFeature {
                         animated: false
                     )
                 ))
+                await send(.checkPendingDetailRequest)
             }
         }
     }

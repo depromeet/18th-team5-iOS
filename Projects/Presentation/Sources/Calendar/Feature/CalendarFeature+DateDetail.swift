@@ -13,19 +13,41 @@ import Foundation
 // MARK: - 셀클릭 > DateDetail
 
 extension CalendarFeature {
+    /// 외부 진입(`openDetail`)을 보관했다가 pages가 준비되면 detail을 연다.
+    /// 매핑이 아직 불가하면 `pendingDetailDate`를 유지한 채 `.none`을 반환해 다음 로드에서 재시도한다.
+    func consumePendingDetailDateIfPossible(_ state: inout State) -> Effect<Action> {
+        guard let pendingDate = state.pendingDetailDate else { return .none }
+        guard !state.calendarState.pages.isEmpty,
+              let anchor = findDateCellAnchor(
+                  state.calendarState.pages,
+                  matching: pendingDate
+              )
+        else { return .none }
+
+        state.pendingDetailDate = nil
+        // .dateCellTapped 핸들러와 동일하게 탭바를 숨긴 뒤 동일 흐름(스크롤+선택+detail)을 재사용한다.
+        // inset은 셀 탭과 동일하게 dateCellAnchorPoint 기반으로 계산된 값을 넘긴다.
+        state.$tabBarVisibility.withLock { $0 = false }
+        return dateCellTapped(&state, dateId: anchor.dateId, inset: anchor.inset)
+    }
+
     func dateCellTapped(
         _ state: inout State,
         dateId: SolarTermDate.ID,
-        inset: CGFloat
+        inset: CGFloat?
     ) -> Effect<Action> {
         guard state.selectedDateId != dateId else { return .none }
 
         // #1. 디테일 화면 데이터
         guard let dateModel = findDate(state.calendarState.pages, dateId),
-              let date = date(from: dateModel)
+              let date = date(from: dateModel),
+              let term = findTermGroup(
+                  pages: state.calendarState.pages,
+                  dateId: dateId
+              )?.solarTermInfo.term
         else { return .none }
 
-        state.detail = .init(date: date)
+        state.detail = .init(date: date, term: term)
         state.calendarState.scrollEnabled = false
 
         // #2. 이전 선택 셀 초기화
@@ -66,8 +88,14 @@ extension CalendarFeature {
     }
 
     func date(from date: SolarTermDate) -> Date? {
+        // 셀 매핑(`findDateCellAnchor`)과 동일하게 KST 기준으로 Date를 생성해
+        // 디바이스 타임존에 따른 off-by-one-day를 방지한다.
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = .init(identifier: "Asia/Seoul") ?? .current
+
         var cmp = DateComponents()
-        cmp.calendar = Calendar(identifier: .gregorian)
+        cmp.calendar = calendar
+        cmp.timeZone = calendar.timeZone
         cmp.year = date.year.rawValue
         cmp.month = date.month
         cmp.day = date.day
@@ -86,6 +114,38 @@ extension CalendarFeature {
                         let cell = term.cells[weekIndex][dateIndex]
                         if case let .dateCell(date) = cell, date.id == id {
                             return date
+                        }
+                    }
+                }
+            }
+        }
+        return nil
+    }
+
+    /// `findDate(_:_:)`(id→date)의 역방향. Foundation Date의 연/월/일과 일치하는 셀의
+    /// dateId와, 셀이 속한 주(week)의 `dateCellAnchorPoint` 기반 스크롤 inset을 함께 반환한다.
+    func findDateCellAnchor(
+        _ pages: [Page<SolarTermGroup>],
+        matching date: Date
+    ) -> (dateId: SolarTermDate.ID, inset: CGFloat)? {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = .init(identifier: "Asia/Seoul") ?? .current
+
+        let cmp = calendar.dateComponents([.year, .month, .day], from: date)
+        guard let year = cmp.year, let month = cmp.month, let day = cmp.day else { return nil }
+
+        for page in pages {
+            for term in page.items {
+                for (weekIndex, week) in term.cells.enumerated() {
+                    for cell in week {
+                        if case let .dateCell(dateModel) = cell,
+                           dateModel.year.rawValue == year,
+                           dateModel.month == month,
+                           dateModel.day == day {
+                            return (
+                                dateModel.id,
+                                CalendarAnchorMetrics.dateCellAnchorInset(weekIndex: weekIndex)
+                            )
                         }
                     }
                 }

@@ -24,6 +24,10 @@ public struct FreeRecordFeature {
     public struct State: Equatable {
         var recordDate: Date
         var selectableDateRange: ClosedRange<Date>?
+        var editingRecordId: Int?
+        var originalImageURL: URL?
+        var originalMemo: String?
+        var isRecordDateEditable: Bool = true
         var memo: String = ""
         var isSubmitting: Bool = false
         var alert: RecordAlert?
@@ -35,8 +39,40 @@ public struct FreeRecordFeature {
             self.photo = RecordPhotoFeature.State(cameraOverlayLabel: "기록하기")
         }
 
+        public init(
+            editingRecordId: Int,
+            recordDate: Date,
+            imageURL: URL?,
+            memo: String?
+        ) {
+            self.recordDate = recordDate
+            self.editingRecordId = editingRecordId
+            self.originalImageURL = imageURL
+            self.originalMemo = memo
+            self.isRecordDateEditable = false
+            self.memo = memo ?? ""
+            self.photo = RecordPhotoFeature.State(
+                cameraOverlayLabel: "기록하기",
+                existingImageURL: imageURL
+            )
+        }
+
         var isMemoLimitExceeded: Bool {
             memo.count > FreeRecordFeature.maxMemoLength
+        }
+
+        var isEditing: Bool {
+            editingRecordId != nil
+        }
+
+        var hasEditedContent: Bool {
+            photo.selectedImageData != nil
+                || photo.existingImageURL != originalImageURL
+                || memo != (originalMemo ?? "")
+        }
+
+        var hasRecordImage: Bool {
+            photo.selectedImageData != nil || photo.existingImageURL != nil
         }
     }
 
@@ -92,29 +128,47 @@ public struct FreeRecordFeature {
 
             case .submitButtonTapped:
                 guard !state.isSubmitting,
-                      !state.isMemoLimitExceeded
+                      !state.isMemoLimitExceeded,
+                      state.hasRecordImage,
+                      !state.isEditing || state.hasEditedContent
                 else { return .none }
 
                 state.isSubmitting = true
                 let imageData = state.photo.selectedImageData
                 let recordDate = Self.recordDateFormatter.string(from: state.recordDate)
                 let memo = state.memo.trimmingCharacters(in: .whitespacesAndNewlines)
+                let editingRecordId = state.editingRecordId
 
                 return .run { send in
                     do {
-                        guard let imageData else {
-                            throw DomainError.unknown("이미지가 필요합니다")
+                        let objectKey: String? = if let imageData {
+                            try await imageUploadRepository.uploadImage(
+                                imageData,
+                                "\(UUID().uuidString).jpg",
+                                "image/jpeg"
+                            )
+                        } else {
+                            nil
                         }
-                        let objectKey = try await imageUploadRepository.uploadImage(
-                            imageData,
-                            "\(UUID().uuidString).jpg",
-                            "image/jpeg"
-                        )
-                        let recordId = try await calendarRecordRepository.completeFreeRecord(
-                            recordDate,
-                            objectKey,
-                            memo.isEmpty ? nil : memo
-                        )
+
+                        let recordId: Int
+                        if let editingRecordId {
+                            try await calendarRecordRepository.updateFreeRecord(
+                                editingRecordId,
+                                objectKey,
+                                memo.isEmpty ? nil : memo
+                            )
+                            recordId = editingRecordId
+                        } else {
+                            guard let objectKey else {
+                                throw DomainError.unknown("이미지가 필요합니다")
+                            }
+                            recordId = try await calendarRecordRepository.completeFreeRecord(
+                                recordDate,
+                                objectKey,
+                                memo.isEmpty ? nil : memo
+                            )
+                        }
                         await send(.submitResponse(.success(recordId)))
                     } catch {
                         await send(.submitResponse(.failure(error)))

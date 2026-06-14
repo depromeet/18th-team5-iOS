@@ -21,6 +21,10 @@ enum CalendarEndpoint: APIEndpoint {
     case deleteFreeRecord(recordId: Int)
     /// 자유 기록 추가
     case completeFreeRecord(CalendarFreeRecordRequestDTO)
+    /// 미션 기록 수정
+    case updateMissionCompletion(completionId: Int, request: CalendarRecordUpdateRequestDTO)
+    /// 자유 기록 수정
+    case updateFreeRecord(recordId: Int, request: CalendarRecordUpdateRequestDTO)
 
     var path: String {
         switch self {
@@ -36,6 +40,10 @@ enum CalendarEndpoint: APIEndpoint {
             "/api/v1/calendar/records/\(recordId)"
         case .completeFreeRecord:
             "/api/v1/calendar/records"
+        case let .updateMissionCompletion(completionId, _):
+            "/api/v1/calendar/mission-completions/\(completionId)"
+        case let .updateFreeRecord(recordId, _):
+            "/api/v1/calendar/records/\(recordId)"
         }
     }
 
@@ -47,12 +55,18 @@ enum CalendarEndpoint: APIEndpoint {
             .delete
         case .completeFreeRecord:
             .post
+        case .updateMissionCompletion, .updateFreeRecord:
+            .patch
         }
     }
 
     var body: Encodable? {
         switch self {
         case let .completeFreeRecord(request):
+            request
+        case let .updateMissionCompletion(_, request):
+            request
+        case let .updateFreeRecord(_, request):
             request
         default:
             nil
@@ -66,7 +80,9 @@ enum CalendarEndpoint: APIEndpoint {
              .fetchDateRecords,
              .deleteMissionCompletion,
              .deleteFreeRecord,
-             .completeFreeRecord:
+             .completeFreeRecord,
+             .updateMissionCompletion,
+             .updateFreeRecord:
             return true
         }
     }

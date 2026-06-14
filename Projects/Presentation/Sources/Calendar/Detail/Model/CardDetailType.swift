@@ -7,5 +7,5 @@
 //
 
 public enum CardDetailDisplayType {
-    case cards, emptyRecord, passedTerm, notDetermined
+    case currentTerm, passedTerm, futureTerm, notDetermined
 }

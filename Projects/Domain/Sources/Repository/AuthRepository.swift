@@ -14,6 +14,7 @@ import Foundation
 public struct AuthRepository: Sendable {
     public var isSignin: @Sendable () -> Bool?
     public var login: @Sendable () async throws -> Void
+    public var signOut: @Sendable () async throws -> Void
 }
 
 // MARK: - TestDependencyKey

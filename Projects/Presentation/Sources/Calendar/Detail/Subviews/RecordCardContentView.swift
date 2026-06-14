@@ -5,6 +5,7 @@
 //  Copyright © 2026 Orange. All rights reserved.
 //
 
+import DesignSystem
 import Domain
 import Kingfisher
 import SwiftUI
@@ -16,6 +17,7 @@ import SwiftUI
 /// 동일하면 body 재실행을 건너뛰고, 드래그 변환(offset/opacity/scale)은 이 뷰 바깥에서만
 /// 적용되어 GPU에서 저렴하게 처리됩니다.
 struct RecordCardContentView: View, Equatable {
+    let term: SolarTerm
     let card: DateRecordCard
     let cardIndex: Int
     let totalCount: Int
@@ -24,10 +26,11 @@ struct RecordCardContentView: View, Equatable {
     let onEditTapped: () -> Void
 
     static func == (lhs: RecordCardContentView, rhs: RecordCardContentView) -> Bool {
-        lhs.card == rhs.card
-            && lhs.cardIndex == rhs.cardIndex
-            && lhs.totalCount == rhs.totalCount
-            && lhs.cardWidth == rhs.cardWidth
+        lhs.term == rhs.term &&
+            lhs.card == rhs.card &&
+            lhs.cardIndex == rhs.cardIndex &&
+            lhs.totalCount == rhs.totalCount &&
+            lhs.cardWidth == rhs.cardWidth
     }
 
     var body: some View {
@@ -46,12 +49,18 @@ struct RecordCardContentView: View, Equatable {
             VStack(spacing: 12) {
                 Spacer()
 
-                Text(card.missionTitle ?? "-")
-                    .font(.headline1Semibold)
-                    .foregroundStyle(.white)
+                if card.cardType == .free {
+                    tagContainer
+                } else {
+                    Text(card.missionTitle ?? "-")
+                        .font(.headline1Semibold)
+                        .foregroundStyle(.white)
+                }
 
                 Text(card.memo ?? "-")
                     .font(.body2Medium)
+                    .multilineTextAlignment(.center)
+                    .truncationMode(.tail)
                     .foregroundStyle(.white)
                     .underline(true, pattern: .solid, color: .white)
                     .frame(minHeight: 52, alignment: .top)
@@ -188,6 +197,39 @@ private extension RecordCardContentView {
             }
         }
     }
+}
+
+private extension RecordCardContentView {
+    var tagContainer: some View {
+        HStack(spacing: 4) {
+            tagView(cardRecordText(card.recordedAt) ?? "-")
+            tagView(term.koreanName)
+        }
+    }
+
+    func tagView(_ text: String) -> some View {
+        Text(text)
+            .font(.body2Medium)
+            .foregroundStyle(.white)
+            .padding(.horizontal, 12)
+            .frame(height: 30, alignment: .center)
+            .background {
+                Capsule()
+                    .fill(Color.blackAlpha300)
+            }
+    }
+
+    func cardRecordText(_ date: Date) -> String? {
+        Self.yyyyMMddFormatter.string(from: date)
+    }
+
+    static let yyyyMMddFormatter = {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "ko_KR")
+        formatter.timeZone = TimeZone(identifier: "Asia/Seoul")
+        formatter.dateFormat = "yyyy. M.d"
+        return formatter
+    }()
 }
 
 // MARK: - Layout Constants

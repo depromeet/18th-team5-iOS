@@ -8,6 +8,7 @@
 
 import Dependencies
 import Domain
+import ImageIO
 import Photos
 import UIKit
 
@@ -81,9 +82,7 @@ private final class PhotoLibraryStore: NSObject, PHPhotoLibraryChangeObserver, @
                 if isDegraded { return }
                 guard resumeGate.closeIfOpen() else { return }
 
-                let data = image?.cgImage.flatMap {
-                    Self.jpegData(from: $0, compressionQuality: 0.8)
-                }
+                let data = image.flatMap { Self.jpegData(from: $0, compressionQuality: 0.8) }
                 continuation.resume(returning: data)
             }
         }
@@ -97,12 +96,18 @@ private final class PhotoLibraryStore: NSObject, PHPhotoLibraryChangeObserver, @
         options.isSynchronous = false
 
         return await withCheckedContinuation { (continuation: CheckedContinuation<Data?, Never>) in
-            imageManager.requestImageDataAndOrientation(for: asset, options: options) { data, _, _, _ in
+            imageManager.requestImageDataAndOrientation(for: asset, options: options) { data, _, orientation, _ in
                 guard let data else {
                     continuation.resume(returning: nil)
                     return
                 }
-                continuation.resume(returning: Self.jpegData(from: data, compressionQuality: 0.9))
+                continuation.resume(
+                    returning: Self.jpegData(
+                        from: data,
+                        orientation: orientation,
+                        compressionQuality: 0.9
+                    )
+                )
             }
         }
     }
@@ -162,32 +167,56 @@ private final class PhotoLibraryStore: NSObject, PHPhotoLibraryChangeObserver, @
         PHPhotoLibrary.shared().register(self)
     }
 
-    private static func jpegData(from data: Data, compressionQuality: CGFloat) -> Data? {
+    private static func jpegData(
+        from data: Data,
+        orientation: CGImagePropertyOrientation,
+        compressionQuality: CGFloat
+    ) -> Data? {
         guard let source = CGImageSourceCreateWithData(data as CFData, nil),
               let image = CGImageSourceCreateImageAtIndex(source, 0, nil) else {
             return nil
         }
-        return jpegData(from: image, compressionQuality: compressionQuality)
+        let imageOrientation = UIImage.Orientation(orientation)
+        return jpegData(
+            from: UIImage(cgImage: image, scale: 1, orientation: imageOrientation),
+            compressionQuality: compressionQuality
+        )
     }
 
-    private static func jpegData(from image: CGImage, compressionQuality: CGFloat) -> Data? {
-        let output = NSMutableData()
-        guard let destination = CGImageDestinationCreateWithData(
-            output,
-            "public.jpeg" as CFString,
-            1,
-            nil
-        ) else {
-            return nil
+    private static func jpegData(from image: UIImage, compressionQuality: CGFloat) -> Data? {
+        let size = image.size
+        guard size.width > 0, size.height > 0 else { return nil }
+
+        let format = UIGraphicsImageRendererFormat.default()
+        format.scale = image.scale
+
+        let normalizedImage = UIGraphicsImageRenderer(size: size, format: format).image { _ in
+            image.draw(in: CGRect(origin: .zero, size: size))
         }
+        return normalizedImage.jpegData(compressionQuality: compressionQuality)
+    }
+}
 
-        let options = [
-            kCGImageDestinationLossyCompressionQuality: compressionQuality
-        ] as CFDictionary
-        CGImageDestinationAddImage(destination, image, options)
-
-        guard CGImageDestinationFinalize(destination) else { return nil }
-        return output as Data
+private extension UIImage.Orientation {
+    init(_ orientation: CGImagePropertyOrientation) {
+        switch orientation {
+        case .up:
+            self = .up
+        case .upMirrored:
+            self = .upMirrored
+        case .down:
+            self = .down
+        case .downMirrored:
+            self = .downMirrored
+        case .left:
+            self = .left
+        case .leftMirrored:
+            self = .leftMirrored
+        case .right:
+            self = .right
+        case .rightMirrored:
+            self = .rightMirrored
+        }
     }
 }
 

@@ -60,5 +60,9 @@ private extension RecordMemoSection {
             .padding(EdgeInsets(top: 16, leading: 12, bottom: 16, trailing: 16))
             .background(Color.monoWhite)
             .clipShape(.rect(cornerRadius: .radius16))
+            .onChange(of: memo) { _, newValue in
+                guard newValue.contains(where: \.isNewline) else { return }
+                memo = newValue.filter { !$0.isNewline }
+            }
     }
 }
