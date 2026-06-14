@@ -54,10 +54,14 @@ public struct FreeRecordView: View {
             }
         )
         .presentToast($store.toast)
+        .task {
+            await store.send(.task).finish()
+        }
         .sheet(isPresented: $isDateSelectionSheetPresented) {
             FreeRecordDateSelectionSheet(
                 selectedDate: $draftRecordDate,
                 confirmedDate: store.recordDate,
+                selectableDateRange: store.selectableDateRange,
                 onClose: {
                     isDateSelectionSheetPresented = false
                 },

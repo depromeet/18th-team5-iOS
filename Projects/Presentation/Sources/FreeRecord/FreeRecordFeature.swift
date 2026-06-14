@@ -23,6 +23,7 @@ public struct FreeRecordFeature {
     @ObservableState
     public struct State: Equatable {
         var recordDate: Date
+        var selectableDateRange: ClosedRange<Date>?
         var editingRecordId: Int?
         var originalImageURL: URL?
         var originalMemo: String?
@@ -77,6 +78,8 @@ public struct FreeRecordFeature {
 
     public enum Action: BindableAction {
         case binding(BindingAction<State>)
+        case task
+        case currentSolarTermDateRangeLoaded(ClosedRange<Date>?)
         case backButtonTapped
         case submitButtonTapped
         case submitResponse(Result<Int, any Error>)
@@ -87,6 +90,7 @@ public struct FreeRecordFeature {
 
     @Dependency(\.calendarRecordRepository) private var calendarRecordRepository
     @Dependency(\.imageUploadRepository) private var imageUploadRepository
+    @Dependency(\.solarTermRepository) private var solarTermRepository
     @Dependency(\.dismiss) private var dismiss
 
     public init() {}
@@ -101,6 +105,22 @@ public struct FreeRecordFeature {
         Reduce<State, Action> { state, action in
             switch action {
             case .binding:
+                return .none
+
+            case .task:
+                return .run { send in
+                    let range = await Self.currentSolarTermSelectableRange(
+                        solarTermRepository: solarTermRepository
+                    )
+                    await send(.currentSolarTermDateRangeLoaded(range))
+                }
+
+            case let .currentSolarTermDateRangeLoaded(range):
+                state.selectableDateRange = range
+                if let range,
+                   !range.contains(Calendar.current.startOfDay(for: state.recordDate)) {
+                    state.recordDate = range.lowerBound
+                }
                 return .none
 
             case .backButtonTapped:
@@ -191,6 +211,33 @@ public struct FreeRecordFeature {
         formatter.locale = Locale(identifier: "en_US_POSIX")
         return formatter
     }()
+
+    private static func currentSolarTermSelectableRange(
+        solarTermRepository: SolarTermRepository
+    ) async -> ClosedRange<Date>? {
+        let calendar = Calendar.current
+        let today = calendar.startOfDay(for: Date.now)
+        let currentYear = SolarTermYear.current
+        var targetYears: [SolarTermYear] = [currentYear]
+        if let previousYear = currentYear.previous {
+            targetYears.append(previousYear)
+        }
+
+        for year in targetYears {
+            guard let solarTerms = try? await solarTermRepository.fetchSolarTerms(year),
+                  let currentSolarTerm = solarTerms.first(where: { $0.dateRange.contains(today) }),
+                  let lastSelectableDate = calendar.date(
+                    byAdding: .day,
+                    value: -1,
+                    to: currentSolarTerm.endDate
+                  )
+            else { continue }
+
+            return currentSolarTerm.startDate ... lastSelectableDate
+        }
+
+        return nil
+    }
 
     private static func recordAlert(from error: any Error) -> RecordAlert {
         guard let domainError = error as? DomainError,
