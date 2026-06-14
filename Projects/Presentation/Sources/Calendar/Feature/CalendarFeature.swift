@@ -22,6 +22,7 @@ public struct CalendarFeature {
         @Shared(.tabBarVisibility) var tabBarVisibility: Bool = true
 
         public var header: CalendarHeader?
+        public var isFloatingRecordButtonExpanded: Bool = true
         public var calendarState: PagingTableViewState<SolarTermGroup> = .init(pages: [])
         public var selectedDateId: SolarTermDate.ID?
         @Presents public var detail: CalendarDetailFeature.State?
@@ -42,6 +43,7 @@ public struct CalendarFeature {
     public enum Action: BindableAction {
         case onAppear
         case viewDidLoad
+        case scrollViewWillBeginDragging
         case headerBackButtonTapped
         case floatingRecordButtonTapped
         case dateCellTapped(dateId: SolarTermDate.ID, inset: CGFloat)
@@ -86,6 +88,12 @@ public struct CalendarFeature {
 
             case .onAppear:
                 return refreshAnchoredTermData(state)
+
+            case .scrollViewWillBeginDragging:
+                guard state.currentTermId != state.anchoredTermId
+                else { return .none }
+                state.isFloatingRecordButtonExpanded = false
+                return .none
 
             case .headerBackButtonTapped:
                 state.detail = nil

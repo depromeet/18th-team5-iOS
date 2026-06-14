@@ -15,7 +15,6 @@ struct CalendarView: View {
     @Bindable var store: StoreOf<CalendarFeature>
 
     @State var sheetHeight: CGFloat = .zero
-    @State var isFloatingRecordButtonExpanded: Bool = true
 
     var body: some View {
         GeometryReader { geo in
@@ -35,10 +34,7 @@ struct CalendarView: View {
                         case let .cellWillAppear(id):
                             store.send(.calendarTermWillAppear(id: id))
                         case .willBeginDragging:
-                            guard isFloatingRecordButtonExpanded else { return }
-                            withAnimation(.spring(response: 0.28, dampingFraction: 0.86)) {
-                                isFloatingRecordButtonExpanded = false
-                            }
+                            store.send(.scrollViewWillBeginDragging)
                         }
                     },
                     arguments: .init(
@@ -102,7 +98,6 @@ struct CalendarView: View {
         .sensoryFeedback(.impact(weight: .heavy), trigger: store.anchorHapticTrigger)
         .task { store.send(.viewDidLoad) }
         .onAppear {
-            isFloatingRecordButtonExpanded = true
             store.send(.onAppear)
         }
         .customAlert(store.scope(state: \.alert, action: \.alert))
@@ -124,14 +119,13 @@ private extension CalendarView {
                     .foregroundStyle(Color.monoWhite)
                     .frame(width: 24, height: 24)
 
-                if isFloatingRecordButtonExpanded {
+                if store.isFloatingRecordButtonExpanded {
                     Text("기록하기")
                         .font(.body1Semibold)
                         .foregroundStyle(Color.monoWhite)
-                        .transition(.move(edge: .trailing).combined(with: .opacity))
                 }
             }
-            .padding(.horizontal, isFloatingRecordButtonExpanded ? 20 : 16)
+            .padding(.horizontal, store.isFloatingRecordButtonExpanded ? 20 : 16)
             .frame(height: Constants.floatingButtonSize)
             .frame(minWidth: Constants.floatingButtonSize)
             .background {
