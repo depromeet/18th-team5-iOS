@@ -30,13 +30,13 @@ public struct CalendarRecordRepository: Sendable {
     /// 미션 기록 수정
     public var updateMissionCompletion: @Sendable (
         _ completionId: Int,
-        _ objectKey: String,
+        _ objectKey: String?,
         _ memo: String?
     ) async throws -> Void
     /// 자유 기록 수정
     public var updateFreeRecord: @Sendable (
         _ recordId: Int,
-        _ objectKey: String,
+        _ objectKey: String?,
         _ memo: String?
     ) async throws -> Void
 }
