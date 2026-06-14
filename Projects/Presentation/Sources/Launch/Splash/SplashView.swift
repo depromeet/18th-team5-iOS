@@ -30,5 +30,19 @@ public struct SplashView: View {
         }
         .loading(isLoading: store.isLoading)
         .onAppear { store.send(.onAppear) }
+        .customAlert(store.scope(state: \.alert, action: \.alert))
+    }
+}
+
+extension SplashFeature.Alert: AlertPresentable {
+    public var alertInfo: AlertInfo {
+        switch self {
+        case .error:
+            AlertInfo(
+                icon: .icWarning,
+                title: "문제가 발생했어요\nWiFi 또는 모바일 네트워크\n연결 상태를 확인해주세요",
+                buttonTitle: "확인"
+            )
+        }
     }
 }
