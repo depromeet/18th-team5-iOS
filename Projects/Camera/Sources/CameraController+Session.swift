@@ -109,6 +109,7 @@ extension CameraController {
                     state.sessionPhase = .stopping
                     state.currentPosition = .back
                     state.flashMode = .off
+                    state.exposureTargetBiasBase = 0
                     return true
                 }
 

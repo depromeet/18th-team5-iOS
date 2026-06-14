@@ -54,6 +54,7 @@ public final class CameraController: NSObject, @unchecked Sendable {
         var currentPosition: AVCaptureDevice.Position = .back
         var flashMode: AVCaptureDevice.FlashMode = .off
         var photoContinuation: CheckedContinuation<CapturedResult, Error>?
+        var exposureTargetBiasBase: Float = 0
     }
 
     let mutableState = OSAllocatedUnfairLock(initialState: MutableState())
