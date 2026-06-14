@@ -44,6 +44,7 @@ public struct HomeFeature {
     }
 
     @Dependency(\.homeRepository) var homeRepository
+    @Dependency(\.missionRepository) var missionRepository
 
     public init() {}
 
