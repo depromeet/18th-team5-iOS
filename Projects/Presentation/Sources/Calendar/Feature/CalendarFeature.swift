@@ -174,6 +174,8 @@ public struct CalendarFeature {
                             return newDate
                         }
                     }
+                case .refreshAnchoredTermData:
+                    return refreshAnchoredTermData(state)
                 }
                 return .none
 

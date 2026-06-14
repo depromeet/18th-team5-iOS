@@ -59,6 +59,7 @@ public struct CalendarDetailFeature {
             case showAlert(Alert)
             case dismissAlert
             case dismiss
+            case refreshAnchoredTermData
         }
 
         public enum AlertAction: Equatable {
@@ -171,6 +172,7 @@ public struct CalendarDetailFeature {
                         case .daily, .recommended, .selected:
                             try await calendarRecordRepository.deleteMissionCompletion(removedCard.id)
                         }
+                        await send(.delegate(.refreshAnchoredTermData))
                     } catch {
                         await send(.deleteCardFailed(card: removedCard, index: removedIndex))
                     }
