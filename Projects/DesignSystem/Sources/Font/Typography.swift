@@ -6,6 +6,8 @@
 //  Copyright © 2026 Orange. All rights reserved.
 //
 
+import UIKit
+
 public enum Typography: CaseIterable {
     case largeTitle1Bold
     case largeTitle2Bold
@@ -109,5 +111,11 @@ extension Typography {
         case .caption2Semibold: .semibold
         case .caption2Medium: .medium
         }
+    }
+}
+
+public extension Typography {
+    var uiFont: UIFont {
+        FontFamily.pretendard.uiFont(style.size, weight)
     }
 }
