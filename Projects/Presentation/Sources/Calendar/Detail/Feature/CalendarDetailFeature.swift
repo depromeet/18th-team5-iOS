@@ -157,7 +157,7 @@ public struct CalendarDetailFeature {
                 let currentDate = state.date
                 return .run { send in
                     if cardCount == 0 {
-                        let displayType = try await displayType(currentDate, 0)
+                        let displayType = try await displayType(currentDate)
                         await send(.updateDetailDisplayType(displayType))
                     }
 

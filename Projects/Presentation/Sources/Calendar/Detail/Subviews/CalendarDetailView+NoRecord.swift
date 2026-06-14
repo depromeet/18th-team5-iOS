@@ -65,6 +65,25 @@ extension CalendarDetailView {
             Spacer()
         }
     }
+
+    var futureTermRecordView: some View {
+        VStack {
+            VStack(spacing: 8) {
+                Text("아직 찾아오지 않은 절기예요\n다가오는 절기에서 만나요")
+                    .multilineTextAlignment(.center)
+                    .font(.headline2Medium)
+                    .foregroundStyle(Color.gray900)
+
+                Image.calendarFutureTermImage
+                    .resizable()
+                    .scaledToFit()
+            }
+            .padding(.horizontal, 27.5)
+            .padding(.top, 80)
+
+            Spacer()
+        }
+    }
 }
 
 #Preview {

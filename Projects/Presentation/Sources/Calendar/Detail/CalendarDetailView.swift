@@ -24,31 +24,38 @@ struct CalendarDetailView: View {
                 ) { screenSize = $0 }
 
             switch store.displayType {
-            case .cards:
-                VStack {
-                    CardStackView(
-                        topCardIndex: $store.frontCardIndex,
-                        items: store.dateRecordCards
-                    ) { cardIndex, orderIndex, item in
-                        cardView(
-                            cardIndex: cardIndex,
-                            orderIndex: orderIndex,
-                            card: item
-                        )
+            case .currentTerm:
+                if !store.dateRecordCards.isEmpty {
+                    VStack {
+                        CardStackView(
+                            topCardIndex: $store.frontCardIndex,
+                            items: store.dateRecordCards
+                        ) { cardIndex, orderIndex, item in
+                            cardView(
+                                cardIndex: cardIndex,
+                                orderIndex: orderIndex,
+                                card: item
+                            )
+                        }
+                        .padding(.top, 16)
+                        Spacer()
                     }
-                    .padding(.top, 16)
-                    Spacer()
-                }
-                .clipped()
-                .transition(.opacity)
+                    .clipped()
+                    .transition(.opacity)
 
-                bottomButtonContainer
-            case .emptyRecord:
-                currentTermNoRecordView {
-                    store.send(.createRecordButtonTapped)
+                    bottomButtonContainer
+                } else {
+                    currentTermNoRecordView {
+                        store.send(.createRecordButtonTapped)
+                    }
                 }
+
             case .passedTerm:
                 passedTermNoRecordView
+
+            case .futureTerm:
+                futureTermRecordView
+
             case .notDetermined:
                 EmptyView()
             }
