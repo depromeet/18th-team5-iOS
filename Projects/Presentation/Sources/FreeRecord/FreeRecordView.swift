@@ -70,7 +70,7 @@ public struct FreeRecordView: View {
                     isDateSelectionSheetPresented = false
                 }
             )
-            .presentationDetents([.height(420)])
+            .presentationDetents([.height(309)])
             .presentationDragIndicator(.hidden)
         }
     }
