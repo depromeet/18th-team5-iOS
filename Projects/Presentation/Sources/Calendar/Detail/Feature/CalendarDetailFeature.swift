@@ -57,6 +57,7 @@ public struct CalendarDetailFeature {
             case showAlert(Alert)
             case dismissAlert
             case dismiss
+            case editRecord(DateRecordCard, date: Date)
         }
 
         public enum AlertAction: Equatable {
@@ -92,9 +93,11 @@ public struct CalendarDetailFeature {
                 return fetchDateRecord(state)
 
             case .editRecordButtonTapped:
-                // TODO: 기능 구현 필요
-                state.toast = .init(title: "준비중입니다.", duration: 1.0, bottomInset: 108)
-                return .none
+                guard state.dateRecordCards.indices.contains(state.frontCardIndex) else {
+                    return .none
+                }
+                let card = state.dateRecordCards[state.frontCardIndex]
+                return .send(.delegate(.editRecord(card, date: state.date)))
 
             case .createRecordButtonTapped:
                 // TODO: 기능 구현 필요

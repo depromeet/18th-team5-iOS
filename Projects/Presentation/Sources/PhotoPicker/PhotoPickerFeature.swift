@@ -32,6 +32,7 @@ public struct PhotoPickerFeature {
         case assetsLoaded([PhotoAsset], isLimited: Bool)
         case libraryDidChange
         case photoTapped(String)
+        case settingsTapped
         case manageLimitedTapped
         case confirmTapped
         case closeTapped
@@ -72,7 +73,7 @@ public struct PhotoPickerFeature {
             case .libraryDidChange:
                 return .run { send in
                     let assets = await photoLibraryClient.fetchAssets()
-                    let status = (try? await picturePermissionClient.status(.photoLibrary)) ?? .denied
+                    let status = await (try? picturePermissionClient.status(.photoLibrary)) ?? .denied
                     await send(.assetsLoaded(assets, isLimited: status == .limited))
                 }
 
@@ -88,6 +89,11 @@ public struct PhotoPickerFeature {
             case let .photoTapped(id):
                 state.selectedAssetId = (state.selectedAssetId == id) ? nil : id
                 return .none
+
+            case .settingsTapped:
+                return .run { _ in
+                    await picturePermissionClient.openSettings()
+                }
 
             case .manageLimitedTapped:
                 return .send(.delegate(.manageLimitedRequested))

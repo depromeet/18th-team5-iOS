@@ -26,7 +26,9 @@ public struct CalendarFeature {
         public var selectedDateId: SolarTermDate.ID?
         @Presents public var detail: CalendarDetailFeature.State?
         public var alert: CustomAlertFeature<Alert>.State?
-        public var isDetailViewPresenting: Bool { detail != nil }
+        public var isDetailViewPresenting: Bool {
+            detail != nil
+        }
 
         var termRecordData: [String: CalendarTermRecordData] = [:]
         var isAppeared: Bool = false
@@ -70,6 +72,7 @@ public struct CalendarFeature {
 
     public enum Delegate {
         case navigateToFreeRecord
+        case navigateToEditRecord(DateRecordCard, date: Date)
     }
 
     @Dependency(\.logger) var logger
@@ -174,6 +177,18 @@ public struct CalendarFeature {
                             return newDate
                         }
                     }
+                case let .editRecord(card, date):
+                    state.detail = nil
+                    state.calendarState.scrollEnabled = true
+                    if let id = state.selectedDateId {
+                        state.selectedDateId = nil
+                        editDateCell(&state, id: id) {
+                            var newDate = $0
+                            newDate.isSelected = false
+                            return newDate
+                        }
+                    }
+                    return .send(.delegate(.navigateToEditRecord(card, date: date)))
                 }
                 return .none
 

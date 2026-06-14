@@ -27,6 +27,18 @@ public struct CalendarRecordRepository: Sendable {
         _ objectKey: String,
         _ memo: String?
     ) async throws -> Int
+    /// 미션 기록 수정
+    public var updateMissionCompletion: @Sendable (
+        _ completionId: Int,
+        _ objectKey: String?,
+        _ memo: String?
+    ) async throws -> Void
+    /// 자유 기록 수정
+    public var updateFreeRecord: @Sendable (
+        _ recordId: Int,
+        _ objectKey: String?,
+        _ memo: String?
+    ) async throws -> Void
 }
 
 extension CalendarRecordRepository: TestDependencyKey {
@@ -59,6 +71,8 @@ public extension CalendarRecordRepository {
         fetchDateRecords: { _ in [] },
         deleteMissionCompletion: { _ in },
         deleteFreeRecord: { _ in },
-        completeFreeRecord: { _, _, _ in 0 }
+        completeFreeRecord: { _, _, _ in 0 },
+        updateMissionCompletion: { _, _, _ in },
+        updateFreeRecord: { _, _, _ in }
     )
 }
