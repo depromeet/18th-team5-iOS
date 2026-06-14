@@ -99,7 +99,7 @@ struct CalendarView: View {
                 }
             }
         }
-        .sensoryFeedback(.impact(weight: .light), trigger: store.anchorHapticTrigger)
+        .sensoryFeedback(.impact(weight: .heavy), trigger: store.anchorHapticTrigger)
         .task { store.send(.viewDidLoad) }
         .onAppear {
             isFloatingRecordButtonExpanded = true
