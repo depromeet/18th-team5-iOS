@@ -85,21 +85,3 @@ extension CalendarDetailView {
         }
     }
 }
-
-#Preview {
-    CalendarDetailView(
-        store: .init(initialState: .init(date: .now)) {
-            CalendarDetailFeature()
-        }
-    )
-    .currentTermNoRecordView(onRecordButtonTapped: {})
-}
-
-#Preview {
-    CalendarDetailView(
-        store: .init(initialState: .init(date: .now)) {
-            CalendarDetailFeature()
-        }
-    )
-    .passedTermNoRecordView
-}

@@ -25,28 +25,32 @@ struct CalendarDetailView: View {
 
             switch store.displayType {
             case .currentTerm:
-                if !store.dateRecordCards.isEmpty {
-                    VStack {
-                        CardStackView(
-                            topCardIndex: $store.frontCardIndex,
-                            items: store.dateRecordCards
-                        ) { cardIndex, orderIndex, item in
-                            cardView(
-                                cardIndex: cardIndex,
-                                orderIndex: orderIndex,
-                                card: item
-                            )
+                if let cards = store.dateRecordCards {
+                    if !cards.isEmpty {
+                        VStack {
+                            CardStackView(
+                                topCardIndex: $store.frontCardIndex,
+                                items: cards
+                            ) { cardIndex, orderIndex, item in
+                                cardView(
+                                    term: store.term,
+                                    cardIndex: cardIndex,
+                                    orderIndex: orderIndex,
+                                    card: item,
+                                    totalCount: cards.count
+                                )
+                            }
+                            .padding(.top, 16)
+                            Spacer()
                         }
-                        .padding(.top, 16)
-                        Spacer()
-                    }
-                    .clipped()
-                    .transition(.opacity)
+                        .clipped()
+                        .transition(.opacity)
 
-                    bottomButtonContainer
-                } else {
-                    currentTermNoRecordView {
-                        store.send(.createRecordButtonTapped)
+                        bottomButtonContainer
+                    } else {
+                        currentTermNoRecordView {
+                            store.send(.createRecordButtonTapped)
+                        }
                     }
                 }
 

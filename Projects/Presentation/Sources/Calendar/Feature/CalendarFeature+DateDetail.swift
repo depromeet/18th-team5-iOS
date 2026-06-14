@@ -22,10 +22,14 @@ extension CalendarFeature {
 
         // #1. 디테일 화면 데이터
         guard let dateModel = findDate(state.calendarState.pages, dateId),
-              let date = date(from: dateModel)
+              let date = date(from: dateModel),
+              let term = findTermGroup(
+                  pages: state.calendarState.pages,
+                  dateId: dateId
+              )?.solarTermInfo.term
         else { return .none }
 
-        state.detail = .init(date: date)
+        state.detail = .init(date: date, term: term)
         state.calendarState.scrollEnabled = false
 
         // #2. 이전 선택 셀 초기화

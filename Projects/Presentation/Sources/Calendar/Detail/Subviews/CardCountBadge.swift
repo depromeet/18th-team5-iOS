@@ -23,6 +23,7 @@ struct CardCountBadge: View {
             .background(.ultraThinMaterial)
             .background(Color.blackAlpha300.opacity(0.12))
             .clipShape(Capsule())
+            .blur(radius: 10)
     }
 }
 
