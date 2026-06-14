@@ -12,7 +12,6 @@ import SwiftUI
 
 struct CalendarDateCell: View {
     enum Constants {
-        static let cellHeight: CGFloat = 90
         static let thumbnailSize: CGFloat = 32
     }
 
@@ -44,7 +43,7 @@ struct CalendarDateCell: View {
             .padding(.top, 20)
             .onTapGesture(perform: onTap)
         }
-        .frame(height: Constants.cellHeight)
+        .frame(height: CalendarAnchorMetrics.cellHeight)
     }
 
     var monthView: some View {

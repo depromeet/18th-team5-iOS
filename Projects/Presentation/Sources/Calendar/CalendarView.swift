@@ -55,7 +55,7 @@ struct CalendarView: View {
                     for: CGFloat.self,
                     of: { $0.size.height - $0.safeAreaInsets.bottom }
                 ) { height in
-                    let cellHeight = CalendarDateCell.Constants.cellHeight
+                    let cellHeight = CalendarAnchorMetrics.cellHeight
                     sheetHeight = height - cellHeight - 12
                 }
                 .ignoresSafeArea(.container, edges: [.bottom])
@@ -190,7 +190,7 @@ extension CalendarView {
         let header = Constants.termSectionHeaderHeight
 
         let weekCount = term.cells.count
-        let weekSectionHeight = CalendarDateCell.Constants.cellHeight
+        let weekSectionHeight = CalendarAnchorMetrics.cellHeight
         let weekSpacing = Constants.weekSectionVerticalSpacing * CGFloat(weekCount - 1)
         let calendar = weekSectionHeight * CGFloat(weekCount) + weekSpacing
 
@@ -275,10 +275,7 @@ extension CalendarView {
     }
 
     func dateCellAnchorPoint(weekIndex: Int) -> CGFloat {
-        let weekHeight = CalendarDateCell.Constants.cellHeight
-        let weekSpacing = Constants.weekSectionVerticalSpacing
-        let weekStartY = (weekHeight + weekSpacing) * CGFloat(weekIndex)
-        return Constants.termSectionHeaderHeight + weekStartY
+        CalendarAnchorMetrics.dateCellAnchorInset(weekIndex: weekIndex)
     }
 }
 
@@ -293,9 +290,9 @@ private extension CalendarView {
 
 private enum Constants {
     static let calendarHorizontalSpacing: CGFloat = 19.5
-    static let termSectionHeaderHeight: CGFloat = 56
+    static let termSectionHeaderHeight: CGFloat = CalendarAnchorMetrics.termSectionHeaderHeight
     static let termSectionBottomPadding: CGFloat = 12
-    static let weekSectionVerticalSpacing: CGFloat = 4
+    static let weekSectionVerticalSpacing: CGFloat = CalendarAnchorMetrics.weekSectionVerticalSpacing
     static let tableBottomPadding: CGFloat = 300
 
     static let dateCellHorizontalSpacing: CGFloat = 7
@@ -305,7 +302,7 @@ private enum Constants {
     static let floatingButtonBottomPadding: CGFloat = 84
 
     static var detailViewTopPadding: CGFloat {
-        CalendarDateCell.Constants.cellHeight + 12
+        CalendarAnchorMetrics.cellHeight + 12
     }
 }
 
