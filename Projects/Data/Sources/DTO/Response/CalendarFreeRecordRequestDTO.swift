@@ -14,6 +14,13 @@ struct CalendarFreeRecordRequestDTO: Encodable {
     let memo: String?
 }
 
+// MARK: - 기록 수정 요청
+
+struct CalendarRecordUpdateRequestDTO: Encodable {
+    let objectKey: String
+    let memo: String?
+}
+
 // MARK: - 자유 기록 추가 응답
 
 struct CalendarFreeRecordResponseDTO: Decodable {
