@@ -21,6 +21,7 @@ public struct NotificationSettingsFeature {
         var authorizationStatus: NotificationAuthorizationStatus?
         var isLoading: Bool = false
         var settings: [NotificationType: Bool]?
+        var alert: CustomAlertFeature<Alert>.State?
 
         public init(_ season: Season) {
             self.season = season
@@ -42,7 +43,13 @@ public struct NotificationSettingsFeature {
         case backButtonTapped
         case toggleChanged(NotificationType, Bool)
         case binding(BindingAction<State>)
+        case showAlert(Alert)
+        case alert(CustomAlertFeature<Alert>.Action)
         case delegate(Delegate)
+    }
+
+    public enum Alert {
+        case fetchFailed
     }
 
     public enum Delegate {
@@ -80,9 +87,27 @@ public struct NotificationSettingsFeature {
                 return .run { [newValue] send in
                     await setNotificationSesttings(oldValue, newValue, send)
                 }
+            case let .showAlert(alert):
+                state.isLoading = false
+                state.alert = .init(.fetchFailed)
+                return .none
+            case let .alert(.primaryButtonTapped(alert)):
+                switch alert {
+                case .fetchFailed:
+                    state.alert = nil
+                    return .send(.onAppear)
+                }
+            case let .alert(.secondaryButtonTapped(alert)):
+                switch alert {
+                case .fetchFailed:
+                    return .send(.backButtonTapped)
+                }
             case .binding: return .none
             case .delegate: return .none
             }
+        }
+        .ifLet(\.alert, action: \.alert) {
+            CustomAlertFeature()
         }
     }
 }
@@ -91,7 +116,12 @@ private extension NotificationSettingsFeature {
     func fetchAll(_ send: Send<Action>) async {
         async let authorizationTask: Void = fetchAuthorizationStatus(send)
         async let settingsTask: Void = fetchNotificationSettings(send)
-        _ = await (authorizationTask, settingsTask)
+
+        do {
+            _ = try await (authorizationTask, settingsTask)
+        } catch {
+            await send(.showAlert(.fetchFailed))
+        }
     }
 
     func fetchAuthorizationStatus(_ send: Send<Action>) async {
@@ -99,13 +129,9 @@ private extension NotificationSettingsFeature {
         await send(.set(\.authorizationStatus, status))
     }
 
-    func fetchNotificationSettings(_ send: Send<Action>) async {
-        do {
-            let settings = try await notificationRepository.fetchNotificationSettings()
-            await send(.set(\.settings, settings))
-        } catch {
-            // TODO: 추후 구현 예정 - @정원
-        }
+    func fetchNotificationSettings(_ send: Send<Action>) async throws {
+        let settings = try await notificationRepository.fetchNotificationSettings()
+        await send(.set(\.settings, settings))
     }
 
     func setNotificationSesttings(

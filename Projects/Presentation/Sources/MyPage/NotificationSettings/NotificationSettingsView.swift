@@ -34,6 +34,7 @@ public struct NotificationSettingsView: View {
         .loading(isLoading: store.isLoading)
         .animation(.easeInOut(duration: 0.3), value: store.isAuthorized)
         .onAppear { store.send(.onAppear) }
+        .customAlert(store.scope(state: \.alert, action: \.alert))
         .onChange(of: scenePhase) { _, scenePhase in
             guard scenePhase == .active else { return }
             store.send(.appDidBecomeActive)
@@ -99,6 +100,20 @@ private extension NotificationType {
         case .solarTermStart: "절기 시작"
         case .solarTermEnd: "절기 마무리"
         case .dailyMission: "오늘의 미션"
+        }
+    }
+}
+
+extension NotificationSettingsFeature.Alert: AlertPresentable {
+    public var alertInfo: AlertInfo {
+        switch self {
+        case .fetchFailed:
+            AlertInfo(
+                icon: .icWarning,
+                title: "알림 설정 정보를 불러오지 못했어요.\n 다시 시도해 주세요.",
+                primaryButtonTitle: "새로고침",
+                secondaryButtonTitle: "닫기"
+            )
         }
     }
 }
