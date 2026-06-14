@@ -95,12 +95,12 @@ public struct CalendarDetailFeature {
                 return fetchDateRecord(state)
 
             case .editRecordButtonTapped:
-                // TODO: 기능 구현 필요
+                // TODO: 라우팅 연결 필요 -@진준호
                 state.toast = .init(title: "준비중입니다.", duration: 1.0, bottomInset: 108)
                 return .none
 
             case .createRecordButtonTapped:
-                // TODO: 기능 구현 필요
+                // TODO: 라우팅 연결 필요 -@진준호
                 state.toast = .init(title: "준비중입니다.", duration: 1.0, bottomInset: 108)
                 return .none
 
