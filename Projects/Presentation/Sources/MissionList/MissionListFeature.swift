@@ -18,6 +18,7 @@ public struct MissionListFeature {
     public enum Alert: Equatable {
         case missionUnavailable
         case fetchFailed
+        case searchFailed
     }
 
     @ObservableState
@@ -40,11 +41,6 @@ public struct MissionListFeature {
         var pendingOpenFromHome: Bool = false
 
         public init() {}
-
-        var isSearchMissionButtonEnabled: Bool {
-            // TODO: 추후 로직 구현
-            true
-        }
 
         var season: Season? {
             solarTerm?.season
@@ -237,7 +233,8 @@ private extension MissionListFeature {
             let mission = try await missionRepository.searchMission(attribute)
             await send(.searchResultFetched(mission))
         } catch {
-            // TODO: 에러처리 - 정원
+            await send(.set(\.isLoading, false))
+            await send(.delegate(.showAlert(.searchFailed)))
         }
     }
 

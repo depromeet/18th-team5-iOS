@@ -114,7 +114,6 @@ private extension MissionListView {
         SearchMissionButton {
             store.send(.searchMissionButtonTapped)
         }
-        .disabled(!store.isSearchMissionButtonEnabled)
     }
 
     var tooltip: some View {
@@ -222,6 +221,12 @@ extension MissionListFeature.Alert: AlertPresentable {
                 title: "미션을 불러오지 못했어요.\n 다시 시도해 주세요.",
                 primaryButtonTitle: "새로고침",
                 secondaryButtonTitle: "닫기"
+            )
+        case .searchFailed:
+            AlertInfo(
+                icon: .icWarning,
+                title: "미션을 찾는 도중 문제가 발생했어요.",
+                buttonTitle: "확인"
             )
         }
     }
