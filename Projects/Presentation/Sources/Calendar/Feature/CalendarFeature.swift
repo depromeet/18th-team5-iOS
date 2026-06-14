@@ -27,7 +27,9 @@ public struct CalendarFeature {
         public var selectedDateId: SolarTermDate.ID?
         @Presents public var detail: CalendarDetailFeature.State?
         public var alert: CustomAlertFeature<Alert>.State?
-        public var isDetailViewPresenting: Bool { detail != nil }
+        public var isDetailViewPresenting: Bool {
+            detail != nil
+        }
 
         var termRecordData: [String: CalendarTermRecordData] = [:]
         var isAppeared: Bool = false
@@ -38,6 +40,8 @@ public struct CalendarFeature {
         var currentTermId: SolarTermGroup.ID?
         var currentYear: SolarTermYear = .current
         var presentMoveToCurrentTermButton: MoveToCurrentTermButtonType?
+        /// 외부에서 전달됐지만 아직 pages가 준비되지 않아 열지 못한 detail 요청. 로드 완료 시 소비된다.
+        var pendingDetailDate: Date?
     }
 
     public enum Action: BindableAction {
@@ -57,8 +61,12 @@ public struct CalendarFeature {
         case alert(CustomAlertFeature<Alert>.Action)
         case delegate(Delegate)
 
+        /// 외부(부모 Reducer)에서 특정 Date의 detail 진입을 요청한다.
+        case openDetail(date: Date)
+
         // Internal actions
         case yearPagesLayoutCompleted
+        case checkPendingDetailRequest
         case calendarDataRequest(TermFetchRequest)
         case updateCurrentTermId(SolarTermGroup.ID)
         case updateCalendarPages([Page<SolarTermGroup>])
@@ -114,6 +122,10 @@ public struct CalendarFeature {
             case .detailViewDisappeared:
                 state.$tabBarVisibility.withLock { $0 = true }
                 return .none
+
+            case .checkPendingDetailRequest:
+                // 헬퍼가 pendingDetailDate nil/매핑 불가를 자체 가드하므로 그대로 위임한다.
+                return consumePendingDetailDateIfPossible(&state)
 
             case let .calendarReachToEnd(direction):
                 return calendarPagingRequest(&state, direction: direction)
@@ -218,6 +230,11 @@ public struct CalendarFeature {
                 state.$tabBarVisibility.withLock { $0 = false }
                 return dateCellTapped(&state, dateId: dateId, inset: inset)
 
+            case let .openDetail(date):
+                state.pendingDetailDate = date
+                // pages가 이미 있으면 즉시, 아니면 보관했다가 로드 완료 시 소비된다.
+                return consumePendingDetailDateIfPossible(&state)
+
             case let .updateCurrentTermId(id):
                 state.currentTermId = id
                 return .none
@@ -236,6 +253,8 @@ public struct CalendarFeature {
 
             case let .updateCalendarPages(pages):
                 state.calendarState.pages = pages
+                // pending detail 소비는 .checkPendingDetailRequest가 담당한다.
+                // 여기서 소비하면 이후 currentTerm 앵커 요청이 pending 스크롤을 덮어쓰므로 분리한다.
                 return .none
 
             case .yearPagesLayoutCompleted:
