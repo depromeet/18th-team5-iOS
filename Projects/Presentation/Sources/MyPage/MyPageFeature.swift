@@ -142,6 +142,10 @@ public struct MyPageFeature {
                     return .send(.delegate(.syncNotificationSettings(settings)))
                 default: return .none
                 }
+            case .path(.presented(.privacyPolicy(.delegate(.refresh)))):
+                return .run { [state] send in
+                    await fetchPrivacyPolicy(state, send)
+                }
             case .deleteButtonTapped:
                 state.alert = .init(.delete)
                 return .none
