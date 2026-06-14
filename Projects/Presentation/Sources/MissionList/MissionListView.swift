@@ -212,14 +212,16 @@ extension MissionListFeature.Alert: AlertPresentable {
     public var alertInfo: AlertInfo {
         switch self {
         case .missionUnavailable:
-            let title = """
-            오늘의 카드 미션을 모두 기록했어요
-            다른 제철 일상을 기록해볼까요?
-            """
-
-            return AlertInfo(
-                title: title,
+            AlertInfo(
+                title: "오늘의 카드 미션을 모두 기록했어요\n다른 제철 일상을 기록해볼까요?",
                 buttonTitle: "확인"
+            )
+        case .fetchFailed:
+            AlertInfo(
+                icon: .icWarning,
+                title: "미션을 불러오지 못했어요.\n 다시 시도해 주세요.",
+                primaryButtonTitle: "새로고침",
+                secondaryButtonTitle: "닫기"
             )
         }
     }

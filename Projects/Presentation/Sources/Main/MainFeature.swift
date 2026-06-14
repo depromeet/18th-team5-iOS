@@ -162,7 +162,16 @@ public struct MainFeature {
                 state.path.append(.freeRecord(.init(recordDate: Date.now)))
                 return .none
 
-            case .alert(.primaryButtonTapped):
+            case let .alert(.primaryButtonTapped(alert)):
+                state.alert = nil
+                switch alert {
+                case .mission(.missionUnavailable):
+                    return .none
+                case .mission(.fetchFailed):
+                    return .send(.mission(.onAppear))
+                }
+
+            case .alert(.secondaryButtonTapped):
                 state.alert = nil
                 return .none
 
