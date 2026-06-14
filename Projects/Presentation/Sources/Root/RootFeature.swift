@@ -33,6 +33,7 @@ public struct RootFeature {
 
     public enum Action {
         case onAppear
+        case splashTimeout
         case appDidBecomeActive
         case path(Path.Action)
         case launchConfigLoaded(Result<LaunchConfig, Error>)
@@ -66,6 +67,23 @@ public struct RootFeature {
                 guard !state.hasFetchedConfig else { return .none }
                 state.hasFetchedConfig = true
                 return loadLaunchConfig()
+
+            case .path(.splash(.onAppear)):
+                return .run { send in
+                    try await Task.sleep(for: .seconds(8))
+                    await send(.splashTimeout)
+                }
+
+            case .splashTimeout:
+                guard case .splash = state.path else { return .none }
+                return .send(.path(.splash(.showAlert)))
+
+            case .path(.splash(.delegate(.refresh))):
+                state = .init()
+                return .concatenate([
+                    .send(.onAppear),
+                    .send(.path(.splash(.onAppear)))
+                ])
 
             case .appDidBecomeActive:
                 return .run { [state] send in

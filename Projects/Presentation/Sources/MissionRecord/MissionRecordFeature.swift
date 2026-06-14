@@ -159,15 +159,14 @@ public struct MissionRecordFeature {
 
                 return .run { send in
                     do {
-                        let objectKey: String?
-                        if let imageData {
-                            objectKey = try await imageUploadRepository.uploadImage(
+                        let objectKey: String? = if let imageData {
+                            try await imageUploadRepository.uploadImage(
                                 imageData,
                                 "\(UUID().uuidString).jpg",
                                 "image/jpeg"
                             )
                         } else {
-                            objectKey = nil
+                            nil
                         }
 
                         let completionId: Int

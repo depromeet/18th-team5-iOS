@@ -35,6 +35,7 @@ public struct PrivacyPolicyView: View {
         }
         .background(Color.white)
         .loading(isLoading: store.isLoading)
+        .customAlert(store.scope(state: \.alert, action: \.alert))
     }
 }
 
@@ -54,6 +55,20 @@ private extension PrivacyPolicyView {
                 .foregroundStyle(Color.gray700)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .multilineTextAlignment(.leading)
+        }
+    }
+}
+
+extension PrivacyPolicyFeature.Alert: AlertPresentable {
+    public var alertInfo: AlertInfo {
+        switch self {
+        case .fetchFailed:
+            AlertInfo(
+                icon: .icWarning,
+                title: "개인정보처리방침을 불러오지 못했어요.\n 다시 시도해 주세요.",
+                primaryButtonTitle: "새로고침",
+                secondaryButtonTitle: "닫기"
+            )
         }
     }
 }

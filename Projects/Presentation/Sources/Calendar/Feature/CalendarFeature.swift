@@ -26,7 +26,9 @@ public struct CalendarFeature {
         public var selectedDateId: SolarTermDate.ID?
         @Presents public var detail: CalendarDetailFeature.State?
         public var alert: CustomAlertFeature<Alert>.State?
-        public var isDetailViewPresenting: Bool { detail != nil }
+        public var isDetailViewPresenting: Bool {
+            detail != nil
+        }
 
         var termRecordData: [String: CalendarTermRecordData] = [:]
         var isAppeared: Bool = false

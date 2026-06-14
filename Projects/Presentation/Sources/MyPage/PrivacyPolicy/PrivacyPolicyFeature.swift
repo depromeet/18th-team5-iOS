@@ -17,6 +17,7 @@ public struct PrivacyPolicyFeature {
     public struct State: Equatable {
         var privacyPolicies: [DocumentInfo]?
         var isLoading: Bool
+        var alert: CustomAlertFeature<Alert>.State?
 
         public init(_ privacyPolicies: [DocumentInfo]?) {
             self.privacyPolicies = privacyPolicies
@@ -28,6 +29,16 @@ public struct PrivacyPolicyFeature {
         case backButtonTapped
         case privacyPolicyFetched([DocumentInfo])
         case showAlert
+        case alert(CustomAlertFeature<Alert>.Action)
+        case delegate(Delegate)
+    }
+
+    public enum Alert {
+        case fetchFailed
+    }
+
+    public enum Delegate {
+        case refresh
     }
 
     public init() {}
@@ -46,9 +57,20 @@ public struct PrivacyPolicyFeature {
                     return .none
                 }
             case .showAlert:
-                // TODO: Alert처리 - @정원
+                state.isLoading = false
+                state.alert = .init(.fetchFailed)
                 return .none
+            case .alert(.primaryButtonTapped):
+                state.alert = nil
+                state.isLoading = true
+                return .send(.delegate(.refresh))
+            case .alert(.secondaryButtonTapped):
+                return .send(.backButtonTapped)
+            case .delegate: return .none
             }
+        }
+        .ifLet(\.alert, action: \.alert) {
+            CustomAlertFeature()
         }
     }
 }

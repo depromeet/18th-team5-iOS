@@ -73,7 +73,7 @@ public struct PhotoPickerFeature {
             case .libraryDidChange:
                 return .run { send in
                     let assets = await photoLibraryClient.fetchAssets()
-                    let status = (try? await picturePermissionClient.status(.photoLibrary)) ?? .denied
+                    let status = await (try? picturePermissionClient.status(.photoLibrary)) ?? .denied
                     await send(.assetsLoaded(assets, isLimited: status == .limited))
                 }
 

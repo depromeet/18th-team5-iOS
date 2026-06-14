@@ -99,7 +99,7 @@ private extension RecordPhotoView {
         }
     }
 
-    func imageContainer<Content: View>(@ViewBuilder content: () -> Content) -> some View {
+    func imageContainer(@ViewBuilder content: () -> some View) -> some View {
         Color.clear
             .overlay {
                 content()

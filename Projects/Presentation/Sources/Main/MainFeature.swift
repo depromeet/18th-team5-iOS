@@ -183,7 +183,15 @@ public struct MainFeature {
                 }
                 return .none
 
-            case .alert(.primaryButtonTapped):
+            case let .alert(.primaryButtonTapped(alert)):
+                state.alert = nil
+                switch alert {
+                case .mission(.fetchFailed):
+                    return .send(.mission(.onAppear))
+                default: return .none
+                }
+
+            case .alert(.secondaryButtonTapped):
                 state.alert = nil
                 return .none
 

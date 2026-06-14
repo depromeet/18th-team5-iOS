@@ -121,7 +121,7 @@ extension MyPageFeature.Alert: AlertPresentable {
     public var alertInfo: AlertInfo {
         switch self {
         case .delete:
-            .init(
+            AlertInfo(
                 icon: .icWarning,
                 title: """
                 내 정보를 초기화할까요?
@@ -129,6 +129,15 @@ extension MyPageFeature.Alert: AlertPresentable {
                 """,
                 primaryButtonTitle: "삭제하기",
                 secondaryButtonTitle: "닫기"
+            )
+        case .deleteFailed:
+            AlertInfo(
+                icon: .icWarning,
+                title: """
+                정보를 초기화하지 못했어요.
+                다시 시도해 주세요.
+                """,
+                buttonTitle: "확인"
             )
         }
     }

@@ -150,7 +150,7 @@ private extension PhotoPickerView {
                 .foregroundStyle(Color.gray700)
 
             Spacer()
-            
+
             Button {
                 store.send(.settingsTapped)
             } label: {
