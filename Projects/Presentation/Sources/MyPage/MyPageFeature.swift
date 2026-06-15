@@ -231,23 +231,13 @@ private extension MyPageFeature {
     func fetchPrivacyPolicy(_ state: State, _ send: Send<Action>) async {
         if state.privacyPolicies?.isEmpty == false { return }
         let policies = try? await myPageRepository.fetchPrivacyPolicy()
-
-        if [true, false].randomElement()! {
-            await send(.privacyPolicyFetched(policies ?? []))
-        } else {
-            await send(.privacyPolicyFetched([]))
-        }
+        await send(.privacyPolicyFetched(policies ?? []))
     }
 
     func fetchTermsOfService(_ state: State, _ send: Send<Action>) async {
         if state.termsOfService?.isEmpty == false { return }
         let terms = try? await myPageRepository.fetchTermsOfService()
-
-        if [true, false].randomElement()! {
-            await send(.termsOfServiceFetched(terms ?? []))
-        } else {
-            await send(.termsOfServiceFetched([]))
-        }
+        await send(.termsOfServiceFetched(terms ?? []))
     }
 
     func fetchUserInfo(_ send: Send<Action>) async {
