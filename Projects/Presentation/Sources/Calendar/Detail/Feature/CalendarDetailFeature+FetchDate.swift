@@ -49,9 +49,10 @@ extension CalendarDetailFeature {
 
         if currentTerm == detailTerm {
             let calendar = Calendar.current
-            let tomorrowMidnight = calendar.startOfDay(
-                for: calendar.date(byAdding: .day, value: 1, to: nowDate)!
-            )
+            guard let tomorrow = calendar.date(byAdding: .day, value: 1, to: nowDate) else {
+                return .currentTermUpToToday
+            }
+            let tomorrowMidnight = calendar.startOfDay(for: tomorrow)
             return currentDate < tomorrowMidnight ? .currentTermUpToToday : .currentTermAfterToday
         }
 
