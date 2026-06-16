@@ -66,6 +66,25 @@ extension CalendarDetailView {
         }
     }
 
+    var futureDayNoRecordViewInCurrentTerm: some View {
+        VStack {
+            VStack(spacing: 8) {
+                Text("아직 찾아오지 않은 날이에요\n새로운 제철 순간을 조금만 기다려주세요")
+                    .multilineTextAlignment(.center)
+                    .font(.headline2Medium)
+                    .foregroundStyle(Color.gray900)
+
+                Image.calendarNoRecordPassedTermImage
+                    .resizable()
+                    .scaledToFit()
+            }
+            .padding(.horizontal, 27.5)
+            .padding(.top, 80)
+
+            Spacer()
+        }
+    }
+
     var futureTermRecordView: some View {
         VStack {
             VStack(spacing: 8) {

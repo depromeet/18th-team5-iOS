@@ -19,7 +19,9 @@ extension CalendarDetailFeature {
                     let displayType = try await displayType(currentDate)
                     await send(.updateDetailDisplayType(displayType))
 
-                    guard displayType != .futureTerm else {
+                    guard displayType != .futureTerm,
+                          displayType != .currentTermAfterToday else {
+                        await send(.updateRecordCards([]))
                         await send(.updateLoadingState(false))
                         return
                     }
@@ -37,8 +39,9 @@ extension CalendarDetailFeature {
 
     func displayType(_ currentDate: Date) async throws -> CardDetailDisplayType {
         let terms = try await solarTermRepository.fetchSolarTerms(.current)
+        let nowDate: Date = .now
         let currentTerm = terms.first { info in
-            (info.startDate ..< info.endDate).contains(.now)
+            (info.startDate ..< info.endDate).contains(nowDate)
         }
         let detailTerm = terms.first { info in
             (info.startDate ..< info.endDate).contains(currentDate)
@@ -47,7 +50,12 @@ extension CalendarDetailFeature {
         guard let currentTerm, let detailTerm else { return .notDetermined }
 
         if currentTerm == detailTerm {
-            return .currentTerm
+            let calendar = Calendar.current
+            guard let tomorrow = calendar.date(byAdding: .day, value: 1, to: nowDate) else {
+                return .currentTermUpToToday
+            }
+            let tomorrowMidnight = calendar.startOfDay(for: tomorrow)
+            return currentDate < tomorrowMidnight ? .currentTermUpToToday : .currentTermAfterToday
         }
 
         if currentTerm.startDate < detailTerm.startDate {

@@ -37,36 +37,36 @@ struct RecordCardContentView: View, Equatable {
         ZStack {
             cardBackground
 
-            VStack {
+            VStack(spacing: .zero) {
                 cardImageView(card.imageURL)
                     .aspectRatio(1.0, contentMode: .fit)
+                    .padding(.top, 48)
                     .padding(.horizontal, 48)
-                    .padding(.top, 43.5)
 
-                Spacer()
-            }
+                VStack(spacing: 12) {
+                    if card.cardType == .free {
+                        tagContainer
+                    } else if let title = card.missionTitle, !title.isEmpty {
+                        Text(title)
+                            .font(.headline1Semibold)
+                            .foregroundStyle(.white)
+                    }
 
-            VStack(spacing: 12) {
-                Spacer()
-
-                if card.cardType == .free {
-                    tagContainer
-                } else {
-                    Text(card.missionTitle ?? "-")
-                        .font(.headline1Semibold)
-                        .foregroundStyle(.white)
+                    if let memo = card.memo, !memo.isEmpty {
+                        Text(memo)
+                            .font(.body2Medium)
+                            .multilineTextAlignment(.center)
+                            .truncationMode(.tail)
+                            .foregroundStyle(.white)
+                            .underline(true, pattern: .solid, color: .white)
+                            .frame(minHeight: 52, alignment: .top)
+                    }
                 }
+                .padding(.vertical, 20)
+                .padding(.horizontal, 16)
 
-                Text(card.memo ?? "-")
-                    .font(.body2Medium)
-                    .multilineTextAlignment(.center)
-                    .truncationMode(.tail)
-                    .foregroundStyle(.white)
-                    .underline(true, pattern: .solid, color: .white)
-                    .frame(minHeight: 52, alignment: .top)
+                Spacer(minLength: 0)
             }
-            .padding(.horizontal, 16)
-            .padding(.bottom, 20)
 
             cardToolbarView
         }
@@ -151,7 +151,9 @@ private extension RecordCardContentView {
     var cardToolbarView: some View {
         VStack(spacing: 12) {
             HStack {
-                CardCountBadge(current: cardIndex + 1, total: totalCount)
+                if totalCount > 1 {
+                    CardCountBadge(current: cardIndex + 1, total: totalCount)
+                }
 
                 Spacer()
 
