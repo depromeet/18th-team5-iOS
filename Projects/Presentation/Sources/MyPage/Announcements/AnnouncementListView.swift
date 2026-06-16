@@ -31,6 +31,7 @@ public struct AnnouncementListView: View {
         .navigationBar(title: navigationTitle, shouldBlur: shouldBlur) {
             store.send(.backButtonTapped)
         }
+        .swipeBackEnabled(isEnabled: !store.isLoading)
         .background(Color.white)
         .loading(isLoading: store.isLoading)
         .animation(.easeInOut(duration: 0.2), value: shouldBlur)

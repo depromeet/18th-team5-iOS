@@ -40,6 +40,7 @@ public struct MyPageView: View {
         .background { backgroundView }
         .onAppear { store.send(.onAppear) }
         .customAlert(store.scope(state: \.alert, action: \.alert))
+        .swipeBackEnabled(isEnabled: !store.isLoading)
         .loading(isLoading: store.isLoading)
         .navigationDestination(
             item: $store.scope(state: \.path, action: \.path),
