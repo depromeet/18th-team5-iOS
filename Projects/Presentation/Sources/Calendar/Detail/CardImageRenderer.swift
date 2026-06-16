@@ -13,11 +13,11 @@ import UIKit
 
 /// 기록 카드를 사진 라이브러리 저장·공유용 PNG 데이터로 렌더링하는 의존성.
 ///
-/// 카드 사진(presigned URL)을 먼저 내려받아 디코딩한 뒤, `ImageRenderer`로
-/// 카드 전체(`RecordCardSnapshotView`)를 합성합니다.
+/// 카드 사진(presigned URL)을 먼저 내려받아 디코딩한 뒤, `ImageRenderer`로 화면 표시와
+/// 동일한 카드 뷰(`RecordCardBody`)를 합성합니다.
 @DependencyClient
 struct CardImageRenderer: Sendable {
-    var render: @Sendable (_ card: DateRecordCard) async throws -> Data
+    var render: @Sendable (_ card: DateRecordCard, _ term: SolarTerm) async throws -> Data
 }
 
 enum CardImageRenderError: Error {
@@ -28,23 +28,28 @@ enum CardImageRenderError: Error {
 
 extension CardImageRenderer: DependencyKey {
     static let liveValue = CardImageRenderer(
-        render: { card in
+        render: { card, term in
             var photo: UIImage?
             if let url = card.imageURL {
                 let (data, _) = try await URLSession.shared.data(from: url)
                 photo = UIImage(data: data)
             }
-            return try await renderCardImage(card: card, photo: photo)
+            return try await renderCardImage(card: card, term: term, photo: photo)
         }
     )
 
     @MainActor
-    private static func renderCardImage(card: DateRecordCard, photo: UIImage?) throws -> Data {
+    private static func renderCardImage(card: DateRecordCard, term: SolarTerm, photo: UIImage?) throws -> Data {
         let width = RecordCardLayout.cardBaseWidth
         let height = RecordCardLayout.cardBaseWidth * RecordCardLayout.cardRatio
 
-        let content = RecordCardSnapshotView(card: card, photo: photo, cardWidth: width)
-            .frame(width: width, height: height)
+        let content = RecordCardBody(
+            term: term,
+            card: card,
+            cardWidth: width,
+            imageSource: .decoded(photo)
+        )
+        .frame(width: width, height: height)
 
         let renderer = ImageRenderer(content: content)
         renderer.scale = UIScreen.main.scale

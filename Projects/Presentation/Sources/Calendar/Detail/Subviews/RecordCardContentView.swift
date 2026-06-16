@@ -7,10 +7,12 @@
 
 import DesignSystem
 import Domain
-import Kingfisher
 import SwiftUI
 
 /// 카드 스택 최상단(내용) 카드 뷰.
+///
+/// 시각 표현은 `RecordCardBody`(저장·공유 경로와 공유)에 위임하고, 이 뷰는 화면에서만 필요한
+/// 인터랙션 요소(카운트 배지·메뉴)를 overlay로 얹습니다.
 ///
 /// CardStackView는 드래그 한 틱마다 body를 재평가하므로, 카드 내용이 그대로일 때 본문을
 /// 다시 빌드하면(특히 KFImage·그라데이션) 프레임 드랍이 발생합니다. `Equatable`로 입력이
@@ -34,120 +36,19 @@ struct RecordCardContentView: View, Equatable {
     }
 
     var body: some View {
-        ZStack {
-            cardBackground
-
-            VStack(spacing: .zero) {
-                cardImageView(card.imageURL)
-                    .aspectRatio(1.0, contentMode: .fit)
-                    .padding(.top, 48)
-                    .padding(.horizontal, 48)
-
-                VStack(spacing: 12) {
-                    if card.cardType == .free {
-                        tagContainer
-                    } else if let title = card.missionTitle, !title.isEmpty {
-                        Text(title)
-                            .font(.headline1Semibold)
-                            .foregroundStyle(.white)
-                    }
-
-                    if let memo = card.memo, !memo.isEmpty {
-                        Text(memo)
-                            .font(.body2Medium)
-                            .multilineTextAlignment(.center)
-                            .truncationMode(.tail)
-                            .foregroundStyle(.white)
-                            .underline(true, pattern: .solid, color: .white)
-                            .frame(minHeight: 52, alignment: .top)
-                    }
-                }
-                .padding(.vertical, 20)
-                .padding(.horizontal, 16)
-
-                Spacer(minLength: 0)
-            }
-
-            cardToolbarView
-        }
+        RecordCardBody(
+            term: term,
+            card: card,
+            cardWidth: cardWidth,
+            imageSource: .remote(card.imageURL)
+        )
+        .overlay { cardToolbarView }
     }
 }
 
 // MARK: - Subviews
 
 private extension RecordCardContentView {
-    var cardBackground: some View {
-        RoundedRectangle(cornerRadius: RecordCardLayout.cardCornerRadius)
-            .fill(
-                RadialGradient(
-                    gradient: Gradient(stops: RecordCardLayout.cardGradientStops),
-                    center: RecordCardLayout.cardGradientCenter,
-                    startRadius: 0,
-                    endRadius: cardWidth * RecordCardLayout.cardGradientRadiusRatio
-                )
-            )
-    }
-
-    var cardImagePlaceholder: some View {
-        Rectangle().fill(Color.gray300)
-    }
-
-    func cardImageView(_ url: URL?) -> some View {
-        // 카드 이미지 영역 한 변(가로 패딩 48 * 2 제외)에 맞춰 다운샘플링하여
-        // 대용량 presigned 이미지를 매 렌더마다 원본 크기로 합성하지 않도록 합니다.
-        let imageSide = max(cardWidth - 96, 1)
-        return cardImagePlaceholder
-            .aspectRatio(1.0, contentMode: .fit)
-            .overlay {
-                if let url {
-                    KFImage(url)
-                        .placeholder { cardImagePlaceholder }
-                        .setProcessor(
-                            DownsamplingImageProcessor(
-                                size: CGSize(width: imageSide, height: imageSide)
-                            )
-                        )
-                        .scaleFactor(UIScreen.main.scale)
-                        .cacheOriginalImage()
-                        .fade(duration: 0.2)
-                        .resizable()
-                        .scaledToFill()
-                }
-            }
-            .clipShape(RoundedRectangle(cornerRadius: 12))
-            .overlay {
-                RoundedRectangle(cornerRadius: 12)
-                    .strokeBorder(.white, lineWidth: 3)
-            }
-            .padding(7)
-            .overlay {
-                ZStack {
-                    VStack {
-                        imageVerSticker
-                        Spacer()
-                        imageVerSticker
-                    }
-                    HStack {
-                        imageHorSticker
-                        Spacer()
-                        imageHorSticker
-                    }
-                }
-            }
-    }
-
-    var imageHorSticker: some View {
-        Rectangle()
-            .fill(.white)
-            .frame(width: 16, height: 6)
-    }
-
-    var imageVerSticker: some View {
-        Rectangle()
-            .fill(.white)
-            .frame(width: 6, height: 16)
-    }
-
     var cardToolbarView: some View {
         VStack(spacing: 12) {
             HStack {
@@ -199,39 +100,6 @@ private extension RecordCardContentView {
             }
         }
     }
-}
-
-private extension RecordCardContentView {
-    var tagContainer: some View {
-        HStack(spacing: 4) {
-            tagView(cardRecordText(card.recordedAt) ?? "-")
-            tagView(term.koreanName)
-        }
-    }
-
-    func tagView(_ text: String) -> some View {
-        Text(text)
-            .font(.body2Medium)
-            .foregroundStyle(.white)
-            .padding(.horizontal, 12)
-            .frame(height: 30, alignment: .center)
-            .background {
-                Capsule()
-                    .fill(Color.blackAlpha300)
-            }
-    }
-
-    func cardRecordText(_ date: Date) -> String? {
-        Self.yyyyMMddFormatter.string(from: date)
-    }
-
-    static let yyyyMMddFormatter = {
-        let formatter = DateFormatter()
-        formatter.locale = Locale(identifier: "ko_KR")
-        formatter.timeZone = TimeZone(identifier: "Asia/Seoul")
-        formatter.dateFormat = "yyyy. M.d"
-        return formatter
-    }()
 }
 
 // MARK: - Layout Constants
