@@ -13,8 +13,7 @@ import Foundation
 extension CalendarDetailFeature {
     func saveImage(_ state: inout State) -> Effect<Action> {
         guard let records = state.dateRecordCards,
-              records.indices.contains(state.frontCardIndex),
-              let card = records[safe: records.count == 1 ? 0 : state.frontCardIndex]
+              let card = records[safe: state.frontCardIndex]
         else { return .none }
 
         let term = state.term
@@ -50,10 +49,9 @@ extension CalendarDetailFeature {
 
     func shareImage(_ state: inout State) -> Effect<Action> {
         guard let records = state.dateRecordCards,
-              records.indices.contains(state.frontCardIndex)
+              let card = records[safe: state.frontCardIndex]
         else { return .none }
 
-        let card = records[state.frontCardIndex]
         let term = state.term
         state.isLoading = true
 
