@@ -35,6 +35,23 @@ private extension TargetScript {
         """,
         name: "Firebase Config Switch"
     )
+
+    // Crashlytics dSYM 심볼 업로드
+    // Tuist는 SPM 패키지를 Tuist/.build/checkouts에 체크아웃하므로 해당 경로의 run 스크립트를 사용
+    static let crashlyticsSymbolUpload: TargetScript = .post(
+        script: """
+        "${PROJECT_DIR}/../../Tuist/.build/checkouts/firebase-ios-sdk/Crashlytics/run"
+        """,
+        name: "Crashlytics Symbol Upload",
+        inputPaths: [
+            "${DWARF_DSYM_FOLDER_PATH}/${DWARF_DSYM_FILE_NAME}/Contents/Resources/DWARF/${TARGET_NAME}",
+            "${DWARF_DSYM_FOLDER_PATH}/${DWARF_DSYM_FILE_NAME}/Contents/Info.plist",
+            "$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/GoogleService-Info.plist",
+            "$(TARGET_BUILD_DIR)/$(EXECUTABLE_PATH)",
+            "$(SRCROOT)/$(BUILT_PRODUCTS_DIR)/$(INFOPLIST_PATH)",
+        ],
+        basedOnDependencyAnalysis: false
+    )
 }
 
 extension Target {
@@ -52,6 +69,7 @@ extension Target {
             scripts: [
                 .lint,
                 .googleServiceInfo,
+                .crashlyticsSymbolUpload,
             ],
             dependencies: module.dependencies,
             settings: .settings(configurations: .default)
