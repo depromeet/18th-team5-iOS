@@ -34,6 +34,7 @@ public struct PrivacyPolicyView: View {
             store.send(.backButtonTapped)
         }
         .background(Color.white)
+        .swipeBackEnabled(isEnabled: !store.isLoading)
         .loading(isLoading: store.isLoading)
         .customAlert(store.scope(state: \.alert, action: \.alert))
     }

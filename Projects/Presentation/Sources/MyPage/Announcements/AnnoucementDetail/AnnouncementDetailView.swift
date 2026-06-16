@@ -26,6 +26,7 @@ public struct AnnouncementDetailView: View {
         }
         .navigationBar(title: "공지사항") { store.send(.backButtonTapped) }
         .background(Color.white)
+        .swipeBackEnabled(isEnabled: !store.isLoading)
         .loading(isLoading: store.isLoading)
         .customAlert(store.scope(state: \.alert, action: \.alert))
         .onAppear { store.send(.onAppear) }

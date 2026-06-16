@@ -31,6 +31,7 @@ public struct NotificationSettingsView: View {
         }
         .navigationBar(title: "알림 수신 설정") { store.send(.backButtonTapped) }
         .background(Color.gray100)
+        .swipeBackEnabled(isEnabled: !store.isLoading)
         .loading(isLoading: store.isLoading)
         .animation(.easeInOut(duration: 0.3), value: store.isAuthorized)
         .onAppear { store.send(.onAppear) }

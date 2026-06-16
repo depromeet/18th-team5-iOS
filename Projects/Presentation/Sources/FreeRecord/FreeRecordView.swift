@@ -43,6 +43,7 @@ public struct FreeRecordView: View {
             store.send(.backButtonTapped)
         }
         .background(background)
+        .swipeBackEnabled(isEnabled: !store.isSubmitting)
         .loading(isLoading: store.isSubmitting)
         .customAlert(
             isPresented: store.alert != nil,
