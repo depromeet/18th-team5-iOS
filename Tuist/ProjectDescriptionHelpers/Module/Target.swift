@@ -72,7 +72,17 @@ extension Target {
                 .crashlyticsSymbolUpload,
             ],
             dependencies: module.dependencies,
-            settings: .settings(configurations: .default)
+            settings: .settings(
+                // Crashlytics dSYM 업로드를 위해 모든 빌드 구성에서 dSYM 생성
+                // (정적 프레임워크 모듈 심볼은 App.app.dSYM에 모두 포함됨)
+                base: [
+                    "DEBUG_INFORMATION_FORMAT": "dwarf-with-dsym",
+                    // Debug Dylib(디버그 시 실행 파일 분리)을 끄면 메인 실행 파일에
+                    // 디버그 정보가 포함되어 빈 dSYM 경고 없이 Crashlytics 심볼이 완전해짐
+                    "ENABLE_DEBUG_DYLIB": "NO",
+                ],
+                configurations: .default
+            )
         )
     }
 }
