@@ -17,7 +17,9 @@ private struct SwipeBackController: UIViewControllerRepresentable {
     }
 
     func updateUIViewController(_ uiViewController: UIViewController, context: Context) {
-        context.coordinator.update(from: uiViewController, isEnabled: isEnabled)
+        DispatchQueue.main.async {
+            context.coordinator.update(from: uiViewController, isEnabled: isEnabled)
+        }
     }
 
     static func dismantleUIViewController(_ uiViewController: UIViewController, coordinator: Coordinator) {
