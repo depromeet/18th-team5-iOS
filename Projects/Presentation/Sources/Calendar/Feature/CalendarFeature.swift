@@ -121,6 +121,7 @@ public struct CalendarFeature {
                 return fetchCalendarData(state, request)
 
             case .detailViewDisappeared:
+                guard state.detail == nil else { return .none }
                 state.$tabBarVisibility.withLock { $0 = true }
                 return .none
 
