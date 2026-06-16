@@ -7,5 +7,9 @@
 //
 
 public enum CardDetailDisplayType {
-    case currentTerm, passedTerm, futureTerm, notDetermined
+    case currentTermUpToToday,
+         currentTermAfterToday,
+         passedTerm,
+         futureTerm,
+         notDetermined
 }

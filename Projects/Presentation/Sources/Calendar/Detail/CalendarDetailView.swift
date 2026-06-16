@@ -24,7 +24,7 @@ struct CalendarDetailView: View {
                 ) { screenSize = $0 }
 
             switch store.displayType {
-            case .currentTerm:
+            case .currentTermUpToToday:
                 if let cards = store.dateRecordCards {
                     if !cards.isEmpty {
                         VStack {
@@ -53,6 +53,9 @@ struct CalendarDetailView: View {
                         }
                     }
                 }
+
+            case .currentTermAfterToday:
+                futureDayNoRecordViewInCurrentTerm
 
             case .passedTerm:
                 passedTermNoRecordView
