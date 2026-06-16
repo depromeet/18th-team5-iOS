@@ -88,10 +88,14 @@ struct CalendarView: View {
             }
             .overlay(alignment: .bottomTrailing) {
                 if !store.isDetailViewPresenting {
-                    floatingRecordButton
-                        .padding(.trailing, Constants.floatingButtonTrailingPadding)
-                        .padding(.bottom, Constants.floatingButtonBottomPadding)
-                        .transition(.scale.combined(with: .opacity))
+                    FloatingRecordButton(
+                        isExpanded: $store.isFloatingRecordButtonExpanded
+                    ) {
+                        store.send(.floatingRecordButtonTapped)
+                    }
+                    .padding(.trailing, 20)
+                    .padding(.bottom, 84)
+                    .transition(.opacity)
                 }
             }
         }
@@ -107,34 +111,52 @@ struct CalendarView: View {
 
 // MARK: Floating Record Button
 
-private extension CalendarView {
-    var floatingRecordButton: some View {
-        Button {
-            store.send(.floatingRecordButtonTapped)
-        } label: {
-            HStack(spacing: 4) {
+private struct FloatingRecordButton: View {
+    @Binding var isExpanded: Bool
+    var onTap: () -> Void
+
+    var body: some View {
+        Button(action: onTap) {
+            if isExpanded {
+                HStack(spacing: 4) {
+                    Image.icPlus
+                        .resizable()
+                        .renderingMode(.template)
+                        .foregroundStyle(Color.monoWhite)
+                        .frame(width: 20, height: 20)
+
+                    Text("기록하기")
+                        .font(.body1Semibold)
+                        .foregroundStyle(Color.monoWhite)
+                        .transition(.opacity)
+                }
+                .frame(height: 56)
+                .padding(.trailing, 20)
+                .padding(.leading, 16)
+                .background {
+                    EllipticalGradient.buttonBackground
+                        .background(Color.gray700)
+                }
+                .clipShape(Capsule())
+                .contentShape(Capsule())
+                .transition(.opacity)
+            } else {
                 Image.icPlus
                     .resizable()
                     .renderingMode(.template)
                     .foregroundStyle(Color.monoWhite)
-                    .frame(width: 24, height: 24)
-
-                if store.isFloatingRecordButtonExpanded {
-                    Text("기록하기")
-                        .font(.body1Semibold)
-                        .foregroundStyle(Color.monoWhite)
-                }
+                    .frame(width: 20, height: 20)
+                    .padding(18)
+                    .background {
+                        EllipticalGradient.buttonBackground
+                            .background(Color.gray700)
+                    }
+                    .clipShape(Circle())
+                    .contentShape(Circle())
+                    .transition(.opacity)
             }
-            .padding(.horizontal, store.isFloatingRecordButtonExpanded ? 20 : 16)
-            .frame(height: Constants.floatingButtonSize)
-            .frame(minWidth: Constants.floatingButtonSize)
-            .background {
-                EllipticalGradient.buttonBackground
-                    .background(Color.gray700)
-            }
-            .clipShape(Capsule())
-            .contentShape(Capsule())
         }
+        .animation(.easeInOut(duration: 0.2), value: isExpanded)
         .buttonStyle(.plain)
     }
 }
@@ -297,9 +319,6 @@ private enum Constants {
 
     static let dateCellHorizontalSpacing: CGFloat = 7
     static let dateCellAnchorOffset: CGFloat = 11
-    static let floatingButtonSize: CGFloat = 56
-    static let floatingButtonTrailingPadding: CGFloat = 20
-    static let floatingButtonBottomPadding: CGFloat = 84
 
     static var detailViewTopPadding: CGFloat {
         CalendarAnchorMetrics.cellHeight + 12
