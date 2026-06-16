@@ -156,6 +156,8 @@ private struct FloatingRecordButton: View {
                     .transition(.opacity)
             }
         }
+        .accessibilityLabel("기록하기")
+        .accessibilityHint("선택한 날짜의 기록 화면으로 이동")
         .animation(.easeInOut(duration: 0.2), value: isExpanded)
         .buttonStyle(.plain)
     }

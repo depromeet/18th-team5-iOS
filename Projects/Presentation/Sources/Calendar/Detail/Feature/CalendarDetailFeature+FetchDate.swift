@@ -19,7 +19,9 @@ extension CalendarDetailFeature {
                     let displayType = try await displayType(currentDate)
                     await send(.updateDetailDisplayType(displayType))
 
-                    guard displayType != .futureTerm else {
+                    guard displayType != .futureTerm,
+                          displayType != .currentTermAfterToday else {
+                        await send(.updateRecordCards([]))
                         await send(.updateLoadingState(false))
                         return
                     }
