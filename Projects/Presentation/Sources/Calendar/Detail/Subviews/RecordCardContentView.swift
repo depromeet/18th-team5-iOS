@@ -151,7 +151,9 @@ private extension RecordCardContentView {
     var cardToolbarView: some View {
         VStack(spacing: 12) {
             HStack {
-                CardCountBadge(current: cardIndex + 1, total: totalCount)
+                if totalCount > 1 {
+                    CardCountBadge(current: cardIndex + 1, total: totalCount)
+                }
 
                 Spacer()
 

@@ -27,24 +27,40 @@ struct CalendarDetailView: View {
             case .currentTermUpToToday:
                 if let cards = store.dateRecordCards {
                     if !cards.isEmpty {
-                        VStack {
-                            CardStackView(
-                                topCardIndex: $store.frontCardIndex,
-                                items: cards
-                            ) { cardIndex, orderIndex, item in
+                        if cards.count == 1, let card = cards.first {
+                            VStack(spacing: .zero) {
                                 cardView(
                                     term: store.term,
-                                    cardIndex: cardIndex,
-                                    orderIndex: orderIndex,
-                                    card: item,
-                                    totalCount: cards.count
+                                    cardIndex: 0,
+                                    orderIndex: 0,
+                                    card: card,
+                                    totalCount: 1
                                 )
+                                .padding(.top, 20)
+                                Spacer()
                             }
-                            .padding(.top, 16)
-                            Spacer()
+                            .transition(.opacity)
+                        } else {
+                            VStack(spacing: .zero) {
+                                CardStackView(
+                                    topCardIndex: $store.frontCardIndex,
+                                    items: cards
+                                ) { cardIndex, orderIndex, item in
+                                    cardView(
+                                        term: store.term,
+                                        cardIndex: cardIndex,
+                                        orderIndex: orderIndex,
+                                        card: item,
+                                        totalCount: cards.count
+                                    )
+                                }
+                                .padding(.top, 16)
+                                Spacer()
+                            }
+                            .clipped()
+                            .transition(.opacity)
+                            .ignoresSafeArea(.container, edges: .bottom)
                         }
-                        .clipped()
-                        .transition(.opacity)
 
                         bottomButtonContainer
                     } else {
