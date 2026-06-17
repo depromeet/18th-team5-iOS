@@ -84,31 +84,41 @@ struct CurrentSolarTermCardView: View {
 
     var body: some View {
         Button(action: onTap) {
-            ZStack {
-                // 1. 그라데이션 배경 + 하단 텍스트 (맨 뒤, 배경)
-                Image.imgSolarTermGradation
-                    .resizable()
-                    .scaledToFill()
-                    .overlay(alignment: .bottomLeading) {
-                        VStack(alignment: .leading, spacing: 8) {
-                            Text(solarTermIntro.introTitle)
-                                .font(.title2Bold)
-                                .foregroundStyle(season.color(.scale700))
-                                .lineLimit(3)
-
-                            Text(solarTermIntro.introSubtitle)
-                                .font(.body2Semibold)
-                                .foregroundStyle(season.color(.scale500))
-                        }
-                        .padding(.horizontal, 20)
-                        .padding(.bottom, 23)
+            VStack {
+                // 칩 - 절기날짜, 절기명
+                HStack(spacing: 4) {
+                    chipView(text: solarTermIntro.term.koreanName)
+                    if let dateLabel {
+                        chipView(text: dateLabel)
                     }
+                    Spacer()
+                }
+                .padding(.top, 18)
+                .padding(.leading, 20)
 
-                // 2. 실사 이미지 (Firebase Storage)
+                Spacer()
+
+                // 하단 텍스트
+                VStack(alignment: .leading, spacing: 8) {
+                    Text(solarTermIntro.introTitle)
+                        .font(.title2Bold)
+                        .foregroundStyle(season.color(.scale700))
+                        .lineLimit(3)
+
+                    Text(solarTermIntro.introSubtitle)
+                        .font(.body2Semibold)
+                        .foregroundStyle(season.color(.scale500))
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, 20)
+                .padding(.bottom, 23)
+            }
+            .background {
+                // 실사 이미지 (그라데이션 배경 뒤)
                 if let cardImageURL {
                     GeometryReader { geo in
                         RemoteImage(url: cardImageURL)
-                            .frame(width: geo.size.width, height: geo.size.height * 0.85)
+                            .frame(width: geo.size.width, height: geo.size.height * 0.83)
                             .clipped()
                             .mask(
                                 LinearGradient(
@@ -118,24 +128,15 @@ struct CurrentSolarTermCardView: View {
                                 )
                             )
                     }
-                    .allowsHitTesting(false)
-                }
-
-                // 3. 칩 - 절기날짜, 절기명 (맨 앞, 이미지 위)
-                VStack {
-                    HStack(spacing: 4) {
-                        chipView(text: solarTermIntro.term.koreanName)
-                        if let dateLabel {
-                            chipView(text: dateLabel)
-                        }
-                        Spacer()
-                    }
-                    .padding(.top, 18)
-                    .padding(.leading, 20)
-                    Spacer()
                 }
             }
             .clipShape(RoundedRectangle(cornerRadius: .radius20))
+            .background {
+                // 그라데이션 배경
+                Image.imgSolarTermGradation
+                    .resizable()
+                    .scaledToFill()
+            }
         }
         .buttonStyle(.plain)
     }
