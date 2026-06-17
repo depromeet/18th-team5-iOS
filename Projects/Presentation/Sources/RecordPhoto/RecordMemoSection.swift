@@ -57,9 +57,16 @@ private extension RecordMemoSection {
                         .allowsHitTesting(false)
                 }
             }
+            .tint(isMemoFocused.wrappedValue ? Color.green500 : Color.clear)
             .padding(EdgeInsets(top: 16, leading: 12, bottom: 16, trailing: 16))
             .background(Color.monoWhite)
             .clipShape(.rect(cornerRadius: .radius16))
+            .overlay {
+                if isMemoFocused.wrappedValue {
+                    RoundedRectangle(cornerRadius: .radius16)
+                        .strokeBorder(Color.blackAlpha200, lineWidth: 1)
+                }
+            }
             .onChange(of: memo) { _, newValue in
                 guard newValue.contains(where: \.isNewline) else { return }
                 memo = newValue.filter { !$0.isNewline }
