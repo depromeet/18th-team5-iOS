@@ -96,8 +96,10 @@ public struct HomeFeature {
                 return .none
 
             case .onMissionTap:
-                guard let homeCard = state.homeCard,
-                      let mission = homeCard.currentMission else { return .none }
+                guard let homeCard = state.homeCard else { return .none }
+                guard let mission = homeCard.currentMission else {
+                    return .send(.delegate(.navigateToMissionTab))
+                }
                 return .send(.delegate(.navigateToMissionCamera(
                     missionId: mission.id,
                     title: mission.title,
@@ -118,12 +120,7 @@ public struct HomeFeature {
                 return .send(.delegate(.navigateToCalendar))
 
             case let .onRecordPhotoTap(dateString):
-                let formatter = DateFormatter()
-                formatter.locale = Locale(identifier: "en_US_POSIX")
-                formatter.timeZone = TimeZone(identifier: "Asia/Seoul")
-                formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSSSS"
-
-                guard let date = formatter.date(from: dateString)
+                guard let date = DateFormatter.serverTimestamp.date(from: dateString)
                 else { return .none }
 
                 return .send(.delegate(.navigateToCalendarRecord(date)))

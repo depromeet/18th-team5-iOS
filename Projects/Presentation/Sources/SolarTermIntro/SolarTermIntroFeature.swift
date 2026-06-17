@@ -7,6 +7,7 @@
 //
 
 import ComposableArchitecture
+import DesignSystem
 import Domain
 import Foundation
 
@@ -33,17 +34,8 @@ public struct SolarTermIntroFeature {
             allCards.filter { $0.term.season == season }
         }
 
-        var dateLabels: [SolarTerm: String] {
-            solarTermInfos.reduce(into: [:]) { result, info in
-                result[info.term] = info.formattedDateRange
-            }
-        }
-
-        var fullDateLabels: [SolarTerm: String] {
-            solarTermInfos.reduce(into: [:]) { result, info in
-                result[info.term] = info.formattedFullDateRange
-            }
-        }
+        var dateLabels: [SolarTerm: String] = [:]
+        var fullDateLabels: [SolarTerm: String] = [:]
     }
 
     public enum Action {
@@ -88,6 +80,13 @@ public struct SolarTermIntroFeature {
 
             case let .solarTermInfosLoad(infos):
                 state.solarTermInfos = infos
+                state.dateLabels = infos.reduce(into: [:]) { result, info in
+                    result[info.term] = info.formattedDateRange
+                }
+                state.fullDateLabels = infos.reduce(into: [:]) { result, info in
+                    result[info.term] = info.formattedFullDateRange
+                }
+
                 if state.targetTerm == nil, state.season == .currentSeason {
                     let now = Date()
                     if let current = infos.first(where: { $0.dateRange.contains(now) }) {
@@ -124,8 +123,20 @@ public struct SolarTermIntroFeature {
                 return .none
 
             case let .onCardTap(solarTermIntro):
-                state.content = SolarTermIntroContentFeature.State(term: solarTermIntro.term)
-                return .none
+                let info = state.solarTermInfos.first { $0.term == solarTermIntro.term }
+                let dateLabel = info?.formattedFullDateRange ?? ""
+                let isCurrent = info?.dateRange.contains(Date()) ?? false
+                state.content = SolarTermIntroContentFeature.State(
+                    intro: solarTermIntro,
+                    dateLabel: dateLabel,
+                    isCurrentTerm: isCurrent
+                )
+                return .run { send in
+                    let urlDictionary = await solarTermIntroRepository.fetchContentImageURLs(solarTermIntro.contents)
+                    let allURLs = Array(urlDictionary.values.flatMap { $0 })
+                    ImagePrefetchService.prefetch(allURLs)
+                    await send(.content(.presented(.imageURLsLoad(urlDictionary))))
+                }
 
             case .content(.presented(.delegate(.dismiss))):
                 state.content = nil
