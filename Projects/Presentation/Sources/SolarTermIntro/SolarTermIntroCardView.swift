@@ -130,13 +130,13 @@ struct CurrentSolarTermCardView: View {
                     }
                 }
             }
-            .clipShape(RoundedRectangle(cornerRadius: .radius20))
             .background {
                 // 그라데이션 배경
                 Image.imgSolarTermGradation
                     .resizable()
                     .scaledToFill()
             }
+            .clipShape(RoundedRectangle(cornerRadius: .radius20))
         }
         .buttonStyle(.plain)
     }
