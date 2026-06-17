@@ -96,8 +96,10 @@ public struct HomeFeature {
                 return .none
 
             case .onMissionTap:
-                guard let homeCard = state.homeCard,
-                      let mission = homeCard.currentMission else { return .none }
+                guard let homeCard = state.homeCard else { return .none }
+                guard let mission = homeCard.currentMission else {
+                    return .send(.delegate(.navigateToMissionTab))
+                }
                 return .send(.delegate(.navigateToMissionCamera(
                     missionId: mission.id,
                     title: mission.title,

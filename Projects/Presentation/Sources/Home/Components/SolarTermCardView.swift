@@ -88,21 +88,34 @@ extension SolarTermCardView {
 }
 
 private struct MissionCardView: View {
-    let mission: CurrentMissionCard
+    let mission: CurrentMissionCard?
     let season: Season
     let onMissionTap: () -> Void
 
+    private var title: String {
+        mission?.title ?? "앗, 오늘의 미션이 비어있어요!"
+    }
+
+    private var buttonTitle: String {
+        guard let mission else { return "제철 미션 기록하기" }
+        return mission.isCompleted ? "미션을 기록했어요" : "미션 기록하기"
+    }
+
+    private var caption: String {
+        guard let mission else { return "제철 미션에서 마음에 드는 제철 미션을 찾아보세요" }
+        return "해당 미션에 \(mission.participantCount)명이 참여했어요"
+    }
+
     var body: some View {
-        VStack(spacing: 12) {
-            // 미션 제목
+        VStack(alignment: .leading, spacing: 12) {
             HStack {
-                Text(mission.title)
+                Text(title)
                     .font(.body1Semibold)
-                    .foregroundStyle(Color.gray900)
+                    .foregroundStyle(mission != nil ? Color.gray900 : Color.gray600)
 
                 Spacer()
 
-                if mission.isCompleted {
+                if mission?.isCompleted == true {
                     Image.icCheck
                         .renderingMode(.template)
                         .resizable()
@@ -118,11 +131,11 @@ private struct MissionCardView: View {
             }
 
             VStack(spacing: 8) {
-                Button(mission.isCompleted ? "미션을 기록했어요" : "미션 기록하기", action: onMissionTap)
+                Button(buttonTitle, action: onMissionTap)
                     .buttonStyle(.seasonGradient(season))
-                    .disabled(mission.isCompleted)
+                    .disabled(mission?.isCompleted == true)
 
-                Text("해당 미션에 \(mission.participantCount)명이 참여했어요")
+                Text(caption)
                     .font(.caption1Regular)
                     .foregroundStyle(Color.gray600)
                     .frame(maxWidth: .infinity, alignment: .center)
