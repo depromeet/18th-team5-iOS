@@ -40,7 +40,6 @@ public struct SolarTermIntroContentFeature {
     }
 
     public enum Action {
-        case onAppear
         case imageURLsLoad([String: [URL]])
         case onTapBack
         case onMissionTap
@@ -57,9 +56,6 @@ public struct SolarTermIntroContentFeature {
     public var body: some ReducerOf<Self> {
         Reduce { state, action in
             switch action {
-            case .onAppear:
-                return .none
-
             case let .imageURLsLoad(urlDictionary):
                 state.imageURL = urlDictionary
                 return .none
@@ -70,8 +66,11 @@ public struct SolarTermIntroContentFeature {
             case .onMissionTap:
                 return .send(.delegate(.navigateToMissionTab))
 
-            case .delegate:
+            case .delegate(.dismiss):
                 return .run { _ in await dismiss() }
+
+            case .delegate:
+                return .none
             }
         }
     }

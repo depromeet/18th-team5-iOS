@@ -34,17 +34,8 @@ public struct SolarTermIntroFeature {
             allCards.filter { $0.term.season == season }
         }
 
-        var dateLabels: [SolarTerm: String] {
-            solarTermInfos.reduce(into: [:]) { result, info in
-                result[info.term] = info.formattedDateRange
-            }
-        }
-
-        var fullDateLabels: [SolarTerm: String] {
-            solarTermInfos.reduce(into: [:]) { result, info in
-                result[info.term] = info.formattedFullDateRange
-            }
-        }
+        var dateLabels: [SolarTerm: String] = [:]
+        var fullDateLabels: [SolarTerm: String] = [:]
     }
 
     public enum Action {
@@ -89,6 +80,13 @@ public struct SolarTermIntroFeature {
 
             case let .solarTermInfosLoad(infos):
                 state.solarTermInfos = infos
+                state.dateLabels = infos.reduce(into: [:]) { result, info in
+                    result[info.term] = info.formattedDateRange
+                }
+                state.fullDateLabels = infos.reduce(into: [:]) { result, info in
+                    result[info.term] = info.formattedFullDateRange
+                }
+
                 if state.targetTerm == nil, state.season == .currentSeason {
                     let now = Date()
                     if let current = infos.first(where: { $0.dateRange.contains(now) }) {

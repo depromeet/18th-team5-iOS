@@ -38,7 +38,6 @@ struct SolarTermIntroContentView: View {
         }
         .swipeBackEnabled(isEnabled: !store.isLoading)
         .loading(isLoading: store.isLoading)
-        .onAppear { store.send(.onAppear) }
         .background(Color.gray50)
         .navigationBarBackButtonHidden()
     }
@@ -161,6 +160,7 @@ private extension SolarTermIntroContentView {
             Text(intro.contentBody)
                 .font(.body2Regular)
                 .foregroundStyle(Color.gray600)
+                .frame(maxWidth: .infinity)
                 .padding(.vertical, 20)
                 .padding(.horizontal, 16)
                 .background(
@@ -231,7 +231,7 @@ private extension SolarTermIntroContentView {
 private struct AutoScrollImageView: View {
     let imageURLs: [URL]
     @State private var currentIndex = 0
-    private let timer = Timer.publish(every: 3.0, on: .main, in: .common).autoconnect()
+    @State private var timer = Timer.publish(every: 3.0, on: .main, in: .common).autoconnect()
 
     var body: some View {
         TabView(selection: $currentIndex) {

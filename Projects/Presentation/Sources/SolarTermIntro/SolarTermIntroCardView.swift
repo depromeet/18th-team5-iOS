@@ -10,6 +10,28 @@ import DesignSystem
 import Domain
 import SwiftUI
 
+// MARK: - 공용 칩 뷰
+
+private struct SolarTermChipView: View {
+    let text: String
+
+    var body: some View {
+        Text(text)
+            .font(.body2Medium)
+            .foregroundStyle(.white)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 5)
+            .background {
+                Capsule()
+                    .fill(Color.blackAlpha300)
+            }
+            .background {
+                CustomBackdropBlurView(radius: 10)
+                    .clipShape(Capsule())
+            }
+    }
+}
+
 // MARK: - 일반 절기 카드
 
 struct SolarTermIntroCardView: View {
@@ -22,9 +44,9 @@ struct SolarTermIntroCardView: View {
         Button(action: onTap) {
             VStack(alignment: .leading) {
                 HStack(spacing: 4) {
-                    chipView(text: solarTermIntro.term.koreanName)
+                    SolarTermChipView(text: solarTermIntro.term.koreanName)
                     if let dateLabel {
-                        chipView(text: dateLabel)
+                        SolarTermChipView(text: dateLabel)
                     }
                 }
                 .padding(.top, 18)
@@ -55,22 +77,6 @@ struct SolarTermIntroCardView: View {
         }
         .buttonStyle(.plain)
     }
-
-    private func chipView(text: String) -> some View {
-        Text(text)
-            .font(.body2Medium)
-            .foregroundStyle(.white)
-            .padding(.horizontal, 12)
-            .padding(.vertical, 5)
-            .background {
-                Capsule()
-                    .fill(Color.blackAlpha300)
-            }
-            .background {
-                CustomBackdropBlurView(radius: 10)
-                    .clipShape(Capsule())
-            }
-    }
 }
 
 // MARK: - 현재 절기 카드 (실사 이미지 + 그라데이션)
@@ -87,9 +93,9 @@ struct CurrentSolarTermCardView: View {
             VStack {
                 // 칩 - 절기날짜, 절기명
                 HStack(spacing: 4) {
-                    chipView(text: solarTermIntro.term.koreanName)
+                    SolarTermChipView(text: solarTermIntro.term.koreanName)
                     if let dateLabel {
-                        chipView(text: dateLabel)
+                        SolarTermChipView(text: dateLabel)
                     }
                     Spacer()
                 }
@@ -139,22 +145,6 @@ struct CurrentSolarTermCardView: View {
             .clipShape(RoundedRectangle(cornerRadius: .radius20))
         }
         .buttonStyle(.plain)
-    }
-
-    private func chipView(text: String) -> some View {
-        Text(text)
-            .font(.body2Medium)
-            .foregroundStyle(.white)
-            .padding(.horizontal, 12)
-            .padding(.vertical, 5)
-            .background {
-                Capsule()
-                    .fill(Color.blackAlpha300)
-            }
-            .background {
-                CustomBackdropBlurView(radius: 10)
-                    .clipShape(Capsule())
-            }
     }
 }
 
