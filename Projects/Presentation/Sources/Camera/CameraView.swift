@@ -136,7 +136,12 @@ private extension CameraView {
                 .foregroundStyle(.white)
                 .padding(.horizontal, 10)
                 .padding(.vertical, 4)
-                .background(Color.blackAlpha300)
+                .background {
+                    ZStack {
+                        CustomBackdropBlurView(radius: 10)
+                        Color.blackAlpha300
+                    }
+                }
                 .clipShape(.capsule)
 
             Text(store.overlayLabel)
@@ -144,7 +149,12 @@ private extension CameraView {
                 .foregroundStyle(.white)
                 .padding(.horizontal, 10)
                 .padding(.vertical, 4)
-                .background(Color.blackAlpha300)
+                .background {
+                    ZStack {
+                        CustomBackdropBlurView(radius: 10)
+                        Color.blackAlpha300
+                    }
+                }
                 .clipShape(.capsule)
         }
     }

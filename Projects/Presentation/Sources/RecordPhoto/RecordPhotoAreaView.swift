@@ -38,6 +38,7 @@ struct RecordPhotoView: View {
                 PhotoPickerView(store: pickerStore)
                     .presentationDetents([.fraction(0.9)])
                     .presentationDragIndicator(.hidden)
+                    .sheetCornerRadius()
             }
             .onChange(of: store.limitedPickerPresentationRequestID) { _, requestID in
                 guard requestID != nil else { return }

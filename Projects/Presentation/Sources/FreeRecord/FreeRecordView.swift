@@ -87,6 +87,7 @@ public struct FreeRecordView: View {
             )
             .presentationDetents([.height(309)])
             .presentationDragIndicator(.hidden)
+            .sheetCornerRadius()
         }
     }
 

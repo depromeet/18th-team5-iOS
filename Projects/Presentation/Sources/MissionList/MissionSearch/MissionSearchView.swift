@@ -39,13 +39,7 @@ public struct MissionSearchView: View {
         }
         .background(Color.white)
         .presentationDetents([.height(593)])
-        .presentationCornerRadius(sheetRadius)
-    }
-}
-
-private extension MissionSearchView {
-    var sheetRadius: CGFloat? {
-        if #available(iOS 26.0, *) { nil } else { 24 }
+        .sheetCornerRadius()
     }
 }
 
