@@ -79,7 +79,7 @@ public struct FreeRecordFeature {
     public enum Action: BindableAction {
         case binding(BindingAction<State>)
         case task
-        case currentSolarTermDateRangeLoaded(ClosedRange<Date>?)
+        case currentSolarTermLoaded(name: String?, range: ClosedRange<Date>?)
         case backButtonTapped
         case submitButtonTapped
         case submitResponse(Result<Int, any Error>)
@@ -109,13 +109,16 @@ public struct FreeRecordFeature {
 
             case .task:
                 return .run { send in
-                    let range = await Self.currentSolarTermSelectableRange(
+                    let (name, range) = await Self.currentSolarTermInfo(
                         solarTermRepository: solarTermRepository
                     )
-                    await send(.currentSolarTermDateRangeLoaded(range))
+                    await send(.currentSolarTermLoaded(name: name, range: range))
                 }
 
-            case let .currentSolarTermDateRangeLoaded(range):
+            case let .currentSolarTermLoaded(name, range):
+                if let name {
+                    state.photo.cameraOverlayLabel = name
+                }
                 state.selectableDateRange = range
                 if let range {
                     let recordDate = Calendar.current.startOfDay(for: state.recordDate)
@@ -216,9 +219,9 @@ public struct FreeRecordFeature {
         return formatter
     }()
 
-    private static func currentSolarTermSelectableRange(
+    private static func currentSolarTermInfo(
         solarTermRepository: SolarTermRepository
-    ) async -> ClosedRange<Date>? {
+    ) async -> (name: String?, range: ClosedRange<Date>?) {
         let calendar = Calendar.current
         let today = calendar.startOfDay(for: Date.now)
         let currentYear = SolarTermYear.current
@@ -237,10 +240,11 @@ public struct FreeRecordFeature {
                   )
             else { continue }
 
-            return currentSolarTerm.startDate ... min(lastSolarTermDate, today)
+            let range = currentSolarTerm.startDate ... min(lastSolarTermDate, today)
+            return (currentSolarTerm.term.koreanName, range)
         }
 
-        return nil
+        return (nil, nil)
     }
 
     private static func recordAlert(from error: any Error) -> RecordAlert {
