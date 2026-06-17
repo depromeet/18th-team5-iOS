@@ -31,17 +31,24 @@ public enum SolarTermIntroRepositoryImpl {
                 return try await ref.downloadURL()
             },
             fetchContentImageURLs: { contents in
-                var urlDictionary: [String: [URL]] = [:]
-                for content in contents {
-                    var urls: [URL] = []
-                    for path in content.imageURLs {
-                        if let url = try? await storage.reference().child(path).downloadURL() {
-                            urls.append(url)
+                await withTaskGroup(of: (String, [URL]).self) { group in
+                    for content in contents {
+                        group.addTask {
+                            var urls: [URL] = []
+                            for path in content.imageURLs {
+                                if let url = try? await storage.reference().child(path).downloadURL() {
+                                    urls.append(url)
+                                }
+                            }
+                            return (content.id, urls)
                         }
                     }
-                    urlDictionary[content.id] = urls
+                    var urlDictionary: [String: [URL]] = [:]
+                    for await (id, urls) in group {
+                        urlDictionary[id] = urls
+                    }
+                    return urlDictionary
                 }
-                return urlDictionary
             }
         )
     }

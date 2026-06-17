@@ -28,11 +28,19 @@ public struct SolarTermIntroContentFeature {
             self.term = term
             self.season = term.season
         }
+
+        public init(intro: SolarTermIntro, dateLabel: String, isCurrentTerm: Bool) {
+            self.term = intro.term
+            self.season = intro.term.season
+            self.solarTermIntro = intro
+            self.dateLabel = dateLabel
+            self.isCurrentTerm = isCurrentTerm
+            self.isLoading = false
+        }
     }
 
     public enum Action {
         case onAppear
-        case introLoaded(SolarTermIntro, String, Bool)
         case imageURLsLoad([String: [URL]])
         case onTapBack
         case onMissionTap
@@ -44,35 +52,12 @@ public struct SolarTermIntroContentFeature {
         }
     }
 
-    @Dependency(\.solarTermIntroRepository) var solarTermIntroRepository
-    @Dependency(\.solarTermRepository) var solarTermRepository
-
     public init() {}
 
     public var body: some ReducerOf<Self> {
         Reduce { state, action in
             switch action {
             case .onAppear:
-                guard state.solarTermIntro == nil else { return .none }
-                state.isLoading = true
-                return .run { [term = state.term] send in
-                    async let cards = solarTermIntroRepository.fetchSolarTermCard()
-                    async let infos = solarTermRepository.fetchSolarTerms(.current)
-                    guard let (fetchedCards, fetchedInfos) = try? await (cards, infos),
-                          let card = fetchedCards.first(where: { $0.term == term }) else { return }
-                    let info = fetchedInfos.first { $0.term == term }
-                    let dateLabel = info?.formattedFullDateRange ?? ""
-                    let isCurrent = info?.dateRange.contains(Date()) ?? false
-                    await send(.introLoaded(card, dateLabel, isCurrent))
-                    let urlDictionary = await solarTermIntroRepository.fetchContentImageURLs(card.contents)
-                    await send(.imageURLsLoad(urlDictionary))
-                }
-
-            case let .introLoaded(intro, dateLabel, isCurrent):
-                state.solarTermIntro = intro
-                state.dateLabel = dateLabel
-                state.isCurrentTerm = isCurrent
-                state.isLoading = false
                 return .none
 
             case let .imageURLsLoad(urlDictionary):

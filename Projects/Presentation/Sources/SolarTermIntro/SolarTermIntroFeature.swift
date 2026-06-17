@@ -7,6 +7,7 @@
 //
 
 import ComposableArchitecture
+import DesignSystem
 import Domain
 import Foundation
 
@@ -124,8 +125,20 @@ public struct SolarTermIntroFeature {
                 return .none
 
             case let .onCardTap(solarTermIntro):
-                state.content = SolarTermIntroContentFeature.State(term: solarTermIntro.term)
-                return .none
+                let info = state.solarTermInfos.first { $0.term == solarTermIntro.term }
+                let dateLabel = info?.formattedFullDateRange ?? ""
+                let isCurrent = info?.dateRange.contains(Date()) ?? false
+                state.content = SolarTermIntroContentFeature.State(
+                    intro: solarTermIntro,
+                    dateLabel: dateLabel,
+                    isCurrentTerm: isCurrent
+                )
+                return .run { send in
+                    let urlDictionary = await solarTermIntroRepository.fetchContentImageURLs(solarTermIntro.contents)
+                    let allURLs = Array(urlDictionary.values.flatMap { $0 })
+                    ImagePrefetchService.prefetch(allURLs)
+                    await send(.content(.presented(.imageURLsLoad(urlDictionary))))
+                }
 
             case .content(.presented(.delegate(.dismiss))):
                 state.content = nil
