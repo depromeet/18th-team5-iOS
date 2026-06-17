@@ -60,14 +60,12 @@ struct SolarTermCardView: View {
             Spacer()
 
             // 하단 미션 카드
-            if let mission {
-                MissionCardView(
-                    mission: mission,
-                    season: solarTerm.term?.season ?? .summer,
-                    onMissionTap: onMissionTap
-                )
-                .padding(.bottom, 16)
-            }
+            MissionCardView(
+                mission: mission,
+                season: solarTerm.term?.season ?? .summer,
+                onMissionTap: onMissionTap
+            )
+            .padding(.bottom, 16)
         }
         .frame(maxWidth: .infinity)
         .frame(height: 400)
