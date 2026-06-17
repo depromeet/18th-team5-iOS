@@ -13,6 +13,7 @@ enum ExternalModule {
     case dependencies
 	case dependenciesMacros
     case firebaseCore
+    case firebaseCrashlytics
     case firebaseMessaging
     case firebaseRemoteConfig
     case firebaseStorage
@@ -26,6 +27,7 @@ enum ExternalModule {
         case .dependencies: "Dependencies"
 		case .dependenciesMacros: "DependenciesMacros"
         case .firebaseCore: "FirebaseCore"
+        case .firebaseCrashlytics: "FirebaseCrashlytics"
         case .firebaseMessaging: "FirebaseMessaging"
         case .firebaseRemoteConfig: "FirebaseRemoteConfig"
         case .firebaseStorage: "FirebaseStorage"
