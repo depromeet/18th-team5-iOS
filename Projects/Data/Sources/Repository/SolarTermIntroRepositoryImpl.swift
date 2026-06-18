@@ -34,11 +34,21 @@ public enum SolarTermIntroRepositoryImpl {
                 await withTaskGroup(of: (String, [URL]).self) { group in
                     for content in contents {
                         group.addTask {
-                            var urls: [URL] = []
-                            for path in content.imageURLs {
-                                if let url = try? await storage.reference().child(path).downloadURL() {
-                                    urls.append(url)
+                            // 한 콘텐츠 안의 이미지들도 병렬로 다운로드, 원래 순서 보존
+                            let urls: [URL] = await withTaskGroup(of: (Int, URL?).self) { innerGroup in
+                                for (index, path) in content.imageURLs.enumerated() {
+                                    innerGroup.addTask {
+                                        let url = try? await storage.reference().child(path).downloadURL()
+                                        return (index, url)
+                                    }
                                 }
+                                var results = [(index: Int, url: URL?)]()
+                                for await result in innerGroup {
+                                    results.append(result)
+                                }
+                                return results
+                                    .sorted { lhs, rhs in lhs.index < rhs.index }
+                                    .compactMap { result in result.url }
                             }
                             return (content.id, urls)
                         }
