@@ -127,7 +127,7 @@ private extension DateRecordResponseDTO {
         return DateRecordCard(
             id: id,
             cardType: cardType,
-            missionId: missionId,
+            missionID: missionId,
             missionTitle: missionTitle,
             missionDescription: missionDescription,
             imageURL: presignedImageUrl.flatMap { URL(string: $0) },
