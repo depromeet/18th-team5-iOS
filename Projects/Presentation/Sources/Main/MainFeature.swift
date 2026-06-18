@@ -92,10 +92,7 @@ public struct MainFeature {
             switch action {
             case .onAppear:
                 return .merge([
-                    .concatenate([
-                        .run { send in await fetchAll(send) },
-                        .send(.handleNotificationTapEvent)
-                    ]),
+                    .run { send in await fetchAll(send) },
                     .send(.observePushNotificationTapEvent)
                 ])
 
@@ -270,7 +267,6 @@ private extension MainFeature {
         async let todaysSolarTerm: Void = fetchTodaysSolarTerm(send)
         async let userType: Void = fetchUserType(send)
         async let myPageConfig: Void = fetchMyPageConfig(send)
-
         _ = await (todaysSolarTerm, userType, myPageConfig)
     }
 
@@ -281,6 +277,7 @@ private extension MainFeature {
         let solarTerm = solarTerms?.first { $0.dateRange ~= Date.now }?.term
         if let solarTerm { analyticsClient.setSolarTerm(solarTerm) }
         await send(.set(\.solarTerm, solarTerm))
+        await send(.handleNotificationTapEvent)
     }
 
     func fetchUserType(_ send: Send<Action>) async {
