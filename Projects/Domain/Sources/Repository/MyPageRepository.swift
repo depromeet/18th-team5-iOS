@@ -17,6 +17,7 @@ public struct MyPageRepository: Sendable {
     public var fetchTermsOfService: @Sendable () async throws -> [DocumentInfo]
     public var fetchMyPageConfig: @Sendable () async throws -> MyPageConfig
     public var fetchUserID: @Sendable () async throws -> Int?
+    public var fetchUserType: @Sendable () async throws -> UserType?
     public var resetUserData: @Sendable () async throws -> Void
 }
 

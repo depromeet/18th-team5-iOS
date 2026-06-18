@@ -7,6 +7,7 @@
 //
 
 import ComposableArchitecture
+import Core
 import Domain
 import Foundation
 
@@ -14,6 +15,7 @@ import Foundation
 public struct MissionListFeature {
     @Dependency(\.missionRepository) private var missionRepository
     @Dependency(\.missionSearchGuideClient) private var missionSearchGuideClient
+    @Dependency(\.analyticsClient) private var analyticsClient
 
     public enum Alert: Equatable {
         case missionUnavailable
@@ -60,6 +62,7 @@ public struct MissionListFeature {
         case onAppear
         case themeTapped(MissionTheme)
         case indicatorIndexChanged(Int)
+        case missionCardScrolled(Mission)
         case searchMissionButtonTapped
         case missionCardTapped(Mission)
         case recommendedMissionsFetched(RecommendedMission?)
@@ -86,19 +89,36 @@ public struct MissionListFeature {
         Reduce { state, action in
             switch action {
             case .onAppear:
+                analyticsClient.logMissionScreenView()
                 handleTooltip(&state)
                 return .run { [state] send in
                     await fetchAll(state, send)
                     await send(.resolveFromHomePending)
                 }
             case let .themeTapped(theme):
-                let mission = state.missions.first { $0.theme == theme }
+                analyticsClient.logMissionCategoryTap(theme)
+                let fromIndex = state.missions.firstIndex { $0 == state.selectedMission }
+                let toIndex = state.missions.firstIndex { $0.theme == theme }
+                let mission = state.missions[safe: toIndex]
+
                 guard let mission else { return .none }
                 state.selectedMission = mission
+
+                logMissionCardNavigation(method: .tab, fromIndex: fromIndex, toIndex: toIndex)
                 return .none
-            case let .indicatorIndexChanged(index):
-                guard state.missions.indices.contains(index) else { return .none }
-                state.selectedMission = state.missions[index]
+            case let .missionCardScrolled(mission):
+                let fromIndex = state.missions.firstIndex { $0 == state.selectedMission }
+                let toIndex = state.missions.firstIndex { $0 == mission }
+                state.selectedMission = mission
+
+                logMissionCardNavigation(method: .scroll, fromIndex: fromIndex, toIndex: toIndex)
+                return .none
+            case let .indicatorIndexChanged(toIndex):
+                let fromIndex = state.missions.firstIndex { $0 == state.selectedMission }
+                guard state.missions.indices.contains(toIndex) else { return .none }
+                state.selectedMission = state.missions[toIndex]
+
+                logMissionCardNavigation(method: .indicator, fromIndex: fromIndex, toIndex: toIndex)
                 return .none
             case .openFromHome:
                 if let mission = state.searchedMission {
@@ -119,6 +139,7 @@ public struct MissionListFeature {
                 }
                 return .none
             case .searchMissionButtonTapped:
+                analyticsClient.logSelectMissionTap()
                 if let mission = state.searchedMission {
                     if mission.isCompleted == true {
                         return .send(.delegate(.showAlert(.missionUnavailable)))
@@ -132,6 +153,8 @@ public struct MissionListFeature {
                     return .none
                 }
             case let .missionCardTapped(mission):
+                let index = state.missions.firstIndex(of: mission)
+                analyticsClient.logMissionCardTap(mission, index)
                 if state.isAvailable == true {
                     return .send(.delegate(.navigateToMissionRecord(mission, .recommended)))
                 } else {
@@ -250,5 +273,21 @@ private extension MissionListFeature {
            availability.isAvailable == false {
             await send(.showCompleteAnimation)
         }
+    }
+
+    func logMissionCardNavigation(
+        method: MissionCardNavigationMethod,
+        fromIndex: Int?,
+        toIndex: Int?
+    ) {
+        guard let fromIndex, let toIndex, fromIndex != toIndex else { return }
+
+        let navigation = MissionCardNavigation(
+            method: method,
+            fromPosition: fromIndex,
+            toPosition: toIndex
+        )
+
+        analyticsClient.logMissionCardNavigate(navigation)
     }
 }
