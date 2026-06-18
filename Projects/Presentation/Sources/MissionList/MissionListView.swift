@@ -54,6 +54,17 @@ public struct MissionListView: View {
 }
 
 private extension MissionListView {
+    var missionSelection: Binding<Mission>? {
+        guard let selectedMission = store.selectedMission else { return nil }
+
+        return Binding(
+            get: { store.selectedMission ?? selectedMission },
+            set: { store.send(.missionCardScrolled($0)) }
+        )
+    }
+}
+
+private extension MissionListView {
     var headerView: some View {
         VStack(spacing: 20) {
             titleView
@@ -152,7 +163,7 @@ private extension MissionListView {
 
     @ViewBuilder
     var pickerView: some View {
-        if let selection = Binding($store.selectedMission) {
+        if let selection = missionSelection {
             CircularWheelPicker(
                 items: store.missions,
                 selection: selection,

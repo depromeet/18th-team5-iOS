@@ -11,5 +11,5 @@ public enum ProjectInfo {
     public static let appName: String = "Peaktime"
     public static let organizationName: String = "Orange"
     public static let destinations: Destinations = [.iPhone]
-    public static let deploymentTargets: DeploymentTargets = .iOS("17.0")
+    public static let deploymentTargets: DeploymentTargets = .iOS("18.0")
 }

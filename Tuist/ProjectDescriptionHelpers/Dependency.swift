@@ -41,6 +41,7 @@ private extension Module {
             .alamofire,
             .dependencies,
             .dependenciesMacros,
+            .firebaseAnalytics,
             .firebaseCore,
             .firebaseMessaging,
             .firebaseRemoteConfig,
