@@ -35,8 +35,27 @@ public enum FirebaseAnalyticsClientImpl {
         static let isCompleted = "is_completed"
     }
 
+    private enum UserPropertyKey {
+        static let userType = "user_type"
+    }
+
+    private enum DefaultParameterKey {
+        static let solarTerm = "solar_term"
+    }
+
     public static func live() -> AnalyticsClient {
         AnalyticsClient(
+            setUserType: { userType in
+                Analytics.setUserProperty(
+                    userType.analyticsValue,
+                    forName: UserPropertyKey.userType
+                )
+            },
+            setSolarTerm: { solarTerm in
+                Analytics.setDefaultEventParameters([
+                    DefaultParameterKey.solarTerm: solarTerm.rawValue
+                ])
+            },
             logMissionScreenView: {
                 Analytics.logEvent(Event.missionScreenView, parameters: nil)
             },
@@ -82,6 +101,17 @@ public enum FirebaseAnalyticsClientImpl {
 private extension Mission {
     var analyticsCategoryValue: String? {
         theme?.analyticsValue ?? attribute?.category?.analyticsValue
+    }
+}
+
+private extension UserType {
+    var analyticsValue: String {
+        switch self {
+        case .explorer: "explorer"
+        case .walker: "walker"
+        case .lifeCreator: "life_creator"
+        case .aesthete: "aesthete"
+        }
     }
 }
 

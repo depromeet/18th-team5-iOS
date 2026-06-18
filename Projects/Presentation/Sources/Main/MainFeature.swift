@@ -65,6 +65,7 @@ public struct MainFeature {
     @Dependency(\.notificationRepository) private var notificationRepository
     @Dependency(\.myPageRepository) private var myPageRepository
     @Dependency(\.missionRepository) private var missionRepository
+    @Dependency(\.analyticsClient) private var analyticsClient
 
     public init() {}
 
@@ -92,11 +93,10 @@ public struct MainFeature {
             case .onAppear:
                 return .merge([
                     .concatenate([
-                        .run { send in await fetchTodaysSolarTerm(send) },
+                        .run { send in await fetchAll(send) },
                         .send(.handleNotificationTapEvent)
                     ]),
-                    .send(.observePushNotificationTapEvent),
-                    .run { send in await fetchMyPageConfig(send) }
+                    .send(.observePushNotificationTapEvent)
                 ])
 
             case .observePushNotificationTapEvent:
@@ -266,12 +266,26 @@ public struct MainFeature {
 }
 
 private extension MainFeature {
+    func fetchAll(_ send: Send<Action>) async {
+        async let todaysSolarTerm: Void = fetchTodaysSolarTerm(send)
+        async let userType: Void = fetchUserType(send)
+        async let myPageConfig: Void = fetchMyPageConfig(send)
+
+        _ = await (todaysSolarTerm, userType, myPageConfig)
+    }
+
     func fetchTodaysSolarTerm(_ send: Send<Action>) async {
         let year = SolarTermYear(rawValue: Date.now.year)
         guard let year else { return }
         let solarTerms = try? await solarTermRepository.fetchSolarTerms(year)
         let solarTerm = solarTerms?.first { $0.dateRange ~= Date.now }?.term
+        if let solarTerm { analyticsClient.setSolarTerm(solarTerm) }
         await send(.set(\.solarTerm, solarTerm))
+    }
+
+    func fetchUserType(_ send: Send<Action>) async {
+        let userType = try? await myPageRepository.fetchUserType()
+        if let userType { analyticsClient.setUserType(userType) }
     }
 
     func syncNotificationSettings(_ settings: [NotificationType: Bool]) async {
