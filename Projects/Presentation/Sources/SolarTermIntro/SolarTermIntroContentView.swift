@@ -38,6 +38,7 @@ struct SolarTermIntroContentView: View {
         }
         .swipeBackEnabled(isEnabled: !store.isLoading)
         .loading(isLoading: store.isLoading)
+        .customAlert(store.scope(state: \.alert, action: \.alert))
         .onAppear { store.send(.onAppear) }
         .background(Color.gray50)
         .navigationBarBackButtonHidden()

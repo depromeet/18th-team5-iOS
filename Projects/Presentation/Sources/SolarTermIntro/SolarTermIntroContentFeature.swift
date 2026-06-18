@@ -7,6 +7,7 @@
 //
 
 import ComposableArchitecture
+import DesignSystem
 import Domain
 import Foundation
 
@@ -23,6 +24,7 @@ public struct SolarTermIntroContentFeature {
         var imageURL: [String: [URL]] = [:]
         var isLoading: Bool = true
         var isCurrentTerm: Bool = false
+        var alert: CustomAlertFeature<Alert>.State?
 
         public init(term: SolarTerm) {
             self.term = term
@@ -42,12 +44,18 @@ public struct SolarTermIntroContentFeature {
     @Dependency(\.solarTermIntroRepository) var solarTermIntroRepository
     @Dependency(\.solarTermRepository) var solarTermRepository
 
+    public enum Alert: Equatable {
+        case loadFailed
+    }
+
     public enum Action {
         case onAppear
         case introLoaded(SolarTermIntro, String, Bool)
+        case introLoadFailed
         case imageURLsLoad([String: [URL]])
         case onTapBack
         case onMissionTap
+        case alert(CustomAlertFeature<Alert>.Action)
         case delegate(Delegate)
 
         public enum Delegate {
@@ -66,17 +74,36 @@ public struct SolarTermIntroContentFeature {
                 guard state.solarTermIntro == nil else { return .none }
                 state.isLoading = true
                 return .run { [term = state.term] send in
-                    async let cards = solarTermIntroRepository.fetchSolarTermCard()
-                    async let infos = solarTermRepository.fetchSolarTerms(.current)
-                    guard let (fetchedCards, fetchedInfos) = try? await (cards, infos),
-                          let card = fetchedCards.first(where: { $0.term == term }) else { return }
-                    let info = fetchedInfos.first { $0.term == term }
-                    let dateLabel = info?.formattedFullDateRange ?? ""
-                    let isCurrent = info?.dateRange.contains(Date()) ?? false
-                    await send(.introLoaded(card, dateLabel, isCurrent))
-                    let urlDictionary = await solarTermIntroRepository.fetchContentImageURLs(card.contents)
-                    await send(.imageURLsLoad(urlDictionary))
+                    do {
+                        async let cards = solarTermIntroRepository.fetchSolarTermCard()
+                        async let infos = solarTermRepository.fetchSolarTerms(.current)
+                        let (fetchedCards, fetchedInfos) = try await (cards, infos)
+                        guard let card = fetchedCards.first(where: { $0.term == term }) else {
+                            await send(.introLoadFailed)
+                            return
+                        }
+                        let info = fetchedInfos.first { $0.term == term }
+                        let dateLabel = info?.formattedFullDateRange ?? ""
+                        let isCurrent = info?.dateRange.contains(Date()) ?? false
+                        await send(.introLoaded(card, dateLabel, isCurrent))
+                        let urlDictionary = await solarTermIntroRepository.fetchContentImageURLs(card.contents)
+                        await send(.imageURLsLoad(urlDictionary))
+                    } catch {
+                        await send(.introLoadFailed)
+                    }
                 }
+
+            case .introLoadFailed:
+                state.isLoading = false
+                state.alert = CustomAlertFeature<Alert>.State(.loadFailed)
+                return .none
+
+            case .alert(.primaryButtonTapped):
+                state.alert = nil
+                return .send(.delegate(.dismiss))
+
+            case .alert:
+                return .none
 
             case let .introLoaded(intro, dateLabel, isCurrent):
                 state.solarTermIntro = intro
@@ -101,6 +128,18 @@ public struct SolarTermIntroContentFeature {
             case .delegate:
                 return .none
             }
+        }
+    }
+}
+
+extension SolarTermIntroContentFeature.Alert: AlertPresentable {
+    public var alertInfo: AlertInfo {
+        switch self {
+        case .loadFailed:
+            return AlertInfo(
+                title: "데이터를 불러오지 못했어요",
+                buttonTitle: "확인"
+            )
         }
     }
 }

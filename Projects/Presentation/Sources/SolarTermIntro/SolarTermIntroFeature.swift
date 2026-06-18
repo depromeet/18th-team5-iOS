@@ -36,10 +36,16 @@ public struct SolarTermIntroFeature {
 
         var dateLabels: [SolarTerm: String] = [:]
         var fullDateLabels: [SolarTerm: String] = [:]
+        var alert: CustomAlertFeature<Alert>.State?
+    }
+
+    public enum Alert: Equatable {
+        case loadFailed
     }
 
     public enum Action {
         case onAppear
+        case loadFailed
         case selectSeason(Season)
         case scrolledToCard(SolarTerm)
         case onCardTap(SolarTermIntro)
@@ -47,6 +53,7 @@ public struct SolarTermIntroFeature {
         case solarTermsLoad([SolarTermIntro])
         case solarTermInfosLoad([SolarTermInfo])
         case currentCardImageURLLoaded(URL)
+        case alert(CustomAlertFeature<Alert>.Action)
         case delegate(Delegate)
 
         public enum Delegate {
@@ -63,16 +70,28 @@ public struct SolarTermIntroFeature {
         Reduce { state, action in
             switch action {
             case .onAppear:
-                return .merge(
-                    .run { send in
-                        let cards = try await solarTermIntroRepository.fetchSolarTermCard()
-                        await send(.solarTermsLoad(cards))
-                    },
-                    .run { send in
-                        let infos = try await solarTermRepository.fetchSolarTerms(.current)
-                        await send(.solarTermInfosLoad(infos))
+                return .run { send in
+                    do {
+                        async let cards = solarTermIntroRepository.fetchSolarTermCard()
+                        async let infos = solarTermRepository.fetchSolarTerms(.current)
+                        let (fetchedCards, fetchedInfos) = try await (cards, infos)
+                        await send(.solarTermsLoad(fetchedCards))
+                        await send(.solarTermInfosLoad(fetchedInfos))
+                    } catch {
+                        await send(.loadFailed)
                     }
-                )
+                }
+
+            case .loadFailed:
+                state.alert = CustomAlertFeature<Alert>.State(.loadFailed)
+                return .none
+
+            case .alert(.primaryButtonTapped):
+                state.alert = nil
+                return .send(.onAppear)
+
+            case .alert:
+                return .none
 
             case let .solarTermsLoad(cards):
                 state.allCards = cards
@@ -155,6 +174,18 @@ public struct SolarTermIntroFeature {
         }
         .ifLet(\.$content, action: \.content) {
             SolarTermIntroContentFeature()
+        }
+    }
+}
+
+extension SolarTermIntroFeature.Alert: AlertPresentable {
+    public var alertInfo: AlertInfo {
+        switch self {
+        case .loadFailed:
+            return AlertInfo(
+                title: "데이터를 불러오지 못했어요",
+                buttonTitle: "다시 시도"
+            )
         }
     }
 }
