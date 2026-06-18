@@ -19,15 +19,19 @@ public struct HomeFeature {
         var homeCard: HomeCard?
         var seasonRecord: SeasonRecord?
         var isLoading: Bool = false
-        var hasError: Bool = false
+        var alert: CustomAlertFeature<Alert>.State?
 
         public init() {}
     }
 
+    public enum Alert: Equatable {
+        case loadFailed
+    }
+
     public enum Action {
         case onAppear
-        case onRetryTap
         case homeLoad(Result<HomeCard, Error>)
+        case alert(CustomAlertFeature<Alert>.Action)
         case seasonRecordLoad(Result<SeasonRecord, Error>)
         case onMissionTap
         case onMissionRecommendTap
@@ -55,8 +59,7 @@ public struct HomeFeature {
     public var body: some ReducerOf<Self> {
         Reduce { state, action in
             switch action {
-            case .onAppear, .onRetryTap:
-                state.hasError = false
+            case .onAppear:
                 state.isLoading = true
                 return .run { send in
                     do {
@@ -82,8 +85,15 @@ public struct HomeFeature {
 
             case let .homeLoad(.failure(error)):
                 state.isLoading = false
-                state.hasError = true
+                state.alert = CustomAlertFeature<Alert>.State(.loadFailed)
                 print("HomeFeature fetchHome 실패: \(error)")
+                return .none
+
+            case .alert(.primaryButtonTapped):
+                state.alert = nil
+                return .send(.onAppear)
+
+            case .alert:
                 return .none
 
             case let .seasonRecordLoad(.success(record)):
@@ -128,6 +138,18 @@ public struct HomeFeature {
             case .delegate:
                 return .none
             }
+        }
+    }
+}
+
+extension HomeFeature.Alert: AlertPresentable {
+    public var alertInfo: AlertInfo {
+        switch self {
+        case .loadFailed:
+            return AlertInfo(
+                title: "데이터를 불러오지 못했어요",
+                buttonTitle: "다시 시도"
+            )
         }
     }
 }
