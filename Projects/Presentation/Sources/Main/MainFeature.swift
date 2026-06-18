@@ -188,6 +188,7 @@ public struct MainFeature {
                     state.path.append(.missionRecord(.init(
                         editingCompletionId: card.id,
                         missionTitle: card.missionTitle ?? "미션 기록",
+                        missionDescription: card.missionDescription,
                         missionType: card.cardType.missionType,
                         imageURL: card.imageURL,
                         memo: card.memo

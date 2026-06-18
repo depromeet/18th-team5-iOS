@@ -46,6 +46,7 @@ public struct MissionRecordFeature {
         public init(
             editingCompletionId: Int,
             missionTitle: String,
+            missionDescription: String?,
             missionType: MissionType,
             imageURL: URL?,
             memo: String?
@@ -53,6 +54,7 @@ public struct MissionRecordFeature {
             self.missionId = 0
             self.missionType = missionType
             self.missionTitle = missionTitle
+            self.missionDescription = missionDescription
             self.editingCompletionId = editingCompletionId
             self.originalImageURL = imageURL
             self.originalMemo = memo
