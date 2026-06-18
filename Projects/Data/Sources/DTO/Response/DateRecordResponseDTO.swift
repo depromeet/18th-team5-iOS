@@ -14,8 +14,12 @@ struct DateRecordResponseDTO: Decodable {
     let id: Int
     /// 기록 타입 (DAILY / RECOMMENDED / SELECTED / FREE)
     let cardType: String
+    /// 미션 ID (FREE 타입이면 null)
+    let missionId: Int?
     /// 미션 제목 (FREE 타입이면 null)
     let missionTitle: String?
+    /// 미션 설명 (FREE 타입이면 null)
+    let missionDescription: String?
     /// 이미지 presigned URL (이미지 없으면 null)
     let presignedImageUrl: String?
     let memo: String?

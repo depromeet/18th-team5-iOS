@@ -15,8 +15,12 @@ import Foundation
 public struct DateRecordCard: Equatable {
     public let id: Int
     public let cardType: RecordCardType
+    /// 미션 ID (`.free` 타입이면 nil)
+    public let missionId: Int?
     /// 미션 제목 (`.free` 타입이면 nil)
     public let missionTitle: String?
+    /// 미션 설명 (`.free` 타입이면 nil)
+    public let missionDescription: String?
     /// 기록 이미지 presigned URL (이미지 없으면 nil)
     public let imageURL: URL?
     public let memo: String?
@@ -26,14 +30,18 @@ public struct DateRecordCard: Equatable {
     public init(
         id: Int,
         cardType: RecordCardType,
+        missionId: Int?,
         missionTitle: String?,
+        missionDescription: String?,
         imageURL: URL?,
         memo: String?,
         recordedAt: Date
     ) {
         self.id = id
         self.cardType = cardType
+        self.missionId = missionId
         self.missionTitle = missionTitle
+        self.missionDescription = missionDescription
         self.imageURL = imageURL
         self.memo = memo
         self.recordedAt = recordedAt
