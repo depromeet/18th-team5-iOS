@@ -39,7 +39,12 @@ public struct SolarTermIntroContentFeature {
         }
     }
 
+    @Dependency(\.solarTermIntroRepository) var solarTermIntroRepository
+    @Dependency(\.solarTermRepository) var solarTermRepository
+
     public enum Action {
+        case onAppear
+        case introLoaded(SolarTermIntro, String, Bool)
         case imageURLsLoad([String: [URL]])
         case onTapBack
         case onMissionTap
@@ -56,6 +61,30 @@ public struct SolarTermIntroContentFeature {
     public var body: some ReducerOf<Self> {
         Reduce { state, action in
             switch action {
+            case .onAppear:
+                // init(term:)으로 생성된 경우에만 직접 fetch
+                guard state.solarTermIntro == nil else { return .none }
+                state.isLoading = true
+                return .run { [term = state.term] send in
+                    async let cards = solarTermIntroRepository.fetchSolarTermCard()
+                    async let infos = solarTermRepository.fetchSolarTerms(.current)
+                    guard let (fetchedCards, fetchedInfos) = try? await (cards, infos),
+                          let card = fetchedCards.first(where: { $0.term == term }) else { return }
+                    let info = fetchedInfos.first { $0.term == term }
+                    let dateLabel = info?.formattedFullDateRange ?? ""
+                    let isCurrent = info?.dateRange.contains(Date()) ?? false
+                    await send(.introLoaded(card, dateLabel, isCurrent))
+                    let urlDictionary = await solarTermIntroRepository.fetchContentImageURLs(card.contents)
+                    await send(.imageURLsLoad(urlDictionary))
+                }
+
+            case let .introLoaded(intro, dateLabel, isCurrent):
+                state.solarTermIntro = intro
+                state.dateLabel = dateLabel
+                state.isCurrentTerm = isCurrent
+                state.isLoading = false
+                return .none
+
             case let .imageURLsLoad(urlDictionary):
                 state.imageURL = urlDictionary
                 return .none
