@@ -26,6 +26,7 @@ struct SolarTermIntroView: View {
             Spacer()
         }
         .navigationBarTitleDisplayMode(.inline)
+        .customAlert(store.scope(state: \.alert, action: \.alert))
         .onAppear { store.send(.onAppear) }
         .navigationDestination(
             item: $store.scope(state: \.content, action: \.content)

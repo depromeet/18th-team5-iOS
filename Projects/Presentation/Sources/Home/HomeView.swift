@@ -46,6 +46,7 @@ public struct HomeView: View {
                 myPageAction: { store.send(.myPageButtonTapped) }
             )
         }
+        .customAlert(store.scope(state: \.alert, action: \.alert))
         .onAppear { store.send(.onAppear) }
     }
 
@@ -53,8 +54,6 @@ public struct HomeView: View {
     private var content: some View {
         if store.isLoading {
             loadingView
-        } else if store.hasError {
-            errorView
         } else if let homeCard = store.homeCard {
             loadedView(for: homeCard)
         }
@@ -64,22 +63,6 @@ public struct HomeView: View {
         ProgressView()
             .frame(maxWidth: .infinity)
             .padding(.top, 80)
-    }
-
-    private var errorView: some View {
-        VStack(spacing: 12) {
-            Text("데이터를 불러오지 못했어요")
-                .font(.body1Regular)
-                .foregroundStyle(Color.gray600)
-
-            Button(action: { store.send(.onRetryTap) }) {
-                Text("불러오기")
-                    .font(.body2Medium)
-                    .foregroundStyle(Color.gray600)
-            }
-        }
-        .frame(maxWidth: .infinity)
-        .padding(.top, 80)
     }
 
     private func loadedView(for homeCard: HomeCard) -> some View {
@@ -129,9 +112,7 @@ private struct ScrollOffsetKey: PreferenceKey {
         store: Store(initialState: HomeFeature.State()) {
             HomeFeature()
         } withDependencies: {
-            $0.homeRepository.fetchCard = {
-                throw URLError(.notConnectedToInternet)
-            }
+            $0.homeRepository.fetchCard = { throw URLError(.notConnectedToInternet) }
         }
     )
 }
