@@ -122,11 +122,8 @@ public struct SolarTermIntroContentFeature {
             case .onMissionTap:
                 return .send(.delegate(.navigateToMissionTab))
 
-            case .delegate(.dismiss):
-                return .run { _ in await dismiss() }
-
             case .delegate:
-                return .none
+                return .run { _ in await dismiss() }
             }
         }
     }
