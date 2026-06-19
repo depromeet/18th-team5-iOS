@@ -209,6 +209,7 @@ public struct MainFeature {
                 id: _,
                 action: .solarTermIntroContent(.delegate(.navigateToMissionTab))
             )):
+                state.path.removeAll()
                 state.tab = .mission
                 return .none
 
