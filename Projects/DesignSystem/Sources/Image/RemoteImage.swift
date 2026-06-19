@@ -38,6 +38,8 @@ public struct RemoteImage: View {
                 .fade(duration: 0.25)
                 .resizable()
                 .aspectRatio(contentMode: contentMode)
+                .frame(width: proxy.size.width, height: proxy.size.height)
+                .clipped()
         }
     }
 }
