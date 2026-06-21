@@ -58,38 +58,32 @@ struct CalendarDateCell: View {
     }
 
     var thumbnailView: some View {
-        Group {
-            if let url = data?.thumbnailURL {
-                KFImage(url)
-                    .setProcessor(
-                        DownsamplingImageProcessor(
-                            size: CGSize(
-                                width: Constants.thumbnailSize,
-                                height: Constants.thumbnailSize
-                            )
-                        )
-                    )
-                    .cacheMemoryOnly()
-                    .placeholder { thumbnailPlaceHolder }
-                    .scaleFactor(UIScreen.main.scale)
-                    .fade(duration: 0.1)
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
-            } else {
+        KFImage(data?.thumbnailURL)
+            .placeholder {
                 thumbnailPlaceHolder
             }
-        }
-        .frame(
-            width: Constants.thumbnailSize,
-            height: Constants.thumbnailSize
-        )
-        .clipShape(
-            CalendarCellImageShape(
-                containerPadding: 2.56,
-                containerRadius: 4,
-                protrusionRadius: 1.78
+            .setProcessor(
+                DownsamplingImageProcessor(
+                    size: CGSize(
+                        width: Constants.thumbnailSize,
+                        height: Constants.thumbnailSize
+                    )
+                )
             )
-        )
+            .cacheMemoryOnly()
+            .placeholder { thumbnailPlaceHolder }
+            .scaleFactor(UIScreen.main.scale)
+            .fade(duration: 0.1)
+            .resizable()
+            .aspectRatio(contentMode: .fill)
+            .frame(width: Constants.thumbnailSize, height: Constants.thumbnailSize)
+            .clipShape(
+                CalendarCellImageShape(
+                    containerPadding: 2.56,
+                    containerRadius: 4,
+                    protrusionRadius: 1.78
+                )
+            )
     }
 
     var dateTextView: some View {

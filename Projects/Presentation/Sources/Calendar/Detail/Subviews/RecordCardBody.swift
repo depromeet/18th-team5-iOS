@@ -114,23 +114,19 @@ private extension RecordCardBody {
     var cardPhoto: some View {
         switch imageSource {
         case let .remote(url):
-            if let url {
-                // 카드 이미지 영역 한 변(가로 패딩 48 * 2 제외)에 맞춰 다운샘플링하여
-                // 대용량 presigned 이미지를 매 렌더마다 원본 크기로 합성하지 않도록 합니다.
-                let imageSide = max(cardWidth - 96, 1)
-                KFImage(url)
-                    .placeholder { cardImagePlaceholder }
-                    .setProcessor(
-                        DownsamplingImageProcessor(
-                            size: CGSize(width: imageSide, height: imageSide)
-                        )
+            let imageSide = max(cardWidth - 96, 1)
+            KFImage(url)
+                .placeholder { cardImagePlaceholder }
+                .setProcessor(
+                    DownsamplingImageProcessor(
+                        size: CGSize(width: imageSide, height: imageSide)
                     )
-                    .cacheMemoryOnly()
-                    .scaleFactor(UIScreen.main.scale)
-                    .fade(duration: 0.1)
-                    .resizable()
-                    .scaledToFill()
-            }
+                )
+                .cacheMemoryOnly()
+                .scaleFactor(UIScreen.main.scale)
+                .fade(duration: 0.1)
+                .resizable()
+                .scaledToFill()
 
         case let .decoded(image):
             if let image {
