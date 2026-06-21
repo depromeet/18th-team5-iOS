@@ -9,15 +9,6 @@ import DesignSystem
 import Domain
 import SwiftUI
 
-/// 카드 스택 최상단(내용) 카드 뷰.
-///
-/// 시각 표현은 `RecordCardBody`(저장·공유 경로와 공유)에 위임하고, 이 뷰는 화면에서만 필요한
-/// 인터랙션 요소(카운트 배지·메뉴)를 overlay로 얹습니다.
-///
-/// CardStackView는 드래그 한 틱마다 body를 재평가하므로, 카드 내용이 그대로일 때 본문을
-/// 다시 빌드하면(특히 KFImage·그라데이션) 프레임 드랍이 발생합니다. `Equatable`로 입력이
-/// 동일하면 body 재실행을 건너뛰고, 드래그 변환(offset/opacity/scale)은 이 뷰 바깥에서만
-/// 적용되어 GPU에서 저렴하게 처리됩니다.
 struct RecordCardContentView: View, Equatable {
     let term: SolarTerm
     let card: DateRecordCard
