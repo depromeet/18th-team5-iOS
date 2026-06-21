@@ -36,7 +36,7 @@ extension CalendarFeature {
 
         let info = anchoredTerm.solarTermInfo
         let recordKey = Self.termRecordKey(info.year, info.term)
-        if let termRecordData = state.termRecordData[recordKey],
+        if let termRecordData = state.calendarState.cellContext[recordKey],
            termRecordData.data == nil {
             effects.append(
                 .send(.calendarDataRequest(.specific(id: termRecordData.requestId)))
