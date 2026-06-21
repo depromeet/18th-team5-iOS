@@ -69,9 +69,10 @@ struct CalendarDateCell: View {
                             )
                         )
                     )
+                    .cacheMemoryOnly()
                     .placeholder { thumbnailPlaceHolder }
                     .scaleFactor(UIScreen.main.scale)
-                    .fade(duration: 0.2)
+                    .fade(duration: 0.1)
                     .resizable()
                     .aspectRatio(contentMode: .fill)
             } else {

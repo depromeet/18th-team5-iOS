@@ -11,12 +11,6 @@ import Kingfisher
 import SwiftUI
 import UIKit
 
-/// 카드의 시각 표현(배경·사진·미션 제목/태그·메모) 단일 정의.
-///
-/// 화면 표시(`RecordCardContentView`)와 이미지 저장·공유(`CardImageRenderer`)가 동일한 레이아웃을
-/// 공유하도록 추출한 뷰입니다. 두 경로의 유일한 차이인 이미지 로딩 방식만 `CardImageSource`로
-/// 분기하므로, 레이아웃을 바꾸면 양쪽이 자동으로 일치합니다. (인터랙션 요소인 툴바는
-/// `RecordCardContentView`가 이 뷰 위에 overlay로만 얹습니다.)
 struct RecordCardBody: View {
     let term: SolarTerm
     let card: DateRecordCard
@@ -131,9 +125,9 @@ private extension RecordCardBody {
                             size: CGSize(width: imageSide, height: imageSide)
                         )
                     )
+                    .cacheMemoryOnly()
                     .scaleFactor(UIScreen.main.scale)
-                    .cacheOriginalImage()
-                    .fade(duration: 0.2)
+                    .fade(duration: 0.1)
                     .resizable()
                     .scaledToFill()
             }
