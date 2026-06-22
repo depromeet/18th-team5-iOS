@@ -51,8 +51,9 @@ public struct HomeFeature {
         }
     }
 
-    @Dependency(\.homeRepository) var homeRepository
-    @Dependency(\.missionRepository) var missionRepository
+    @Dependency(\.homeRepository) private var homeRepository
+    @Dependency(\.missionRepository) private var missionRepository
+    @Dependency(\.analyticsClient) private var analyticsClient
 
     public init() {}
 
@@ -60,6 +61,7 @@ public struct HomeFeature {
         Reduce { state, action in
             switch action {
             case .onAppear:
+                analyticsClient.logHomeScreenView()
                 state.isLoading = true
                 return .run { send in
                     do {
@@ -110,6 +112,8 @@ public struct HomeFeature {
                 guard let mission = homeCard.currentMission else {
                     return .send(.delegate(.navigateToMissionTab))
                 }
+
+                analyticsClient.logHomeQuickRecordTap(mission.id)
                 return .send(.delegate(.navigateToMissionCamera(
                     missionId: mission.id,
                     title: mission.title,
@@ -117,6 +121,7 @@ public struct HomeFeature {
                 )))
 
             case .onMissionRecommendTap:
+                analyticsClient.logHomeMissionShortcutTap()
                 return .send(.delegate(.navigateToMissionTab))
 
             case .onSolarTermDetailTap:
@@ -127,6 +132,9 @@ public struct HomeFeature {
                 return .send(.delegate(.navigateToMyPage))
 
             case .calendarButtonTapped:
+                if let recordCount = state.seasonRecord?.recordCount {
+                    analyticsClient.logHomeRecordMoreTap(recordCount)
+                }
                 return .send(.delegate(.navigateToCalendar))
 
             case let .onRecordPhotoTap(dateString):

@@ -21,7 +21,9 @@ public enum FirebaseAnalyticsClientImpl {
         static let onboardingQ2Submit = "onboarding_q2_submit"
         static let onboardingQ3Submit = "onboarding_q3_submit"
         static let onboardingCompleteSubmit = "onboarding_complete_submit"
-        static let missionScreenView = "mission_screen_view"
+        static let homeMissionShortcutTap = "home_mission_shortcut_tap"
+        static let homeQuickRecordTap = "home_quick_record_tap"
+        static let homeRecordMoreTap = "home_record_more_tap"
         static let missionCategoryTap = "mission_category_tap"
         static let missionCardNavigate = "mission_missioncard_navigate"
         static let selectMissionTap = "mission_selectmission_tap"
@@ -45,6 +47,7 @@ public enum FirebaseAnalyticsClientImpl {
         static let missionName = "mission_name"
         static let cardPosition = "card_position"
         static let isCompleted = "is_completed"
+        static let recordCount = "record_count"
     }
 
     private enum UserPropertyKey {
@@ -127,8 +130,30 @@ public enum FirebaseAnalyticsClientImpl {
                     ParameterKey.q3Rank1: ranking[0]
                 ])
             },
+            logHomeScreenView: {
+                Analytics.logEvent(AnalyticsEventScreenView, parameters: [
+                    AnalyticsParameterScreenName: "홈",
+                    AnalyticsParameterScreenClass: "HomeView"
+                ])
+            },
+            logHomeMissionShortcutTap: {
+                Analytics.logEvent(Event.homeMissionShortcutTap, parameters: nil)
+            },
+            logHomeQuickRecordTap: { missionId in
+                Analytics.logEvent(Event.homeQuickRecordTap, parameters: [
+                    ParameterKey.missionId: missionId
+                ])
+            },
+            logHomeRecordMoreTap: { recordCount in
+                Analytics.logEvent(Event.homeRecordMoreTap, parameters: [
+                    ParameterKey.recordCount: recordCount
+                ])
+            },
             logMissionScreenView: {
-                Analytics.logEvent(Event.missionScreenView, parameters: nil)
+                Analytics.logEvent(AnalyticsEventScreenView, parameters: [
+                    AnalyticsParameterScreenName: "미션",
+                    AnalyticsParameterScreenClass: "MissionListView"
+                ])
             },
             logMissionCategoryTap: { category in
                 Analytics.logEvent(Event.missionCategoryTap, parameters: [

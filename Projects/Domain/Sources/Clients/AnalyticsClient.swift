@@ -20,6 +20,10 @@ public struct AnalyticsClient: Sendable {
     public var logOnboardingQ2Submit: @Sendable (_ answer: EngagementLevel) -> Void
     public var logOnboardingQ3Submit: @Sendable (_ ranking: [ActivityTheme]) -> Void
     public var logOnboardingCompleteSubmit: @Sendable (_ preference: UserPreference) -> Void
+    public var logHomeScreenView: @Sendable () -> Void
+    public var logHomeMissionShortcutTap: @Sendable () -> Void
+    public var logHomeQuickRecordTap: @Sendable (_ missionId: Int) -> Void
+    public var logHomeRecordMoreTap: @Sendable (_ recordCount: Int) -> Void
     public var logMissionScreenView: @Sendable () -> Void
     public var logMissionCategoryTap: @Sendable (_ category: MissionTheme) -> Void
     public var logSelectMissionTap: @Sendable () -> Void
