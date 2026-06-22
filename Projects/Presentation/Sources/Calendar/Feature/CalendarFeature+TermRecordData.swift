@@ -46,7 +46,7 @@ extension CalendarFeature {
                     guard let item else { continue }
 
                     let termRecordKey = Self.termRecordKey(item.year, item.term)
-                    if let record = state.termRecordData[termRecordKey], record.data != nil {
+                    if let record = state.calendarState.cellContext[termRecordKey], record.data != nil {
                         continue
                     }
 
@@ -80,7 +80,7 @@ extension CalendarFeature {
             let info = anchoredTerm.solarTermInfo
             let fetchId = Self.termRecordKey(info.year, info.term)
 
-            if let pending = state.termRecordData[fetchId] {
+            if let pending = state.calendarState.cellContext[fetchId] {
                 let request = TermFetchRequest.specific(id: pending.requestId)
                 return .send(.calendarDataRequest(request))
             }

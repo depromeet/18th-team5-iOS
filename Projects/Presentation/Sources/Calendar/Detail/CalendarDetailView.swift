@@ -25,48 +25,9 @@ struct CalendarDetailView: View {
 
             switch store.displayType {
             case .currentTermUpToToday:
-                if let cards = store.dateRecordCards {
-                    if !cards.isEmpty {
-                        if cards.count == 1, let card = cards.first {
-                            VStack(spacing: .zero) {
-                                cardView(
-                                    term: store.term,
-                                    cardIndex: 0,
-                                    orderIndex: 0,
-                                    card: card,
-                                    totalCount: 1
-                                )
-                                .padding(.top, 20)
-                                Spacer()
-                            }
-                            .transition(.opacity)
-                        } else {
-                            VStack(spacing: .zero) {
-                                CardStackView(
-                                    topCardIndex: $store.frontCardIndex,
-                                    items: cards
-                                ) { cardIndex, orderIndex, item in
-                                    cardView(
-                                        term: store.term,
-                                        cardIndex: cardIndex,
-                                        orderIndex: orderIndex,
-                                        card: item,
-                                        totalCount: cards.count
-                                    )
-                                }
-                                .padding(.top, 16)
-                                Spacer()
-                            }
-                            .clipped()
-                            .transition(.opacity)
-                            .ignoresSafeArea(.container, edges: .bottom)
-                        }
-
-                        bottomButtonContainer
-                    } else {
-                        currentTermNoRecordView {
-                            store.send(.createRecordButtonTapped)
-                        }
+                cardsView {
+                    currentTermNoRecordView {
+                        store.send(.createRecordButtonTapped)
                     }
                 }
 
@@ -74,7 +35,9 @@ struct CalendarDetailView: View {
                 futureDayNoRecordViewInCurrentTerm
 
             case .passedTerm:
-                passedTermNoRecordView
+                cardsView {
+                    passedTermNoRecordView
+                }
 
             case .futureTerm:
                 futureTermRecordView
@@ -112,6 +75,50 @@ struct CalendarDetailView: View {
             guard !Task.isCancelled else { return }
             store.send(.viewDidLoad)
         }
+    }
+
+    @ViewBuilder
+    func cardsView(onCardIsEmpty: () -> some View) -> some View {
+        if let cards = store.dateRecordCards {
+            if !cards.isEmpty {
+                if cards.count == 1, let card = cards.first {
+                    VStack(spacing: .zero) {
+                        cardView(
+                            term: store.term,
+                            cardIndex: 0,
+                            orderIndex: 0,
+                            card: card,
+                            totalCount: 1
+                        )
+                        .padding(.top, 20)
+                        Spacer()
+                    }
+                    .transition(.opacity)
+                } else {
+                    VStack(spacing: .zero) {
+                        CardStackView(
+                            topCardIndex: $store.frontCardIndex,
+                            items: cards
+                        ) { cardIndex, orderIndex, item in
+                            cardView(
+                                term: store.term,
+                                cardIndex: cardIndex,
+                                orderIndex: orderIndex,
+                                card: item,
+                                totalCount: cards.count
+                            )
+                        }
+                        .padding(.top, 16)
+                        Spacer()
+                    }
+                    .clipped()
+                    .transition(.opacity)
+                    .ignoresSafeArea(.container, edges: .bottom)
+                }
+
+                bottomButtonContainer
+            } else { onCardIsEmpty() }
+        } else { EmptyView() }
     }
 }
 

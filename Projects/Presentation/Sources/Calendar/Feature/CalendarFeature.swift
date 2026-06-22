@@ -23,7 +23,10 @@ public struct CalendarFeature {
 
         public var header: CalendarHeader?
         public var isFloatingRecordButtonExpanded: Bool = true
-        public var calendarState: PagingTableViewState<SolarTermGroup> = .init(pages: [])
+        public var calendarState: PagingTableViewState<SolarTermGroup, TermRecordContext> = .init(
+            pages: [],
+            cellContext: [:]
+        )
         public var selectedDateId: SolarTermDate.ID?
         @Presents public var detail: CalendarDetailFeature.State?
         public var alert: CustomAlertFeature<Alert>.State?
@@ -31,7 +34,6 @@ public struct CalendarFeature {
             detail != nil
         }
 
-        var termRecordData: [String: CalendarTermRecordData] = [:]
         var isAppeared: Bool = false
         var anchoredTermId: SolarTermGroup.ID?
         /// 스크롤로 상단 절기가 바뀔 때마다 증가하는 햅틱 트리거. 프로그래밍적 앵커 이동에는 반응하지 않는다.
@@ -288,7 +290,7 @@ public struct CalendarFeature {
                 return .none
 
             case let .updateTermRecordData(id, data):
-                state.termRecordData[id] = data
+                state.calendarState.cellContext[id] = data
                 return .none
 
             case let .updateRowReloadRequest(request):
@@ -336,8 +338,14 @@ extension CalendarFeature.Alert: AlertPresentable {
 
 extension CalendarFeature.State {
     func dateData(_ date: SolarTermDate) -> CalendarDateRecord? {
+        Self.dateData(date, in: calendarState.cellContext)
+    }
+
+    /// 컨텍스트(termRecordKey → 기록)에서 특정 날짜의 기록을 조회한다. store에 의존하지 않는 순수 함수로,
+    /// `cellContext`만 있으면 셀 빌더에서 동일한 결과를 재현할 수 있다.
+    static func dateData(_ date: SolarTermDate, in context: TermRecordContext) -> CalendarDateRecord? {
         let termRecordKey = CalendarFeature.termRecordKey(date.year, date.term)
-        guard let termRecord = termRecordData[termRecordKey]?.data else { return nil }
+        guard let termRecord = context[termRecordKey]?.data else { return nil }
         return termRecord.dates.first { dateRecord in
             let components = Calendar.current.dateComponents([.day], from: dateRecord.date)
             return components.day == date.day

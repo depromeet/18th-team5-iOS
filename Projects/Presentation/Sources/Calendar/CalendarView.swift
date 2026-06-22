@@ -21,7 +21,7 @@ struct CalendarView: View {
             VStack(spacing: 0) {
                 headerView
 
-                UIBridge<PagingTableView<SolarTermGroup>>(
+                UIBridge<PagingTableView<SolarTermGroup, TermRecordContext>>(
                     state: store.calendarState,
                     actionHandler: { action in
                         switch action {
@@ -40,12 +40,15 @@ struct CalendarView: View {
                     arguments: .init(
                         defaultAnchorInset: Constants.termSectionHeaderHeight,
                         bottomPadding: Constants.tableBottomPadding,
-                        cellBuilder: {
-                            termSectionView(
-                                termGroup: $0,
-                                dateCellWidth: cellWidth(screenWidth: geo.size.width)
+                        cellBuilder: { termGroup, context in
+                            TermSectionView(
+                                termGroup: termGroup,
+                                dateCellWidth: cellWidth(screenWidth: geo.size.width),
+                                records: termRecords(termGroup, context: context),
+                                onDateTap: { dateId, inset in
+                                    store.send(.dateCellTapped(dateId: dateId, inset: inset))
+                                }
                             )
-                            .eraseView()
                         },
                         cellHeightProvider: termSectionViewHeight
                     )
@@ -226,80 +229,23 @@ extension CalendarView {
         let containerWidth = screenWidth - Constants.calendarHorizontalSpacing * 2
         return (containerWidth - Constants.dateCellHorizontalSpacing * 6) / 7
     }
-}
 
-// MARK: TermSectionView
-
-extension CalendarView {
-    func termSectionView(termGroup: SolarTermGroup, dateCellWidth: CGFloat) -> some View {
-        VStack(spacing: .zero) {
-            termSectionHeaderView(termGroup)
-            termCalendarView(termGroup.cells, dateCellWidth: dateCellWidth)
-        }
-        .padding(.bottom, Constants.termSectionBottomPadding)
-        .overlay {
-            VStack {
-                Spacer()
-                Rectangle()
-                    .foregroundStyle(Color.gray200)
-                    .frame(height: 1)
+    /// 절기 그룹에 속한 날짜 셀들의 기록 데이터를 `날짜 ID -> 기록` 딕셔너리로 모아 반환한다.
+    /// `TermSectionView`가 store에 의존하지 않도록, cellContext를 프로퍼티로 변환하는 단계다.
+    func termRecords(
+        _ termGroup: SolarTermGroup,
+        context: TermRecordContext
+    ) -> [SolarTermDate.ID: CalendarDateRecord] {
+        var records: [SolarTermDate.ID: CalendarDateRecord] = [:]
+        for week in termGroup.cells {
+            for cell in week {
+                guard case let .dateCell(date) = cell,
+                      let record = CalendarFeature.State.dateData(date, in: context)
+                else { continue }
+                records[date.id] = record
             }
         }
-    }
-
-    func termSectionHeaderView(_ termGroup: SolarTermGroup) -> some View {
-        VStack {
-            HStack {
-                Text(termGroup.termText)
-                    .font(.headline2Medium)
-                    .foregroundStyle(
-                        termGroup.containsToday ? Color.green600 : Color.gray900
-                    )
-                Spacer()
-            }
-            .padding(.top, 24)
-
-            Spacer()
-        }
-        .frame(height: Constants.termSectionHeaderHeight)
-    }
-
-    func termCalendarView(_ termDates: [[SolarTermGroupCell]], dateCellWidth: CGFloat) -> some View {
-        VStack(alignment: .leading, spacing: Constants.weekSectionVerticalSpacing) {
-            ForEach(termDates.indices, id: \.self) { weekIndex in
-                HStack(spacing: Constants.dateCellHorizontalSpacing) {
-                    ForEach(termDates[weekIndex]) { date in
-                        dateCellView(
-                            date: date,
-                            cellWidth: dateCellWidth,
-                            anchorInset: dateCellAnchorPoint(weekIndex: weekIndex)
-                        )
-                    }
-                }
-            }
-        }
-    }
-
-    @ViewBuilder
-    func dateCellView(date: SolarTermGroupCell, cellWidth: CGFloat, anchorInset: CGFloat) -> some View {
-        switch date {
-        case .emptyCell:
-            Color.clear
-                .frame(width: cellWidth, height: 1)
-
-        case let .dateCell(date):
-            CalendarDateCell(
-                date: date,
-                data: store.state.dateData(date)
-            ) {
-                store.send(.dateCellTapped(dateId: date.id, inset: anchorInset))
-            }
-            .frame(width: cellWidth)
-        }
-    }
-
-    func dateCellAnchorPoint(weekIndex: Int) -> CGFloat {
-        CalendarAnchorMetrics.dateCellAnchorInset(weekIndex: weekIndex)
+        return records
     }
 }
 

@@ -32,22 +32,24 @@ public struct RowReloadRequest<Item: Identifiable & Equatable>: Equatable {
     public let targetIds: [Item.ID]
 }
 
-public struct PagingTableViewState<Item: Identifiable & Equatable>: Equatable {
+public struct PagingTableViewState<Item: Identifiable & Equatable, CellContext: Equatable>: Equatable {
     public var anchorRequest: AnchorRequest<Item>?
     public var rowReloadRequest: RowReloadRequest<Item>?
     public var scrollEnabled: Bool = true
     public var pages: [Page<Item>]
+    /// 셀 렌더링에 필요한 부가 상태. pages(=Item)와 별개로 변경되며, 변경 시 보이는 셀이 재구성된다.
+    public var cellContext: CellContext
 }
 
 // MARK: - UIKit Paging Table View
 
-final class PagingTableView<Item: Identifiable & Equatable>: UIView, UITableViewDataSource,
+final class PagingTableView<Item: Identifiable & Equatable, CellContext: Equatable>: UIView, UITableViewDataSource,
     BridgingUIView,
     UITableViewDelegate {
     struct Arguments {
         let defaultAnchorInset: CGFloat
         let bottomPadding: CGFloat
-        let cellBuilder: (Item) -> AnyView
+        let cellBuilder: (Item, CellContext) -> TermSectionView
         let cellHeightProvider: (Item) -> CGFloat
     }
 
@@ -71,11 +73,13 @@ final class PagingTableView<Item: Identifiable & Equatable>: UIView, UITableView
     // MARK: Subviews
 
     private let tableView = UITableView(frame: .zero, style: .plain)
-    private typealias Cell = HostingTableViewCell<AnyView>
+    private typealias Cell = HostingTableViewCell<TermSectionView>
 
     // MARK: Internal state
 
     private var pages: [Page<Item>] = []
+    /// 최신 셀 컨텍스트. bind 시점에 최초 주입되며, 변경될 때마다 보이는 셀이 재구성된다.
+    private var cellContext: CellContext?
     private var prevAnchoredId: Item.ID?
     private var isAdjustingContentOffset: Bool = false
     private var isPageUpdating: Bool = false
@@ -91,10 +95,20 @@ final class PagingTableView<Item: Identifiable & Equatable>: UIView, UITableView
         nil
     }
 
-    typealias State = PagingTableViewState<Item>
+    typealias State = PagingTableViewState<Item, CellContext>
 
     func bind(_ context: AnyPublisher<UpdateContext<State>, Never>) {
         let state = context.map(\.state)
+
+        // pages 갱신보다 먼저 구독해, 최초 reloadData 이전에 cellContext가 주입되도록 한다.
+        state
+            .map(\.cellContext)
+            .removeDuplicates()
+            .sink { [weak self] cellContext in
+                self?.cellContext = cellContext
+                self?.reloadVisibleCells()
+            }
+            .store(in: &store)
 
         state
             .map(\.pages)
@@ -144,9 +158,10 @@ final class PagingTableView<Item: Identifiable & Equatable>: UIView, UITableView
             withIdentifier: String(describing: Cell.self),
             for: indexPath
         ) as? Cell,
-            let item = itemAt(indexPath: indexPath)
+            let item = itemAt(indexPath: indexPath),
+            let cellContext
         else { return UITableViewCell() }
-        return cell.configure(arguments.cellBuilder(item))
+        return cell.configure(arguments.cellBuilder(item, cellContext))
     }
 
     // MARK: - UITableViewDelegate
@@ -301,12 +316,12 @@ private extension PagingTableView {
             diffIndexPaths.append(contentsOf: indexPaths)
         }
 
-        guard !diffIndexPaths.isEmpty else { return }
+        guard !diffIndexPaths.isEmpty, let cellContext else { return }
 
         for indexPath in diffIndexPaths {
             if let cell = tableView.cellForRow(at: indexPath) as? Cell,
                let item = itemAt(indexPath: indexPath) {
-                cell.configure(arguments.cellBuilder(item))
+                cell.configure(arguments.cellBuilder(item, cellContext))
             }
         }
     }
@@ -331,14 +346,28 @@ private extension PagingTableView {
     }
 
     func update(request: RowReloadRequest<Item>) {
+        guard let cellContext else { return }
         request.targetIds
             .compactMap { indexPath(for: $0) }
             .forEach { indexPath in
                 if let cell = tableView.cellForRow(at: indexPath) as? Cell,
                    let item = itemAt(indexPath: indexPath) {
-                    cell.configure(arguments.cellBuilder(item))
+                    cell.configure(arguments.cellBuilder(item, cellContext))
                 }
             }
+    }
+
+    /// cellContext 변경 시 호출. 화면에 보이는 셀만 재구성한다.
+    /// 행 높이는 Item에만 의존하므로(레코드와 무관) 레이아웃 갱신 없이 rootView만 교체한다.
+    /// `TermSectionView`의 값 비교(diffing)로 실제 변경된 날짜 셀만 다시 그려진다.
+    func reloadVisibleCells() {
+        guard let cellContext else { return }
+        for indexPath in tableView.indexPathsForVisibleRows ?? [] {
+            if let cell = tableView.cellForRow(at: indexPath) as? Cell,
+               let item = itemAt(indexPath: indexPath) {
+                cell.configure(arguments.cellBuilder(item, cellContext))
+            }
+        }
     }
 }
 
