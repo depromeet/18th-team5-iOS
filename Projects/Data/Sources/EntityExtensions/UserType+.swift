@@ -21,3 +21,14 @@ extension UserType {
         }
     }
 }
+
+extension UserType {
+    var analyticsValue: String {
+        switch self {
+        case .explorer: "explorer"
+        case .walker: "walker"
+        case .lifeCreator: "life_creator"
+        case .aesthete: "aesthete"
+        }
+    }
+}

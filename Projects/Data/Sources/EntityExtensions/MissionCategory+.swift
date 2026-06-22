@@ -26,3 +26,15 @@ extension MissionCategory {
         }
     }
 }
+
+extension MissionCategory {
+    var analyticsValue: String {
+        switch self {
+        case .food: "food"
+        case .nature: "nature"
+        case .content: "content"
+        case .place: "place"
+        case .music: "music"
+        }
+    }
+}
