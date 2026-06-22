@@ -12,6 +12,7 @@ import Domain
 @Reducer
 public struct OnboardingSurveyFeature {
     @Dependency(\.onboardingRepository) private var onboardingRepository
+    @Dependency(\.analyticsClient) private var analyticsClient
 
     enum Status: Equatable {
         case initial
@@ -66,6 +67,7 @@ public struct OnboardingSurveyFeature {
                     state.status = .inProgress
                     return .none
                 case .inProgress:
+                    logOnboardingSubmit(state)
                     switch state.step {
                     case 0 ..< 2: state.step += 1
                     case 2: state.status = .result
@@ -89,10 +91,30 @@ private extension OnboardingSurveyFeature {
     func submitOnboardingInfo(_ state: State, _ send: Send<Action>) async {
         do {
             try await onboardingRepository.submitOnboardingInfo(state.preference)
+
+            if let userType = state.userType {
+                analyticsClient.setUserType(userType)
+                analyticsClient.logOnboardingCompleteSubmit(state.preference)
+            }
+
             await send(.set(\.isLoading, false))
             await send(.delegate(.completed))
         } catch {
             await send(.set(\.isLoading, false))
+        }
+    }
+
+    func logOnboardingSubmit(_ state: State) {
+        switch state.step {
+        case 0:
+            guard let answer = state.preference.activityStyle else { return }
+            analyticsClient.logOnboardingQ1Submit(answer)
+        case 1:
+            guard let answer = state.preference.engagementLevel else { return }
+            analyticsClient.logOnboardingQ2Submit(answer)
+        case 2:
+            analyticsClient.logOnboardingQ3Submit(state.preference.themeRanking)
+        default: break
         }
     }
 }

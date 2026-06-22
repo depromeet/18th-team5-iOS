@@ -2,7 +2,7 @@
 //  MissionCardNavigation+.swift
 //  Data
 //
-//  Created by Codex on 6/22/26.
+//  Created by 이정원 on 6/22/26.
 //  Copyright © 2026 Orange. All rights reserved.
 //
 

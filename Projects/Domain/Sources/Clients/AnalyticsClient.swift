@@ -16,6 +16,10 @@ public struct AnalyticsClient: Sendable {
     public var setSolarTerm: @Sendable (_ solarTerm: SolarTerm) -> Void
     public var logAppOpen: @Sendable () -> Void
     public var logNavTabTap: @Sendable (_ tabName: String, _ previousTab: String) -> Void
+    public var logOnboardingQ1Submit: @Sendable (_ answer: ActivityStyle) -> Void
+    public var logOnboardingQ2Submit: @Sendable (_ answer: EngagementLevel) -> Void
+    public var logOnboardingQ3Submit: @Sendable (_ ranking: [ActivityTheme]) -> Void
+    public var logOnboardingCompleteSubmit: @Sendable (_ preference: UserPreference) -> Void
     public var logMissionScreenView: @Sendable () -> Void
     public var logMissionCategoryTap: @Sendable (_ category: MissionTheme) -> Void
     public var logSelectMissionTap: @Sendable () -> Void
