@@ -16,6 +16,7 @@ extension AnalyticsClient: @retroactive DependencyKey {
 
 public enum FirebaseAnalyticsClientImpl {
     private enum Event {
+        static let navTabTap = "nav_tab_tap"
         static let missionScreenView = "mission_screen_view"
         static let missionCategoryTap = "mission_category_tap"
         static let missionCardNavigate = "mission_missioncard_navigate"
@@ -24,6 +25,8 @@ public enum FirebaseAnalyticsClientImpl {
     }
 
     private enum ParameterKey {
+        static let tabName = "tab_name"
+        static let previousTab = "previous_tab"
         static let category = "category"
         static let method = "method"
         static let direction = "direction"
@@ -54,6 +57,15 @@ public enum FirebaseAnalyticsClientImpl {
             setSolarTerm: { solarTerm in
                 Analytics.setDefaultEventParameters([
                     DefaultParameterKey.solarTerm: solarTerm.rawValue
+                ])
+            },
+            logAppOpen: {
+                Analytics.logEvent(AnalyticsEventAppOpen, parameters: nil)
+            },
+            logNavTabTap: { tabName, previousTab in
+                Analytics.logEvent(Event.navTabTap, parameters: [
+                    ParameterKey.tabName: tabName,
+                    ParameterKey.previousTab: previousTab
                 ])
             },
             logMissionScreenView: {

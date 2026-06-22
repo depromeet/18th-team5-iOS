@@ -14,6 +14,8 @@ import Foundation
 public struct AnalyticsClient: Sendable {
     public var setUserType: @Sendable (_ userType: UserType) -> Void
     public var setSolarTerm: @Sendable (_ solarTerm: SolarTerm) -> Void
+    public var logAppOpen: @Sendable () -> Void
+    public var logNavTabTap: @Sendable (_ tabName: String, _ previousTab: String) -> Void
     public var logMissionScreenView: @Sendable () -> Void
     public var logMissionCategoryTap: @Sendable (_ category: MissionTheme) -> Void
     public var logSelectMissionTap: @Sendable () -> Void

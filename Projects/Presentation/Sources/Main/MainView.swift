@@ -62,7 +62,7 @@ private extension MainView {
         HStack(spacing: 6) {
             ForEach(MainFeature.Tab.allCases, id: \.self) { tab in
                 Button {
-                    store.send(.set(\.tab, tab))
+                    store.send(.tabTapped(tab))
                 } label: {
                     tabItemView(tab)
                 }
@@ -103,15 +103,6 @@ private extension MainFeature.Tab {
         case .solarTerm: .icFileTab
         case .mission: .icMailTab
         case .calendar: .icCalendarTab
-        }
-    }
-
-    var title: String {
-        switch self {
-        case .home: "홈"
-        case .solarTerm: "절기소개"
-        case .mission: "미션"
-        case .calendar: "캘린더"
         }
     }
 }
