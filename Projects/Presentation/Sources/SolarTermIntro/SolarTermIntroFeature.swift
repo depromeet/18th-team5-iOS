@@ -130,6 +130,9 @@ public struct SolarTermIntroFeature {
                 return .none
 
             case let .selectSeason(season):
+                if state.season != season {
+                    analyticsClient.logSeasonFilterTap(season)
+                }
                 state.season = season
                 if season == state.currentTerm?.season {
                     state.targetTerm = state.currentTerm

@@ -28,6 +28,7 @@ public enum FirebaseAnalyticsClientImpl {
         static let missionCardNavigate = "mission_missioncard_navigate"
         static let selectMissionTap = "mission_selectmission_tap"
         static let missionCardTap = "mission_missioncard_tap"
+        static let seasonFilterTap = "season_filter_tap"
         static let seasonCardTap = "season_card_tap"
     }
 
@@ -197,6 +198,11 @@ public enum FirebaseAnalyticsClientImpl {
                 Analytics.logEvent(AnalyticsEventScreenView, parameters: [
                     AnalyticsParameterScreenName: "절기소개",
                     AnalyticsParameterScreenClass: "SolarTermIntroView",
+                    ParameterKey.seasonFilter: season.displayName
+                ])
+            },
+            logSeasonFilterTap: { season in
+                Analytics.logEvent(Event.seasonFilterTap, parameters: [
                     ParameterKey.seasonFilter: season.displayName
                 ])
             },
