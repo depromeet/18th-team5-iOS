@@ -7,6 +7,7 @@
 //
 
 import ComposableArchitecture
+import Core
 import DesignSystem
 import Domain
 import Foundation
@@ -83,6 +84,7 @@ public struct CalendarDetailFeature {
     @Dependency(\.picturePermissionClient) var picturePermissionClient
     @Dependency(\.photoLibraryClient) var photoLibraryClient
     @Dependency(\.cardImageRenderer) var cardImageRenderer
+    @Dependency(\.analyticsClient) var analyticsClient
 
     public init() {}
 
@@ -108,6 +110,7 @@ public struct CalendarDetailFeature {
                 return .send(.delegate(.createRecord(date: state.date)))
 
             case .saveImageButtonTapped:
+                analyticsClient.logCalendarDownloadSubmit(state.currentRecordMissionName)
                 return saveImage(&state)
 
             case let .updateToast(model):
@@ -115,6 +118,7 @@ public struct CalendarDetailFeature {
                 return .none
 
             case .shareImageButtonTapped:
+                analyticsClient.logCalendarShareSubmit(state.currentRecordMissionName)
                 return shareImage(&state)
 
             case let .updateShareImageItem(item):
@@ -225,5 +229,11 @@ public struct CalendarDetailFeature {
                 return .none
             }
         }
+    }
+}
+
+private extension CalendarDetailFeature.State {
+    var currentRecordMissionName: String? {
+        dateRecordCards?[safe: frontCardIndex]?.missionTitle
     }
 }

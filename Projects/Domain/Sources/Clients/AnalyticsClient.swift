@@ -29,6 +29,11 @@ public struct AnalyticsClient: Sendable {
     public var logSelectMissionTap: @Sendable () -> Void
     public var logMissionCardTap: @Sendable (_ mission: Mission, _ cardPosition: Int?) -> Void
     public var logMissionCardNavigate: @Sendable (_ navigation: MissionCardNavigation) -> Void
+    public var logCalendarScreenView: @Sendable () -> Void
+    public var logCalendarDateTap: @Sendable (_ date: Date, _ hasRecord: Bool) -> Void
+    public var logCalendarRecordTap: @Sendable () -> Void
+    public var logCalendarDownloadSubmit: @Sendable (_ missionName: String?) -> Void
+    public var logCalendarShareSubmit: @Sendable (_ missionName: String?) -> Void
     public var logSeasonScreenView: @Sendable (_ season: Season) -> Void
     public var logSeasonFilterTap: @Sendable (_ season: Season) -> Void
     public var logSeasonCardTap: @Sendable (_ solarTerm: SolarTerm, _ cardPosition: Int) -> Void

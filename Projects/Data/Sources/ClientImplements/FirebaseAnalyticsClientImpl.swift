@@ -6,6 +6,7 @@
 //  Copyright © 2026 Orange. All rights reserved.
 //
 
+import Core
 import Dependencies
 import Domain
 import FirebaseAnalytics
@@ -28,6 +29,10 @@ public enum FirebaseAnalyticsClientImpl {
         static let missionCardNavigate = "mission_missioncard_navigate"
         static let selectMissionTap = "mission_selectmission_tap"
         static let missionCardTap = "mission_missioncard_tap"
+        static let calendarDateTap = "calendar_date_tap"
+        static let calendarRecordTap = "calendar_record_tap"
+        static let calendarDownloadSubmit = "calendar_download_submit"
+        static let calendarShareSubmit = "calendar_share_submit"
         static let seasonFilterTap = "season_filter_tap"
         static let seasonCardTap = "season_card_tap"
     }
@@ -50,6 +55,8 @@ public enum FirebaseAnalyticsClientImpl {
         static let cardPosition = "card_position"
         static let isCompleted = "is_completed"
         static let recordCount = "record_count"
+        static let date = "date"
+        static let hasRecord = "has_record"
         static let seasonFilter = "season_filter"
         static let targetSolarTerm = "target_solar_term"
     }
@@ -191,6 +198,41 @@ public enum FirebaseAnalyticsClientImpl {
 
                 Analytics.logEvent(
                     Event.missionCardNavigate,
+                    parameters: parameters.compactMapValues { $0 }
+                )
+            },
+            logCalendarScreenView: {
+                Analytics.logEvent(AnalyticsEventScreenView, parameters: [
+                    AnalyticsParameterScreenName: "캘린더",
+                    AnalyticsParameterScreenClass: "CalendarView"
+                ])
+            },
+            logCalendarDateTap: { date, hasRecord in
+                Analytics.logEvent(Event.calendarDateTap, parameters: [
+                    ParameterKey.date: date.string(.yearMonthDayDash),
+                    ParameterKey.hasRecord: hasRecord
+                ])
+            },
+            logCalendarRecordTap: {
+                Analytics.logEvent(Event.calendarRecordTap, parameters: nil)
+            },
+            logCalendarDownloadSubmit: { missionName in
+                let parameters: [String: Any?] = [
+                    ParameterKey.missionName: missionName
+                ]
+
+                Analytics.logEvent(
+                    Event.calendarDownloadSubmit,
+                    parameters: parameters.compactMapValues { $0 }
+                )
+            },
+            logCalendarShareSubmit: { missionName in
+                let parameters: [String: Any?] = [
+                    ParameterKey.missionName: missionName
+                ]
+
+                Analytics.logEvent(
+                    Event.calendarShareSubmit,
                     parameters: parameters.compactMapValues { $0 }
                 )
             },
