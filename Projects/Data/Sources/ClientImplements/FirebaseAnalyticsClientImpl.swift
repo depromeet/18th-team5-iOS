@@ -28,6 +28,7 @@ public enum FirebaseAnalyticsClientImpl {
         static let missionCardNavigate = "mission_missioncard_navigate"
         static let selectMissionTap = "mission_selectmission_tap"
         static let missionCardTap = "mission_missioncard_tap"
+        static let seasonCardTap = "season_card_tap"
     }
 
     private enum ParameterKey {
@@ -48,6 +49,8 @@ public enum FirebaseAnalyticsClientImpl {
         static let cardPosition = "card_position"
         static let isCompleted = "is_completed"
         static let recordCount = "record_count"
+        static let seasonFilter = "season_filter"
+        static let targetSolarTerm = "target_solar_term"
     }
 
     private enum UserPropertyKey {
@@ -189,6 +192,19 @@ public enum FirebaseAnalyticsClientImpl {
                     Event.missionCardNavigate,
                     parameters: parameters.compactMapValues { $0 }
                 )
+            },
+            logSeasonScreenView: { season in
+                Analytics.logEvent(AnalyticsEventScreenView, parameters: [
+                    AnalyticsParameterScreenName: "절기소개",
+                    AnalyticsParameterScreenClass: "SolarTermIntroView",
+                    ParameterKey.seasonFilter: season.displayName
+                ])
+            },
+            logSeasonCardTap: { solarTerm, cardPosition in
+                Analytics.logEvent(Event.seasonCardTap, parameters: [
+                    ParameterKey.targetSolarTerm: solarTerm.koreanName,
+                    ParameterKey.cardPosition: cardPosition
+                ])
             }
         )
     }
