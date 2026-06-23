@@ -68,6 +68,10 @@ public struct MissionRecordView: View {
             }
         )
         .presentToast($store.toast)
+        .onChange(of: isMemoFocused) { _, isFocused in
+            guard isFocused else { return }
+            store.send(.memoFieldFocused)
+        }
         .onAppear {
             store.send(.onAppear)
         }

@@ -22,10 +22,8 @@ public struct MissionRecordFeature {
 
     @ObservableState
     public struct State: Equatable {
-        let missionId: Int
         let missionType: MissionType
-        var missionTitle: String
-        var missionDescription: String?
+        var mission: Mission
         var editingCompletionId: Int?
         var originalImageURL: URL?
         var originalMemo: String?
@@ -37,8 +35,7 @@ public struct MissionRecordFeature {
         var photo: RecordPhotoFeature.State
 
         public init(missionId: Int, missionTitle: String, missionType: MissionType) {
-            self.missionId = missionId
-            self.missionTitle = missionTitle
+            self.mission = .init(id: missionId, title: missionTitle)
             self.missionType = missionType
             self.photo = RecordPhotoFeature.State(cameraOverlayLabel: missionTitle)
         }
@@ -51,10 +48,8 @@ public struct MissionRecordFeature {
             imageURL: URL?,
             memo: String?
         ) {
-            self.missionId = 0
+            self.mission = .init(id: 0, title: missionTitle, description: missionDescription)
             self.missionType = missionType
-            self.missionTitle = missionTitle
-            self.missionDescription = missionDescription
             self.editingCompletionId = editingCompletionId
             self.originalImageURL = imageURL
             self.originalMemo = memo
@@ -83,6 +78,14 @@ public struct MissionRecordFeature {
         var hasRecordImage: Bool {
             photo.selectedImageData != nil || photo.existingImageURL != nil
         }
+
+        var missionTitle: String {
+            mission.title
+        }
+
+        var missionDescription: String? {
+            mission.description
+        }
     }
 
     public enum Action: BindableAction {
@@ -94,6 +97,7 @@ public struct MissionRecordFeature {
         case submitButtonTapped
         case submitResponse(Result<Int, any Error>)
         case completionToastPresented
+        case memoFieldFocused
         case alertCancelTapped
         case dismissAll
         case photo(RecordPhotoFeature.Action)
@@ -107,6 +111,7 @@ public struct MissionRecordFeature {
     @Dependency(\.missionRepository) private var missionRepository
     @Dependency(\.calendarRecordRepository) private var calendarRecordRepository
     @Dependency(\.imageUploadRepository) private var imageUploadRepository
+    @Dependency(\.analyticsClient) private var analyticsClient
     @Dependency(\.dismiss) private var dismiss
 
     public init() {}
@@ -123,7 +128,7 @@ public struct MissionRecordFeature {
             case .onAppear:
                 guard !state.didRequestMissionRecordPage else { return .none }
                 state.didRequestMissionRecordPage = true
-                let missionId = state.missionId
+                let missionId = state.mission.id
                 return .run { send in
                     do {
                         let mission = try await missionRepository.fetchMissionRecordPage(missionId)
@@ -138,9 +143,9 @@ public struct MissionRecordFeature {
 
             case let .missionRecordPageFetched(mission):
                 guard let mission else { return .none }
-                state.missionTitle = mission.title
-                state.missionDescription = mission.description
+                state.mission = mission
                 state.photo.cameraOverlayLabel = mission.title
+                logRecordScreenView(state)
                 return .none
 
             case .backButtonTapped:
@@ -153,7 +158,7 @@ public struct MissionRecordFeature {
                       !state.isEditing || state.hasEditedContent
                 else { return .none }
                 state.isSubmitting = true
-                let missionId = state.missionId
+                let missionId = state.mission.id
                 let missionType = state.missionType
                 let imageData = state.photo.selectedImageData
                 let memo = state.memo.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -197,6 +202,7 @@ public struct MissionRecordFeature {
                 }
 
             case .submitResponse(.success):
+                logRecordConfirmSubmit(state)
                 state.isSubmitting = false
                 state.toast = ToastModel(
                     title: "기록이 완료되었어요!",
@@ -219,6 +225,10 @@ public struct MissionRecordFeature {
                     memo: state.memo
                 )))
 
+            case .memoFieldFocused:
+                logRecordMemoTap(state)
+                return .none
+
             case .alertCancelTapped:
                 state.alert = nil
                 return .none
@@ -226,6 +236,14 @@ public struct MissionRecordFeature {
             case .dismissAll:
                 state.photo.camera = nil
                 state.photo.photoPicker = nil
+                return .none
+
+            case .photo(.cameraButtonTapped):
+                logRecordPictureTap(state, .camera)
+                return .none
+
+            case .photo(.galleryButtonTapped):
+                logRecordPictureTap(state, .photoLibrary)
                 return .none
 
             case .photo:
@@ -238,5 +256,31 @@ public struct MissionRecordFeature {
                 return .run { _ in await dismiss() }
             }
         }
+    }
+}
+
+private extension MissionRecordFeature {
+    func logRecordScreenView(_ state: State) {
+        guard !state.isEditing else { return }
+        analyticsClient.logRecordScreenView(state.mission)
+    }
+
+    func logRecordPictureTap(_ state: State, _ source: PicturePermissionKind) {
+        guard !state.isEditing else { return }
+        analyticsClient.logRecordPictureTap(source, state.mission.id)
+    }
+
+    func logRecordMemoTap(_ state: State) {
+        guard !state.isEditing else { return }
+        analyticsClient.logRecordMemoTap(state.mission.id, state.hasRecordImage)
+    }
+
+    func logRecordConfirmSubmit(_ state: State) {
+        guard !state.isEditing else { return }
+        analyticsClient.logRecordConfirmSubmit(
+            state.mission,
+            state.hasRecordImage,
+            !state.memo.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        )
     }
 }

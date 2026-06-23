@@ -29,6 +29,9 @@ public enum FirebaseAnalyticsClientImpl {
         static let missionCardNavigate = "mission_missioncard_navigate"
         static let selectMissionTap = "mission_selectmission_tap"
         static let missionCardTap = "mission_missioncard_tap"
+        static let recordPictureTap = "record_picture_tap"
+        static let recordMemoTap = "record_memo_tap"
+        static let recordConfirmSubmit = "record_confirm_submit"
         static let calendarDateTap = "calendar_date_tap"
         static let calendarRecordTap = "calendar_record_tap"
         static let calendarDownloadSubmit = "calendar_download_submit"
@@ -57,6 +60,10 @@ public enum FirebaseAnalyticsClientImpl {
         static let recordCount = "record_count"
         static let date = "date"
         static let hasRecord = "has_record"
+        static let photoSource = "photo_source"
+        static let hasPhoto = "has_photo"
+        static let hasMemo = "has_memo"
+        static let recordMethod = "record_method"
         static let seasonFilter = "season_filter"
         static let targetSolarTerm = "target_solar_term"
     }
@@ -198,6 +205,49 @@ public enum FirebaseAnalyticsClientImpl {
 
                 Analytics.logEvent(
                     Event.missionCardNavigate,
+                    parameters: parameters.compactMapValues { $0 }
+                )
+            },
+            logRecordScreenView: { mission in
+                let parameters: [String: Any?] = [
+                    AnalyticsParameterScreenName: "기록하기",
+                    AnalyticsParameterScreenClass: "MissionRecordView",
+                    ParameterKey.missionId: mission.id,
+                    ParameterKey.missionName: mission.title,
+                    ParameterKey.category: mission.analyticsCategoryValue
+                ]
+
+                Analytics.logEvent(
+                    AnalyticsEventScreenView,
+                    parameters: parameters.compactMapValues { $0 }
+                )
+            },
+            logRecordPictureTap: { source, missionId in
+                Analytics.logEvent(Event.recordPictureTap, parameters: [
+                    ParameterKey.photoSource: source.analyticsValue,
+                    ParameterKey.missionId: missionId
+                ])
+            },
+            logRecordMemoTap: { missionId, hasPhoto in
+                Analytics.logEvent(Event.recordMemoTap, parameters: [
+                    ParameterKey.missionId: missionId,
+                    ParameterKey.hasPhoto: hasPhoto
+                ])
+            },
+            logRecordConfirmSubmit: { mission, hasPhoto, hasMemo in
+                let recordMethod = RecordMethod(hasPhoto: hasPhoto, hasMemo: hasMemo)
+
+                let parameters: [String: Any?] = [
+                    ParameterKey.missionId: mission.id,
+                    ParameterKey.missionName: mission.title,
+                    ParameterKey.category: mission.analyticsCategoryValue,
+                    ParameterKey.hasPhoto: hasPhoto,
+                    ParameterKey.hasMemo: hasMemo,
+                    ParameterKey.recordMethod: recordMethod.analyticsValue
+                ]
+
+                Analytics.logEvent(
+                    Event.recordConfirmSubmit,
                     parameters: parameters.compactMapValues { $0 }
                 )
             },

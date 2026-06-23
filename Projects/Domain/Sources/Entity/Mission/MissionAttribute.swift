@@ -12,9 +12,9 @@ public struct MissionAttribute: Equatable, Hashable {
     public let category: MissionCategory?
 
     public init(
-        locationType: LocationType?,
-        participationType: ParticipationType?,
-        category: MissionCategory?
+        locationType: LocationType? = nil,
+        participationType: ParticipationType? = nil,
+        category: MissionCategory? = nil
     ) {
         self.locationType = locationType
         self.participationType = participationType
