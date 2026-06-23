@@ -132,9 +132,8 @@ public struct HomeFeature {
                 return .send(.delegate(.navigateToMyPage))
 
             case .calendarButtonTapped:
-                if let recordCount = state.seasonRecord?.recordCount {
-                    analyticsClient.logHomeRecordMoreTap(recordCount)
-                }
+                let recordCount = state.seasonRecord?.recordCount
+                analyticsClient.logHomeRecordMoreTap(recordCount)
                 return .send(.delegate(.navigateToCalendar))
 
             case let .onRecordPhotoTap(dateString):

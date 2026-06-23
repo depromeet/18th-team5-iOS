@@ -163,9 +163,14 @@ public enum FirebaseAnalyticsClientImpl {
                 ])
             },
             logHomeRecordMoreTap: { recordCount in
-                Analytics.logEvent(Event.homeRecordMoreTap, parameters: [
+                let parameters: [String: Any?] = [
                     ParameterKey.recordCount: recordCount
-                ])
+                ]
+
+                Analytics.logEvent(
+                    Event.homeRecordMoreTap,
+                    parameters: parameters.compactMapValues { $0 }
+                )
             },
             logMissionScreenView: {
                 Analytics.logEvent(AnalyticsEventScreenView, parameters: [

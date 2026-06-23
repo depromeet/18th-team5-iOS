@@ -23,7 +23,7 @@ public struct AnalyticsClient: Sendable {
     public var logHomeScreenView: @Sendable () -> Void
     public var logHomeMissionShortcutTap: @Sendable () -> Void
     public var logHomeQuickRecordTap: @Sendable (_ missionId: Int) -> Void
-    public var logHomeRecordMoreTap: @Sendable (_ recordCount: Int) -> Void
+    public var logHomeRecordMoreTap: @Sendable (_ recordCount: Int?) -> Void
     public var logMissionScreenView: @Sendable () -> Void
     public var logMissionCategoryTap: @Sendable (_ category: MissionTheme) -> Void
     public var logSelectMissionTap: @Sendable () -> Void
