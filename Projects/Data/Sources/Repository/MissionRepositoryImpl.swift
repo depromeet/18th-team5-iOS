@@ -164,7 +164,8 @@ private extension MissionRecordPageResponseDTO {
         Mission(
             id: id,
             title: title,
-            description: description
+            description: description,
+            attribute: .init(category: .init(categoryType))
         )
     }
 }

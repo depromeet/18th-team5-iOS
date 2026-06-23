@@ -34,6 +34,7 @@ struct MissionRecordPageResponseDTO: Decodable {
     let id: Int
     let title: String
     let description: String
+    let categoryType: String?
 }
 
 // MARK: - 미션 완료 기록 조회 응답

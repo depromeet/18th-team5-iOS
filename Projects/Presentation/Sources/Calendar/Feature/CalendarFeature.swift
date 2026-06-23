@@ -89,6 +89,7 @@ public struct CalendarFeature {
     @Dependency(\.date) var date
     @Dependency(\.solarTermRepository) var solarTermRepository
     @Dependency(\.calendarRecordRepository) var calendarRecordRepository
+    @Dependency(\.analyticsClient) var analyticsClient
 
     public var body: some ReducerOf<Self> {
         BindingReducer()
@@ -98,6 +99,7 @@ public struct CalendarFeature {
                 return initialTask(&state)
 
             case .onAppear:
+                analyticsClient.logCalendarScreenView()
                 return refreshAnchoredTermData(state)
 
             case .scrollViewWillBeginDragging:
@@ -228,6 +230,7 @@ public struct CalendarFeature {
                 return .none
 
             case .floatingRecordButtonTapped:
+                analyticsClient.logCalendarRecordTap()
                 return .send(.delegate(.navigateToFreeRecord(Date.now)))
 
             // Alert

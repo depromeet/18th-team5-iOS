@@ -84,6 +84,7 @@ public struct FreeRecordFeature {
         case submitButtonTapped
         case submitResponse(Result<Int, any Error>)
         case completionToastPresented
+        case memoFieldFocused
         case alertCancelTapped
         case photo(RecordPhotoFeature.Action)
     }
@@ -91,6 +92,7 @@ public struct FreeRecordFeature {
     @Dependency(\.calendarRecordRepository) private var calendarRecordRepository
     @Dependency(\.imageUploadRepository) private var imageUploadRepository
     @Dependency(\.solarTermRepository) private var solarTermRepository
+    @Dependency(\.analyticsClient) private var analyticsClient
     @Dependency(\.dismiss) private var dismiss
 
     public init() {}
@@ -108,6 +110,7 @@ public struct FreeRecordFeature {
                 return .none
 
             case .task:
+                logRecordScreenView(state)
                 return .run { send in
                     let (name, range) = await Self.currentSolarTermInfo(
                         solarTermRepository: solarTermRepository
@@ -183,6 +186,7 @@ public struct FreeRecordFeature {
                 }
 
             case .submitResponse(.success):
+                logRecordConfirmSubmit(state)
                 state.isSubmitting = false
                 state.toast = ToastModel(
                     title: "기록이 완료되었어요!",
@@ -202,8 +206,20 @@ public struct FreeRecordFeature {
             case .completionToastPresented:
                 return .run { _ in await dismiss() }
 
+            case .memoFieldFocused:
+                logRecordMemoTap(state)
+                return .none
+
             case .alertCancelTapped:
                 state.alert = nil
+                return .none
+
+            case .photo(.cameraButtonTapped):
+                logRecordPictureTap(state, .camera)
+                return .none
+
+            case .photo(.galleryButtonTapped):
+                logRecordPictureTap(state, .photoLibrary)
                 return .none
 
             case .photo:
@@ -254,5 +270,31 @@ public struct FreeRecordFeature {
         else { return .submitFailed }
 
         return .freeRecordLimitExceeded
+    }
+}
+
+private extension FreeRecordFeature {
+    func logRecordScreenView(_ state: State) {
+        guard !state.isEditing else { return }
+        analyticsClient.logRecordScreenView(nil)
+    }
+
+    func logRecordPictureTap(_ state: State, _ source: PicturePermissionKind) {
+        guard !state.isEditing else { return }
+        analyticsClient.logRecordPictureTap(source, nil)
+    }
+
+    func logRecordMemoTap(_ state: State) {
+        guard !state.isEditing else { return }
+        analyticsClient.logRecordMemoTap(nil, state.hasRecordImage)
+    }
+
+    func logRecordConfirmSubmit(_ state: State) {
+        guard !state.isEditing else { return }
+        analyticsClient.logRecordConfirmSubmit(
+            nil,
+            state.hasRecordImage,
+            !state.memo.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        )
     }
 }

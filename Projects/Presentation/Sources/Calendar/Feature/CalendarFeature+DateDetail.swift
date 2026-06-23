@@ -47,6 +47,9 @@ extension CalendarFeature {
               )?.solarTermInfo.term
         else { return .none }
 
+        let hasRecord = state.dateData(dateModel)?.thumbnailURL != nil
+        analyticsClient.logCalendarDateTap(date, hasRecord)
+
         state.detail = .init(date: date, term: term)
         state.calendarState.scrollEnabled = false
 

@@ -61,8 +61,9 @@ public struct SolarTermIntroFeature {
         }
     }
 
-    @Dependency(\.solarTermIntroRepository) var solarTermIntroRepository
-    @Dependency(\.solarTermRepository) var solarTermRepository
+    @Dependency(\.solarTermIntroRepository) private var solarTermIntroRepository
+    @Dependency(\.solarTermRepository) private var solarTermRepository
+    @Dependency(\.analyticsClient) private var analyticsClient
 
     public init() {}
 
@@ -70,6 +71,7 @@ public struct SolarTermIntroFeature {
         Reduce { state, action in
             switch action {
             case .onAppear:
+                analyticsClient.logSeasonScreenView(state.season)
                 return .run { send in
                     do {
                         async let cards = solarTermIntroRepository.fetchSolarTermCard()
@@ -128,6 +130,9 @@ public struct SolarTermIntroFeature {
                 return .none
 
             case let .selectSeason(season):
+                if state.season != season {
+                    analyticsClient.logSeasonFilterTap(season)
+                }
                 state.season = season
                 if season == state.currentTerm?.season {
                     state.targetTerm = state.currentTerm
@@ -142,6 +147,7 @@ public struct SolarTermIntroFeature {
                 return .none
 
             case let .onCardTap(solarTermIntro):
+                logSeasonCardTap(state, solarTermIntro.term)
                 let info = state.solarTermInfos.first { $0.term == solarTermIntro.term }
                 let dateLabel = info?.formattedFullDateRange ?? ""
                 let isCurrent = info?.dateRange.contains(Date()) ?? false
@@ -175,6 +181,14 @@ public struct SolarTermIntroFeature {
         .ifLet(\.$content, action: \.content) {
             SolarTermIntroContentFeature()
         }
+    }
+}
+
+private extension SolarTermIntroFeature {
+    func logSeasonCardTap(_ state: State, _ solarTerm: SolarTerm) {
+        let index = state.solarTermInfos.firstIndex { $0.term == solarTerm }
+        guard let index else { return }
+        analyticsClient.logSeasonCardTap(solarTerm, index)
     }
 }
 

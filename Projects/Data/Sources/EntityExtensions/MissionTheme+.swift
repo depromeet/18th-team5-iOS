@@ -20,3 +20,13 @@ extension MissionTheme {
         }
     }
 }
+
+extension MissionTheme {
+    var analyticsValue: String {
+        switch self {
+        case .food: "food"
+        case .contents: "contents"
+        case .activity: "activity"
+        }
+    }
+}

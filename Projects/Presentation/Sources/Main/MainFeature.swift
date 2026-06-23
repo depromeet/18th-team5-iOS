@@ -42,6 +42,7 @@ public struct MainFeature {
 
     public enum Action: BindableAction {
         case onAppear
+        case tabTapped(Tab)
         case observePushNotificationTapEvent
         case handleNotificationTapEvent
         case binding(BindingAction<State>)
@@ -95,6 +96,14 @@ public struct MainFeature {
                     .run { send in await fetchAll(send) },
                     .send(.observePushNotificationTapEvent)
                 ])
+
+            case let .tabTapped(tab):
+                let previousTab = state.tab
+                guard previousTab != tab else { return .none }
+
+                state.tab = tab
+                analyticsClient.logNavTabTap(tab.title, previousTab.title)
+                return .none
 
             case .observePushNotificationTapEvent:
                 let stream = NotificationCenter.default
@@ -333,12 +342,21 @@ private extension MainFeature {
     }
 }
 
-public extension MainFeature {
-    enum Tab: CaseIterable {
+extension MainFeature {
+    public enum Tab: CaseIterable {
         case home
         case mission
         case calendar
         case solarTerm
+
+        var title: String {
+            switch self {
+            case .home: "홈"
+            case .solarTerm: "절기소개"
+            case .mission: "미션"
+            case .calendar: "캘린더"
+            }
+        }
     }
 }
 

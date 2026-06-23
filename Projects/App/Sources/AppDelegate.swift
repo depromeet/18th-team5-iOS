@@ -20,8 +20,11 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
         _ application: UIApplication,
         didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
     ) -> Bool {
+        @Dependency(\.analyticsClient) var analyticsClient
+
         FirebaseApp.configure()
         configureNotification()
+        analyticsClient.logAppOpen()
         return true
     }
 }
