@@ -69,6 +69,10 @@ public struct FreeRecordView: View {
             }
         )
         .presentToast($store.toast)
+        .onChange(of: isMemoFocused) { _, isFocused in
+            guard isFocused else { return }
+            store.send(.memoFieldFocused)
+        }
         .task {
             await store.send(.task).finish()
         }

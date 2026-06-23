@@ -212,9 +212,9 @@ public enum FirebaseAnalyticsClientImpl {
                 let parameters: [String: Any?] = [
                     AnalyticsParameterScreenName: "기록하기",
                     AnalyticsParameterScreenClass: "MissionRecordView",
-                    ParameterKey.missionId: mission.id,
-                    ParameterKey.missionName: mission.title,
-                    ParameterKey.category: mission.analyticsCategoryValue
+                    ParameterKey.missionId: mission?.id,
+                    ParameterKey.missionName: mission?.title,
+                    ParameterKey.category: mission?.analyticsCategoryValue
                 ]
 
                 Analytics.logEvent(
@@ -223,24 +223,34 @@ public enum FirebaseAnalyticsClientImpl {
                 )
             },
             logRecordPictureTap: { source, missionId in
-                Analytics.logEvent(Event.recordPictureTap, parameters: [
+                let parameters: [String: Any?] = [
                     ParameterKey.photoSource: source.analyticsValue,
                     ParameterKey.missionId: missionId
-                ])
+                ]
+
+                Analytics.logEvent(
+                    Event.recordPictureTap,
+                    parameters: parameters.compactMapValues { $0 }
+                )
             },
             logRecordMemoTap: { missionId, hasPhoto in
-                Analytics.logEvent(Event.recordMemoTap, parameters: [
+                let parameters: [String: Any?] = [
                     ParameterKey.missionId: missionId,
                     ParameterKey.hasPhoto: hasPhoto
-                ])
+                ]
+
+                Analytics.logEvent(
+                    Event.recordMemoTap,
+                    parameters: parameters.compactMapValues { $0 }
+                )
             },
             logRecordConfirmSubmit: { mission, hasPhoto, hasMemo in
                 let recordMethod = RecordMethod(hasPhoto: hasPhoto, hasMemo: hasMemo)
 
                 let parameters: [String: Any?] = [
-                    ParameterKey.missionId: mission.id,
-                    ParameterKey.missionName: mission.title,
-                    ParameterKey.category: mission.analyticsCategoryValue,
+                    ParameterKey.missionId: mission?.id,
+                    ParameterKey.missionName: mission?.title,
+                    ParameterKey.category: mission?.analyticsCategoryValue,
                     ParameterKey.hasPhoto: hasPhoto,
                     ParameterKey.hasMemo: hasMemo,
                     ParameterKey.recordMethod: recordMethod.analyticsValue
