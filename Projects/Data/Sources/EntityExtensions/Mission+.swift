@@ -9,7 +9,11 @@
 import Domain
 
 extension Mission {
+    var analyticsThemeValue: String? {
+        theme?.analyticsValue
+    }
+
     var analyticsCategoryValue: String? {
-        theme?.analyticsValue ?? attribute?.category?.analyticsValue
+        attribute?.category?.analyticsValue
     }
 }

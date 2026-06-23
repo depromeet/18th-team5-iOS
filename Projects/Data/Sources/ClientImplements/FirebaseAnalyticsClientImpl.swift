@@ -185,7 +185,7 @@ public enum FirebaseAnalyticsClientImpl {
                 let parameters: [String: Any?] = [
                     ParameterKey.missionId: mission.id,
                     ParameterKey.missionName: mission.title,
-                    ParameterKey.category: mission.analyticsCategoryValue,
+                    ParameterKey.category: mission.analyticsThemeValue,
                     ParameterKey.cardPosition: cardPosition,
                     ParameterKey.isCompleted: mission.isCompleted
                 ]
