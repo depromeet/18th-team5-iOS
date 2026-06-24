@@ -110,7 +110,7 @@ platform :ios do
   # ──────────────────────────────
   private_lane :set_version_from_tag do |options|
     version = ENV["TAG_NAME"].delete_prefix("v")
-    version = version.delete_suffix("-beta") if options[:strip_beta]
+    version = version.sub(/-beta.*$/, "") if options[:strip_beta]
 
     increment_version_number(
       version_number: version,
