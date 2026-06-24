@@ -77,32 +77,40 @@ platform :ios do
   # 공통: App Store Connect API 인증
   # ──────────────────────────────
   private_lane :setup_signing do
-    app_store_connect_api_key(
-      key_id: ENV["ASC_KEY_ID"],
-      issuer_id: ENV["ASC_ISSUER_ID"],
-      key_content: ENV["ASC_KEY_CONTENT"],
-      is_key_content_base64: true
-    )
+  app_store_connect_api_key(
+    key_id: ENV["ASC_KEY_ID"],
+    issuer_id: ENV["ASC_ISSUER_ID"],
+    key_content: ENV["ASC_KEY_CONTENT"],
+    is_key_content_base64: true
+  )
 
-    # p12 인증서를 CI 키체인에 설치
-    create_keychain(
-      name: "ci_keychain",
-      password: "ci_password",
-      default_keychain: true,
-      unlock: true,
-      timeout: 3600
-    )
+  create_keychain(
+    name: "ci_keychain",
+    password: "ci_password",
+    default_keychain: true,
+    unlock: true,
+    timeout: 3600
+  )
 
-    import_certificate(
-      certificate_path: "Secrets/Xcode/Peaktime.p12",
-      certificate_password: ENV["P12_PASSWORD"],
-      keychain_name: "ci_keychain",
-      keychain_password: "ci_password"
-    )
+  import_certificate(
+    certificate_path: "Secrets/Xcode/Peaktime.p12",
+    certificate_password: ENV["P12_PASSWORD"],
+    keychain_name: "ci_keychain",
+    keychain_password: "ci_password"
+  )
 
-    install_provisioning_profile(
-      path: "Secrets/Xcode/Peaktime.mobileprovision"
-    )
+  install_provisioning_profile(
+    path: "Secrets/Xcode/Peaktime.mobileprovision"
+  )
+
+  # 배포용 서명 설정으로 오버라이드
+  update_code_signing_settings(
+    use_automatic_signing: false,
+    path: "Projects/App/App.xcodeproj",
+    code_sign_identity: "Apple Distribution",
+    profile_name: ENV["PROVISIONING_PROFILE_NAME"],
+    bundle_identifier: "com.peaktime.app"
+  )
   end
 
   # ──────────────────────────────
