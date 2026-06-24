@@ -47,10 +47,11 @@ jobs:
       - name: Generate Xcode workspace
         run: tuist generate
         
-      - name: Select Xcode 26
+      - name: Select latest Xcode
         run: |
-          ls /Applications/ | grep Xcode
-          sudo xcode-select -s /Applications/Xcode_26.0.app
+          XCODE_PATH=$(ls -d /Applications/Xcode_26*.app | sort -V | tail -1)
+          echo "Using: $XCODE_PATH"
+          sudo xcode-select -s "$XCODE_PATH"
 
       - name: Setup Ruby
         uses: ruby/setup-ruby@v1
