@@ -78,3 +78,9 @@ Tuist/.build
 
 ### Claude ###
 .claude/settings.local.json
+
+### CD Pipeline
+vendor/
+build/
+fastlane/report.xml
+fastlane/README.md

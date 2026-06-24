@@ -1,0 +1,131 @@
+# This file contains the fastlane.tools configuration
+# You can find the documentation at https://docs.fastlane.tools
+#
+# For a list of all available actions, check out
+#
+#     https://docs.fastlane.tools/actions
+#
+# For a list of all available plugins, check out
+#
+#     https://docs.fastlane.tools/plugins/available-plugins
+#
+
+# Uncomment the line if you want fastlane to automatically update itself
+# update_fastlane
+
+# fastlane/Fastfile
+default_platform(:ios)
+
+platform :ios do
+
+  # ──────────────────────────────
+  # TestFlight 배포 (v1.0.0-beta)
+  # ──────────────────────────────
+  lane :beta do
+    setup_signing
+    set_version_from_tag(strip_beta: true)
+
+    build_app(
+      workspace: "Peaktime.xcworkspace",
+      scheme: "Peaktime",
+      configuration: "ReleaseProd",
+      export_method: "app-store",
+      export_options: {
+        provisioningProfiles: {
+          "com.peaktime.app" => ENV["PROVISIONING_PROFILE_NAME"]
+        }
+      },
+      output_directory: "build",
+      clean: true
+    )
+
+    upload_to_testflight(
+      app_identifier: "com.peaktime.app",
+      skip_waiting_for_build_processing: true
+    )
+  end
+
+  # ──────────────────────────────
+  # App Store 배포 (v1.0.0)
+  # ──────────────────────────────
+  lane :release do
+    setup_signing
+    set_version_from_tag(strip_beta: false)
+
+    build_app(
+      workspace: "Peaktime.xcworkspace",
+      scheme: "Peaktime",
+      configuration: "ReleaseProd",
+      export_method: "app-store",
+      export_options: {
+        provisioningProfiles: {
+          "com.peaktime.app" => ENV["PROVISIONING_PROFILE_NAME"]
+        }
+      },
+      output_directory: "build",
+      clean: true
+    )
+
+    upload_to_app_store(
+      app_identifier: "com.peaktime.app",
+      submit_for_review: false,
+      force: true
+    )
+  end
+
+  # ──────────────────────────────
+  # 공통: App Store Connect API 인증
+  # ──────────────────────────────
+  private_lane :setup_signing do
+    app_store_connect_api_key(
+      key_id: ENV["ASC_KEY_ID"],
+      issuer_id: ENV["ASC_ISSUER_ID"],
+      key_content: ENV["ASC_KEY_CONTENT"],
+      is_key_content_base64: true
+    )
+
+    # p12 인증서를 CI 키체인에 설치
+    create_keychain(
+      name: "ci_keychain",
+      password: "ci_password",
+      default_keychain: true,
+      unlock: true,
+      timeout: 3600
+    )
+
+    import_certificate(
+      certificate_path: "Secrets/Xcode/distribution.p12",
+      certificate_password: ENV["P12_PASSWORD"],
+      keychain_name: "ci_keychain",
+      keychain_password: "ci_password"
+    )
+
+    install_provisioning_profile(
+      path: "Secrets/Xcode/AppStore.mobileprovision"
+    )
+  end
+
+  # ──────────────────────────────
+  # 공통: 태그에서 버전/빌드번호 설정
+  # ──────────────────────────────
+  private_lane :set_version_from_tag do |options|
+    version = ENV["TAG_NAME"].delete_prefix("v")
+    version = version.delete_suffix("-beta") if options[:strip_beta]
+
+    increment_version_number(
+      version_number: version,
+      xcodeproj: "Projects/App/App.xcodeproj"
+    )
+
+    build_number = latest_testflight_build_number(
+      app_identifier: "com.peaktime.app",
+      version: version
+    ) + 1
+
+    increment_build_number(
+      build_number: build_number,
+      xcodeproj: "Projects/App/App.xcodeproj"
+    )
+  end
+
+end
