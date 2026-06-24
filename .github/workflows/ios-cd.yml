@@ -42,9 +42,16 @@ jobs:
             ${{ runner.os }}-tuist-spm-
 
       - name: Install Tuist dependencies
+        run: tuist install
+        
+      - name: Debug swift-collections
         run: |
-          tuist clean
-          tuist install
+          echo "=== Package.resolved version ==="
+          grep -A 5 "swift-collections" Tuist/Package.resolved
+          echo "=== Actual checkout ==="
+          git -C Tuist/.build/checkouts/swift-collections log --oneline -1 2>/dev/null || echo "checkout not found"
+          echo "=== LifetimeOverride.swift exists? ==="
+          ls -la Tuist/.build/checkouts/swift-collections/Sources/InternalCollectionsUtilities/LifetimeOverride.swift 2>/dev/null || echo "File not found"
 
       - name: Generate Xcode workspace
         run: tuist generate
