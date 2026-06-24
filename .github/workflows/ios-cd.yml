@@ -46,6 +46,11 @@ jobs:
 
       - name: Generate Xcode workspace
         run: tuist generate
+        
+      - name: Select Xcode 26
+        run: |
+          ls /Applications/ | grep Xcode
+          sudo xcode-select -s /Applications/Xcode_26.0.app
 
       - name: Setup Ruby
         uses: ruby/setup-ruby@v1
