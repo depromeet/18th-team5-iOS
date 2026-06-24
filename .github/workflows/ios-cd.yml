@@ -41,10 +41,10 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-tuist-spm-
 
-        - name: Install Tuist dependencies
-          run: |
-            tuist clean
-            tuist install
+      - name: Install Tuist dependencies
+        run: |
+          tuist clean
+          tuist install
 
       - name: Generate Xcode workspace
         run: tuist generate
