@@ -36,7 +36,8 @@ platform :ios do
         }
       },
       output_directory: "build",
-      clean: true
+      clean: true,
+      xcargs: "OTHER_SWIFT_FLAGS='$(inherited) -enable-experimental-feature Lifetimes'"
     )
 
     upload_to_testflight(
@@ -63,7 +64,8 @@ platform :ios do
         }
       },
       output_directory: "build",
-      clean: true
+      clean: true,
+      xcargs: "OTHER_SWIFT_FLAGS='$(inherited) -enable-experimental-feature Lifetimes'"
     )
 
     upload_to_app_store(
