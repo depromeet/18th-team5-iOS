@@ -11,8 +11,18 @@ jobs:
     timeout-minutes: 60
 
     steps:
+      - name: Validate tag format
+        run: |
+          TAG="${GITHUB_REF_NAME}"
+          if [[ ! "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-beta\.[0-9]+)?$ ]]; then
+            echo "::error::지원하지 않는 태그 형식입니다: $TAG (허용: vX.Y.Z 또는 vX.Y.Z-beta.N)"
+            exit 1
+          fi
+
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
 
       - name: Restore Secrets
         env:
@@ -28,10 +38,10 @@ jobs:
           rm Secrets.tar.gz
 
       - name: Install mise
-        uses: jdx/mise-action@v2
+        uses: jdx/mise-action@c37c93293d6b742fc901e1406b8f764f6fb19dac # v2
 
       - name: Cache Tuist and SPM
-        uses: actions/cache@v4
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
         with:
           path: |
             Tuist/.build
@@ -51,7 +61,7 @@ jobs:
         run: sudo xcode-select -s /Applications/Xcode_26.2.0.app
 
       - name: Setup Ruby
-        uses: ruby/setup-ruby@v1
+        uses: ruby/setup-ruby@b8d447ba7506ac7e0c8fbc50762276fb3b7df731 # v1
         with:
           ruby-version: '3.2'
           bundler-cache: true
