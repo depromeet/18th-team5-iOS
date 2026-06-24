@@ -94,14 +94,14 @@ platform :ios do
     )
 
     import_certificate(
-      certificate_path: "Secrets/Xcode/distribution.p12",
+      certificate_path: "Secrets/Xcode/Peaktime.p12",
       certificate_password: ENV["P12_PASSWORD"],
       keychain_name: "ci_keychain",
       keychain_password: "ci_password"
     )
 
     install_provisioning_profile(
-      path: "Secrets/Xcode/AppStore.mobileprovision"
+      path: "Secrets/Xcode/Peaktime.mobileprovision"
     )
   end
 

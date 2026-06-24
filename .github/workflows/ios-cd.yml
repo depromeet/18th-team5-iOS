@@ -58,7 +58,7 @@ jobs:
         id: profile
         run: |
           PROFILE_NAME=$(/usr/libexec/PlistBuddy -c "Print :Name" /dev/stdin <<< \
-            "$(security cms -D -i Secrets/Xcode/AppStore.mobileprovision)")
+            "$(security cms -D -i Secrets/Xcode/Peaktime.mobileprovision)")
           echo "name=${PROFILE_NAME}" >> "$GITHUB_OUTPUT"
 
       - name: Deploy beta (TestFlight)
