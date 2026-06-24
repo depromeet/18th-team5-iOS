@@ -41,14 +41,17 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-tuist-spm-
 
-      - name: Install Tuist dependencies
-        run: tuist install
+        - name: Install Tuist dependencies
+          run: |
+            tuist clean
+            tuist install
 
       - name: Generate Xcode workspace
         run: tuist generate
         
-      - name: Select latest Xcode
+      - name: Select Xcode
         run: |
+          ls /Applications/ | grep Xcode
           XCODE_PATH=$(ls -d /Applications/Xcode_26*.app | sort -V | tail -1)
           echo "Using: $XCODE_PATH"
           sudo xcode-select -s "$XCODE_PATH"
