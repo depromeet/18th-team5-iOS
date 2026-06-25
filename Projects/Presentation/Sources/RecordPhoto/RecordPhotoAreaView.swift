@@ -130,7 +130,7 @@ private extension RecordPhotoView {
                 }
             }
 
-            HStack(spacing: 24) {
+            HStack(spacing: 12) {
                 cameraButton
                 galleryButton
             }
@@ -141,12 +141,19 @@ private extension RecordPhotoView {
         Button {
             store.send(.cameraButtonTapped)
         } label: {
-            Image.icCamera
-                .resizable()
-                .frame(width: 20, height: 20)
-                .padding(12)
-                .background(Color.whiteAlpha600)
-                .clipShape(.circle)
+            HStack(spacing: 6) {
+                Image.icCamera
+                    .resizable()
+                    .frame(width: 20, height: 20)
+
+                Text("카메라")
+                    .font(.caption1Medium)
+                    .foregroundStyle(Color.gray900)
+            }
+            .padding(.horizontal, 24)
+            .padding(.vertical, 12)
+            .background(Color.whiteAlpha600)
+            .clipShape(.capsule)
         }
     }
 
@@ -154,12 +161,19 @@ private extension RecordPhotoView {
         Button {
             store.send(.galleryButtonTapped)
         } label: {
-            Image.icPhoto
-                .resizable()
-                .frame(width: 20, height: 20)
-                .padding(12)
-                .background(Color.whiteAlpha600)
-                .clipShape(.circle)
+            HStack(spacing: 6) {
+                Image.icPhoto
+                    .resizable()
+                    .frame(width: 20, height: 20)
+
+                Text("갤러리")
+                    .font(.caption1Medium)
+                    .foregroundStyle(Color.gray900)
+            }
+            .padding(.horizontal, 24)
+            .padding(.vertical, 12)
+            .background(Color.whiteAlpha600)
+            .clipShape(.capsule)
         }
     }
 }
