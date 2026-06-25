@@ -49,6 +49,7 @@ extension MissionResponseDTO {
         return .init(
             id: id,
             title: title,
+            description: description,
             theme: MissionTheme(enjoyType),
             isCompleted: isCompleted
         )

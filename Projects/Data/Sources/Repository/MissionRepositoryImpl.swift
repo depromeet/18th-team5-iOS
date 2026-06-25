@@ -35,21 +35,6 @@ public enum MissionRepositoryImpl {
 
     public static func live() -> MissionRepository {
         MissionRepository(
-            fetchMissionRecordPage: { missionId in
-                @Dependency(\.networkClient) var client
-
-                do {
-                    let result: MissionRecordPageResponseDTO? = try await client.request(
-                        MissionEndpoint.fetchRecordPage(missionId: missionId)
-                    )
-                    guard let result else {
-                        throw DomainError.unknown("데이터 획득 실패")
-                    }
-                    return result.toDomain()
-                } catch {
-                    throw mapToDomainError(error)
-                }
-            },
             completeMission: { missionId, missionType, objectKey, memo in
                 @Dependency(\.networkClient) var client
 
@@ -156,17 +141,6 @@ private extension MissionEndpoint {
         case .selected:
             .completeSelected(missionId: missionId, request: request)
         }
-    }
-}
-
-private extension MissionRecordPageResponseDTO {
-    func toDomain() -> Mission {
-        Mission(
-            id: id,
-            title: title,
-            description: description,
-            attribute: .init(category: .init(categoryType))
-        )
     }
 }
 

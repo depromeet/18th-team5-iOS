@@ -27,15 +27,14 @@ public struct MissionRecordFeature {
         var editingCompletionId: Int?
         var originalImageURL: URL?
         var originalMemo: String?
-        var didRequestMissionRecordPage = false
         var memo: String = ""
         var isSubmitting: Bool = false
         var alert: RecordAlert?
         var toast: ToastModel?
         var photo: RecordPhotoFeature.State
 
-        public init(missionId: Int, missionTitle: String, missionType: MissionType) {
-            self.mission = .init(id: missionId, title: missionTitle)
+        public init(missionId: Int, missionTitle: String, missionDescription: String? = nil, missionType: MissionType) {
+            self.mission = .init(id: missionId, title: missionTitle, description: missionDescription)
             self.missionType = missionType
             self.photo = RecordPhotoFeature.State(cameraOverlayLabel: missionTitle)
         }
@@ -53,7 +52,6 @@ public struct MissionRecordFeature {
             self.editingCompletionId = editingCompletionId
             self.originalImageURL = imageURL
             self.originalMemo = memo
-            self.didRequestMissionRecordPage = true
             self.memo = memo ?? ""
             self.photo = RecordPhotoFeature.State(
                 cameraOverlayLabel: missionTitle,
@@ -92,7 +90,6 @@ public struct MissionRecordFeature {
         case onAppear
         case binding(BindingAction<State>)
         case delegate(Delegate)
-        case missionRecordPageFetched(Mission?)
         case backButtonTapped
         case submitButtonTapped
         case submitResponse(Result<Int, any Error>)
@@ -126,26 +123,10 @@ public struct MissionRecordFeature {
         Reduce<State, Action> { state, action in
             switch action {
             case .onAppear:
-                guard !state.didRequestMissionRecordPage else { return .none }
-                state.didRequestMissionRecordPage = true
-                let missionId = state.mission.id
-                return .run { send in
-                    do {
-                        let mission = try await missionRepository.fetchMissionRecordPage(missionId)
-                        await send(.missionRecordPageFetched(mission))
-                    } catch {
-                        await send(.missionRecordPageFetched(nil))
-                    }
-                }
-
-            case .binding:
+                logRecordScreenView(state)
                 return .none
 
-            case let .missionRecordPageFetched(mission):
-                guard let mission else { return .none }
-                state.mission = mission
-                state.photo.cameraOverlayLabel = mission.title
-                logRecordScreenView(state)
+            case .binding:
                 return .none
 
             case .backButtonTapped:

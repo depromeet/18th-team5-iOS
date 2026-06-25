@@ -119,7 +119,7 @@ public struct MainFeature {
             case .handleNotificationTapEvent:
                 return handleNotificationTapEvent(state)
 
-            case let .home(.delegate(.navigateToMissionCamera(missionId, title, missionTypeRaw))):
+            case let .home(.delegate(.navigateToMissionCamera(missionId, title, description, missionTypeRaw))):
                 let missionType = MissionType(rawValue: missionTypeRaw) ?? {
                     assertionFailure("Unknown missionType: \(missionTypeRaw)")
                     return .daily
@@ -128,6 +128,7 @@ public struct MainFeature {
                 let missionRecord = MissionRecordFeature.State(
                     missionId: missionId,
                     missionTitle: title,
+                    missionDescription: description,
                     missionType: missionType
                 )
 
@@ -166,6 +167,7 @@ public struct MainFeature {
                 let missionRecord: Path.State = .missionRecord(.init(
                     missionId: mission.id,
                     missionTitle: mission.title,
+                    missionDescription: mission.description,
                     missionType: missionType
                 ))
 

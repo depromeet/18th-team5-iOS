@@ -26,6 +26,7 @@ struct DailyMissionResponseDTO: Decodable {
     let id: Int
     let title: String
     let participantCount: Int
+    let description: String
     let missionType: String
     let isCompleted: Bool
 }
@@ -93,6 +94,7 @@ extension DailyMissionResponseDTO {
         CurrentMissionCard(
             id: id,
             title: title,
+            description: description,
             participantCount: participantCount,
             missionType: missionType,
             isCompleted: isCompleted
