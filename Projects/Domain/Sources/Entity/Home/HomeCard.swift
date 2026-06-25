@@ -34,6 +34,7 @@ public extension HomeCard {
         currentMission: CurrentMissionCard(
             id: 7,
             title: "시원한 계곡물에 발 담그기",
+            description: "더운 여름, 계곡에서 시원하게 발을 담가보세요",
             participantCount: 100,
             missionType: "DAILY",
             isCompleted: false

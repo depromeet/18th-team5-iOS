@@ -12,8 +12,6 @@ import Foundation
 
 @DependencyClient
 public struct MissionRepository: Sendable {
-    public var fetchMissionRecordPage: @Sendable (_ missionId: Int) async throws -> Mission
-
     public var completeMission: @Sendable (
         _ missionId: Int,
         _ missionType: MissionType,

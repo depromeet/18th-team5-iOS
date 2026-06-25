@@ -10,7 +10,6 @@ import Alamofire
 import Foundation
 
 enum MissionEndpoint: APIEndpoint {
-    case fetchRecordPage(missionId: Int)
     case completeDaily(missionId: Int, request: MissionCompleteRequestDTO)
     case completeRecommended(missionId: Int, request: MissionCompleteRequestDTO)
     case completeSelected(missionId: Int, request: MissionCompleteRequestDTO)
@@ -22,8 +21,6 @@ enum MissionEndpoint: APIEndpoint {
 
     var path: String {
         switch self {
-        case let .fetchRecordPage(missionId):
-            "/api/v1/missions/\(missionId)/record"
         case let .completeDaily(missionId, _):
             "/api/v1/missions/\(missionId)/complete/daily"
         case let .completeRecommended(missionId, _):
@@ -45,7 +42,6 @@ enum MissionEndpoint: APIEndpoint {
 
     var method: HTTPMethod {
         switch self {
-        case .fetchRecordPage: .get
         case .fetchCompletions: .get
         case .fetchRecommendedMissions: .get
         case .fetchSearchedMission: .get

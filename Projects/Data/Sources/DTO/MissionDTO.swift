@@ -28,15 +28,6 @@ struct MissionCompleteResultDTO: Decodable {
     let completionId: Int
 }
 
-// MARK: - 미션 기록 페이지 정보 조회 응답
-
-struct MissionRecordPageResponseDTO: Decodable {
-    let id: Int
-    let title: String
-    let description: String
-    let categoryType: String?
-}
-
 // MARK: - 미션 완료 기록 조회 응답
 
 struct MissionCompletionItemDTO: Decodable {
