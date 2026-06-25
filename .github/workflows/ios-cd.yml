@@ -61,9 +61,9 @@ jobs:
         run: sudo xcode-select -s /Applications/Xcode_26.2.0.app
 
       - name: Setup Ruby
-        uses: ruby/setup-ruby@b8d447ba7506ac7e0c8fbc50762276fb3b7df731 # v1
+        uses: ruby/setup-ruby@v1
         with:
-          ruby-version: '3.2'
+          ruby-version: '3.3'
           bundler-cache: true
 
       # 프로비저닝 프로파일 이름 추출 (Fastlane export_options에서 사용)
