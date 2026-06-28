@@ -42,6 +42,8 @@ struct RecordCardBody: View {
                             .multilineTextAlignment(.center)
                             .truncationMode(.tail)
                             .foregroundStyle(.white)
+                            .lineLimit(2)
+                            .baselineOffset(5)
                             .underline(true, pattern: .solid, color: .white)
                             .frame(minHeight: 52, alignment: .top)
                     }
