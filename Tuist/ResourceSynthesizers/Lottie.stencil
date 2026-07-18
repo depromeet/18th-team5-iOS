@@ -1,0 +1,32 @@
+// swiftformat:disable all
+// swiftlint:disable all
+{% if groups.count > 0 %}
+{% set accessModifier %}{% if param.publicAccess %}public{% else %}internal{% endif %}{% endset %}
+{% macro asset file %}
+    case {{file.name|swiftIdentifier:"pretty"|lowerFirstWord|escapeReservedKeywords}} = "{{file.name}}"
+{% endmacro %}
+{% macro assetsInDirectory directory %}
+{% for file in directory.files %}
+{% call asset file %}
+{% endfor %}
+{% for childDirectory in directory.directories %}
+{% call assetsInDirectory childDirectory %}
+{% endfor %}
+{% endmacro %}
+
+{{accessModifier}} enum AnimationAsset: String, Sendable {
+{% for group in groups %}
+{% for file in group.files %}
+{% call asset file %}
+{% endfor %}
+{% for directory in group.directories %}
+{% call assetsInDirectory directory %}
+{% endfor %}
+{% endfor %}
+}
+{% else %}
+// No Lottie files found
+{% endif %}
+
+// swiftformat:enable all
+// swiftlint:enable all

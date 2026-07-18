@@ -119,7 +119,7 @@ private extension MissionSearchResultView {
     }
 
     var lottieView: some View {
-        Color.pink
+        PLottieView(.loading)
             .frame(width: 120, height: 120)
     }
 
