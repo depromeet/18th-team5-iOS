@@ -92,8 +92,16 @@ private extension MissionSearchResultFeature {
         _ send: Send<Action>
     ) async {
         do {
-            let mission = try await missionRepository.searchMission(attribute)
-            await send(.searchResultFetched(mission))
+            try await withThrowingTaskGroup { group in
+                var mission: Mission?
+                group.addTask { try await Task.sleep(for: .seconds(9.0)) }
+                group.addTask {
+                    mission = try await missionRepository.searchMission(attribute)
+                }
+
+                try await group.waitForAll()
+                await send(.searchResultFetched(mission))
+            }
         } catch {
             // TODO: 조회 실패
         }

@@ -180,6 +180,10 @@ public struct MissionListFeature {
                 state.search = nil
                 guard let solarTerm = state.solarTerm else { return .none }
                 state.searchResult = .init(solarTerm)
+                state.searchResult?.attribute = attribute
+                return .none
+            case let .searchResult(.presented(.searchResultFetched(mission))):
+                state.searchedMission = mission
                 return .none
             case let .searchResult(.presented(.delegate(.navigateToMissionRecord(mission)))):
                 state.searchResult = nil

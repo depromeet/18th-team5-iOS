@@ -35,13 +35,15 @@ public struct MissionSearchResultView: View {
                 switch store.isSearching {
                 case true:
                     Spacer()
-                        .frame(height: 56)
+                        .frame(height: 72)
                 case false:
                     bottomButton
                 }
             }
         }
         .navigationBarBackButtonHidden()
+        .animation(.easeInOut, value: store.isSearching)
+        .onAppear { store.send(.onAppear) }
     }
 }
 
