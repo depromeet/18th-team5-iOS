@@ -66,7 +66,6 @@ public struct MissionListFeature {
         case searchMissionButtonTapped
         case missionCardTapped(Mission)
         case recommendedMissionsFetched(RecommendedMission?)
-        case searchResultFetched(Mission?)
         case openFromHome
         case resolveFromHomePending
         case showCompleteAnimation
@@ -122,7 +121,8 @@ public struct MissionListFeature {
                 return .none
             case .openFromHome:
                 if let mission = state.searchedMission {
-                    state.searchResult = .init(mission)
+                    guard let solarTerm = state.solarTerm else { return .none }
+                    state.searchResult = .init(solarTerm, mission)
                 } else if let season = state.season {
                     state.search = .init(season: season)
                 } else {
@@ -133,7 +133,9 @@ public struct MissionListFeature {
                 guard state.pendingOpenFromHome else { return .none }
                 state.pendingOpenFromHome = false
                 if let mission = state.searchedMission {
-                    state.searchResult = .init(mission)
+                    if let solarTerm = state.solarTerm {
+                        state.searchResult = .init(solarTerm, mission)
+                    }
                 } else if let season = state.season {
                     state.search = .init(season: season)
                 }
@@ -144,7 +146,8 @@ public struct MissionListFeature {
                     if mission.isCompleted == true {
                         return .send(.delegate(.showAlert(.missionUnavailable)))
                     } else {
-                        state.searchResult = .init(mission)
+                        guard let solarTerm = state.solarTerm else { return .none }
+                        state.searchResult = .init(solarTerm, mission)
                         return .none
                     }
                 } else {
@@ -173,16 +176,11 @@ public struct MissionListFeature {
                 default: info.missions[safe: 0]
                 }
                 return .none
-            case let .searchResultFetched(mission):
-                guard let mission else { return .none }
-                state.searchedMission = mission
-                state.searchResult = .init(mission)
-                return .none
             case let .search(.presented(.delegate(.searchMission(attribute)))):
                 state.search = nil
-                return .run { send in
-                    await searchMission(attribute, send)
-                }
+                guard let solarTerm = state.solarTerm else { return .none }
+                state.searchResult = .init(solarTerm)
+                return .none
             case let .searchResult(.presented(.delegate(.navigateToMissionRecord(mission)))):
                 state.searchResult = nil
                 state.isLoading = true
@@ -246,19 +244,6 @@ private extension MissionListFeature {
     func fetchSearchedMission(_ state: State, _ send: Send<Action>) async throws {
         let mission = try await missionRepository.fetchSearchedMission()
         await send(.set(\.searchedMission, mission))
-    }
-
-    func searchMission(
-        _ attribute: MissionAttribute,
-        _ send: Send<Action>
-    ) async {
-        do {
-            let mission = try await missionRepository.searchMission(attribute)
-            await send(.searchResultFetched(mission))
-        } catch {
-            await send(.set(\.isLoading, false))
-            await send(.delegate(.showAlert(.searchFailed)))
-        }
     }
 
     func fetchRecommendedMisisonAvailability(
