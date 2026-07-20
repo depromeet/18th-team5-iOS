@@ -32,10 +32,27 @@ public struct MissionSearchResultView: View {
                 .padding(.top, 24)
                 .padding(.bottom, 40)
 
-                bottomButton
+                switch store.isSearching {
+                case true:
+                    Spacer()
+                        .frame(height: 72)
+                case false:
+                    bottomButton
+                }
             }
         }
         .navigationBarBackButtonHidden()
+        .animation(.easeInOut, value: store.isSearching)
+        .onAppear { store.send(.onAppear) }
+    }
+}
+
+private extension MissionSearchResultView {
+    var title: String {
+        switch store.isSearching {
+        case true: "선택한 조건에 맞는\n제철 활동을 찾고 있어요!"
+        case false: "선택한 조건에 맞는\n제철 활동을 찾았어요!"
+        }
     }
 }
 
@@ -72,7 +89,7 @@ private extension MissionSearchResultView {
     }
 
     var titleView: some View {
-        Text("선택한 조건에 맞는\n제철 활동을 찾았어요!")
+        Text(title)
             .font(.headline2Semibold)
             .foregroundStyle(Color.gray900)
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -80,6 +97,35 @@ private extension MissionSearchResultView {
     }
 
     var cardView: some View {
+        Group {
+            switch store.isSearching {
+            case true: searchingView
+            case false: resultView
+            }
+        }
+        .padding(.horizontal, 16)
+        .padding(.top, 48)
+        .padding(.bottom, 56)
+        .background { cardBackgroundView }
+        .clipShape(RoundedRectangle(cornerRadius: .radius16))
+        .shadow(color: Color.blackAlpha100, radius: 12, x: 0, y: -4)
+    }
+
+    var searchingView: some View {
+        VStack(spacing: 8) {
+            LoadingTextView()
+            lottieView
+        }
+        .padding(.top, 102)
+        .frame(maxHeight: .infinity, alignment: .top)
+    }
+
+    var lottieView: some View {
+        PLottieView(.loading)
+            .frame(width: 120, height: 120)
+    }
+
+    var resultView: some View {
         VStack(spacing: 24) {
             VStack(spacing: 20) {
                 textView
@@ -92,12 +138,6 @@ private extension MissionSearchResultView {
 
             categoryListView
         }
-        .padding(.horizontal, 16)
-        .padding(.top, 48)
-        .padding(.bottom, 56)
-        .background { cardBackgroundView }
-        .clipShape(RoundedRectangle(cornerRadius: .radius16))
-        .shadow(color: Color.blackAlpha100, radius: 12, x: 0, y: -4)
     }
 
     var cardBackgroundView: some View {
@@ -123,12 +163,12 @@ private extension MissionSearchResultView {
                 .clipShape(Capsule())
 
             VStack(spacing: 8) {
-                Text(store.mission.title)
+                Text(store.mission?.title ?? "")
                     .font(.headline1Semibold)
                     .foregroundStyle(Color.gray900)
                     .frame(maxWidth: .infinity)
 
-                Text(store.mission.description ?? "")
+                Text(store.mission?.description ?? "")
                     .font(.body2Regular)
                     .foregroundStyle(Color.gray700)
                     .frame(maxWidth: .infinity)
@@ -184,5 +224,34 @@ private extension MissionSearchResultView {
         }
         .padding(.horizontal, 20)
         .padding(.bottom, 16)
+    }
+}
+
+private struct LoadingTextView: View {
+    @State private var index: Int = 0
+    @State private var textRotationTask: Task<Void, Never>?
+    private let words: [String] = ["공간", "인원", "카테고리"]
+
+    var body: some View {
+        Text("원하는 \(words[index])에 맞는 미션 찾는 중...")
+            .font(.body2Regular)
+            .foregroundStyle(Color.gray700)
+            .frame(maxWidth: .infinity)
+            .onAppear {
+                textRotationTask?.cancel()
+                textRotationTask = Task {
+                    while !Task.isCancelled {
+                        try? await Task.sleep(for: .seconds(1.4))
+                        guard !Task.isCancelled else { return }
+                        withAnimation(.easeOut(duration: 0.25)) {
+                            index = (index + 1) % words.count
+                        }
+                    }
+                }
+            }
+            .onDisappear {
+                textRotationTask?.cancel()
+                textRotationTask = nil
+            }
     }
 }

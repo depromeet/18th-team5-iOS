@@ -52,7 +52,7 @@ private extension Module {
     
     var resourceSynthesizers: [ResourceSynthesizer] {
         switch self {
-        case .designSystem: [.fonts(), .images, .colors]
+        case .designSystem: [.fonts(), .images, .colors, .lottie]
         default: []
         }
     }
@@ -61,4 +61,5 @@ private extension Module {
 private extension ResourceSynthesizer {
     static let images: Self = .custom(name: "Images", parser: .assets, extensions: ["xcassets"])
     static let colors: Self = .custom(name: "Colors", parser: .assets, extensions: ["xcassets"])
+    static let lottie: Self = .custom(name: "Lottie", parser: .files, extensions: ["lottie"])
 }

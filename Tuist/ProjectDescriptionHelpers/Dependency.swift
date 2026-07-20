@@ -47,10 +47,9 @@ private extension Module {
             .firebaseRemoteConfig,
             .firebaseStorage
         ]
-        case .designSystem: [.kingfisher]
+        case .designSystem: [.kingfisher, .lottie]
         case .core: [.dependencies]
         case .camera: []
-        default: []
         }
     }
 
