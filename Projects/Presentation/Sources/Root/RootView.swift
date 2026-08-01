@@ -7,7 +7,9 @@
 //
 
 import ComposableArchitecture
+import Domain
 import SwiftUI
+import UIKit
 
 public struct RootView: View {
     @Environment(\.scenePhase) private var scenePhase
@@ -34,6 +36,27 @@ public struct RootView: View {
         .onChange(of: scenePhase) { _, scenePhase in
             guard scenePhase == .active else { return }
             store.send(.appDidBecomeActive)
+        }
+        .onChange(of: store.season) { _, season in
+            guard let season,
+                  UIApplication.shared.supportsAlternateIcons,
+                  UIApplication.shared.alternateIconName != season.appIconName
+            else { return }
+
+            Task {
+                try? await UIApplication.shared.setAlternateIconName(season.appIconName)
+            }
+        }
+    }
+}
+
+private extension Season {
+    var appIconName: String? {
+        switch self {
+        case .spring: "Spring"
+        case .summer: nil
+        case .autumn: "Autumn"
+        case .winter: "Winter"
         }
     }
 }

@@ -25,6 +25,7 @@ public struct RootFeature {
         var isOnboarded: Bool?
         var notificationAuthorizationStatus: NotificationAuthorizationStatus?
         @Shared(.solarTerm) var solarTerm
+        var season: Season?
 
         public init(currentAppVersion: AppVersion = .current, isDebug: Bool = false) {
             self.currentAppVersion = currentAppVersion
@@ -99,6 +100,7 @@ public struct RootFeature {
 
             case let .solarTermFetched(solarTerm):
                 state.$solarTerm.withLock { $0 = solarTerm }
+                state.season = solarTerm.season
                 return .none
 
             case let .launchConfigLoaded(result):
