@@ -107,11 +107,14 @@ enum RecordCardLayout {
     /// 카드 배경 radial gradient 파라미터 (카드 기준 치수 좌표계)
     static let cardGradientCenter = UnitPoint(x: 156 / cardBaseWidth, y: 133 / cardBaseHeight)
     static let cardGradientRadiusRatio: CGFloat = 273 / cardBaseWidth
-    static let cardGradientStops: [Gradient.Stop] = [
-        .init(color: Color(hex: 0xE8FFB9), location: 0),
-        .init(color: Color(hex: 0xBBF4AF), location: 0.25),
-        .init(color: Color(hex: 0x8FE8A6), location: 0.5),
-        .init(color: Color(hex: 0x62DD9C), location: 0.75),
-        .init(color: Color.green400, location: 1)
-    ]
+
+    static func cardGradientStops(_ season: Season) -> [Gradient.Stop] {
+        [
+            .init(color: season.color(.scale50), location: 0),
+            .init(color: season.color(.scale100), location: 0.25),
+            .init(color: season.color(.scale200), location: 0.5),
+            .init(color: season.color(.scale300), location: 0.75),
+            .init(color: season.color(.scale400), location: 1)
+        ]
+    }
 }

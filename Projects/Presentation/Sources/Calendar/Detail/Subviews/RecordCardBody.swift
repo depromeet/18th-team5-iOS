@@ -74,7 +74,7 @@ private extension RecordCardBody {
         RoundedRectangle(cornerRadius: RecordCardLayout.cardCornerRadius)
             .fill(
                 RadialGradient(
-                    gradient: Gradient(stops: RecordCardLayout.cardGradientStops),
+                    gradient: Gradient(stops: RecordCardLayout.cardGradientStops(term.season)),
                     center: RecordCardLayout.cardGradientCenter,
                     startRadius: 0,
                     endRadius: cardWidth * RecordCardLayout.cardGradientRadiusRatio
