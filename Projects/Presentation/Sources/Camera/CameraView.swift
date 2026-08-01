@@ -395,7 +395,7 @@ private extension CameraView {
 
     var captureButton: some View {
         var image: Image {
-            switch Season.currentSeason {
+            switch store.solarTerm.season {
             case .spring:
                 return .imgCameraButtonSpring
             case .summer:
