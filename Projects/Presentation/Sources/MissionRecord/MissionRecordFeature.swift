@@ -22,6 +22,7 @@ public struct MissionRecordFeature {
 
     @ObservableState
     public struct State: Equatable {
+        @Shared(.solarTerm) var solarTerm
         let missionType: MissionType
         var mission: Mission
         var editingCompletionId: Int?

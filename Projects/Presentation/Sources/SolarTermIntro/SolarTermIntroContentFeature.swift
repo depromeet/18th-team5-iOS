@@ -17,27 +17,23 @@ public struct SolarTermIntroContentFeature {
 
     @ObservableState
     public struct State: Equatable {
-        let term: SolarTerm
         var solarTermIntro: SolarTermIntro?
-        var season: Season
         var dateLabel: String = ""
         var imageURL: [String: [URL]] = [:]
         var isLoading: Bool = true
         var isCurrentTerm: Bool = false
         var alert: CustomAlertFeature<Alert>.State?
 
-        public init(term: SolarTerm) {
-            self.term = term
-            self.season = term.season
-        }
-
+        public init() {}
         public init(intro: SolarTermIntro, dateLabel: String, isCurrentTerm: Bool) {
-            self.term = intro.term
-            self.season = intro.term.season
             self.solarTermIntro = intro
             self.dateLabel = dateLabel
             self.isCurrentTerm = isCurrentTerm
             self.isLoading = false
+        }
+
+        var term: SolarTerm? {
+            solarTermIntro?.term
         }
     }
 

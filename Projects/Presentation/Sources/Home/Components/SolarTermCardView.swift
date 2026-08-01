@@ -11,7 +11,8 @@ import Domain
 import SwiftUI
 
 struct SolarTermCardView: View {
-    let solarTerm: SolarTermCard
+    let card: SolarTermCard
+    let solarTerm: SolarTerm
     let mission: CurrentMissionCard?
     let onMissionTap: () -> Void
     let onDetailTap: () -> Void
@@ -21,7 +22,7 @@ struct SolarTermCardView: View {
             // 상단 텍스트 영역
             VStack(alignment: .leading, spacing: 0) {
                 VStack(alignment: .leading, spacing: 12) {
-                    Text("\(solarTerm.startDate) - \(solarTerm.endDate)")
+                    Text("\(card.startDate) - \(card.endDate)")
                         .font(.caption1Semibold)
                         .foregroundStyle(.white)
                         .padding(.horizontal, 12)
@@ -30,7 +31,7 @@ struct SolarTermCardView: View {
                         .clipShape(Capsule())
 
                     VStack(alignment: .leading, spacing: 0) {
-                        ForEach(descriptionLines(solarTerm.description), id: \.self) { line in
+                        ForEach(descriptionLines(card.description), id: \.self) { line in
                             Text(line)
                                 .font(.title2Bold)
                                 .foregroundStyle(.white)
@@ -53,7 +54,7 @@ struct SolarTermCardView: View {
                 .padding(.vertical, 24)
                 .padding(.horizontal, 20)
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .background(LinearGradient.homeCardBackground(solarTerm.term?.season ?? .summer))
+                .background(LinearGradient.homeCardBackground(solarTerm.season))
             }
             .frame(maxWidth: .infinity, alignment: .leading)
 
@@ -62,7 +63,7 @@ struct SolarTermCardView: View {
             // 하단 미션 카드
             MissionCardView(
                 mission: mission,
-                season: solarTerm.term?.season ?? .summer,
+                season: solarTerm.season,
                 onMissionTap: onMissionTap
             )
             .padding(.bottom, 16)
@@ -70,7 +71,7 @@ struct SolarTermCardView: View {
         .frame(maxWidth: .infinity)
         .frame(height: 400)
         .background {
-            (solarTerm.term?.cardImage ?? Image.imgSolarTermCardDefault)
+            (solarTerm.cardImage)
                 .resizable()
                 .scaledToFill()
         }
@@ -147,7 +148,7 @@ private struct MissionCardView: View {
         .clipShape(RoundedRectangle(cornerRadius: .radius12))
         .overlay(
             RoundedRectangle(cornerRadius: .radius12)
-                .stroke(Color.green50, lineWidth: 1)
+                .stroke(season.color(.scale50), lineWidth: 1)
         )
         .padding(.horizontal, 16)
     }
@@ -155,7 +156,8 @@ private struct MissionCardView: View {
 
 #Preview {
     SolarTermCardView(
-        solarTerm: HomeCard.mock.solarTerm,
+        card: HomeCard.mock.solarTerm,
+        solarTerm: .ibha,
         mission: HomeCard.mock.currentMission,
         onMissionTap: {},
         onDetailTap: {}

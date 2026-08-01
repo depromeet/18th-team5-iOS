@@ -375,7 +375,8 @@ private extension CameraView {
 
     var flashButton: some View {
         let icon: Image = cameraState.isFlashOn ? .icFlash : .icFlashOff
-        let foregroundColor: Color = isFlashButtonFeedbackVisible ? .green600 : .gray800
+        let seasonColor = store.solarTerm.season.color(.scale600)
+        let foregroundColor: Color = isFlashButtonFeedbackVisible ? seasonColor : .gray800
 
         return Button {
             proxy.send(.toggleFlash)
@@ -423,7 +424,8 @@ private extension CameraView {
     }
 
     var switchCameraButton: some View {
-        let foregroundColor: Color = isSwitchCameraButtonFeedbackVisible ? .green600 : .gray800
+        let seasonColor = store.solarTerm.season.color(.scale600)
+        let foregroundColor: Color = isSwitchCameraButtonFeedbackVisible ? seasonColor : .gray800
 
         return Button {
             clearFocusExposureFeedback()

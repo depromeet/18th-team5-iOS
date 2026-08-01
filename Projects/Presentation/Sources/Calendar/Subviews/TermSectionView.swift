@@ -38,7 +38,7 @@ struct TermSectionView: View {
                 Text(termGroup.termText)
                     .font(.headline2Medium)
                     .foregroundStyle(
-                        termGroup.containsToday ? Color.green600 : Color.gray900
+                        termGroup.containsToday ? season.color(.scale600) : Color.gray900
                     )
                 Spacer()
             }
@@ -80,6 +80,10 @@ struct TermSectionView: View {
             }
             .frame(width: dateCellWidth)
         }
+    }
+
+    private var season: Season {
+        termGroup.solarTermInfo.term.season
     }
 }
 

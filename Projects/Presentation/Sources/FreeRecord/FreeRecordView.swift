@@ -96,7 +96,7 @@ public struct FreeRecordView: View {
     }
 
     var background: some View {
-        LinearGradient.missionRecordBackground
+        LinearGradient.missionRecordBackground(store.solarTerm.season.color(.scale50))
             .ignoresSafeArea()
     }
 }
@@ -158,6 +158,7 @@ private extension FreeRecordView {
 private extension FreeRecordView {
     var memoSection: some View {
         RecordMemoSection(
+            season: store.solarTerm.season,
             memo: $store.memo,
             isMemoFocused: $isMemoFocused,
             isLimitExceeded: store.isMemoLimitExceeded,

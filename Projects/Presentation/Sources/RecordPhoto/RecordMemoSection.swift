@@ -6,21 +6,25 @@
 //
 
 import DesignSystem
+import Domain
 import SwiftUI
 
 struct RecordMemoSection: View {
     @Binding private var memo: String
+    private let season: Season
     private let isMemoFocused: FocusState<Bool>.Binding
     private let isLimitExceeded: Bool
     private let maxMemoLength: Int
 
     init(
+        season: Season,
         memo: Binding<String>,
         isMemoFocused: FocusState<Bool>.Binding,
         isLimitExceeded: Bool,
         maxMemoLength: Int
     ) {
         self._memo = memo
+        self.season = season
         self.isMemoFocused = isMemoFocused
         self.isLimitExceeded = isLimitExceeded
         self.maxMemoLength = maxMemoLength
@@ -57,7 +61,7 @@ private extension RecordMemoSection {
                         .allowsHitTesting(false)
                 }
             }
-            .tint(isMemoFocused.wrappedValue ? Color.green500 : Color.clear)
+            .tint(isMemoFocused.wrappedValue ? season.color(.scale500) : Color.clear)
             .padding(EdgeInsets(top: 16, leading: 12, bottom: 16, trailing: 16))
             .background(Color.monoWhite)
             .clipShape(.rect(cornerRadius: .radius16))

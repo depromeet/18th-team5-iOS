@@ -22,6 +22,7 @@ public struct OnboardingSurveyFeature {
 
     @ObservableState
     public struct State: Equatable {
+        @Shared(.solarTerm) var solarTerm
         var status: Status = .initial
         let stepCount: Int = 3
         var step: Int = 0
@@ -35,6 +36,10 @@ public struct OnboardingSurveyFeature {
                 activityStyle: preference.activityStyle,
                 engagementLevel: preference.engagementLevel
             )
+        }
+
+        var season: Season {
+            solarTerm.season
         }
     }
 

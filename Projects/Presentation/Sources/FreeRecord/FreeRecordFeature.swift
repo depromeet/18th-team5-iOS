@@ -22,6 +22,7 @@ public struct FreeRecordFeature {
 
     @ObservableState
     public struct State: Equatable {
+        @Shared(.solarTerm) var solarTerm
         var recordDate: Date
         var selectableDateRange: ClosedRange<Date>?
         var editingRecordId: Int?

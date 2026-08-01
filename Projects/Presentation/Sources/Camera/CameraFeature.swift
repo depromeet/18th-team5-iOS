@@ -14,6 +14,7 @@ import Foundation
 public struct CameraFeature {
     @ObservableState
     public struct State: Equatable {
+        @Shared(.solarTerm) var solarTerm
         public let overlayDate: String
         public let overlayLabel: String
 

@@ -28,9 +28,9 @@ public struct MainFeature {
         var solarTermIntro: SolarTermIntroFeature.State = .init()
 
         var path: StackState<Path.State> = .init()
-        var solarTerm: SolarTerm?
         var myPageConfig: MyPageConfig?
         var alert: CustomAlertFeature<Alert>.State?
+        @Shared(.solarTerm) var solarTerm
 
         public init() {
             self._tabBarVisibility = Shared(
@@ -94,6 +94,7 @@ public struct MainFeature {
             case .onAppear:
                 return .merge([
                     .run { send in await fetchAll(send) },
+                    .send(.handleNotificationTapEvent),
                     .send(.observePushNotificationTapEvent)
                 ])
 
@@ -146,13 +147,12 @@ public struct MainFeature {
                     }
                 }
 
-            case let .home(.delegate(.navigateToSolarTermContent(term))):
-                state.path.append(.solarTermIntroContent(.init(term: term)))
+            case .home(.delegate(.navigateToSolarTermContent)):
+                state.path.append(.solarTermIntroContent(.init()))
                 return .none
 
             case .home(.delegate(.navigateToMyPage)):
-                guard let solarTerm = state.solarTerm else { return .none }
-                state.path.append(.myPage(.init(solarTerm, state.myPageConfig)))
+                state.path.append(.myPage(.init(state.myPageConfig)))
                 return .none
 
             case let .home(.delegate(.navigateToCalendarRecord(date))):
@@ -275,20 +275,9 @@ public struct MainFeature {
 
 private extension MainFeature {
     func fetchAll(_ send: Send<Action>) async {
-        async let todaysSolarTerm: Void = fetchTodaysSolarTerm(send)
         async let userType: Void = fetchUserType(send)
         async let myPageConfig: Void = fetchMyPageConfig(send)
-        _ = await (todaysSolarTerm, userType, myPageConfig)
-    }
-
-    func fetchTodaysSolarTerm(_ send: Send<Action>) async {
-        let year = SolarTermYear(rawValue: Date.now.year)
-        guard let year else { return }
-        let solarTerms = try? await solarTermRepository.fetchSolarTerms(year)
-        let solarTerm = solarTerms?.first { $0.dateRange ~= Date.now }?.term
-        if let solarTerm { analyticsClient.setSolarTerm(solarTerm) }
-        await send(.set(\.solarTerm, solarTerm))
-        await send(.handleNotificationTapEvent)
+        _ = await (userType, myPageConfig)
     }
 
     func fetchUserType(_ send: Send<Action>) async {
@@ -302,9 +291,8 @@ private extension MainFeature {
 
     func handleNotificationTapEvent(_ state: State) -> Effect<Action> {
         let notificationType = notificationRepository.fetchPendingNotificationType()
-        notificationRepository.clearPendingNotificationType()
-
         guard let notificationType else { return .none }
+        notificationRepository.clearPendingNotificationType()
 
         return .run { [state] send in
             if let dismissCoverAction = dismissCoverAction(state) {
@@ -319,8 +307,7 @@ private extension MainFeature {
                 await send(.set(\.tab, .calendar))
                 await send(.popToRoot)
             case .solarTermStart:
-                guard let solarTerm = state.solarTerm else { return }
-                await send(.push(.solarTermIntroContent(.init(term: solarTerm))))
+                await send(.push(.solarTermIntroContent(.init())))
             }
         }
     }

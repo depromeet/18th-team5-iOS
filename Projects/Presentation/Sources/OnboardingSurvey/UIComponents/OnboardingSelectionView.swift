@@ -7,18 +7,22 @@
 //
 
 import DesignSystem
+import Domain
 import SwiftUI
 
 struct OnboardingSelectionView<Item: Hashable>: View {
+    private let season: Season
     private let items: [Item]
     private let viewState: (Item) -> OnboardingViewState
     @Binding private var selection: Item?
 
     init(
+        season: Season,
         items: [Item],
         viewState: @escaping (Item) -> OnboardingViewState,
         selection: Binding<Item?>
     ) {
+        self.season = season
         self.items = items
         self.viewState = viewState
         self._selection = selection
@@ -35,15 +39,15 @@ struct OnboardingSelectionView<Item: Hashable>: View {
 
 private extension OnboardingSelectionView {
     func titleColor(_ isSelected: Bool) -> Color {
-        isSelected ? .green600 : .gray900
+        isSelected ? season.color(.scale600) : .gray900
     }
 
     func backgroundColor(_ isSelected: Bool) -> Color {
-        isSelected ? .green500.opacity(0.04) : .white
+        isSelected ? season.color(.scale500).opacity(0.04) : .white
     }
 
     func strokeColor(_ isSelected: Bool) -> Color {
-        isSelected ? .green300 : .gray300
+        isSelected ? season.color(.scale300) : .gray300
     }
 }
 

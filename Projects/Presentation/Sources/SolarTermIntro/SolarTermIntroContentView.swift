@@ -50,7 +50,7 @@ struct SolarTermIntroContentView: View {
 private extension SolarTermIntroContentView {
     var navigationBar: some View {
         ZStack {
-            Text("\(store.term.koreanName) 소개보기")
+            Text("\(store.term?.koreanName ?? "") 소개보기")
                 .font(.body1Medium)
                 .foregroundStyle(Color.gray900)
 
@@ -91,19 +91,21 @@ private extension SolarTermIntroContentView {
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, 11)
-            .background(
-                RoundedRectangle(cornerRadius: .radius16)
-                    .fill(
-                        LinearGradient(
-                            colors: [
-                                store.season.color(.scale100),
-                                store.season.color(.scale300)
-                            ],
-                            startPoint: .top,
-                            endPoint: .bottom
+            .background {
+                if let term = store.solarTermIntro?.term {
+                    RoundedRectangle(cornerRadius: .radius16)
+                        .fill(
+                            LinearGradient(
+                                colors: [
+                                    term.season.color(.scale100),
+                                    term.season.color(.scale300)
+                                ],
+                                startPoint: .top,
+                                endPoint: .bottom
+                            )
                         )
-                    )
-            )
+                }
+            }
 
             // 의미 & 특징
             VStack(spacing: 8) {
@@ -262,7 +264,7 @@ private struct AutoScrollImageView: View {
 #Preview {
     NavigationStack {
         SolarTermIntroContentView(
-            store: Store(initialState: SolarTermIntroContentFeature.State(term: .ibha)) {
+            store: Store(initialState: SolarTermIntroContentFeature.State()) {
                 SolarTermIntroContentFeature()
             }
         )
