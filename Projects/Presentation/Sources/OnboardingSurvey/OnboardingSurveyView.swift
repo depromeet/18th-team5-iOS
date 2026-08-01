@@ -101,6 +101,7 @@ private extension OnboardingSurveyView {
     var headerView: some View {
         ZStack {
             OnboardingProgressView(
+                season: store.solarTerm.season,
                 stepCount: store.stepCount,
                 currentStep: store.step
             )
@@ -158,6 +159,7 @@ private extension OnboardingSurveyView {
 
     var activityStyleSelectionView: some View {
         OnboardingSelectionView(
+            season: store.solarTerm.season,
             items: [.outdoor, .indoor],
             viewState: { $0.viewState },
             selection: $store.preference.activityStyle
@@ -166,6 +168,7 @@ private extension OnboardingSurveyView {
 
     var engagementLevelSelectionView: some View {
         OnboardingSelectionView(
+            season: store.solarTerm.season,
             items: [.active, .casual],
             viewState: { $0.viewState },
             selection: $store.preference.engagementLevel
@@ -174,6 +177,7 @@ private extension OnboardingSurveyView {
 
     var rankingView: some View {
         OnboardingRankingView(
+            season: store.solarTerm.season,
             items: [.nature, .food, .culture],
             ranking: $store.preference.themeRanking,
             viewState: { $0.viewState }
@@ -200,7 +204,7 @@ private extension OnboardingSurveyView {
         Group {
             switch store.status {
             case .initial:
-                LinearGradient.onboardingBackground
+                LinearGradient.onboardingBackground(store.season.color(.scale50))
             case .inProgress:
                 Color.white
             case .result:

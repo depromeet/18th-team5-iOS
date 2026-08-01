@@ -16,6 +16,7 @@ import Foundation
 public struct HomeFeature {
     @ObservableState
     public struct State: Equatable {
+        @Shared(.solarTerm) var solarTerm
         var homeCard: HomeCard?
         var seasonRecord: SeasonRecord?
         var isLoading: Bool = false
@@ -75,6 +76,9 @@ public struct HomeFeature {
             case let .homeLoad(.success(data)):
                 state.isLoading = false
                 state.homeCard = data
+                if let term = data.solarTerm.term {
+                    state.$solarTerm.withLock { $0 = term }
+                }
                 return .run { send in
                     do {
                         var record = try await homeRepository.fetchSeasonalRecords()

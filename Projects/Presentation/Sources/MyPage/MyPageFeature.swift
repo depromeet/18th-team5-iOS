@@ -35,7 +35,7 @@ public struct MyPageFeature {
 
     @ObservableState
     public struct State: Equatable {
-        let solarTerm: SolarTerm
+        @Shared(.solarTerm) var solarTerm
         var privacyPolicies: [DocumentInfo]?
         var termsOfService: [DocumentInfo]?
         var contactUsURL: URL?
@@ -50,8 +50,7 @@ public struct MyPageFeature {
         var alert: CustomAlertFeature<Alert>.State?
         var isLoading: Bool = false
 
-        public init(_ solarTerm: SolarTerm, _ config: MyPageConfig?) {
-            self.solarTerm = solarTerm
+        public init(_ config: MyPageConfig?) {
             self.contactUsURL = config?.contactUsURL
             self.latestVersion = config?.latestAppVersion
             self.isDevModeEnabled = config?.isDevModeEnabled ?? false

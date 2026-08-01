@@ -25,8 +25,8 @@ struct CalendarDateCell: View {
 
             ZStack {
                 RoundedRectangle(cornerRadius: 12)
-                    .foregroundStyle(date.isSelected ? Color.green500 : Color.gray50)
-                    .shadow(color: Color.green100, radius: date.isSelected ? 8 : 0)
+                    .foregroundStyle(date.isSelected ? date.term.season.color(.scale500) : Color.gray50)
+                    .shadow(color: date.term.season.color(.scale100), radius: date.isSelected ? 8 : 0)
 
                 HStack(spacing: 0) {
                     Spacer(minLength: 5)
@@ -95,7 +95,7 @@ struct CalendarDateCell: View {
             .frame(maxWidth: .infinity)
             .background {
                 if date.isToday {
-                    Capsule().fill(Color.green500)
+                    Capsule().fill(date.term.season.color(.scale500))
                 }
             }
     }

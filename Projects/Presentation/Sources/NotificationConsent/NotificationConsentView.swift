@@ -43,7 +43,7 @@ public struct NotificationConsentView: View {
             .padding(.top, 8)
             .padding(.bottom, 20)
         }
-        .background(LinearGradient.onboardingBackground)
+        .background(LinearGradient.onboardingBackground(store.season.color(.scale50)))
     }
 }
 

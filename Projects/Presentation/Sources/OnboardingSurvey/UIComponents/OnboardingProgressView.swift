@@ -7,16 +7,20 @@
 //
 
 import DesignSystem
+import Domain
 import SwiftUI
 
 struct OnboardingProgressView: View {
+    private let season: Season
     private let stepCount: Int
     private let currentStep: Int
 
     init(
+        season: Season,
         stepCount: Int,
         currentStep: Int
     ) {
+        self.season = season
         self.stepCount = stepCount
         self.currentStep = min(max(currentStep, 0), stepCount - 1)
     }
@@ -35,6 +39,6 @@ struct OnboardingProgressView: View {
 
 private extension OnboardingProgressView {
     func color(_ step: Int) -> Color {
-        step > currentStep ? .gray300 : .green500
+        step > currentStep ? .gray300 : season.color(.scale500)
     }
 }

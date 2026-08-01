@@ -7,18 +7,22 @@
 //
 
 import DesignSystem
+import Domain
 import SwiftUI
 
 struct OnboardingRankingView<Item: Hashable>: View {
     @Binding private var ranking: [Item]
+    private let season: Season
     private let items: [Item]
     private let viewState: (Item) -> OnboardingViewState
 
     init(
+        season: Season,
         items: [Item],
         ranking: Binding<[Item]>,
         viewState: @escaping (Item) -> OnboardingViewState
     ) {
+        self.season = season
         self.items = items
         self._ranking = ranking
         self.viewState = viewState
@@ -45,11 +49,11 @@ struct OnboardingRankingView<Item: Hashable>: View {
 
 private extension OnboardingRankingView {
     func backgroundColor(_ isSelected: Bool) -> Color {
-        isSelected ? .green500.opacity(0.04) : .white
+        isSelected ? season.color(.scale500).opacity(0.04) : .white
     }
 
     func strokeColor(_ isSelected: Bool) -> Color {
-        isSelected ? .green300 : .gray300
+        isSelected ? season.color(.scale300) : .gray300
     }
 }
 
@@ -87,7 +91,7 @@ private extension OnboardingRankingView {
                 if let rank {
                     Text("\(rank + 1)순위")
                         .font(.body2Medium)
-                        .foregroundStyle(Color.green600)
+                        .foregroundStyle(season.color(.scale600))
                         .frame(height: 26)
                         .padding(.horizontal, 7)
                         .background(Color.blackAlpha200)

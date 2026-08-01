@@ -39,7 +39,7 @@ public struct HomeView: View {
             scrollOffset = newValue
         }
         .scrollIndicators(.hidden)
-        .background(LinearGradient.homeBackground.ignoresSafeArea())
+        .background(LinearGradient.homeBackground(store.solarTerm.season.color(.scale50)).ignoresSafeArea())
         .overlay(alignment: .top) {
             HomeHeaderView(
                 showBlur: scrollOffset > 1,
@@ -68,7 +68,8 @@ public struct HomeView: View {
     private func loadedView(for homeCard: HomeCard) -> some View {
         VStack(spacing: 16) {
             SolarTermCardView(
-                solarTerm: homeCard.solarTerm,
+                card: homeCard.solarTerm,
+                solarTerm: store.solarTerm,
                 mission: homeCard.currentMission,
                 onMissionTap: { store.send(.onMissionTap) },
                 onDetailTap: { store.send(.onSolarTermDetailTap) }
@@ -81,7 +82,7 @@ public struct HomeView: View {
             if let seasonRecord = store.seasonRecord {
                 SeasonRecordSectionView(
                     seasonRecord: seasonRecord,
-                    season: homeCard.solarTerm.term?.season ?? .summer,
+                    season: store.solarTerm.season,
                     onDetailTap: { store.send(.calendarButtonTapped) },
                     onPhotoTap: { dateString in store.send(.onRecordPhotoTap(dateString)) }
                 )

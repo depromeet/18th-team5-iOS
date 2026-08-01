@@ -24,6 +24,8 @@ public struct RootFeature {
         var hasFetchedConfig: Bool = false
         var isOnboarded: Bool?
         var notificationAuthorizationStatus: NotificationAuthorizationStatus?
+        @Shared(.solarTerm) var solarTerm
+        var season: Season?
 
         public init(currentAppVersion: AppVersion = .current, isDebug: Bool = false) {
             self.currentAppVersion = currentAppVersion
@@ -36,6 +38,7 @@ public struct RootFeature {
         case splashTimeout
         case appDidBecomeActive
         case path(Path.Action)
+        case solarTermFetched(SolarTerm)
         case launchConfigLoaded(Result<LaunchConfig, Error>)
         case launchFlowFinished
         case loginFlowFinished(with: Result<Void, Error>)
@@ -53,6 +56,8 @@ public struct RootFeature {
     @Dependency(\.openURL) var openURL
     @Dependency(\.logger) var logger
     @Dependency(\.notificationClient) private var notificationClient
+    @Dependency(\.solarTermRepository) private var solarTermRepository
+    @Dependency(\.analyticsClient) private var analyticsClient
 
     public init() {}
 
@@ -66,7 +71,10 @@ public struct RootFeature {
             case .onAppear:
                 guard !state.hasFetchedConfig else { return .none }
                 state.hasFetchedConfig = true
-                return loadLaunchConfig()
+                return .merge([
+                    .run { send in await loadLaunchConfig(send) },
+                    .run { send in await fetchTodaysSolarTerm(send) }
+                ])
 
             case .path(.splash(.onAppear)):
                 return .run { send in
@@ -90,6 +98,11 @@ public struct RootFeature {
                     await checkNotificationAuthorizationStatusChange(state, send)
                 }
 
+            case let .solarTermFetched(solarTerm):
+                state.$solarTerm.withLock { $0 = solarTerm }
+                state.season = solarTerm.season
+                return .none
+
             case let .launchConfigLoaded(result):
                 switch result {
                 case let .success(config):
@@ -109,7 +122,9 @@ public struct RootFeature {
             case let .loginFlowFinished(result):
                 switch result {
                 case .success:
-                    return .run { send in await loadOnboardingState(send) }
+                    return .run { [state] send in await
+                        loadOnboardingState(state, send)
+                    }
                 case let .failure(error):
                     // TODO: 로그인 실패 에러처리 - @준영
                     logger.error(message: "로그인 실패 \(error.localizedDescription)")
@@ -193,12 +208,10 @@ extension Path.State: Equatable {}
 // MARK: Lauch
 
 private extension RootFeature {
-    func loadLaunchConfig() -> Effect<Action> {
-        .run { send in
-            await send(.launchConfigLoaded(
-                Result { try await launchConfigRepository.fetch() }
-            ))
-        }
+    func loadLaunchConfig(_ send: Send<Action>) async {
+        await send(.launchConfigLoaded(
+            Result { try await launchConfigRepository.fetch() }
+        ))
     }
 
     func handleLaunchConfig(
@@ -250,11 +263,11 @@ private extension RootFeature {
 // MARK: Onboarding
 
 private extension RootFeature {
-    func loadOnboardingState(_ send: Send<Action>) async {
+    func loadOnboardingState(_ state: State, _ send: Send<Action>) async {
         do {
             let isOnboarded = try await onboardingRepository.isOnboarded()
             await send(.onboardingStateLoaded(isOnboarded))
-            await loadNotificationAuthorizationStatus(isOnboarded, send)
+            await loadNotificationAuthorizationStatus(isOnboarded, state, send)
         } catch {
             // TODO: 온보딩 조회 실패 에러처리 - @준영
             logger.error(message: "온보딩 진행여부 확인 실패 \(error.localizedDescription)")
@@ -263,6 +276,7 @@ private extension RootFeature {
 
     func loadNotificationAuthorizationStatus(
         _ isOnboarded: Bool,
+        _ state: State,
         _ send: Send<Action>
     ) async {
         do {
@@ -304,6 +318,16 @@ private extension RootFeature {
             // TODO: 알림 권한 조회 실패 에러처리 - @정원
             logger.error(message: "알림 권한 조회 실패 \(error.localizedDescription)")
         }
+    }
+
+    func fetchTodaysSolarTerm(_ send: Send<Action>) async {
+        let year = SolarTermYear(rawValue: Date.now.year)
+        guard let year else { return }
+        let solarTerms = try? await solarTermRepository.fetchSolarTerms(year)
+        let solarTerm = solarTerms?.first { $0.dateRange ~= Date.now }?.term
+        guard let solarTerm else { return }
+        analyticsClient.setSolarTerm(solarTerm)
+        await send(.solarTermFetched(solarTerm))
     }
 }
 

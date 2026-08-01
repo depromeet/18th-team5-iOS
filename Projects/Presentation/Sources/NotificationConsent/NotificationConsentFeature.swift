@@ -13,7 +13,11 @@ import Domain
 public struct NotificationConsentFeature {
     @ObservableState
     public struct State: Equatable {
+        @Shared(.solarTerm) var solarTerm
         public init() {}
+        var season: Season {
+            solarTerm.season
+        }
     }
 
     public enum Action: Equatable {

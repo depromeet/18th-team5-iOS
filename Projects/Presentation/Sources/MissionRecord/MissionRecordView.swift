@@ -78,7 +78,7 @@ public struct MissionRecordView: View {
     }
 
     var background: some View {
-        LinearGradient.missionRecordBackground
+        LinearGradient.missionRecordBackground(store.solarTerm.season.color(.scale50))
             .ignoresSafeArea()
     }
 }
@@ -123,6 +123,7 @@ private extension MissionRecordView {
 private extension MissionRecordView {
     var memoSection: some View {
         RecordMemoSection(
+            season: store.solarTerm.season,
             memo: $store.memo,
             isMemoFocused: $isMemoFocused,
             isLimitExceeded: store.isMemoLimitExceeded,
