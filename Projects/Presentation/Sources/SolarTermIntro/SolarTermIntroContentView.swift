@@ -50,7 +50,7 @@ struct SolarTermIntroContentView: View {
 private extension SolarTermIntroContentView {
     var navigationBar: some View {
         ZStack {
-            Text("\(store.term?.koreanName ?? "") 소개보기")
+            Text("\(store.targetTerm.koreanName) 소개보기")
                 .font(.body1Medium)
                 .foregroundStyle(Color.gray900)
 
@@ -264,7 +264,7 @@ private struct AutoScrollImageView: View {
 #Preview {
     NavigationStack {
         SolarTermIntroContentView(
-            store: Store(initialState: SolarTermIntroContentFeature.State()) {
+            store: Store(initialState: SolarTermIntroContentFeature.State(targetTerm: .ibha)) {
                 SolarTermIntroContentFeature()
             }
         )

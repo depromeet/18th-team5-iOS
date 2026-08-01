@@ -17,6 +17,7 @@ public struct SolarTermIntroContentFeature {
 
     @ObservableState
     public struct State: Equatable {
+        let targetTerm: SolarTerm
         var solarTermIntro: SolarTermIntro?
         var dateLabel: String = ""
         var imageURL: [String: [URL]] = [:]
@@ -24,16 +25,16 @@ public struct SolarTermIntroContentFeature {
         var isCurrentTerm: Bool = false
         var alert: CustomAlertFeature<Alert>.State?
 
-        public init() {}
+        public init(targetTerm: SolarTerm) {
+            self.targetTerm = targetTerm
+        }
+
         public init(intro: SolarTermIntro, dateLabel: String, isCurrentTerm: Bool) {
+            self.targetTerm = intro.term
             self.solarTermIntro = intro
             self.dateLabel = dateLabel
             self.isCurrentTerm = isCurrentTerm
             self.isLoading = false
-        }
-
-        var term: SolarTerm? {
-            solarTermIntro?.term
         }
     }
 
@@ -66,19 +67,19 @@ public struct SolarTermIntroContentFeature {
         Reduce { state, action in
             switch action {
             case .onAppear:
-                // init(term:)으로 생성된 경우에만 직접 fetch
+                // init(targetTerm:)으로 생성된 경우에만 직접 fetch
                 guard state.solarTermIntro == nil else { return .none }
                 state.isLoading = true
-                return .run { [term = state.term] send in
+                return .run { [targetTerm = state.targetTerm] send in
                     do {
                         async let cards = solarTermIntroRepository.fetchSolarTermCard()
                         async let infos = solarTermRepository.fetchSolarTerms(.current)
                         let (fetchedCards, fetchedInfos) = try await (cards, infos)
-                        guard let card = fetchedCards.first(where: { $0.term == term }) else {
+                        guard let card = fetchedCards.first(where: { $0.term == targetTerm }) else {
                             await send(.introLoadFailed)
                             return
                         }
-                        let info = fetchedInfos.first { $0.term == term }
+                        let info = fetchedInfos.first { $0.term == targetTerm }
                         let dateLabel = info?.formattedFullDateRange ?? ""
                         let isCurrent = info?.dateRange.contains(Date()) ?? false
                         await send(.introLoaded(card, dateLabel, isCurrent))

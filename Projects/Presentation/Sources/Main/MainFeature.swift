@@ -147,8 +147,8 @@ public struct MainFeature {
                     }
                 }
 
-            case .home(.delegate(.navigateToSolarTermContent)):
-                state.path.append(.solarTermIntroContent(.init()))
+            case let .home(.delegate(.navigateToSolarTermContent(term))):
+                state.path.append(.solarTermIntroContent(.init(targetTerm: term)))
                 return .none
 
             case .home(.delegate(.navigateToMyPage)):
@@ -307,7 +307,7 @@ private extension MainFeature {
                 await send(.set(\.tab, .calendar))
                 await send(.popToRoot)
             case .solarTermStart:
-                await send(.push(.solarTermIntroContent(.init())))
+                await send(.push(.solarTermIntroContent(.init(targetTerm: state.solarTerm))))
             }
         }
     }
