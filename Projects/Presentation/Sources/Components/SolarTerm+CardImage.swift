@@ -13,13 +13,30 @@ import SwiftUI
 extension SolarTerm {
     var cardImage: Image {
         switch self {
+        case .ipchun: .imgIpchunHomeCard
+        case .usu: .imgUsuHomeCard
+        case .gyeongchip: .imgGyeongchipHomeCard
+        case .chunbun: .imgChunbunHomeCard
+        case .cheongmyeong: .imgCheongmyeongHomeCard
+        case .gogu: .imgGoguHomeCard
         case .ibha: .imgIbhaHomeCard
         case .soman: .imgSomanHomeCard
         case .mangjong: .imgMangjongHomeCard
         case .haji: .imgHajiHomeCard
         case .soseo: .imgSoseoHomeCard
         case .daeseo: .imgDaeseoHomeCard
-        default: .imgSolarTermCardDefault
+        case .ibchu: .imgIbchuHomeCard
+        case .cheoseo: .imgCheoseoHomeCard
+        case .baengno: .imgBaengnoHomeCard
+        case .chubun: .imgChubunHomeCard
+        case .hanro: .imgHanroHomeCard
+        case .sanggang: .imgSanggangHomeCard
+        case .ibdong: .imgIbdongHomeCard
+        case .soseol: .imgSoseolHomeCard
+        case .daeseol: .imgDaeseolHomeCard
+        case .dongji: .imgDongjiHomeCard
+        case .sohan: .imgSohanHomeCard
+        case .daehan: .imgDaehanHomeCard
         }
     }
 
