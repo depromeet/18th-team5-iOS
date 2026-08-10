@@ -40,10 +40,12 @@ public struct RootView: View {
         .onChange(of: store.season) { _, season in
             guard let season,
                   UIApplication.shared.supportsAlternateIcons,
-                  UIApplication.shared.alternateIconName != season.appIconName
-            else { return }
+                  UIApplication.shared.alternateIconName != season.appIconName else {
+                return
+            }
 
             Task {
+                try? await Task.sleep(for: .seconds(1))
                 try? await UIApplication.shared.setAlternateIconName(season.appIconName)
             }
         }
@@ -54,8 +56,8 @@ private extension Season {
     var appIconName: String? {
         switch self {
         case .spring: "Spring"
-        case .summer: nil
-        case .autumn: "Autumn"
+        case .summer: "Summer"
+        case .autumn: nil
         case .winter: "Winter"
         }
     }
